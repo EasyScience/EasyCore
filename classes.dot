@@ -1,0 +1,7 @@
+digraph "classes" {
+charset="utf-8"
+rankdir=BT
+"0" [label="{Descriptor|description : NoneType\ldisplay_name : str\lname : str\lunit : NoneType\lurl : str\lvalue\lvalue : NoneType\l|}", shape="record"];
+"1" [label="{Parameter|constraints : dict\lfixed : bool\lmax\lmin\l|}", shape="record"];
+"1" -> "0" [arrowhead="empty", arrowtail="none"];
+}
