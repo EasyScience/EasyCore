@@ -19,6 +19,8 @@ jobs:
       uses: ts-graphviz/setup-graphviz@v1
     - name: Create UML diagrams
       run: pyreverse -Amy -o png Base/
+    - name: Move UML diagrams
+      run: mv packages_*.png classes_*.png Diagrams/
     - name: Commit changes
       uses: stefanzweifel/git-auto-commit-action@v4
       with:
