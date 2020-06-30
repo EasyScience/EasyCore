@@ -1,0 +1,20 @@
+name: Uml diagrams
+
+on: [push]
+
+jobs:
+  uml:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check-out the repository
+      uses: actions/checkout@v2
+    - name: Set up the Python environment
+      uses: actions/setup-python@v2
+      with:
+          python-version: 3.7
+    - name: Setup Graphviz
+      uses: ts-graphviz/setup-graphviz@v1
+    - name: Create diagrams
+      run: pyreverse -Amy -o png Base/
+    - name: Show dir content
+      run: ls
