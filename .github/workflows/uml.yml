@@ -1,9 +1,10 @@
-name: Uml diagrams
+name: Create UML diagrams
 
 on: [push]
 
 jobs:
   uml:
+    if: "contains(github.event.head_commit.message, '[uml]')"
     runs-on: ubuntu-latest
     steps:
     - name: Check-out the repository
@@ -12,11 +13,11 @@ jobs:
       uses: actions/setup-python@v2
       with:
           python-version: 3.7
-    - name: Setup pyreverse (now part of pylint)
+    - name: Setup Pyreverse (part of Pylint)
       run: pip install pylint
-    - name: Setup Graphviz
+    - name: Setup GraphViz
       uses: ts-graphviz/setup-graphviz@v1
-    - name: Create diagrams
+    - name: Create UML diagrams
       run: pyreverse -Amy -o png Base/
     - name: Commit changes
       uses: stefanzweifel/git-auto-commit-action@v4
