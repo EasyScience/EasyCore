@@ -18,5 +18,7 @@ jobs:
       uses: ts-graphviz/setup-graphviz@v1
     - name: Create diagrams
       run: pyreverse -Amy -o png Base/
-    - name: Show dir content
-      run: ls
+    - name: Commit changes
+      uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: Update UML diagrams
