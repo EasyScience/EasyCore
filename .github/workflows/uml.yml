@@ -21,7 +21,7 @@ jobs:
     - name: Setup GraphViz
       uses: ts-graphviz/setup-graphviz@v1
     - name: Create UML diagrams
-      run: pyreverse -Amy -p ${{ env.SHORT_GITHUB_REF }} -o png Base/
+      run: pyreverse -Amy -p ${{ github.event.repository.name }} -o png Base/
     - name: Move UML diagrams
       run: mv packages_*.png classes_*.png Diagrams/
     - name: Commit changes
