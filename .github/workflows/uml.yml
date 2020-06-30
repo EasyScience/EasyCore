@@ -7,9 +7,6 @@ jobs:
     if: "contains(github.event.head_commit.message, '[uml]')"
     runs-on: ubuntu-latest
     steps:
-    - name: Declare os-independent env variables
-      shell: bash
-      run: echo ::set-env name=SHORT_GITHUB_REF::${GITHUB_REF#refs/*/}
     - name: Check-out the repository
       uses: actions/checkout@v2
     - name: Set up the Python environment
