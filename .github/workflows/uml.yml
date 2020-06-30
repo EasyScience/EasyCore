@@ -17,10 +17,14 @@ jobs:
       run: pip install pylint
     - name: Setup GraphViz
       uses: ts-graphviz/setup-graphviz@v1
-    - name: Create UML diagrams
-      run: pyreverse -Amy -p ${{ github.event.repository.name }} -o png Base/
+    - name: Create UML diagrams (*.dot files)
+      run: pyreverse -Amy -p ${{ github.event.repository.name }} Base/
+    - name: Create UML diagrams (*.pdf files)
+      run: |
+        dot -Tpdf packages_${{ github.event.repository.name }}.dot -o packages_${{ github.event.repository.name }}.pdf
+        dot -Tpdf classes_${{ github.event.repository.name }}.dot -o classes_${{ github.event.repository.name }}.pdf
     - name: Move UML diagrams
-      run: mv packages_*.png classes_*.png Diagrams/
+      run: mv *.dot *.pdf Diagrams/
     - name: Commit changes
       uses: stefanzweifel/git-auto-commit-action@v4
       with:
