@@ -13,7 +13,7 @@ jobs:
       with:
           python-version: 3.7
     - name: Setup pyreverse (now part of pylint)
-      uses: pip install pylint
+      run: pip install pylint
     - name: Setup Graphviz
       uses: ts-graphviz/setup-graphviz@v1
     - name: Create diagrams
