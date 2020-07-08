@@ -2,7 +2,8 @@ __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
 from copy import deepcopy
-from typing import List, Union
+from enum import Enum
+from typing import List, Union, Any
 from functools import cached_property
 
 from easyCore import borg, ureg
@@ -17,27 +18,38 @@ Q_ = ureg.Quantity
 M_ = ureg.Measurement
 
 
-class Descriptor:
-    _storer = Q_
+class Descriptor(MSONable):
 
-    def __init__(self, name: str, value, *args, unit=None, description: str = '',
-                 url: str = '', callback: property = None, parent=None):
+    _storer = Q_
+    _borg = borg
+    _args = {
+        'value': None,
+        'units': ''
+    }
+
+    def __init__(self, name: str,
+                 value: Any,
+                 units: Union[noneType, str, ureg.Quantity, ureg.Measurement, ureg.Unit] = None,
+                 description: str = '',
+                 url: str = '',
+                 callback: property = None,
+                 parent=None):
         self.__borg = borg
         self.__borg.map.add_vertex(id(self))
         self._parent = parent
         if self._parent is not None:
             self.__borg.map.add_edge({id(self._parent), id(self)})
         self.name: str = name
-        self._unit = ureg.parse_expression(unit)
-
-        self._val = self.__class__._storer(value, *args, self._unit)
+        self._units = ureg.parse_expression(units)
+        self._args['value'] = value
+        self._args['units'] = str(self.unit)
+        self._value = self.__class__._storer(**self._args)
         self.description: str = description
         self._display_name: str = ''
         self.url: str = url
         self._callback: property = callback
         self.user_data: dict = {}
         self._type = type(value)
-        self._args = args
 
     # This should not
     @property
@@ -55,20 +67,21 @@ class Descriptor:
     @property
     def unit(self):
         # Should implement the undo/redo functionality
-        return self._unit.units
+        return self._units.units
 
     @unit.setter
     @stack_deco
     def unit(self, unit_str: str):
         new_unit = ureg.parse_expression(unit_str)
-        self._unit = new_unit
-        self._val = self.__class__._storer(self.raw_value, *self._args, self._unit)
+        self._units = new_unit
+        self._args['units'] = str(new_unit)
+        self._value = self.__class__._storer(**self._args)
 
     @property
     def value(self):
         # Cached property? Should reference callback.
         # Also should reference for undo/redo
-        return self._val
+        return self._value
 
     @value.setter
     @stack_deco
@@ -78,19 +91,29 @@ class Descriptor:
         #     self._parent._history[self._parent.__hash__()].append(self, 'value_change', value)
         # Cached property?
         if hasattr(value, 'magnitude'):
-            value = value.magnitude.nominal_value
-        self._val = self.__class__._storer(value, *self._args, self._unit)
+            value = value = value.magnitude
+            if hasattr(value, 'nominal_value'):
+                value = value.nominal_value
+        self._args['value'] = value
+        self._value = self.__class__._storer(**self._args)
 
     @property
     def raw_value(self):
-        return self._val.magnitude.nominal_value
+        value = self._value
+        if hasattr(value, 'magnitude'):
+            value = value = value.magnitude
+            if hasattr(value, 'nominal_value'):
+                value = value.nominal_value
+        return value
 
     def _validator(self, value):
         assert isinstance(value, self._type)
 
     def convert_unit(self, unit_str: str):
         new_unit = ureg.parse_expression(unit_str)
-        self._val = self._val.to(new_unit)
+        self._value = self._value.to(new_unit)
+        self._args['value'] = self.raw_value
+        self._args['units'] = str(self.unit)
 
     @cached_property
     def compatible_units(self) -> List[str]:
@@ -103,20 +126,44 @@ class Descriptor:
 
     def __repr__(self):
         """Return printable representation of a Parameter object."""
-        sval = "value=%s" % self._val.magnitude
-        if self.value.unitless:
-            sval += ' %s' % self._val.units
-        return "<%s '%s', %s>" % (self.__class__.__name__, self.name, sval)
+        sval = "= %s" % self._value.magnitude
+        if not self.value.unitless:
+            sval += ' %s' % self.unit
+        return "<%s '%s' %s>" % (self.__class__.__name__, self.name, sval)
+
+    def as_dict(self) -> dict:
+        super_dict = super().as_dict()
+        super_dict['value'] = self.raw_value
+        super_dict['units'] = self._args['units']
+        return super_dict
+
+    def to_parameter(self, error: Union[float, np.ndarray]):
+        pickled_obj = self.as_dict()
+        pickled_obj['error'] = error
+        return Parameter.from_dict(pickled_obj)
 
 
 class Parameter(Descriptor):
     _storer = M_
+    _args = {
+        'value': None,
+        'units': '',
+        'error': None
+    }
 
-    def __init__(self, name:str, value: Union[float, np.ndarray, noneType], error: Union[float, np.ndarray, noneType]=None, **kwargs):
-        super().__init__(name, value, error, **kwargs)
-        self._min: float = -np.Inf
-        self._max: float = np.Inf
-        self._fixed: bool = False
+    def __init__(self,
+                 name: str,
+                 value: Union[float, np.ndarray, noneType],
+                 error: Union[float, np.ndarray, noneType] = None,
+                 min: float = -np.Inf,
+                 max: float = np.Inf,
+                 fixed: bool = False,
+                 **kwargs):
+        self._args['error'] = error
+        super().__init__(name, value, **kwargs)
+        self._min: float = min
+        self._max: float = max
+        self._fixed: bool = fixed
         self.initial_value = self.value
         self.constraints: dict = {
             'user': [],
@@ -124,11 +171,12 @@ class Parameter(Descriptor):
             'builtin': [Constraint(lambda x: x < self.min, self.min),
                         Constraint(lambda x: x > self.max, self.max)]
         }
+        self._kwargs = kwargs
         self.__previous_set = self.__class__.value.fset
         self.__previous_unit = self.__class__.unit
 
         setattr(self.__class__, 'unit', property(fget=self.__class__.unit.fget,
-                                                 fset=lambda obj, value: obj.__unit_setter(value),
+                                                 fset=lambda obj, new_value: obj.__unit_setter(new_value),
                                                  fdel=self.__class__.unit.fdel))
 
         setattr(self.__class__, 'value', property(fget=self.__class__.value.fget,
@@ -136,12 +184,14 @@ class Parameter(Descriptor):
                                                   fdel=self.__class__.value.fdel))
 
     def __unit_setter(self, value_str: str):
-        old_unit = deepcopy(self._unit)
-        # Deal with min/max
-        if self.value.unitless:
-            self._min = Q_(self.min, old_unit).to(self._unit).magnitude
-            self._max = Q_(self.max, old_unit).to(self._unit).magnitude
+        old_unit = str(self._args['units'])
         self.__previous_unit.fset(self, value_str)
+        # Deal with min/max
+        if not self.value.unitless:
+            self._min = Q_(self.min, old_unit).to(self._units).magnitude
+            self._max = Q_(self.max, old_unit).to(self._units).magnitude
+        # Log the converted error
+        self._args['error'] = self.value.error.magnitude
 
     @property
     def min(self) -> float:
@@ -177,12 +227,13 @@ class Parameter(Descriptor):
         self._fixed = value
 
     @property
-    def stderr(self) -> float:
-        return self._val.error.magnitude
+    def error(self) -> float:
+        return self._value.error.magnitude
 
-    def set_error(self, value: float):
-        self._args[0] = value
-        self._val.error.magnitude = value
+    @error.setter
+    def error(self, value: float):
+        self._args['error'] = value
+        self._value.error.magnitude = value
 
     def for_fit(self) -> lmfitPar:
         return lmfitPar(self.name, value=self.value, vary=~self.fixed, min=self.min, max=self.max,
@@ -221,11 +272,11 @@ class Constraint:
 
 
 class BaseObj(MSONable):
-    def __init__(self, **kwargs):
-        self._borg = borg
+    _parent = None
+    _borg = borg
 
-    def _instantiate(self, json: str):
-        pass
+    def __init__(self, parent=None, **kwargs):
+        self._parent = parent
 
     def sub_fittables(self) -> List[Parameter]:
         vals = []
