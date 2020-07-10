@@ -1,9 +1,7 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
-from copy import deepcopy
-from enum import Enum
-from typing import List, Union, Any
+from typing import List, Union, Any, Iterable
 from functools import cached_property
 
 from easyCore import borg, ureg
@@ -12,7 +10,9 @@ from easyCore.Utils.UndoRedo import stack_deco
 
 import numpy as np
 from monty.json import MSONable
+from monty.collections import MongoDict
 from lmfit import Parameter as lmfitPar
+from lmfit import Parameters as lmfitPars
 
 Q_ = ureg.Quantity
 M_ = ureg.Measurement
@@ -20,7 +20,7 @@ M_ = ureg.Measurement
 
 class Descriptor(MSONable):
 
-    _storer = Q_
+    _constructor = Q_
     _borg = borg
     _args = {
         'value': None,
@@ -32,24 +32,44 @@ class Descriptor(MSONable):
                  units: Union[noneType, str, ureg.Quantity, ureg.Measurement, ureg.Unit] = None,
                  description: str = '',
                  url: str = '',
-                 callback: property = None,
+                 display_name: str = None,
+                 callback: property = property(),
                  parent=None):
-        self.__borg = borg
-        self.__borg.map.add_vertex(id(self))
-        self._parent = parent
+        """
+        This is a class
+        :param name:
+        :param value:
+        :param units:
+        :param description:
+        :param url:
+        :param display_name:
+        :param callback:
+        :param parent:
+        """
+        self._borg.map.add_vertex(id(self))
+        self._parent_store = parent
         if self._parent is not None:
-            self.__borg.map.add_edge({id(self._parent), id(self)})
+            self._borg.map.add_edge({id(self._parent), id(self)})
         self.name: str = name
         self._units = ureg.parse_expression(units)
         self._args['value'] = value
         self._args['units'] = str(self.unit)
-        self._value = self.__class__._storer(**self._args)
+        self._value = self.__class__._constructor(**self._args)
         self.description: str = description
-        self._display_name: str = ''
+        self._display_name: str = display_name
         self.url: str = url
         self._callback: property = callback
         self.user_data: dict = {}
         self._type = type(value)
+
+    @property
+    def _parent(self):
+        return id(self._parent_store)
+
+    @_parent.setter
+    def _parent(self, parent):
+        # This should update the graph.....
+        self._parent_store = parent
 
     # This should not
     @property
@@ -72,10 +92,12 @@ class Descriptor(MSONable):
     @unit.setter
     @stack_deco
     def unit(self, unit_str: str):
+        if not isinstance(unit_str, str):
+            unit_str = str(unit_str)
         new_unit = ureg.parse_expression(unit_str)
         self._units = new_unit
         self._args['units'] = str(new_unit)
-        self._value = self.__class__._storer(**self._args)
+        self._value = self.__class__._constructor(**self._args)
 
     @property
     def value(self):
@@ -95,7 +117,7 @@ class Descriptor(MSONable):
             if hasattr(value, 'nominal_value'):
                 value = value.nominal_value
         self._args['value'] = value
-        self._value = self.__class__._storer(**self._args)
+        self._value = self.__class__._constructor(**self._args)
 
     @property
     def raw_value(self):
@@ -135,16 +157,22 @@ class Descriptor(MSONable):
         super_dict = super().as_dict()
         super_dict['value'] = self.raw_value
         super_dict['units'] = self._args['units']
+        # We'll have to serialize the callback option :face_palm:
+        keys = super_dict.keys()
+        if 'parent' in keys:
+            del super_dict['parent']
         return super_dict
 
-    def to_parameter(self, error: Union[float, np.ndarray]):
+    def to_obj_type(self, data_type: Union['Descriptor', 'Parameter'], *kwargs):
+        if issubclass(data_type, Descriptor):
+            raise AttributeError
         pickled_obj = self.as_dict()
-        pickled_obj['error'] = error
-        return Parameter.from_dict(pickled_obj)
+        pickled_obj.update(kwargs)
+        return data_type.from_dict(pickled_obj)
 
 
 class Parameter(Descriptor):
-    _storer = M_
+    _constructor = M_
     _args = {
         'value': None,
         'units': '',
@@ -231,12 +259,13 @@ class Parameter(Descriptor):
         return self._value.error.magnitude
 
     @error.setter
+    @stack_deco
     def error(self, value: float):
         self._args['error'] = value
         self._value.error.magnitude = value
 
     def for_fit(self) -> lmfitPar:
-        return lmfitPar(self.name, value=self.value, vary=~self.fixed, min=self.min, max=self.max,
+        return lmfitPar(self.name, value=self.raw_value, vary=~self.fixed, min=self.min, max=self.max,
                         expr=None, brute_step=None, user_data=self.user_data)
 
     def _validate(self, value):
@@ -272,17 +301,58 @@ class Constraint:
 
 
 class BaseObj(MSONable):
-    _parent = None
+    _parent_store = None
     _borg = borg
 
-    def __init__(self, parent=None, **kwargs):
+    def __init__(self, name: str, *args, parent=None, **kwargs):
         self._parent = parent
+        self.__dict__['name'] = name
+        for arg in args:
+            if issubclass(arg.__class__, Descriptor):
+                arg._parent = self
+                kwargs[arg.name] = arg
+        # super().__init__(**kwargs)
+        known_keys = self.__dict__.keys()
+        for key in kwargs.keys():
+            if key in known_keys:
+                raise AttributeError
+            self.__dict__[key] = kwargs[key]
+        self._kwargs = kwargs
 
-    def sub_fittables(self) -> List[Parameter]:
-        vals = []
+    def parameters(self) -> List[Parameter]:
+        parameter_list = []
         for key, item in self.__dict__.items():
-            if hasattr(item, 'sub_fittables'):
-                vals = [vals, *item.sub_fittables()]
+            if hasattr(item, 'parameters'):
+                parameter_list = [parameter_list, *item.parameters()]
             elif isinstance(item, Parameter) and not item.fixed:
-                vals.append(item.for_fit())
-        return vals
+                parameter_item: lmfitPar = item.for_fit()
+                parameter_item.user_data['set_callback'] = item._callback.fset
+                parameter_list.append(parameter_item)
+        return parameter_list
+
+    def for_fit(self) -> lmfitPars:
+        pars = self.parameters()
+        pars_fit_obj = lmfitPars()
+        pars_fit_obj.add_many(*pars)
+        return pars_fit_obj
+
+    @property
+    def _parent(self) -> int:
+        return id(self._parent_store)
+
+    @_parent.setter
+    def _parent(self, parent: Any):
+        # This should update the graph.....
+        self._parent_store = parent
+
+    def __dir__(self) -> Iterable[str]:
+        new_objs = list(k for k in self.__dict__ if not k.startswith('_'))
+        class_objs = list(k for k in self.__class__.__dict__ if not k.startswith('_'))
+        return sorted(new_objs + class_objs)
+
+    def as_dict(self) -> dict:
+        d = MSONable.as_dict(self)
+        for key, item in d.items():
+            if hasattr(item, 'as_dict'):
+                d[key] = item.as_dict()
+        return d
