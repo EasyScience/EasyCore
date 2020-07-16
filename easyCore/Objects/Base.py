@@ -1,6 +1,7 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
+from copy import deepcopy
 from typing import List, Union, Any, Iterable
 from functools import cached_property
 
@@ -10,15 +11,21 @@ from easyCore.Utils.UndoRedo import stack_deco
 
 import numpy as np
 from monty.json import MSONable
-from monty.collections import MongoDict
-from lmfit import Parameter as lmfitPar
-from lmfit import Parameters as lmfitPars
 
 Q_ = ureg.Quantity
 M_ = ureg.Measurement
 
 
 class Descriptor(MSONable):
+    """
+    Class which is the base of all models. It contains all information to describe an objects unique property. This
+    includes a value, unit, description and url (for reference material). All so implemented is a callback so that the
+    value can be read from a linked library object.
+
+    Undo/Redo functionality is implemented for value, unit, display name.
+
+
+    """
 
     _constructor = Q_
     _borg = borg
@@ -29,29 +36,45 @@ class Descriptor(MSONable):
 
     def __init__(self, name: str,
                  value: Any,
-                 units: Union[noneType, str, ureg.Quantity, ureg.Measurement, ureg.Unit] = None,
+                 units: Union[noneType, str, ureg.Unit] = None,
                  description: str = '',
                  url: str = '',
                  display_name: str = None,
                  callback: property = property(),
                  parent=None):
         """
-        This is a class
+        Class to describe a static-property. i.e Not a property which is fitable. The value and unit of this property
+        can vary and the changes implement undo/redo functionality.
+
+        Units are provided by pint: https://github.com/hgrecco/pint
+
         :param name:
+        :type name: str
         :param value:
+        :type value:
         :param units:
+        :type units: str, ureg.Unit
         :param description:
+        :type description: str
         :param url:
-        :param display_name:
+        :type url: str
         :param callback:
+        :type callback: parameter
         :param parent:
+        :type parent:
         """
-        self._borg.map.add_vertex(id(self))
-        self._parent_store = parent
+        self.__borg = borg
+        self.__borg.map.add_vertex(id(self))
+        self._parent = parent
         if self._parent is not None:
             self._borg.map.add_edge({id(self._parent), id(self)})
         self.name: str = name
-        self._units = ureg.parse_expression(units)
+        if isinstance(units, ureg.Unit):
+            self._units = deepcopy(units)
+        elif isinstance(units, (str, noneType)):
+            self._units = ureg.parse_expression(units)
+        else:
+            raise AttributeError
         self._args['value'] = value
         self._args['units'] = str(self.unit)
         self._value = self.__class__._constructor(**self._args)
@@ -182,7 +205,7 @@ class Parameter(Descriptor):
     def __init__(self,
                  name: str,
                  value: Union[float, np.ndarray, noneType],
-                 error: Union[float, np.ndarray, noneType] = None,
+                 error: Union[float, np.ndarray] = 0,
                  min: float = -np.Inf,
                  max: float = np.Inf,
                  fixed: bool = False,
@@ -264,9 +287,8 @@ class Parameter(Descriptor):
         self._args['error'] = value
         self._value.error.magnitude = value
 
-    def for_fit(self) -> lmfitPar:
-        return lmfitPar(self.name, value=self.raw_value, vary=~self.fixed, min=self.min, max=self.max,
-                        expr=None, brute_step=None, user_data=self.user_data)
+    def for_fit(self) -> borg.fitting_engine.property_type:
+        return self._borg.fitting_engine.convert_to_par_object(self)
 
     def _validate(self, value):
         new_value = value
@@ -319,22 +341,21 @@ class BaseObj(MSONable):
             self.__dict__[key] = kwargs[key]
         self._kwargs = kwargs
 
-    def parameters(self) -> List[Parameter]:
-        parameter_list = []
-        for key, item in self.__dict__.items():
-            if hasattr(item, 'parameters'):
-                parameter_list = [parameter_list, *item.parameters()]
-            elif isinstance(item, Parameter) and not item.fixed:
-                parameter_item: lmfitPar = item.for_fit()
-                parameter_item.user_data['set_callback'] = item._callback.fset
-                parameter_list.append(parameter_item)
-        return parameter_list
+    def fit_objects(self) -> List[borg.fitting_engine.property_type]:
+        fittables = self.get_fittables()
+        vals = []
+        for fitable in fittables:
+            vals.append(fitable.for_fit())
+        return vals
 
-    def for_fit(self) -> lmfitPars:
-        pars = self.parameters()
-        pars_fit_obj = lmfitPars()
-        pars_fit_obj.add_many(*pars)
-        return pars_fit_obj
+    def get_fittables(self) -> List[Parameter]:
+        fit_list = []
+        for key, item in self.__dict__.items():
+            if hasattr(item, 'get_fittables'):
+                fit_list = [fit_list, *item.get_fittables()]
+            elif isinstance(item, Parameter) and not item.fixed:
+                fit_list.append(item)
+        return fit_list
 
     @property
     def _parent(self) -> int:

@@ -245,3 +245,10 @@ def stack_deco(func):
         new_value = args[0]
         borg.stack.push(PropertyStack(obj, func, old_value, new_value))
     return inner
+
+# def stack_macro(func):
+#     def inner(obj, *args, **kwargs):
+#         old_value = getattr(obj, name)
+#         new_value = args[0]
+#         borg.stack.push(PropertyStack(obj, func, old_value, new_value))
+#     return inner
