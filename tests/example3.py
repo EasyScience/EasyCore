@@ -1,12 +1,15 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
+from collections import Callable
+
 import numpy as np
 from easyCore.Objects.Base import Parameter, BaseObj
 from easyCore.Fitting.Fitting import Fitter
 
 # In this case we have inherited from `BaseObj` to create a class which has fitable attributes.
 # This class does not know about the `Calculator`, only the interface.
+
 
 class Calculator:
     def __init__(self, m=1, c=0):
@@ -19,49 +22,72 @@ class Calculator:
 
 class Interface:
     def __init__(self):
-        self.calculaor = Calculator()
+        self.calculator = Calculator()
 
     def get_value(self, value_label: str):
-        return getattr(self.calculaor, value_label, None)
+        return getattr(self.calculator, value_label, None)
 
     def set_value(self, value_label: str, value):
         print(f'Value of {value_label} set to {value}')
-        setattr(self.calculaor, value_label, value)
+        setattr(self.calculator, value_label, value)
 
     def fit_func(self, x):
-        return self.calculaor.calculate(x)
+        return self.calculator.calculate(x)
 
 
 class Line(BaseObj):
-    _defaults = [Parameter('m', 1, callback=property()),
+    _defaults = [Parameter('m', 1),
                  Parameter('c', 0)]
 
-    def __init__(self):
-        self.interface = Interface()
+    def __init__(self, interface=None):
+        self.interface = interface
         super().__init__(self.__class__.__name__,
                          *self._defaults)
-        self.m._callback = property(lambda: self.interface.get_value('m'),
-                                    lambda value: self.interface.set_value('m', value))
 
-        self.c._callback = property(lambda: self.interface.get_value('c'),
-                                    lambda value: self.interface.set_value('c', value))
+        if self.interface:
+            for parameter in self.get_fittables():
+                name = parameter.name
+                setattr(self.__dict__[name],
+                        '_callback',
+                        property(self.__gitem(name), self.__sitem(self, name)))
 
     @property
     def gradient(self):
-        return self.interface.get_value('m')
+        if self.interface:
+            return self.interface.get_value('m')
+        else:
+            return self.m.raw_value
 
     @property
     def intercept(self):
-        return self.interface.get_value('c')
+        if self.interface:
+            return self.interface.get_value('c')
+        else:
+            return self.c.raw_value
 
     def fit_func(self, x: np.ndarray) -> np.ndarray:
-        return self.interface.fit_func(x)
+        if self.interface:
+            return self.interface.fit_func(x)
+        else:
+            raise NotImplementedError
 
     def __repr__(self):
         return f'Line: m={self.m}, c={self.c}'
 
+    @staticmethod
+    def __gitem(key: str) -> Callable:
+        def inner(obj):
+            obj.interface.get_value(key)
+        return lambda obj: inner(obj)
 
-l = Line()
+    @staticmethod
+    def __sitem(obj, key):
+        def inner(value):
+            obj.interface.set_value(key, value)
+        return inner
+
+
+l = Line(interface=Interface())
 f = Fitter.fitting_engine(l, l.fit_func)
 
 x = np.array([1, 2, 3])
