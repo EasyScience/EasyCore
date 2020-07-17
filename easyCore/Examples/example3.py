@@ -45,7 +45,7 @@ class Line(BaseObj):
                          *self._defaults)
 
         if self.interface:
-            for parameter in self.get_fittables():
+            for parameter in self.get_parameters():
                 name = parameter.name
                 setattr(self.__dict__[name],
                         '_callback',

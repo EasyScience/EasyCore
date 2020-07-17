@@ -7,6 +7,7 @@ import abc
 
 from easyCore import borg
 
+
 class UndoStack:
     """
     Implement a version of QUndoStack without the QT
@@ -153,6 +154,7 @@ class UndoCommand(metaclass=abc.ABCMeta):
     def setText(self, text: str) -> NoReturn:
         self._text = text
 
+
 class _EmptyCommand(UndoCommand):
     """
     The _EmptyCommand class is the custom base class of all undoable commands
@@ -224,6 +226,9 @@ class _RemoveItemCommand(_EmptyCommand):
 
 
 class PropertyStack(UndoCommand):
+    """
+    Stack operator for when a property setter is wrapped.
+    """
     def __init__(self, parent, func, old_value, new_value):
         self.setText("Setting {} to {}".format(func.__name__, new_value))
         super().__init__(self)
@@ -238,12 +243,22 @@ class PropertyStack(UndoCommand):
     def redo(self) -> NoReturn:
         self._set_func(self._parent, self._new_value)
 
+
 def stack_deco(func):
+    """
+    Decorate a `property` setter with undo/redo functionality
+    :param func: function to be wrapped
+    :type func: Callable
+    :return: wrapped function
+    :rtype: Callable
+    """
     name = func.__name__
+
     def inner(obj, *args, **kwargs):
         old_value = getattr(obj, name)
         new_value = args[0]
         borg.stack.push(PropertyStack(obj, func, old_value, new_value))
+
     return inner
 
 # def stack_macro(func):

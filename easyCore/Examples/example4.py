@@ -32,15 +32,15 @@ class Calculator1:
         self.m = m
         self.c = c
 
-    def calculate(self, x: np.ndarray) -> np.ndarray:
+    def calculate(self, x_array: np.ndarray) -> np.ndarray:
         """
         For a given x calculate the corresponding y
-        :param x: array of data points to be calculated
-        :type x: np.ndarray
+        :param x_array: array of data points to be calculated
+        :type x_array: np.ndarray
         :return: points calculated at `x`
         :rtype: np.ndarray
         """
-        return self.m * x + self.c
+        return self.m * x_array + self.c
 
 
 class InterfaceTemplate(MSONable, metaclass=ABCMeta):
@@ -88,11 +88,11 @@ class InterfaceTemplate(MSONable, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def fit_func(self, x: np.ndarray) -> np.ndarray:
+    def fit_func(self, x_array: np.ndarray) -> np.ndarray:
         """
         Function to perform a fit
-        :param x: points to be calculated at
-        :type x: np.ndarray
+        :param x_array: points to be calculated at
+        :type x_array: np.ndarray
         :return: calculated points
         :rtype: np.ndarray
         """
@@ -130,15 +130,15 @@ class Interface1(InterfaceTemplate):
         print(f'Interface1: Value of {value_label} set to {value}')
         setattr(self.calculator, value_label, value)
 
-    def fit_func(self, x: np.ndarray) -> np.ndarray:
+    def fit_func(self, x_array: np.ndarray) -> np.ndarray:
         """
         Function to perform a fit
-        :param x: points to be calculated at
-        :type x: np.ndarray
+        :param x_array: points to be calculated at
+        :type x_array: np.ndarray
         :return: calculated points
         :rtype: np.ndarray
         """
-        return self.calculator.calculate(x)
+        return self.calculator.calculate(x_array)
 
 
 class Interface2(InterfaceTemplate):
@@ -168,21 +168,22 @@ class Interface2(InterfaceTemplate):
         print(f'Interface2: Value of {value_label} set to {value}')
         setattr(self.calculator, value_label, value)
 
-    def fit_func(self, x: np.ndarray) -> np.ndarray:
+    def fit_func(self, x_array: np.ndarray) -> np.ndarray:
         """
         Function to perform a fit
-        :param x: points to be calculated at
-        :type x: np.ndarray
+        :param x_array: points to be calculated at
+        :type x_array: np.ndarray
         :return: calculated points
         :rtype: np.ndarray
         """
-        return self.calculator.calculate(x)
+        return self.calculator.calculate(x_array)
 
 
 class InterfaceFactory:
     """
     This class allows for the creation and transference of interfaces.
     """
+
     def __init__(self):
         self._interfaces: List[InterfaceTemplate] = InterfaceTemplate._interfaces
         self._current_interface = None
@@ -206,7 +207,7 @@ class InterfaceFactory:
         interfaces = self.available_interfaces
         if interface_name in interfaces:
             self._current_interface = self._interfaces[interfaces.index(interface_name)]
-        self.__interface_obj = self.current_interface()
+        self.__interface_obj = self._current_interface()
 
     def switch(self, new_interface: str):
         """
@@ -244,11 +245,11 @@ class InterfaceFactory:
         """
         return self._current_interface
 
-    def fit_func(self, x: np.ndarray, *args, **kwargs) -> np.ndarray:
+    def fit_func(self, x_array: np.ndarray, *args, **kwargs) -> np.ndarray:
         """
         Pass through to the underlying interfaces fitting function.
-        :param x: points to be calculated at
-        :type x: np.ndarray
+        :param x_array: points to be calculated at
+        :type x_array: np.ndarray
         :param args: positional arguments for the fitting function
         :type args: Any
         :param kwargs: key/value pair arguments for the fitting function.
@@ -256,7 +257,7 @@ class InterfaceFactory:
         :return: points calculated at positional values `x`
         :rtype: np.ndarray
         """
-        return self.__interface_obj.fit_func(x, *args, **kwargs)
+        return self.__interface_obj.fit_func(x_array, *args, **kwargs)
 
     def generate_bindings(self, name):
         """
@@ -289,7 +290,7 @@ class InterfaceFactory:
         """
 
         :param obj: object to be created from
-        :type obj: InterfaceTemplate
+        :type obj: InterfaceFactory
         :param key: name of parameter to be set
         :type key: str
         :return: function to set key
@@ -319,7 +320,7 @@ class Line(BaseObj):
 
         if self.interface:
             # If an interface is given, generate bindings
-            for parameter in self.get_fittables():
+            for parameter in self.get_parameters():
                 name = parameter.name
                 self.set_binding(name, self.interface.generate_bindings)
 
