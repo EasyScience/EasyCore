@@ -377,3 +377,8 @@ class BaseObj(MSONable):
             if hasattr(item, 'as_dict'):
                 d[key] = item.as_dict()
         return d
+
+    def set_binding(self, binding_name, binding_fun, *args, **kwargs):
+        parameters = [par.name for par in self.get_fittables()]
+        if binding_name in parameters:
+            setattr(self.__dict__[binding_name], '_callback', binding_fun(binding_name, *args, **kwargs))
