@@ -6,6 +6,8 @@ from typing import Callable, List
 from monty.json import MSONable
 
 import numpy as np
+
+from easyCore import borg
 from easyCore.Objects.Base import Parameter, BaseObj
 from easyCore.Fitting.Fitting import Fitter
 
@@ -20,7 +22,7 @@ from abc import ABCMeta, abstractmethod
 
 class Calculator1:
     """
-    Generic calculator
+    Generic calculator in the style of crysPy
     """
     def __init__(self, m: float = 1, c: float = 0):
         """
@@ -47,7 +49,7 @@ class Calculator1:
 class Calculator2:
     """
     Isolated calculator. This calculator can't have values set, it can
-    only load/save data and calculate from it
+    only load/save data and calculate from it. i.e in the style of crysfml
     """
     def __init__(self):
         """
@@ -77,6 +79,7 @@ class InterfaceTemplate(MSONable, metaclass=ABCMeta):
     This class is a template and defines all properties that an interface should have.
     """
     _interfaces = []
+    _borg = borg
 
     def __init_subclass__(cls, is_abstract: bool = False, **kwargs):
         """
@@ -156,7 +159,8 @@ class Interface1(InterfaceTemplate):
         :return: None
         :rtype: noneType
         """
-        print(f'Interface1: Value of {value_label} set to {value}')
+        if self._borg.debug:
+            print(f'Interface1: Value of {value_label} set to {value}')
         setattr(self.calculator, value_label, value)
 
     def fit_func(self, x_array: np.ndarray) -> np.ndarray:
@@ -204,7 +208,8 @@ class Interface2(InterfaceTemplate):
         :return: None
         :rtype: noneType
         """
-        print(f'Interface2: Value of {value_label} set to {value}')
+        if self._borg.debug:
+            print(f'Interface2: Value of {value_label} set to {value}')
         self._data = json.loads(self.calculator.export_data())
         if value_label in self._data.keys():
             self._data[value_label] = value
@@ -264,8 +269,8 @@ class InterfaceFactory:
         serialized = self.__interface_obj.as_dict()
         interfaces = self.available_interfaces
         if new_interface in interfaces:
-            new_interface_class: InterfaceTemplate = self._interfaces[interfaces.index(new_interface)]
-            self.__interface_obj = new_interface_class.from_dict(serialized)
+            self._current_interface: InterfaceTemplate = self._interfaces[interfaces.index(new_interface)]
+            self.__interface_obj = self._current_interface.from_dict(serialized)
         else:
             raise AttributeError
 
@@ -359,7 +364,9 @@ class Line(BaseObj):
         self.interface = interface_factory
         super().__init__(self.__class__.__name__,
                          *self._defaults)
+        self._set_interface()
 
+    def _set_interface(self):
         if self.interface:
             # If an interface is given, generate bindings
             for parameter in self.get_parameters():
@@ -394,6 +401,7 @@ y = np.array([2, 4, 6]) - 1
 
 f_res = f.fit(x, y)
 
+print('\n######### Interface 1 #########\n')
 print(f_res.fit_report())
 print(line)
 
@@ -401,7 +409,11 @@ print(line)
 other_interface = interface.available_interfaces[1]
 # Switch over the interfaces
 line.interface.switch(other_interface)
+# Reset the values so we don't cheat
+line.m.value = 1
+line.c.value = 0
 f_res = f.fit(x, y)
 
+print('\n######### Interface 2 #########\n')
 print(f_res.fit_report())
 print(line)

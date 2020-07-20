@@ -541,6 +541,9 @@ class BaseObj(MSONable):
         for key in kwargs.keys():
             if key in known_keys:
                 raise AttributeError
+            # Should we do it like this or assign property to class?
+            # This way is easy, but can be overwritten i.e obj.foo = 1
+            # Assigning property is more complex but protects obj.foo
             self.__dict__[key] = kwargs[key]
         self._kwargs = kwargs
 
