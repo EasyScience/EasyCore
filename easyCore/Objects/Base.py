@@ -23,8 +23,6 @@ class Descriptor(MSONable):
     value can be read from a linked library object.
 
     Undo/Redo functionality is implemented for value, unit, display name.
-
-
     """
 
     _constructor = Q_
