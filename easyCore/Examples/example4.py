@@ -3,7 +3,7 @@ __version__ = '0.0.1'
 
 import json
 from typing import Callable, List
-from monty.json import MSONable
+from easyCore.Utils.json import MSONable
 
 import numpy as np
 

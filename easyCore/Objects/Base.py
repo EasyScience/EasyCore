@@ -8,9 +8,9 @@ from functools import cached_property
 from easyCore import borg, ureg
 from easyCore.Utils.typing import noneType
 from easyCore.Utils.UndoRedo import stack_deco
+from easyCore.Utils.json import MSONable
 
 import numpy as np
-from monty.json import MSONable
 
 Q_ = ureg.Quantity
 M_ = ureg.Measurement
