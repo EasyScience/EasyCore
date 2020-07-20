@@ -218,6 +218,7 @@ class Descriptor(MSONable):
     def convert_unit(self, unit_str: str):
         new_unit = ureg.parse_expression(unit_str)
         self._value = self._value.to(new_unit)
+        self._units = new_unit
         self._args['value'] = self.raw_value
         self._args['units'] = str(self.unit)
 
