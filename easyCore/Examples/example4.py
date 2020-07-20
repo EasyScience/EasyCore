@@ -1,6 +1,7 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
+import json
 from typing import Callable, List
 from monty.json import MSONable
 
@@ -41,6 +42,34 @@ class Calculator1:
         :rtype: np.ndarray
         """
         return self.m * x_array + self.c
+
+
+class Calculator2:
+    """
+    Isolated calculator. This calculator can't have values set, it can
+    only load/save data and calculate from it
+    """
+    def __init__(self):
+        """
+        """
+        self._data = {'m': 0,
+                      'c': 0}
+
+    def calculate(self, x_array: np.ndarray) -> np.ndarray:
+        """
+        For a given x calculate the corresponding y
+        :param x_array: array of data points to be calculated
+        :type x_array: np.ndarray
+        :return: points calculated at `x`
+        :rtype: np.ndarray
+        """
+        return self._data['m'] * x_array + self._data['c']
+
+    def export_data(self) -> str:
+        return json.dumps(self._data)
+
+    def import_data(self, input_str: str):
+        self._data = json.loads(input_str)
 
 
 class InterfaceTemplate(MSONable, metaclass=ABCMeta):
@@ -142,8 +171,17 @@ class Interface1(InterfaceTemplate):
 
 
 class Interface2(InterfaceTemplate):
+    """
+    This is a more complex template. Here we need to export_data data,
+    transfer it to the calculator (get and calculate) and import data
+    from the calculator (set)
+    """
     def __init__(self):
-        self.calculator = Calculator1()
+        """
+        Set up a calculator and a local dict
+        """
+        self.calculator = Calculator2()
+        self._data: dict = {}
 
     def get_value(self, value_label: str) -> float:
         """
@@ -153,7 +191,8 @@ class Interface2(InterfaceTemplate):
         :return: associated value
         :rtype: float
         """
-        return getattr(self.calculator, value_label, None)
+        self._data = json.loads(self.calculator.export_data())
+        return getattr(self._data, value_label, None)
 
     def set_value(self, value_label: str, value: float):
         """
@@ -166,7 +205,10 @@ class Interface2(InterfaceTemplate):
         :rtype: noneType
         """
         print(f'Interface2: Value of {value_label} set to {value}')
-        setattr(self.calculator, value_label, value)
+        self._data = json.loads(self.calculator.export_data())
+        if value_label in self._data.keys():
+            self._data[value_label] = value
+        self.calculator.import_data(json.dumps(self._data))
 
     def fit_func(self, x_array: np.ndarray) -> np.ndarray:
         """
@@ -346,6 +388,7 @@ interface = InterfaceFactory()
 line = Line(interface_factory=interface)
 f = Fitter.fitting_engine(line, interface.fit_func)
 
+# y = 2x -1
 x = np.array([1, 2, 3])
 y = np.array([2, 4, 6]) - 1
 
