@@ -5,6 +5,7 @@ import inspect
 
 from easyCore.Fitting.fitting_template import noneType, Union, Callable, FittingTemplate, np
 
+# Import lmfit specific objects
 from lmfit import Parameter as lmParameter, Parameters as lmParameters, Model as lmModel
 from lmfit.model import ModelResult
 
@@ -31,7 +32,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         self._cached_pars = {}
         self._cached_model = None
 
-    def make_model(self) -> lmModel:
+    def make_model(self, pars: Union[noneType, lmParameters] = None) -> lmModel:
         """
         Generate a lmfit model from the supplied `fit_function` and parameters in the base object
         :return: Callable lmfit model
@@ -39,11 +40,18 @@ class lmfit(FittingTemplate):  # noqa: S101
         """
         # Generate the fitting function
         fit_func = self._generate_fit_function()
+        if pars is None:
+            pars = self._cached_pars
         # Create the model
-        model = lmModel(fit_func, independent_vars=['x'], param_names=list(self._cached_pars.keys()))
+        model = lmModel(fit_func, independent_vars=['x'], param_names=list(pars.keys()))
         # Assign values from the `Parameter` to the model
-        for name, item in self._cached_pars.items():
-            model.set_param_hint(name, value=item.raw_value, min=item.min, max=item.max)
+        for name, item in pars.items():
+            if isinstance(item, lmParameter):
+                value = item.value
+            else:
+                value = item.raw_value
+            model.set_param_hint(name, value=value, min=item.min, max=item.max)
+
         # Cache the model for later reference
         self._cached_model = model
         return model
@@ -117,12 +125,11 @@ class lmfit(FittingTemplate):  # noqa: S101
         :return: Fit results
         :rtype: ModelResult
         """
-        if not model:
+        if model is None:
             model = self.make_model()
         model_results = model.fit(y, x=x, weights=weights, **kwargs)
-        # TODO post process model results
-        # TODO update parameter with fit sigma.
-        return model_results
+        results = self._convert_fit_result(model_results)
+        return results
 
     def convert_to_pars_obj(self, par_list: Union[list, noneType] = None) -> lmParameters:
         """
@@ -148,3 +155,9 @@ class lmfit(FittingTemplate):  # noqa: S101
         return lmParameter(obj.name, value=obj.raw_value, vary=~obj.fixed,
                            min=obj.min, max=obj.max, expr=None, brute_step=None
                            )
+
+    def _convert_fit_result(self, fit_result):
+        # TODO post process model results
+        # TODO update parameter with fit sigma.
+        return fit_result
+

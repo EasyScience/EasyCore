@@ -27,7 +27,7 @@ class FittingTemplate(metaclass=ABCMeta):
         self._fit_function = fit_function
 
     @abstractmethod
-    def make_model(self):
+    def make_model(self, pars=None):
         """
         Generate an engine model from the supplied `fit_function` and parameters in the base object
         :return: Callable model
@@ -77,3 +77,8 @@ class FittingTemplate(metaclass=ABCMeta):
         Convert an `easyCore.Objects.Base.Parameter` object to an engine Parameter object
         """
         pass
+
+    @abstractmethod
+    def _convert_fit_result(self, fit_result):
+        pass
+

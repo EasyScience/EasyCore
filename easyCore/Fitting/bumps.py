@@ -2,15 +2,17 @@ __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
 import inspect
+from typing import List
 
 from easyCore.Fitting.fitting_template import noneType, Union, Callable, FittingTemplate, np
 
+# Import bumps specific objects
 from bumps.names import Curve, FitProblem
 from bumps.parameter import Parameter as bumpsParameter
 from bumps.fitters import fit as bumps_fit
 
 
-class bumps(FittingTemplate):
+class bumps(FittingTemplate):  # noqa: S101
     """
     This is a wrapper to bumps: https://bumps.readthedocs.io/
     It allows for the bumps fitting engine to use parameters declared in an `easyCore.Objects.Base.BaseObj`.
@@ -32,20 +34,24 @@ class bumps(FittingTemplate):
         super().__init__(obj, fit_function)
         self._cached_pars = {}
 
-    def make_model(self) -> Callable:
+    def make_model(self, pars: Union[noneType, List[bumpsParameter]] = None) -> Callable:
         """
         Generate a bumps model from the supplied `fit_function` and parameters in the base object.
         Note that this makes a callable as it needs to be initialized with *x*, *y*, *weights*
-        :return: Callable to make a bumps model
-        :rtype: Curve
+        :return: Callable to make a bumps Curve model
+        :rtype: Callable
         """
         fit_func = self._generate_fit_function()
 
         def outer(obj):
             def make_func(x, y, weights):
                 par = {}
-                for name, item in obj._cached_pars.items():
-                    par[name] = obj.convert_to_par_object(item)
+                if not pars:
+                    for name, item in obj._cached_pars.items():
+                        par[name] = obj.convert_to_par_object(item)
+                else:
+                    for item in pars:
+                        par[item.name] = obj.convert_to_par_object(item)
                 return Curve(fit_func, x, y, weights, **par)
             return make_func
         return outer(self)
@@ -100,40 +106,60 @@ class bumps(FittingTemplate):
         fit_function.__signature__ = inspect.Signature(params)
         return fit_function
 
-    def fit(self, x: np.ndarray, y: np.ndarray, weights: Union[np.ndarray, noneType] = None, model=None,
-            parameters=None, xtol=1e-6, ftol=1e-8, **kwargs):
+    def fit(self, x: np.ndarray, y: np.ndarray, weights: Union[np.ndarray, noneType] = None,
+            model=None, parameters=None, xtol=1e-6, ftol=1e-8, **kwargs):
         """
         Perform a fit using the lmfit engine.
         :param x: points to be calculated at
         :type x: np.ndarray
         :param y: measured points
         :type y: np.ndarray
-        :param weights: Weights for supplied measured points * NON Op
+        :param weights: Weights for supplied measured points * Not really optional*
         :type weights: np.ndarray
         :param model: Optional Model which is being fitted to
         :type model: lmModel
         :param parameters: Optional parameters for the fit
-        :type parameters: lmParameters
+        :type parameters: List[bumpsParameter]
         :param kwargs: Additional arguments for the fitting function.
         :return: Fit results
         :rtype: ModelResult
         """
-        if not model:
-            model = self.make_model()
+
+        if weights is None:
+            weights = np.sqrt(x)
+
+        if model is None:
+            model = self.make_model(pars=parameters)
             model = model(x, y, weights)
         problem = FitProblem(model)
         model_results = bumps_fit(problem, **kwargs)
-        # TODO post process model results
-        # TODO update parameter with fit sigma.
-        return model_results
+        results = self._convert_fit_result(model_results)
+        return results
 
-    def convert_to_pars_obj(self, par_list: Union[list, noneType] = None) -> list:
+    def convert_to_pars_obj(self, par_list: Union[list, noneType] = None) -> List[bumpsParameter]:
+        """
+        Create a container with the `Parameters` converted from the base object.
+        :param par_list: If only a single/selection of parameter is required. Specify as a list
+        :type par_list: List[str]
+        :return: bumps Parameters list
+        :rtype: List[bumpsParameter]
+        """
         if par_list is None:
             # Assume that we have a BaseObj for which we can obtain a list
             par_list = self._object.get_parameters()
         pars_obj = ([self.__class__.convert_to_par_object(obj) for obj in par_list])
         return pars_obj
 
-    @staticmethod
+    # Note that this is an implementation of a abstract static method. My IDE can't cope with this.
     def convert_to_par_object(obj) -> bumpsParameter:
+        """
+        Convert an `easyCore.Objects.Base.Parameter` object to a bumps Parameter object
+        :return: bumps Parameter compatible object.
+        :rtype: bumpsParameter
+        """
         return bumpsParameter(name=obj.name, value=obj.raw_value, bounds=[obj.min, obj.max], fixed=obj.fixed)
+
+    def _convert_fit_result(self, fit_result):
+        # TODO post process model results
+        # TODO update parameter with fit sigma.
+        return fit_result
