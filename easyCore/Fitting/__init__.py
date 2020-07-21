@@ -6,6 +6,12 @@ try:
 except ImportError:
     # TODO make this a proper message (use logging?)
     print('lm fit is not installed')
+try:
+    from easyCore.Fitting.bumps import bumps  # noqa: F401
+except ImportError:
+    # TODO make this a proper message (use logging?)
+    print('bumps is not installed')
+
 from easyCore.Fitting.fitting_template import FittingTemplate
 
 engines = FittingTemplate._engines

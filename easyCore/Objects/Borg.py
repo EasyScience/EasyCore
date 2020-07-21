@@ -30,7 +30,7 @@ class Borg:
         self.map = self.__map
         # Fitting. These are the available fitting engines
         self._fitting = engines
-        self._current_fitting_engine = self._fitting[0]
+        self._current_fitting_engine = self._fitting[[engine.name for engine in engines].index('lmfit')]
 
     @property
     def fitting_engines(self) -> List[str]:

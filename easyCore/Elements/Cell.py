@@ -6,7 +6,8 @@ from copy import deepcopy
 import numpy as np
 from typing import Tuple, Union, List
 
-from easyCore import borg, ureg
+from easyCore import ureg
+from easyCore.Utils.decorators import memoized
 from easyCore.Utils.typing import Vector3Like
 from easyCore.Objects.Base import Parameter, BaseObj
 
@@ -372,27 +373,7 @@ class Cell(BaseObj):
         :return: Lattice matrix in the form of a 9x9 matrix
         :rtype: np.ndarray
         """
-
-        (a, b, c) = self.lengths
-        (alpha, beta, gamma) = self.angles
-        angles_r = np.radians([alpha, beta, gamma])
-        cos_alpha, cos_beta, cos_gamma = np.cos(angles_r)
-        sin_alpha, sin_beta, sin_gamma = np.sin(angles_r)
-
-        val = (cos_alpha * cos_beta - cos_gamma) / (sin_alpha * sin_beta)
-        # Sometimes rounding errors result in values slightly > 1.
-        val = max(min(val, 1), - 1)
-        gamma_star = np.arccos(val)
-
-        vector_a = [a * sin_beta, 0.0, a * cos_beta]
-        vector_b = [
-            -b * sin_alpha * np.cos(gamma_star),
-            b * sin_alpha * np.sin(gamma_star),
-            b * cos_alpha,
-        ]
-        vector_c = [0.0, 0.0, float(c)]
-
-        return np.array([vector_a, vector_b, vector_c], dtype=np.float64)
+        return self.__matrix(*self.lengths, *self.angles)
 
     @property
     def volume(self) -> float:
@@ -569,6 +550,44 @@ class Cell(BaseObj):
                 abs(lengths[right_angles[0]] - lengths[right_angles[1]]) < hex_length_tol
         )
 
+    @staticmethod
+    @memoized
+    def __matrix(a: float, b: float, c: float, alpha: float, beta: float, gamma: float) -> np.ndarray:
+        """
+        Calculating the crystallographic matrix is time consuming and we use it often, so we have memoized it.
+        :param a: *a* lattice parameter
+        :type a: float
+        :param b: *b* lattice parameter
+        :type b: float
+        :param c: *c* lattice parameter
+        :type c: float
+        :param alpha: *alpha* lattice parameter
+        :type alpha: float
+        :param beta: *beta* lattice parameter
+        :type beta: float
+        :param gamma: *gamma* lattice parameter
+        :type gamma: float
+        :return: crystallographic matrix
+        :rtype: np.ndarray
+        """
+        angles_r = np.radians([alpha, beta, gamma])
+        cos_alpha, cos_beta, cos_gamma = np.cos(angles_r)
+        sin_alpha, sin_beta, sin_gamma = np.sin(angles_r)
+
+        val = (cos_alpha * cos_beta - cos_gamma) / (sin_alpha * sin_beta)
+        # Sometimes rounding errors result in values slightly > 1.
+        val = max(min(val, 1), - 1)
+        gamma_star = np.arccos(val)
+
+        vector_a = [a * sin_beta, 0.0, a * cos_beta]
+        vector_b = [
+            -b * sin_alpha * np.cos(gamma_star),
+            b * sin_alpha * np.sin(gamma_star),
+            b * cos_alpha,
+        ]
+        vector_c = [0.0, 0.0, float(c)]
+        return np.array([vector_a, vector_b, vector_c], dtype=np.float64)
+
     def __repr__(self) -> str:
-        return 'Cell: (a:{}, b:{}, c:{}, alpha:{}, beta:{}, gamma:{}) '.format(self.a, self.b, self.c,
+        return 'Cell: (a:{:.2f}, b:{:.2f}, c:{:.2f}, alpha:{:.2f}, beta:{:.2f}, gamma:{:.2f}) '.format(self.a, self.b, self.c,
                                                                                self.alpha, self.beta, self.gamma)

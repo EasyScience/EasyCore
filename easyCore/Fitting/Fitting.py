@@ -36,7 +36,8 @@ class Fitter:
         # engine.
         return engine(*args, **kwargs)
 
-    def set_fitting_engine(self, engine_name: Union[str, int]):
+    @staticmethod
+    def set_fitting_engine(engine_name: Union[str, int]):
         """
         Set the current fitting engine
         :param engine_name: Name of the fitting engine to be initialised
@@ -44,4 +45,4 @@ class Fitter:
         :return: None
         :rtype: noneType
         """
-        self._borg.fitting_engine = engine_name
+        borg.fitting_engine = engine_name
