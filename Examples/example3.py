@@ -88,7 +88,7 @@ class Line(BaseObj):
 
 
 l = Line(interface=Interface())
-f = Fitter.fitting_engine(l, l.fit_func)
+f = Fitter(l, l.fit_func)
 
 x = np.array([1, 2, 3])
 y = np.array([2, 4, 6]) - 1

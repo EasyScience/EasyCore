@@ -27,6 +27,7 @@ class Calculator1:
     def __init__(self, m: float = 1, c: float = 0):
         """
         Create a calculator object with m and c
+
         :param m: gradient
         :type m: float
         :param c: intercept
@@ -38,6 +39,7 @@ class Calculator1:
     def calculate(self, x_array: np.ndarray) -> np.ndarray:
         """
         For a given x calculate the corresponding y
+
         :param x_array: array of data points to be calculated
         :type x_array: np.ndarray
         :return: points calculated at `x`
@@ -60,6 +62,7 @@ class Calculator2:
     def calculate(self, x_array: np.ndarray) -> np.ndarray:
         """
         For a given x calculate the corresponding y
+
         :param x_array: array of data points to be calculated
         :type x_array: np.ndarray
         :return: points calculated at `x`
@@ -84,6 +87,7 @@ class InterfaceTemplate(MSONable, metaclass=ABCMeta):
     def __init_subclass__(cls, is_abstract: bool = False, **kwargs):
         """
         Initialise all subclasses so that they can be created in the factory
+
         :param is_abstract: Is this a subclass which shouldn't be dded
         :type is_abstract: bool
         :param kwargs: key word arguments
@@ -99,6 +103,7 @@ class InterfaceTemplate(MSONable, metaclass=ABCMeta):
     def get_value(self, value_label: str) -> float:
         """
         Method to get a value from the calculator
+
         :param value_label: parameter name to get
         :type value_label: str
         :return: associated value
@@ -110,6 +115,7 @@ class InterfaceTemplate(MSONable, metaclass=ABCMeta):
     def set_value(self, value_label: str, value: float):
         """
         Method to set a value from the calculator
+
         :param value_label: parameter name to get
         :type value_label: str
         :param value: new numeric value
@@ -123,6 +129,7 @@ class InterfaceTemplate(MSONable, metaclass=ABCMeta):
     def fit_func(self, x_array: np.ndarray) -> np.ndarray:
         """
         Function to perform a fit
+
         :param x_array: points to be calculated at
         :type x_array: np.ndarray
         :return: calculated points
@@ -142,6 +149,7 @@ class Interface1(InterfaceTemplate):
     def get_value(self, value_label: str) -> float:
         """
         Method to get a value from the calculator
+
         :param value_label: parameter name to get
         :type value_label: str
         :return: associated value
@@ -152,6 +160,7 @@ class Interface1(InterfaceTemplate):
     def set_value(self, value_label: str, value: float):
         """
         Method to set a value from the calculator
+
         :param value_label: parameter name to get
         :type value_label: str
         :param value: new numeric value
@@ -166,6 +175,7 @@ class Interface1(InterfaceTemplate):
     def fit_func(self, x_array: np.ndarray) -> np.ndarray:
         """
         Function to perform a fit
+
         :param x_array: points to be calculated at
         :type x_array: np.ndarray
         :return: calculated points
@@ -190,6 +200,7 @@ class Interface2(InterfaceTemplate):
     def get_value(self, value_label: str) -> float:
         """
         Method to get a value from the calculator
+
         :param value_label: parameter name to get
         :type value_label: str
         :return: associated value
@@ -201,6 +212,7 @@ class Interface2(InterfaceTemplate):
     def set_value(self, value_label: str, value: float):
         """
         Method to set a value from the calculator
+
         :param value_label: parameter name to get
         :type value_label: str
         :param value: new numeric value
@@ -218,6 +230,7 @@ class Interface2(InterfaceTemplate):
     def fit_func(self, x_array: np.ndarray) -> np.ndarray:
         """
         Function to perform a fit
+
         :param x_array: points to be calculated at
         :type x_array: np.ndarray
         :return: calculated points
@@ -278,6 +291,7 @@ class InterfaceFactory:
     def available_interfaces(self) -> List[str]:
         """
         Return all available interfaces.
+
         :return: List of available interface names
         :rtype: List[str]
         """
@@ -287,6 +301,7 @@ class InterfaceFactory:
     def current_interface(self):
         """
         Returns the constructor for the currently selected interface
+
         :return: Interface constructor
         :rtype: InterfaceTemplate
         """
@@ -295,6 +310,7 @@ class InterfaceFactory:
     def fit_func(self, x_array: np.ndarray, *args, **kwargs) -> np.ndarray:
         """
         Pass through to the underlying interfaces fitting function.
+
         :param x_array: points to be calculated at
         :type x_array: np.ndarray
         :param args: positional arguments for the fitting function
@@ -309,6 +325,7 @@ class InterfaceFactory:
     def generate_bindings(self, name):
         """
         Automatically bind a `Parameter` to the corresponding interface.
+
         :param name: parameter name
         :type name: str
         :return: binding property
@@ -323,6 +340,7 @@ class InterfaceFactory:
     def __get_item(key: str) -> Callable:
         """
         Access the value of a key by a callable object
+
         :param key: name of parameter to be retrieved
         :type key: str
         :return: function to get key
@@ -335,6 +353,7 @@ class InterfaceFactory:
     @staticmethod
     def __set_item(obj, key):
         """
+        Set the value of a key by a callable object
 
         :param obj: object to be created from
         :type obj: InterfaceFactory
@@ -358,6 +377,7 @@ class Line(BaseObj):
     def __init__(self, interface_factory: InterfaceFactory = None):
         """
         Create a line and add an interface if requested
+
         :param interface_factory: interface controller object
         :type interface_factory: InterfaceFactory
         """
@@ -393,7 +413,7 @@ class Line(BaseObj):
 
 interface = InterfaceFactory()
 line = Line(interface_factory=interface)
-f = Fitter.fitting_engine(line, interface.fit_func)
+f = Fitter(line, interface.fit_func)
 
 # y = 2x -1
 x = np.array([1, 2, 3])

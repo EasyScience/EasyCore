@@ -9,6 +9,10 @@ from easyCore.Fitting.Fitting import Fitter
 
 
 class Line(BaseObj):
+    """
+    Simple descriptor of a line.
+    """
+
     _defaults = [Parameter('m', 1),
                  Parameter('c', 0)]
 
@@ -32,7 +36,8 @@ class Line(BaseObj):
 
 
 l = Line()
-f = Fitter.fitting_engine(l, l.fit_func)
+f = Fitter()
+f.initialize(l, l.fit_func)
 
 x = np.array([1, 2, 3])
 y = np.array([2, 4, 6]) - 1

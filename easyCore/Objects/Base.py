@@ -454,7 +454,7 @@ class Parameter(Descriptor):
         self._args['error'] = value
         self._value.error.magnitude = value
 
-    def for_fit(self) -> borg.fitting_engine.property_type:
+    def for_fit(self):
         """
         Coverts oneself into a type which can be used for fitting. Note that the type
         is dependent on the fitting engine selected
@@ -546,7 +546,7 @@ class BaseObj(MSONable):
             self.__dict__[key] = kwargs[key]
         self._kwargs = kwargs
 
-    def fit_objects(self) -> List[borg.fitting_engine.property_type]:
+    def fit_objects(self):
         """
         Collect all objects which can be fitted, convert them to fitting engine objects and
         return them as a list

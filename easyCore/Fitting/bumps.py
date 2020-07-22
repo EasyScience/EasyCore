@@ -24,6 +24,7 @@ class bumps(FittingTemplate):  # noqa: S101
     def __init__(self, obj, fit_function: Callable):
         """
         Initialize the fitting engine with a `BaseObj` and an arbitrary fitting function.
+
         :param obj: Object containing elements of the `Parameter` class
         :type obj: BaseObj
         :param fit_function: function that when called returns y values. 'x' must be the first
@@ -38,6 +39,7 @@ class bumps(FittingTemplate):  # noqa: S101
         """
         Generate a bumps model from the supplied `fit_function` and parameters in the base object.
         Note that this makes a callable as it needs to be initialized with *x*, *y*, *weights*
+
         :return: Callable to make a bumps Curve model
         :rtype: Callable
         """
@@ -60,6 +62,7 @@ class bumps(FittingTemplate):  # noqa: S101
         """
         Using the user supplied `fit_function`, wrap it in such a way we can update `Parameter` on
         iterations.
+
         :return: a fit function which is compatible with bumps models
         :rtype: Callable
         """
@@ -73,6 +76,7 @@ class bumps(FittingTemplate):  # noqa: S101
         def fit_function(x: np.ndarray, **kwargs):
             """
             Wrapped fit function which now has a bumps compatible form
+
             :param x: array of data points to be calculated
             :type x: np.ndarray
             :param kwargs: key word arguments
@@ -110,6 +114,7 @@ class bumps(FittingTemplate):  # noqa: S101
             model=None, parameters=None, xtol=1e-6, ftol=1e-8, **kwargs):
         """
         Perform a fit using the lmfit engine.
+
         :param x: points to be calculated at
         :type x: np.ndarray
         :param y: measured points
@@ -139,6 +144,7 @@ class bumps(FittingTemplate):  # noqa: S101
     def convert_to_pars_obj(self, par_list: Union[list, noneType] = None) -> List[bumpsParameter]:
         """
         Create a container with the `Parameters` converted from the base object.
+
         :param par_list: If only a single/selection of parameter is required. Specify as a list
         :type par_list: List[str]
         :return: bumps Parameters list
@@ -150,10 +156,12 @@ class bumps(FittingTemplate):  # noqa: S101
         pars_obj = ([self.__class__.convert_to_par_object(obj) for obj in par_list])
         return pars_obj
 
-    # Note that this is an implementation of a abstract static method. My IDE can't cope with this.
+    # For some reason I have to double staticmethod :-/
+    @staticmethod
     def convert_to_par_object(obj) -> bumpsParameter:
         """
         Convert an `easyCore.Objects.Base.Parameter` object to a bumps Parameter object
+
         :return: bumps Parameter compatible object.
         :rtype: bumpsParameter
         """
