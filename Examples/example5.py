@@ -417,19 +417,19 @@ f = Fitter(line, interface.fit_func)
 
 # y = 2x -1
 x = np.array([1, 2, 3])
-y = np.array([2, 4, 6]) - 1
+y = 2*x - 1
 
 f_res = f.fit(x, y)
 
 print('\n######### Interface 1 #########\n')
-print(f_res.fit_report())
+print(f_res)
 print(line)
 
 # Now lets change fitting engine
-f.switch('bumps')
+f.switch_engine('bumps')
 # Reset the values so we don't cheat
-line.m.value = 1
-line.c.value = 0
+line.m = 1
+line.c = 0
 f_res = f.fit(x, y, weights=0.1*np.ones_like(x))
 print('\n######### bumps fitting #########\n')
 print(f_res)

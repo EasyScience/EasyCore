@@ -452,7 +452,7 @@ class Parameter(Descriptor):
         :rtype: noneType
         """
         self._args['error'] = value
-        self._value.error.magnitude = value
+        self._value._magnitude.std_dev = value
 
     def for_fit(self):
         """
@@ -519,6 +519,7 @@ class BaseObj(MSONable):
     def __init__(self, name: str, *args, parent=None, **kwargs):
         """
         Set up the base class.
+
         :param name: Name of this object
         :type name: str
         :param args: Any arguments?
@@ -537,19 +538,21 @@ class BaseObj(MSONable):
                 kwargs[arg.name] = arg
         # Set kwargs, also useful for serialization
         known_keys = self.__dict__.keys()
+        self._kwargs = kwargs
         for key in kwargs.keys():
             if key in known_keys:
                 raise AttributeError
             # Should we do it like this or assign property to class?
             # This way is easy, but can be overwritten i.e obj.foo = 1
             # Assigning property is more complex but protects obj.foo
-            self.__dict__[key] = kwargs[key]
-        self._kwargs = kwargs
+            setattr(self.__class__, key, property(self.__getter(key), self.__setter(key)))
+            # self.__dict__[key] = kwargs[key]
 
     def fit_objects(self):
         """
         Collect all objects which can be fitted, convert them to fitting engine objects and
         return them as a list
+
         :return: List of fitting engine objects
         """
         return_objects = []
@@ -560,11 +563,12 @@ class BaseObj(MSONable):
     def get_parameters(self) -> List[Parameter]:
         """
         Get all objects which can be fitted (and are not fixed) as a list
+
         :return: List of `Parameter` objects which can be used in fitting.
         :rtype: List[Parameter]
         """
         fit_list = []
-        for key, item in self.__dict__.items():
+        for key, item in self._kwargs.items():
             if hasattr(item, 'get_parameters'):
                 fit_list = [fit_list, *item.get_parameters()]
             elif isinstance(item, Parameter) and not item.fixed:
@@ -575,6 +579,7 @@ class BaseObj(MSONable):
     def _parent(self) -> int:
         """
         Return the id of parent
+
         :return: python id of parent
         :rtype: int
         """
@@ -584,6 +589,7 @@ class BaseObj(MSONable):
     def _parent(self, parent: Any):
         """
         Set the parent of this self
+
         :param parent: Parent object
         :type parent: Any
         :return: None
@@ -594,6 +600,7 @@ class BaseObj(MSONable):
     def __dir__(self) -> Iterable[str]:
         """
         This creates auto-completion and helps out in iPython notebooks
+
         :return: list of function and parameter names for auto-completion
         :rtype: List[str]
         """
@@ -604,6 +611,7 @@ class BaseObj(MSONable):
     def as_dict(self) -> dict:
         """
         Convert ones self into a serialized form
+
         :return: dictionary of ones self
         :rtype: dict
         """
@@ -616,6 +624,7 @@ class BaseObj(MSONable):
     def set_binding(self, binding_name, binding_fun, *args, **kwargs):
         """
         Set the binding of parameters of self to interface counterparts
+
         :param binding_name: name of parameter to be bound
         :type binding_name: str
         :param binding_fun: function to do the binding
@@ -627,4 +636,19 @@ class BaseObj(MSONable):
         """
         parameters = [par.name for par in self.get_parameters()]
         if binding_name in parameters:
-            setattr(self.__dict__[binding_name], '_callback', binding_fun(binding_name, *args, **kwargs))
+            setattr(self._kwargs[binding_name], '_callback', binding_fun(binding_name, *args, **kwargs))
+
+    @staticmethod
+    def __getter(key: str):
+
+        def getter(obj):
+            return obj._kwargs[key]
+        return lambda obj: getter(obj)
+
+    @staticmethod
+    def __setter(key):
+        def setter(obj, value):
+            if issubclass(obj._kwargs[key].__class__, Descriptor):
+                obj._kwargs[key].value = value
+        return lambda obj, value: setter(obj, value)
+

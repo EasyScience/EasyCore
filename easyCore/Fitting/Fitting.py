@@ -2,10 +2,11 @@ __author__ = "github.com/wardsimon"
 __version__ = "0.0.1"
 
 from types import FunctionType
-from functools import wraps
 from typing import List, Callable
 from easyCore import borg
+
 import easyCore.Fitting as Fitting
+import numpy as np
 
 
 class Fitter:
@@ -56,7 +57,7 @@ class Fitter:
         if engine_name in engines:
             self._current_engine = self._engines[engines.index(engine_name)]
 
-    def switch(self, engine_name: str):
+    def switch_engine(self, engine_name: str):
         # There isn't any state to carry over
         if not self._is_initialized:
             print('The fitting engine must first be initialized')

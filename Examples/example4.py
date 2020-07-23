@@ -13,7 +13,6 @@ from easyCore.Fitting.Fitting import Fitter
 
 from abc import ABCMeta, abstractmethod
 
-
 # This is a much more complex case where we have calculators, interfaces, interface factory and an
 # inherited object (from `BaseObj`). In this case the Line class is available with/without an interface
 # With an interface it connects to one of the calculator interfaces. This calculator interface then translates

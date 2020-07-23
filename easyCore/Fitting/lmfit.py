@@ -3,7 +3,7 @@ __version__ = '0.0.1'
 
 import inspect
 
-from easyCore.Fitting.fitting_template import noneType, Union, Callable, FittingTemplate, np
+from easyCore.Fitting.fitting_template import noneType, Union, Callable, FittingTemplate, np, FitResults
 
 # Import lmfit specific objects
 from lmfit import Parameter as lmParameter, Parameters as lmParameters, Model as lmModel
@@ -29,8 +29,6 @@ class lmfit(FittingTemplate):  # noqa: S101
         :type fit_function: Callable
         """
         super().__init__(obj, fit_function)
-        self._cached_pars = {}
-        self._cached_model = None
 
     def make_model(self, pars: Union[noneType, lmParameters] = None) -> lmModel:
         """
@@ -64,7 +62,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         :rtype: Callable
         """
         # Original fit function
-        func = self._fit_function
+        func = self._original_fit_function
         # Get a list of `Parameters`
         for parameter in self._object.get_parameters():
             self._cached_pars[parameter.name] = parameter
@@ -104,11 +102,12 @@ class lmfit(FittingTemplate):  # noqa: S101
                                                                  for name, parameter in self._cached_pars.items()]]
         # Sign the function
         fit_function.__signature__ = inspect.Signature(params)
+        self._fit_function = fit_function
         return fit_function
 
     def fit(self, x: np.ndarray, y: np.ndarray,
             weights: Union[np.ndarray, noneType] = None, model: Union[lmModel, noneType] = None,
-            parameters: Union[lmParameters, noneType] = None, **kwargs) -> ModelResult:
+            parameters: Union[lmParameters, noneType] = None, **kwargs) -> FitResults:
         """
         Perform a fit using the lmfit engine.
         :param x: points to be calculated at
@@ -125,11 +124,16 @@ class lmfit(FittingTemplate):  # noqa: S101
         :return: Fit results
         :rtype: ModelResult
         """
+
+        # Why do we do this? Because a fitting template has to have borg instantiated outside pre-runtime
+        from easyCore import borg
+        borg.stack.beginMacro('Fitting routine')
         if model is None:
             model = self.make_model()
         model_results = model.fit(y, x=x, weights=weights, **kwargs)
-        results = self._convert_fit_result(model_results)
-        return results
+        self._set_parameter_fit_result(model_results)
+        borg.stack.endMacro()
+        return self._gen_fit_results(model_results)
 
     def convert_to_pars_obj(self, par_list: Union[list, noneType] = None) -> lmParameters:
         """
@@ -145,7 +149,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         pars_obj = lmParameters().add_many([self.__class__.convert_to_par_object(obj) for obj in par_list])
         return pars_obj
 
-    # Note that this is an implementation of a abstract static method. My IDE can't cope with this.
+    @staticmethod
     def convert_to_par_object(obj) -> lmParameter:
         """
         Convert an `easyCore.Objects.Base.Parameter` object to a lmfit Parameter object
@@ -156,8 +160,45 @@ class lmfit(FittingTemplate):  # noqa: S101
                            min=obj.min, max=obj.max, expr=None, brute_step=None
                            )
 
-    def _convert_fit_result(self, fit_result):
-        # TODO post process model results
-        # TODO update parameter with fit sigma.
-        return fit_result
+    def _set_parameter_fit_result(self, fit_result: ModelResult):
+        """
+        Update parameters to their final values and assign a std error to them.
 
+        :param fit_result: Fit object which contains info on the fit
+        :return: None
+        :rtype: noneType
+        """
+        pars = self._cached_pars
+        for name in pars.keys():
+            pars[name].value = fit_result.params[name].value
+            pars[name].error = fit_result.params[name].stderr
+
+    def _gen_fit_results(self, fit_results: ModelResult, **kwargs) -> FitResults:
+        """
+        Convert fit results into the unified `FitResults` format.
+        See https://github.com/lmfit/lmfit-py/blob/480072b9f7834b31ff2ca66277a5ad31246843a4/lmfit/model.py#L1272
+
+        :param fit_result: Fit object which contains info on the fit
+        :return: fit results container
+        :rtype: FitResults
+        """
+        results = FitResults()
+        for name, value in kwargs.items():
+            if getattr(results, name, False):
+                setattr(results, name, value)
+
+        # We need to unify return codes......
+        results.success = fit_results.success
+        results.y_obs = fit_results.data
+        results.residual = fit_results.residual
+        results.x = fit_results.userkws['x']
+        results.p = fit_results.values
+        results.p0 = fit_results.init_values
+        results.goodness_of_fit = fit_results.chisqr
+        results.y_calc = fit_results.best_fit
+
+        results.fitting_engine = self.__class__
+        results.fit_args = None
+
+        results.engine_result = fit_results
+        return results
