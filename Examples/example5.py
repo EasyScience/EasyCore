@@ -8,7 +8,8 @@ from easyCore.Utils.json import MSONable
 import numpy as np
 
 from easyCore import borg
-from easyCore.Objects.Base import Parameter, BaseObj, LoggedProperty
+from easyCore.Objects.Base import Parameter, BaseObj
+# from easyCore.Objects.Base import LoggedProperty
 from easyCore.Objects.Inferface import InterfaceFactoryTemplate
 from easyCore.Fitting.Fitting import Fitter
 

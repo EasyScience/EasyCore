@@ -7,7 +7,6 @@ from typing import Callable, List, Any
 from functools import wraps
 
 from easyCore import borg
-from easyCore.Objects.Base import BaseObj
 from easyCore.Utils.Hugger.Hugger import Store, PatcherFactory
 
 
@@ -21,10 +20,11 @@ class LoggedProperty(property):
 
     _borg = borg
 
-    def __init__(self, *args, get_id=None, my_self=None, **kwargs):
+    def __init__(self, *args, get_id=None, my_self=None, test_class=None, **kwargs):
         super(LoggedProperty, self).__init__(*args, **kwargs)
         self._get_id = get_id
         self._my_self = my_self
+        self.test_class = test_class
 
     @staticmethod
     def _caller_class(test_class, skip: int = 1):
@@ -46,7 +46,7 @@ class LoggedProperty(property):
         return test
 
     def __get__(self, instance, owner=None):
-        test = self._caller_class(BaseObj)
+        test = self._caller_class(self.test_class)
         if not test and self._get_id is not None and self._my_self is not None:
             # borg.script.append_log(self.makeEntry('get', res, *args, **kwargs))
             if borg.debug:  # noqa: S1006
@@ -56,7 +56,7 @@ class LoggedProperty(property):
             return super(LoggedProperty, self).__get__(instance, owner)
 
     def __set__(self, instance, value):
-        test = self._caller_class(BaseObj)
+        test = self._caller_class(self.test_class)
         if not test and self._get_id is not None and self._my_self is not None:
             if borg.debug:  # noqa: S1006
                 print(f"I'm {self._my_self} and {self._get_id} has been set to {value} outside!")

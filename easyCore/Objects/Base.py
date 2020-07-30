@@ -9,6 +9,7 @@ from typing import List, Union, Any, Iterable
 from functools import cached_property
 
 from easyCore import borg, ureg
+from easyCore.Utils.Hugger.Property import LoggedProperty
 from easyCore.Utils.typing import noneType
 from easyCore.Utils.UndoRedo import stack_deco
 from easyCore.Utils.json import MSONable
@@ -567,7 +568,8 @@ class BaseObj(MSONable):
         for key in kwargs.keys():
             if key in known_keys:
                 raise AttributeError
-            setattr(self.__class__, key, LoggedProperty(self.__getter(key), self.__setter(key), get_id=key, my_self=self))
+            setattr(self.__class__, key, LoggedProperty(self.__getter(key), self.__setter(key),
+                                                        get_id=key, my_self=self, test_class=BaseObj))
 
     def fit_objects(self):
         """
