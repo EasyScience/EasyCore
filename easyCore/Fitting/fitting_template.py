@@ -20,6 +20,9 @@ class FittingTemplate(metaclass=ABCMeta):
     def __init_subclass__(cls, is_abstract: bool = False, **kwargs):
         super().__init_subclass__(**kwargs)
         if not is_abstract:
+            # Deal with the issue of people not reading the schema.
+            if not hasattr(cls, 'name'):
+                setattr(cls, 'name', cls.__class__.__name__)
             cls._engines.append(cls)
 
     def __init__(self, obj, fit_function: Callable):
@@ -32,7 +35,7 @@ class FittingTemplate(metaclass=ABCMeta):
     @abstractmethod
     def make_model(self, pars=None):
         """
-        Generate an engine model from the supplied `fit_function` and parameters in the base object
+        Generate an engine model from the supplied `fit_function` and parameters in the base object.
 
         :return: Callable model
         """
@@ -68,7 +71,7 @@ class FittingTemplate(metaclass=ABCMeta):
     def evaluate(self, x: np.ndarray, parameters: dict = None, **kwargs) -> np.ndarray:
         """
         Evaluate the fit function for values of x. Parameters used are either the latest or user supplied.
-        If the parameters are user supplied, it must be in a dictionary of {'parameter_name': parameter_value,...}
+        If the parameters are user supplied, it must be in a dictionary of {'parameter_name': parameter_value,...}.
 
         :param x: x values for which the fit function will be evaluated
         :type x:  np.ndarray
@@ -100,6 +103,7 @@ class FittingTemplate(metaclass=ABCMeta):
     def convert_to_pars_obj(self, par_list: Union[list, noneType] = None):
         """
         Create an engine compatible container with the `Parameters` converted from the base object.
+
         :param par_list: If only a single/selection of parameter is required. Specify as a list
         :type par_list: List[str]
         :return: engine Parameters compatible object
@@ -110,7 +114,7 @@ class FittingTemplate(metaclass=ABCMeta):
     @abstractmethod
     def convert_to_par_object(obj):
         """
-        Convert an `easyCore.Objects.Base.Parameter` object to an engine Parameter object
+        Convert an `easyCore.Objects.Base.Parameter` object to an engine Parameter object.
         """
         pass
 
@@ -128,7 +132,7 @@ class FittingTemplate(metaclass=ABCMeta):
     @abstractmethod
     def _gen_fit_results(self, fit_results, **kwargs) -> 'FitResults':
         """
-        Convert fit results into the unified `FitResults` format
+        Convert fit results into the unified `FitResults` format.
 
         :param fit_result: Fit object which contains info on the fit
         :return: fit results container
@@ -139,7 +143,7 @@ class FittingTemplate(metaclass=ABCMeta):
 
 class FitResults:
     """
-    At the moment this is just a dummy way of unifying the returned fit parameters
+    At the moment this is just a dummy way of unifying the returned fit parameters.
     """
     def __init__(self):
         self.success = False

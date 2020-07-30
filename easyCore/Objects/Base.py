@@ -1,6 +1,9 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
+import sys
+import numpy as np
+
 from copy import deepcopy
 from typing import List, Union, Any, Iterable
 from functools import cached_property
@@ -10,11 +13,8 @@ from easyCore.Utils.typing import noneType
 from easyCore.Utils.UndoRedo import stack_deco
 from easyCore.Utils.json import MSONable
 
-import numpy as np
-
 Q_ = ureg.Quantity
 M_ = ureg.Measurement
-
 
 class Descriptor(MSONable):
     """
@@ -92,7 +92,8 @@ class Descriptor(MSONable):
     @property
     def _parent(self) -> int:
         """
-        Return the id of parent
+        Return the id of parent.
+
         :return: python id of parent
         :rtype: int
         """
@@ -101,7 +102,8 @@ class Descriptor(MSONable):
     @_parent.setter
     def _parent(self, parent: Any):
         """
-        Set the parent of this self
+        Set the parent of this self.
+
         :param parent: Parent object
         :type parent: Any
         :return: None
@@ -113,7 +115,8 @@ class Descriptor(MSONable):
     @property
     def display_name(self) -> str:
         """
-        Get a pretty display name
+        Get a pretty display name.
+
         :return: the pretty display name
         :rtype: str
         """
@@ -127,7 +130,8 @@ class Descriptor(MSONable):
     @stack_deco
     def display_name(self, name_str: str):
         """
-        Set the pretty display name
+        Set the pretty display name.
+
         :param name_str: pretty display name
         :type name_str: str
         :return: None
@@ -138,7 +142,8 @@ class Descriptor(MSONable):
     @property
     def unit(self):
         """
-        Get the unit associated with the value
+        Get the unit associated with the value.
+
         :return: Unit associated with self
         :rtype: ureg.Unit
         """
@@ -149,6 +154,7 @@ class Descriptor(MSONable):
     def unit(self, unit_str: str):
         """
         Set the unit to a new one.
+
         :param unit_str:
         :type unit_str: str
         :return: None
@@ -165,7 +171,8 @@ class Descriptor(MSONable):
     def value(self):
         """
         Get the value of self as a pint. This is should be usable for most cases. If a pint
-        is not acceptable then the raw value can be obtained through `obj.raw_value`
+        is not acceptable then the raw value can be obtained through `obj.raw_value`.
+
         :return: Value of self
         :rtype: Any
         """
@@ -178,6 +185,7 @@ class Descriptor(MSONable):
     def value(self, value: Any):
         """
         Set the value of self. This creates a pint with a unit.
+
         :param value: new value of self
         :type value: Any
         :return: None
@@ -194,7 +202,8 @@ class Descriptor(MSONable):
     @property
     def raw_value(self):
         """
-        Return the raw value of self without a unit
+        Return the raw value of self without a unit.
+
         :return: raw value of self
         :rtype: Any
         """
@@ -208,6 +217,7 @@ class Descriptor(MSONable):
     def _validator(self, value: Any):
         """
         Check that type is consistent. We don't want to assign a float to a string etc.
+
         :param value: Value to be checked
         :type value: Any
         :return: None
@@ -226,6 +236,7 @@ class Descriptor(MSONable):
     def compatible_units(self) -> List[str]:
         """
         Returns all possible units for which the current unit can be converted.
+
         :return: Possible conversion units
         :rtype: List[str]
         """
@@ -233,7 +244,8 @@ class Descriptor(MSONable):
 
     def __del__(self):
         """
-        This would remove ones self from the collective
+        This would remove ones self from the collective.
+
         :return: None
         :rtype: noneType
         """
@@ -250,7 +262,8 @@ class Descriptor(MSONable):
 
     def as_dict(self) -> dict:
         """
-        Convert ones self into a serialized form
+        Convert ones self into a serialized form.
+
         :return: dictionary of ones self
         :rtype: dict
         """
@@ -265,7 +278,8 @@ class Descriptor(MSONable):
 
     def to_obj_type(self, data_type: Union['Descriptor', 'Parameter'], *kwargs):
         """
-        Convert between a `Parameter` and a `Descriptor`
+        Convert between a `Parameter` and a `Descriptor`.
+
         :param data_type: class constructor of what we want to be
         :type data_type: Callable
         :param kwargs: Additional keyword/value pairs for conversion
@@ -351,6 +365,7 @@ class Parameter(Descriptor):
     def __unit_setter(self, value_str: str):  # noqa: S1144
         """
         Perform unit conversion. The value, max and min can change on unit change.
+
         :param value_str: new unit
         :type value_str: str
         :return: None
@@ -368,7 +383,8 @@ class Parameter(Descriptor):
     @property
     def min(self) -> float:
         """
-        Get the minimum value for fitting
+        Get the minimum value for fitting.
+
         :return: minimum value
         :rtype: float
         """
@@ -379,7 +395,8 @@ class Parameter(Descriptor):
     def min(self, value: float):
         """
         Set the minimum value for fitting.
-        - implements undo/redo functionality
+        - implements undo/redo functionality.
+
         :param value: new minimum value
         :type value: float
         :return: None
@@ -390,7 +407,8 @@ class Parameter(Descriptor):
     @property
     def max(self) -> float:
         """
-        Get the maximum value for fitting
+        Get the maximum value for fitting.
+
         :return: maximum value
         :rtype: float
         """
@@ -401,7 +419,8 @@ class Parameter(Descriptor):
     def max(self, value: float):
         """
         Get the maximum value for fitting.
-        - implements undo/redo functionality
+        - implements undo/redo functionality.
+
         :param value: new maximum value
         :type value: float
         :return: None
@@ -413,6 +432,7 @@ class Parameter(Descriptor):
     def fixed(self) -> bool:
         """
         Can the parameter vary while fitting?
+
         :return: True = fixed, False = can vary
         :rtype: bool
         """
@@ -422,8 +442,9 @@ class Parameter(Descriptor):
     @stack_deco
     def fixed(self, value: bool):
         """
-        Change the parameter vary while fitting state
-        - implements undo/redo functionality
+        Change the parameter vary while fitting state.
+        - implements undo/redo functionality.
+
         :param value: True = fixed, False = can vary
         :type value: bool
         :return: None
@@ -434,7 +455,8 @@ class Parameter(Descriptor):
     @property
     def error(self) -> float:
         """
-        The error associated with the parameter
+        The error associated with the parameter.
+
         :return: Error associated with parameter
         :rtype: float
         """
@@ -444,8 +466,9 @@ class Parameter(Descriptor):
     @stack_deco
     def error(self, value: float):
         """
-        Set the error associated with the parameter
-        - implements undo/redo functionality
+        Set the error associated with the parameter.
+        - implements undo/redo functionality.
+
         :param value: New error value
         :type value: float
         :return: None
@@ -457,14 +480,16 @@ class Parameter(Descriptor):
     def for_fit(self):
         """
         Coverts oneself into a type which can be used for fitting. Note that the type
-        is dependent on the fitting engine selected
+        is dependent on the fitting engine selected.
+
         :return: parameter for fitting
         """
         return self._borg.fitting_engine.convert_to_par_object(self)
 
     def _validate(self, value: Any):
         """
-        Verify value against constraints. This hasn't really been implemented as fitting is tricky
+        Verify value against constraints. This hasn't really been implemented as fitting is tricky.
+
         :param value: value to be verified
         :type value: Any
         :return: new value from constraint
@@ -510,7 +535,7 @@ class BaseObj(MSONable):
     This is the base class for which all higher level classes are built off of.
     NOTE: This object is serializable only if parameters are supplied as:
     `BaseObj(a=value, b=value)`. For `Parameter` or `Descriptor` objects we can
-    cheat with `BaseObj(*[Descriptor(...), Parameter(...), ...])`
+    cheat with `BaseObj(*[Descriptor(...), Parameter(...), ...])`.
     """
 
     _parent_store = None
@@ -533,7 +558,7 @@ class BaseObj(MSONable):
         self.__dict__['name'] = name
         # If Parameter or Descriptor is given as arguments...
         for arg in args:
-            if issubclass(arg.__class__, Descriptor):
+            if issubclass(arg.__class__, (BaseObj, Descriptor)):
                 arg._parent = self
                 kwargs[arg.name] = arg
         # Set kwargs, also useful for serialization
@@ -542,16 +567,12 @@ class BaseObj(MSONable):
         for key in kwargs.keys():
             if key in known_keys:
                 raise AttributeError
-            # Should we do it like this or assign property to class?
-            # This way is easy, but can be overwritten i.e obj.foo = 1
-            # Assigning property is more complex but protects obj.foo
-            setattr(self.__class__, key, property(self.__getter(key), self.__setter(key)))
-            # self.__dict__[key] = kwargs[key]
+            setattr(self.__class__, key, LoggedProperty(self.__getter(key), self.__setter(key), get_id=key, my_self=self))
 
     def fit_objects(self):
         """
         Collect all objects which can be fitted, convert them to fitting engine objects and
-        return them as a list
+        return them as a list.
 
         :return: List of fitting engine objects
         """
@@ -562,7 +583,7 @@ class BaseObj(MSONable):
 
     def get_parameters(self) -> List[Parameter]:
         """
-        Get all objects which can be fitted (and are not fixed) as a list
+        Get all objects which can be fitted (and are not fixed) as a list.
 
         :return: List of `Parameter` objects which can be used in fitting.
         :rtype: List[Parameter]
@@ -570,7 +591,7 @@ class BaseObj(MSONable):
         fit_list = []
         for key, item in self._kwargs.items():
             if hasattr(item, 'get_parameters'):
-                fit_list = [fit_list, *item.get_parameters()]
+                fit_list = [*fit_list, *item.get_parameters()]
             elif isinstance(item, Parameter) and not item.fixed:
                 fit_list.append(item)
         return fit_list
@@ -578,7 +599,7 @@ class BaseObj(MSONable):
     @property
     def _parent(self) -> int:
         """
-        Return the id of parent
+        Return the id of parent.
 
         :return: python id of parent
         :rtype: int
@@ -588,7 +609,7 @@ class BaseObj(MSONable):
     @_parent.setter
     def _parent(self, parent: Any):
         """
-        Set the parent of this self
+        Set the parent of this self.
 
         :param parent: Parent object
         :type parent: Any
@@ -599,7 +620,7 @@ class BaseObj(MSONable):
 
     def __dir__(self) -> Iterable[str]:
         """
-        This creates auto-completion and helps out in iPython notebooks
+        This creates auto-completion and helps out in iPython notebooks.
 
         :return: list of function and parameter names for auto-completion
         :rtype: List[str]
@@ -610,7 +631,7 @@ class BaseObj(MSONable):
 
     def as_dict(self) -> dict:
         """
-        Convert ones self into a serialized form
+        Convert ones self into a serialized form.
 
         :return: dictionary of ones self
         :rtype: dict
@@ -623,7 +644,7 @@ class BaseObj(MSONable):
 
     def set_binding(self, binding_name, binding_fun, *args, **kwargs):
         """
-        Set the binding of parameters of self to interface counterparts
+        Set the binding of parameters of self to interface counterparts.
 
         :param binding_name: name of parameter to be bound
         :type binding_name: str

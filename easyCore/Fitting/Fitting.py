@@ -2,11 +2,14 @@ __author__ = "github.com/wardsimon"
 __version__ = "0.0.1"
 
 from types import FunctionType
-from typing import List, Callable
-from easyCore import borg
+from typing import List, Callable,  TypeVar
 
+from abc import ABCMeta
+from easyCore import borg, default_fitting_engine
 import easyCore.Fitting as Fitting
-import numpy as np
+
+_C = TypeVar("_C", bound=ABCMeta)
+_M = TypeVar("_M", bound=Fitting.FittingTemplate)
 
 
 class Fitter:
@@ -28,10 +31,10 @@ class Fitter:
             if (fit_object is not None) or (fit_function is not None):
                 raise AttributeError
 
-        self._engines = Fitting.engines
-        self._current_engine = None
-        self.__engine_obj = None
-        self._is_initialized = False
+        self._engines: List[_C] = Fitting.engines
+        self._current_engine: _C = None
+        self.__engine_obj: _M = None
+        self._is_initialized: bool = False
         self.create()
 
         fit_methods = [x for x, y in Fitting.FittingTemplate.__dict__.items()
@@ -52,7 +55,7 @@ class Fitter:
         self.__engine_obj = self._current_engine(self._fit_object, self._fit_function)
         self._is_initialized = True
 
-    def create(self, engine_name: str = 'lmfit'):
+    def create(self, engine_name: str = default_fitting_engine):
         engines = self.available_engines
         if engine_name in engines:
             self._current_engine = self._engines[engines.index(engine_name)]
@@ -69,6 +72,7 @@ class Fitter:
     def available_engines(self) -> List[str]:
         """
         Get a list of the names of available fitting engines
+
         :return: List of available fitting engines
         :rtype: List[str]
         """
@@ -78,15 +82,33 @@ class Fitter:
         return [engine.name for engine in Fitting.engines]
 
     @property
-    def can_fit(self):
+    def can_fit(self) -> bool:
+        """
+        Can a fit be performed. i.e has the object been created properly
+
+        :return: Can a fit be performed
+        :rtype: bool
+        """
         return self._is_initialized
 
     @property
-    def current_engine(self) -> Callable:
+    def current_engine(self) -> _C:
+        """
+        Get the class object of the current fitting engine.
+
+        :return: Class of the current fitting engine (based on the `FittingTemplate` class)
+        :rtype: _T
+        """
         return self._current_engine
 
     @property
-    def engine(self) -> Fitting.FittingTemplate:
+    def engine(self) -> _M:
+        """
+        Get the current fitting engine object.
+
+        :return:
+        :rtype: _M
+        """
         return self.__engine_obj
 
     @property
@@ -98,14 +120,14 @@ class Fitter:
         self._fit_function = fit_function
 
     @property
-    def fit_object(self):
+    def fit_object(self) -> object:
         return self._fit_object
 
     @fit_object.setter
     def fit_object(self, fit_object: object):
         self._fit_object = fit_object
 
-    def __pass_through_generator(self, name):
+    def __pass_through_generator(self, name: str):
         obj = self
 
         def inner(*args, **kwargs):

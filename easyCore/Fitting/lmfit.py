@@ -21,6 +21,7 @@ class lmfit(FittingTemplate):  # noqa: S101
     def __init__(self, obj, fit_function: Callable):
         """
         Initialize the fitting engine with a `BaseObj` and an arbitrary fitting function.
+
         :param obj: Object containing elements of the `Parameter` class
         :type obj: BaseObj
         :param fit_function: function that when called returns y values. 'x' must be the first
@@ -32,7 +33,8 @@ class lmfit(FittingTemplate):  # noqa: S101
 
     def make_model(self, pars: Union[noneType, lmParameters] = None) -> lmModel:
         """
-        Generate a lmfit model from the supplied `fit_function` and parameters in the base object
+        Generate a lmfit model from the supplied `fit_function` and parameters in the base object.
+
         :return: Callable lmfit model
         :rtype: lmModel
         """
@@ -58,6 +60,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         """
         Using the user supplied `fit_function`, wrap it in such a way we can update `Parameter` on
         iterations.
+
         :return: a fit function which is compatible with lmfit models
         :rtype: Callable
         """
@@ -70,7 +73,8 @@ class lmfit(FittingTemplate):  # noqa: S101
         # Make a new fit function
         def fit_function(x: np.ndarray, **kwargs):
             """
-            Wrapped fit function which now has a lmfit compatible form
+            Wrapped fit function which now has a lmfit compatible form.
+
             :param x: array of data points to be calculated
             :type x: np.ndarray
             :param kwargs: key word arguments
@@ -78,6 +82,7 @@ class lmfit(FittingTemplate):  # noqa: S101
             :rtype: np.ndarray
             """
             # Update the `Parameter` values and the callback if needed
+            # TODO THIS IS NOT THREAD SAFE :-(
             for name, value in kwargs.items():
                 if name in self._cached_pars.keys():
                     self._cached_pars[name].value = value
@@ -110,6 +115,7 @@ class lmfit(FittingTemplate):  # noqa: S101
             parameters: Union[lmParameters, noneType] = None, **kwargs) -> FitResults:
         """
         Perform a fit using the lmfit engine.
+
         :param x: points to be calculated at
         :type x: np.ndarray
         :param y: measured points
@@ -138,6 +144,7 @@ class lmfit(FittingTemplate):  # noqa: S101
     def convert_to_pars_obj(self, par_list: Union[list, noneType] = None) -> lmParameters:
         """
         Create an lmfit compatible container with the `Parameters` converted from the base object.
+
         :param par_list: If only a single/selection of parameter is required. Specify as a list
         :type par_list: List[str]
         :return: lmfit Parameters compatible object
@@ -152,7 +159,8 @@ class lmfit(FittingTemplate):  # noqa: S101
     @staticmethod
     def convert_to_par_object(obj) -> lmParameter:
         """
-        Convert an `easyCore.Objects.Base.Parameter` object to a lmfit Parameter object
+        Convert an `easyCore.Objects.Base.Parameter` object to a lmfit Parameter object.
+
         :return: lmfit Parameter compatible object.
         :rtype: lmParameter
         """

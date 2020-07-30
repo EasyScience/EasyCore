@@ -1,10 +1,11 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
+from abc import ABCMeta, abstractmethod
 from typing import TypeVar, List, Callable
 import numpy as np
 
-_T = TypeVar("_T")
+_C = TypeVar("_C", bound=ABCMeta)
 _M = TypeVar("_M")
 
 
@@ -13,9 +14,9 @@ class InterfaceFactoryTemplate:
     This class allows for the creation and transference of interfaces.
     """
 
-    def __init__(self, interface_list: List[_T]):
-        self._interfaces: List[_T] = interface_list
-        self._current_interface: _T = None
+    def __init__(self, interface_list: List[_C]):
+        self._interfaces: List[_C] = interface_list
+        self._current_interface: _C
         self.__interface_obj: _M = None
         self.create()
 
@@ -23,7 +24,7 @@ class InterfaceFactoryTemplate:
         """
         Create an interface to a calculator from those initialized. Interfaces can be selected
         by `interface_name` where `interface_name` is one of `obj.available_interfaces`. This
-        interface can now be accessed by obj()
+        interface can now be accessed by obj().
 
         :param interface_name: name of interface to be created
         :type interface_name: str
@@ -31,7 +32,14 @@ class InterfaceFactoryTemplate:
         :rtype: noneType
         """
         if interface_name is None:
-            interface_name = self._interfaces[0].__name__
+            if len(self._interfaces) > 0:
+                # Fallback name
+                interface_name = self._interfaces[0].__name__
+                # If the interface is created to spec, it should have a name field.
+                if hasattr(self._interfaces[0], 'name'):
+                    interface_name = self._interfaces[0].name
+            else:
+                raise NotImplementedError
 
         interfaces = self.available_interfaces
         if interface_name in interfaces:
@@ -67,9 +75,9 @@ class InterfaceFactoryTemplate:
         return [this_interface.__name__ for this_interface in self._interfaces]
 
     @property
-    def current_interface(self) -> _T:
+    def current_interface(self) -> _C:
         """
-        Returns the constructor for the currently selected interface
+        Returns the constructor for the currently selected interface.
 
         :return: Interface constructor
         :rtype: InterfaceTemplate
@@ -91,7 +99,8 @@ class InterfaceFactoryTemplate:
         """
         return self.__interface_obj.fit_func(x_array, *args, **kwargs)
 
-    def generate_bindings(self, name) -> property:
+    @abstractmethod
+    def generate_bindings(self, name, *args, **kwargs) -> property:
         """
         Automatically bind a `Parameter` to the corresponding interface.
 
@@ -100,37 +109,7 @@ class InterfaceFactoryTemplate:
         :return: binding property
         :rtype: property
         """
-        return property(self.__get_item(name), self.__set_item(self, name))
+        pass
 
     def __call__(self, *args, **kwargs) -> _M:
         return self.__interface_obj
-
-    @staticmethod
-    def __get_item(key: str) -> Callable:
-        """
-        Access the value of a key by a callable object
-
-        :param key: name of parameter to be retrieved
-        :type key: str
-        :return: function to get key
-        :rtype: Callable
-        """
-        def inner(obj):
-            obj().get_value(key)
-        return lambda obj: inner(obj)
-
-    @staticmethod
-    def __set_item(obj, key):
-        """
-        Set the value of a key by a callable object
-
-        :param obj: object to be created from
-        :type obj: InterfaceFactory
-        :param key: name of parameter to be set
-        :type key: str
-        :return: function to set key
-        :rtype: Callable
-        """
-        def inner(value):
-            obj().set_value(key, value)
-        return inner
