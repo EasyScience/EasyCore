@@ -421,7 +421,7 @@ y = np.array([2, 4, 6]) - 1
 f_res = f.fit(x, y)
 
 print('\n######### Interface 1 #########\n')
-print(f_res.fit_report())
+print(f_res)
 print(line)
 
 # This gets the interface name `'Interface2'`
@@ -434,5 +434,5 @@ line.c.value = 0
 f_res = f.fit(x, y)
 
 print('\n######### Interface 2 #########\n')
-print(f_res.fit_report())
+print(f_res)
 print(line)
