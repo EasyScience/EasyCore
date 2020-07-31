@@ -47,13 +47,12 @@ class LoggedProperty(property):
 
     def __get__(self, instance, owner=None):
         test = self._caller_class(self.test_class)
+        res = super(LoggedProperty, self).__get__(instance, owner)
         if not test and self._get_id is not None and self._my_self is not None:
-            # borg.script.append_log(self.makeEntry('get', res, *args, **kwargs))
+            Store().append_log(self.makeEntry('get', res))
             if borg.debug:  # noqa: S1006
                 print(f"I'm {self._my_self} and {self._get_id} has been called outside!")
-            return super(LoggedProperty, self).__get__(instance, owner)
-        else:
-            return super(LoggedProperty, self).__get__(instance, owner)
+        return res
 
     def __set__(self, instance, value):
         test = self._caller_class(self.test_class)
@@ -70,30 +69,30 @@ class LoggedProperty(property):
             returns = [returns]
         if log_type == 'get':
             for var in returns:
-                if self._in_list('return_list', var):
-                    index = self._get_position("return_list", var)
-                    temp += f'{self._store.var_ident}{index}, '
+                if id(var) in borg.map.returned_objs:
+                    index = borg.map.returned_objs.index(id(var))
+                    temp += f'{Store().var_ident}{index}, '
             if len(returns) > 0:
                 temp = temp[:-2]
                 temp += ' = '
-            if self._in_list('create_list', args[0]):
-                index = self._get_position("create_list", args[0])
-                temp += f'{self._my_self.__name__.lower()}_{index}.{self._get_id}'
+            if id(self._my_self) in borg.map.created_objs:
+                index = borg.map.created_objs.index(id(self._my_self))
+                temp += f'{self._my_self.__class__.__name__.lower()}_{index}.{self._get_id}'
         elif log_type == 'set':
-            if self._in_list('create_list', args[0]):
-                index = self._get_position("create_list", args[0])
-                temp += f'{self._my_self.__name__.lower()}_{index}.{self._get_id} = '
+            if id(self._my_self) in borg.map.created_objs:
+                index = borg.map.created_objs.index(id(self._my_self))
+                temp += f'{self._my_self.__class__.__name__.lower()}_{index}.{self._get_id} = '
             args = args[1:]
             for var in args:
-                if self._in_list('input_list', var):
-                    index = self._get_position("input_list", var)
-                    temp += f'{self._store.var_ident}{index}'
-                elif self._in_list('return_list', var):
-                    index = self._get_position("return_list", var)
-                    temp += f'{self._store.var_ident}{index}'
-                elif self._in_list('create_list', var):
-                    index = self._get_position("create_list", var)
-                    temp += f'{self._my_self.__name__.lower()}_{index}'
+                if id(var) in borg.map.argument_objs:
+                    index = borg.map.argument_objs.index(id(var))
+                    temp += f'{Store().var_ident}{index}'
+                elif id(var) in borg.map.returned_objs:
+                    index = borg.map.returned_objs.index(id(var))
+                    temp += f'{Store().var_ident}{index}'
+                elif id(var) in borg.map.created_objs:
+                    index = borg.map.created_objs.index(id(var))
+                    temp += f'{self._my_self.__class__.__name__.lower()}_{index}'
                 else:
                     if isinstance(var, str):
                         var = '"' + var + '"'

@@ -47,7 +47,7 @@ class Line(BaseObj):
         if self.interface:
             for parameter in self.get_parameters():
                 name = parameter.name
-                setattr(self.__dict__[name],
+                setattr(self.__class__.__dict__[name],
                         '_callback',
                         property(self.__gitem(name), self.__sitem(self, name)))
 
@@ -95,5 +95,5 @@ y = np.array([2, 4, 6]) - 1
 
 f_res = f.fit(x, y)
 
-print(f_res.fit_report())
+print(f_res)
 print(l)

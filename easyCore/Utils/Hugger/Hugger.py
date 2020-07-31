@@ -20,18 +20,8 @@ class Store:
     __var_ident = 'var_'
     __ret_ident = 'ret_'
 
-    # TODO These should be classed out
-    __create_list = weakref.WeakKeyDictionary()
-    __unique_args = []
-    __unique_rets = []
-
     def __init__(self):
         self.log = self.__log  ## TODO Async problem?
-        self.create_list = self.__create_list
-        self.unique_args = self.__unique_args
-        self.unique_rets = self.__unique_rets
-        self.var_ident = self.__var_ident
-        self.ret_ident = self.__ret_ident
 
     @staticmethod
     def get_defaults() -> dict:

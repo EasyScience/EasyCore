@@ -2,7 +2,7 @@ __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
 from easyCore.Objects.Graph import Graph
-# from easyCore.Utils.Hugger import
+from easyCore.Utils.Hugger.Hugger import ScriptManager
 from easyCore.Utils.classUtils import singleton
 
 
@@ -25,7 +25,7 @@ class Borg:
         # Stack. This is where the undo/redo operations are stored.
         self.stack = self.__stack
         #
-        # self.script = ScriptManager()
+        self.script = ScriptManager()
         # Map. This is the conduit database between all borg species
         self.map = self.__map
 

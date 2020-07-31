@@ -17,6 +17,7 @@ from easyCore.Utils.json import MSONable
 Q_ = ureg.Quantity
 M_ = ureg.Measurement
 
+
 class Descriptor(MSONable):
     """
     Class which is the base of all models. It contains all information to describe an objects unique property. This
@@ -62,13 +63,11 @@ class Descriptor(MSONable):
         :param parent: The object which is the parent to this one
         :type parent:Any
         """
-        # Where did we come from
-        self._parent = parent
         # Let the collective know we've been assimilated
-        self._borg.map.add_vertex(id(self))
+        self._borg.map.add_vertex(self, obj_type='created')
         # Make the connection between self and parent
-        if self._parent is not None:
-            self._borg.map.add_edge({id(self._parent), id(self)})
+        if parent is not None:
+            self._borg.map.add_edge(parent, self)
 
         self.name: str = name
         # Attach units if necessary
@@ -89,29 +88,6 @@ class Descriptor(MSONable):
         self._callback: property = callback
         self.user_data: dict = {}
         self._type = type(value)
-
-    @property
-    def _parent(self) -> int:
-        """
-        Return the id of parent.
-
-        :return: python id of parent
-        :rtype: int
-        """
-        return id(self._parent_store)
-
-    @_parent.setter
-    def _parent(self, parent: Any):
-        """
-        Set the parent of this self.
-
-        :param parent: Parent object
-        :type parent: Any
-        :return: None
-        :rtype: noneType
-        """
-        # TODO This should also update the graph.....
-        self._parent_store = parent
 
     @property
     def display_name(self) -> str:
@@ -539,10 +515,9 @@ class BaseObj(MSONable):
     cheat with `BaseObj(*[Descriptor(...), Parameter(...), ...])`.
     """
 
-    _parent_store = None
     _borg = borg
 
-    def __init__(self, name: str, *args, parent=None, **kwargs):
+    def __init__(self, name: str, *args, **kwargs):
         """
         Set up the base class.
 
@@ -555,13 +530,13 @@ class BaseObj(MSONable):
         :param kwargs: Fields which this class should contain
         """
 
-        self._parent = parent
+        self._borg.map.add_vertex(self, obj_type='created')
         self.__dict__['name'] = name
         # If Parameter or Descriptor is given as arguments...
         for arg in args:
             if issubclass(arg.__class__, (BaseObj, Descriptor)):
-                arg._parent = self
                 kwargs[arg.name] = arg
+                self._borg.map.add_edge(self, arg)
         # Set kwargs, also useful for serialization
         known_keys = self.__dict__.keys()
         self._kwargs = kwargs
@@ -597,28 +572,6 @@ class BaseObj(MSONable):
             elif isinstance(item, Parameter) and not item.fixed:
                 fit_list.append(item)
         return fit_list
-
-    @property
-    def _parent(self) -> int:
-        """
-        Return the id of parent.
-
-        :return: python id of parent
-        :rtype: int
-        """
-        return id(self._parent_store)
-
-    @_parent.setter
-    def _parent(self, parent: Any):
-        """
-        Set the parent of this self.
-
-        :param parent: Parent object
-        :type parent: Any
-        :return: None
-        :rtype: noneType
-        """
-        self._parent_store = parent
 
     def __dir__(self) -> Iterable[str]:
         """
