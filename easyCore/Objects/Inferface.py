@@ -2,7 +2,7 @@ __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
 from abc import ABCMeta, abstractmethod
-from typing import TypeVar, List, Callable
+from typing import TypeVar, List
 import numpy as np
 
 _C = TypeVar("_C", bound=ABCMeta)

@@ -2,14 +2,78 @@ __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
 import weakref
-from typing import List
+import sys
+from typing import List, Union
+from weakref import WeakKeyDictionary
+from collections import defaultdict
+from uuid import uuid4, UUID
 
 
 class _EntryList(list):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, my_type=None, **kwargs):
         super(_EntryList, self).__init__(*args, **kwargs)
-        self.var_type = ''
+        self.__known_types = {'argument', 'created', 'created_internal', 'returned'}
         self.finalizer = None
+        self._type = []
+        if my_type in self.__known_types:
+            self._type.append(my_type)
+
+    def __repr__(self) -> str:
+        s = 'Graph entry of type: '
+        if self._type:
+            s += ', '.join(self._type)
+        else:
+            s += 'Undefined'
+        s += '. With'
+        if self.finalizer is None:
+            s += 'out'
+        s += 'a finalizer.'
+        return s
+
+    def remove_type(self, old_type: str):
+        if old_type in self.__known_types and old_type in self._type:
+            self._type.remove(old_type)
+
+    def reset_type(self, default_type: str = None):
+        self._type = []
+        self.type = default_type
+
+    @property
+    def type(self) -> List[str]:
+        return self._type
+
+    @type.setter
+    def type(self, value: str):
+        if value in self.__known_types and value not in self._type:
+            self._type.append(value)
+
+    @property
+    def is_argument(self) -> bool:
+        return 'argument' in self._type
+
+    @property
+    def is_created(self) -> bool:
+        return 'created' in self._type
+
+    @property
+    def is_created_internal(self) -> bool:
+        return 'created_internal' in self._type
+
+    @property
+    def is_returned(self) -> bool:
+        return 'returned' in self._type
+
+
+class UniqueIdMap(WeakKeyDictionary):
+    def __init__(self, dict: dict=None):
+        super().__init__(self)
+        # replace data with a defaultdict to generate uuids
+        self.data = defaultdict(uuid4)
+        if dict is not None:
+            self.update(dict)
+
+
+uniqueidmap = UniqueIdMap()
 
 
 class Graph:
@@ -35,6 +99,10 @@ class Graph:
         return self._nested_get('created')
 
     @property
+    def created_internal(self) -> List[int]:
+        return self._nested_get('created_internal')
+
+    @property
     def returned_objs(self) -> List[int]:
         return self._nested_get('returned')
 
@@ -44,25 +112,33 @@ class Graph:
         else:
             raise ValueError
 
-    def is_known(self, vertex: object):
-        return id(vertex) in self._store.keys()
+    def is_known(self, vertex: object) -> bool:
+        return self.convert_id(vertex).int in self._store.keys()
 
-    def find_type(self, vertex: object):
+    def find_type(self, vertex: object) -> List[str]:
         if self.is_known(vertex):
-            oid = id(vertex)
-            return self.__graph_dict[oid].var_type
+            oid = self.convert_id(vertex)
+            return self.__graph_dict[oid].type
 
-    def add_vertex(self, obj: object, obj_type: str = ''):
-        oid = id(obj)
+    def reset_type(self, obj, default_type: str):
+        if self.convert_id(obj).int in self.__graph_dict.keys():
+            self.__graph_dict[self.convert_id(obj).int].reset_type(default_type)
+
+    def change_type(self, obj, new_type: str):
+        if self.convert_id(obj).int in self.__graph_dict.keys():
+            self.__graph_dict[self.convert_id(obj).int].type = new_type
+
+    def add_vertex(self, obj: object, obj_type: str = None):
+        oid = self.convert_id(obj).int
         self._store[oid] = obj
-        self.__graph_dict[oid] = _EntryList()
+        self.__graph_dict[oid] = _EntryList()  # Enhanced list of keys
         self.__graph_dict[oid].finalizer = weakref.finalize(self._store[oid], self.prune, oid)
-        self.__graph_dict[oid].var_type = obj_type
+        self.__graph_dict[oid].type = obj_type
 
     def add_edge(self, start_obj: object, end_obj: object):
-        vertex1 = id(start_obj)
-        vertex2 = id(end_obj)
-        if vertex1 in self.__graph_dict:
+        vertex1 = self.convert_id(start_obj).int
+        vertex2 = self.convert_id(end_obj).int
+        if vertex1 in self.__graph_dict.keys():
             self.__graph_dict[vertex1].append(vertex2)
         else:
             raise AttributeError
@@ -94,19 +170,19 @@ class Graph:
                 isolated += [vertex]
         return isolated
 
-    def find_path(self, start_obj, end_obj, path=[]):
+    def find_path(self, start_obj, end_obj, path=[]) -> list:
         """ find a path from start_vertex to end_vertex
             in graph """
 
-        start_vertex = id(start_obj)
-        end_vertex = id(end_obj)
+        start_vertex = self.convert_id(start_obj).int
+        end_vertex = self.convert_id(end_obj).int
 
         graph = self.__graph_dict
         path = path + [start_vertex]
         if start_vertex == end_vertex:
             return path
         if start_vertex not in graph:
-            return None
+            return []
         for vertex in graph[start_vertex]:
             if vertex not in path:
                 extended_path = self.find_path(vertex,
@@ -114,14 +190,14 @@ class Graph:
                                                path)
                 if extended_path:
                     return extended_path
-        return None
+        return []
 
-    def find_all_paths(self, start_obj, end_obj, path=[]):
+    def find_all_paths(self, start_obj, end_obj, path=[]) -> list:
         """ find all paths from start_vertex to
             end_vertex in graph """
 
-        start_vertex = id(start_obj)
-        end_vertex = id(end_obj)
+        start_vertex = self.convert_id(start_obj).int
+        end_vertex = self.convert_id(end_obj).int
 
         graph = self.__graph_dict
         path = path + [start_vertex]
@@ -138,6 +214,37 @@ class Graph:
                 for p in extended_paths:
                     paths.append(p)
         return paths
+
+    def reverse_route(self, end_obj, start_obj=None) -> List:
+        """
+        In this case we have an object and want to know the connections to get to another in reverse.
+        We might not know the start_object. In which case we follow the shortest path to a base vertex.
+        :param end_obj:
+        :type end_obj:
+        :param start_obj:
+        :type start_obj:
+        :return:
+        :rtype:
+        """
+        end_vertex = self.convert_id(end_obj).int
+
+        if end_vertex in self.find_isolated_vertices():
+            return []
+
+        path_length = sys.maxsize
+        optimum_path = []
+        if start_obj is None:
+            # We now have to find where to begin.....
+            for possible_start, vertices in self.__graph_dict.items():
+                if end_vertex in vertices:
+                    temp_path = self.find_path(possible_start, end_obj)
+                    if len(temp_path) < path_length:
+                        path_length = len(temp_path)
+                        optimum_path = temp_path
+        else:
+            optimum_path = self.find_path(start_obj, end_obj)
+        optimum_path.reverse()
+        return optimum_path
 
     def is_connected(self,
                      vertices_encountered=None,
@@ -163,6 +270,45 @@ class Graph:
         """Access a nested object in root by key sequence."""
         extracted_list = []
         for key, item in self.__graph_dict.items():
-            if item.var_type is obj_type:
+            if obj_type in item.type:
                 extracted_list.append(key)
         return extracted_list
+
+    @staticmethod
+    def convert_id(input_value) -> UUID:
+        """ Sometimes we're dopy and """
+        if not validate_id(input_value):
+            input_value = unique_id(input_value)
+        return input_value
+
+    @staticmethod
+    def convert_id_to_key(input_value: Union[object, UUID]) -> int:
+        """ Sometimes we're dopy and """
+        if not validate_id(input_value):
+            input_value: UUID = unique_id(input_value)
+        return input_value.int
+
+    def __repr__(self) -> str:
+        return f"Graph object of {len(self._store)} vertices."
+
+
+def unique_id(obj) -> UUID:
+    """Produce a unique integer id for the object.
+
+    Object must me *hashable*. Id is a UUID and should be unique
+    across Python invocations.
+
+    """
+    return uniqueidmap[obj]
+
+
+def validate_id(potential_id) -> bool:
+    test = True
+    try:
+        if isinstance(potential_id, UUID):
+            UUID(str(potential_id), version=4)
+        else:
+            UUID(potential_id, version=4)
+    except (ValueError, AttributeError):
+        test = False
+    return test

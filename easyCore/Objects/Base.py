@@ -144,6 +144,14 @@ class Descriptor(MSONable):
         self._args['units'] = str(new_unit)
         self._value = self.__class__._constructor(**self._args)
 
+    # @property
+    # def units(self):
+    #     return self.unit
+    #
+    # @units.setter
+    # def units(self, value):
+    #     self.unit = value
+
     @property
     def value(self):
         """
@@ -537,6 +545,7 @@ class BaseObj(MSONable):
             if issubclass(arg.__class__, (BaseObj, Descriptor)):
                 kwargs[arg.name] = arg
                 self._borg.map.add_edge(self, arg)
+                self._borg.map.reset_type(arg, 'created_internal')
         # Set kwargs, also useful for serialization
         known_keys = self.__dict__.keys()
         self._kwargs = kwargs

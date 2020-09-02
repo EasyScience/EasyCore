@@ -10,4 +10,5 @@ default_fitting_engine = 'lmfit'
 ureg = UnitRegistry()
 borg = Borg()
 borg.instantiate_stack()
+borg.stack.enabled = True
 

@@ -22,6 +22,8 @@ class Store:
 
     def __init__(self):
         self.log = self.__log  ## TODO Async problem?
+        self.var_ident = self.__var_ident
+        self.ret_ident = self.__ret_ident
 
     @staticmethod
     def get_defaults() -> dict:
@@ -39,8 +41,17 @@ class Store:
 
 
 class ScriptManager:
-    def __init__(self):
+    def __init__(self, enabled=True):
         self._store = Store()
+        self._enabled = enabled
+
+    @property
+    def enabled(self) -> bool:
+        return self._enabled
+
+    @enabled.setter
+    def enabled(self, value: bool):
+        self._enabled = value
 
     def history(self) -> List[str]:
         return self._store.log
