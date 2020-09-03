@@ -117,7 +117,7 @@ class Descriptor(MSONable):
         self._display_name = name_str
 
     @property
-    def unit(self):
+    def unit(self) -> ureg.Unit:
         """
         Get the unit associated with the value.
 
@@ -143,14 +143,6 @@ class Descriptor(MSONable):
         self._units = new_unit
         self._args['units'] = str(new_unit)
         self._value = self.__class__._constructor(**self._args)
-
-    # @property
-    # def units(self):
-    #     return self.unit
-    #
-    # @units.setter
-    # def units(self, value):
-    #     self.unit = value
 
     @property
     def value(self):
@@ -340,7 +332,7 @@ class Parameter(Descriptor):
         self.__previous_unit = self.__class__.unit
 
         setattr(self.__class__, 'unit', property(fget=self.__class__.unit.fget,
-                                                 fset=lambda obj, new_value: obj.__unit_setter(new_value),
+                                                 fset=lambda obj, val: obj.__unit_setter(val),
                                                  fdel=self.__class__.unit.fdel))
 
         setattr(self.__class__, 'value', property(fget=self.__class__.value.fget,
@@ -359,7 +351,7 @@ class Parameter(Descriptor):
         old_unit = str(self._args['units'])
         self.__previous_unit.fset(self, value_str)
         # Deal with min/max
-        if not self.value.unitless:
+        if not self.value.unitless and not old_unit == 'dimensionless':
             self._min = Q_(self.min, old_unit).to(self._units).magnitude
             self._max = Q_(self.max, old_unit).to(self._units).magnitude
         # Log the converted error
