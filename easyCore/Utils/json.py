@@ -130,7 +130,7 @@ class MSONable:
     REDIRECT = _load_redirect(
         os.path.join(os.path.expanduser("~"), ".monty.yaml"))
 
-    def as_dict(self) -> dict:
+    def as_dict(self, skip: list = []) -> dict:
         """
         A JSON serializable dict representation of an object.
         """
@@ -159,7 +159,7 @@ class MSONable:
             return obj
 
         for c in args:
-            if c != "self":
+            if c != "self" and c not in skip:
                 try:
                     a = self.__getattribute__(c)
                 except AttributeError:

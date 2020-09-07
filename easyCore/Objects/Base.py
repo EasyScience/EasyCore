@@ -2,6 +2,7 @@ __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
 import sys
+import numbers
 import numpy as np
 
 from copy import deepcopy
@@ -244,13 +245,13 @@ class Descriptor(MSONable):
         :return: dictionary of ones self
         :rtype: dict
         """
-        super_dict = super().as_dict()
+        super_dict = super().as_dict(skip=['parent'])
         super_dict['value'] = self.raw_value
         super_dict['units'] = self._args['units']
         # We'll have to serialize the callback option :face_palm:
-        keys = super_dict.keys()
-        if 'parent' in keys:
-            del super_dict['parent']
+        # keys = super_dict.keys()
+        # if 'parent' in keys:
+        #     del super_dict['parent']
         return super_dict
 
     def to_obj_type(self, data_type: Union['Descriptor', 'Parameter'], *kwargs):
@@ -286,10 +287,10 @@ class Parameter(Descriptor):
 
     def __init__(self,
                  name: str,
-                 value: Union[float, np.ndarray, noneType],
-                 error: Union[float, np.ndarray] = 0.,
-                 min: float = -np.Inf,
-                 max: float = np.Inf,
+                 value: Union[numbers.Number, np.ndarray, noneType],
+                 error: Union[numbers.Number, np.ndarray] = 0.,
+                 min: numbers.Number = -np.Inf,
+                 max: numbers.Number = np.Inf,
                  fixed: bool = False,
                  **kwargs):
         """
@@ -312,11 +313,20 @@ class Parameter(Descriptor):
         """
         # Set the error
         self._args['error'] = error
+        if not isinstance(value, numbers.Number):
+            raise ValueError("In a parameter the `value` must be numeric")
+        if value < min:
+            raise ValueError("`value` can not be less than `min`")
+        if value > max:
+            raise ValueError("`value` can not be greater than `max`")
+        if error < 0:
+            raise ValueError("Standard deviation `error` must be positive")
+
         super().__init__(name, value, **kwargs)
 
         # Create additional fitting elements
-        self._min: float = min
-        self._max: float = max
+        self._min: numbers.Number = min
+        self._max: numbers.Number = max
         self._fixed: bool = fixed
         self.initial_value = self.value
         self.constraints: dict = {
@@ -329,17 +339,17 @@ class Parameter(Descriptor):
         self._kwargs = kwargs
         # Monkey patch the unit and the value to take into account the new max/min situation
         self.__previous_set = self.__class__.value.fset
-        self.__previous_unit = self.__class__.unit
+        # self.__previous_unit = self.__class__.unit
 
-        setattr(self.__class__, 'unit', property(fget=self.__class__.unit.fget,
-                                                 fset=lambda obj, val: obj.__unit_setter(val),
-                                                 fdel=self.__class__.unit.fdel))
+        # setattr(self.__class__, 'unit', property(fget=self.__class__.unit.fget,
+        #                                          fset=lambda obj, val: obj.__unit_setter(val),
+        #                                          fdel=self.__class__.unit.fdel))
 
         setattr(self.__class__, 'value', property(fget=self.__class__.value.fget,
                                                   fset=lambda obj, val: self.__previous_set(obj, obj._validate(val)),
                                                   fdel=self.__class__.value.fdel))
 
-    def __unit_setter(self, value_str: str):  # noqa: S1144
+    def convert_unit(self, new_unit: str):  # noqa: S1144
         """
         Perform unit conversion. The value, max and min can change on unit change.
 
@@ -349,16 +359,16 @@ class Parameter(Descriptor):
         :rtype: noneType
         """
         old_unit = str(self._args['units'])
-        self.__previous_unit.fset(self, value_str)
-        # Deal with min/max
+        super().convert_unit(new_unit)
+        # Deal with min/max. Error is auto corrected
         if not self.value.unitless and not old_unit == 'dimensionless':
             self._min = Q_(self.min, old_unit).to(self._units).magnitude
             self._max = Q_(self.max, old_unit).to(self._units).magnitude
-        # Log the converted error
+        # Log the new converted error
         self._args['error'] = self.value.error.magnitude
 
     @property
-    def min(self) -> float:
+    def min(self) -> numbers.Number:
         """
         Get the minimum value for fitting.
 
@@ -369,7 +379,7 @@ class Parameter(Descriptor):
 
     @min.setter
     @stack_deco
-    def min(self, value: float):
+    def min(self, value: numbers.Number):
         """
         Set the minimum value for fitting.
         - implements undo/redo functionality.
@@ -379,10 +389,13 @@ class Parameter(Descriptor):
         :return: None
         :rtype: noneType
         """
-        self._min = value
+        if value <= self.raw_value:
+            self._min = value
+        else:
+            raise ValueError
 
     @property
-    def max(self) -> float:
+    def max(self) -> numbers.Number:
         """
         Get the maximum value for fitting.
 
@@ -393,7 +406,7 @@ class Parameter(Descriptor):
 
     @max.setter
     @stack_deco
-    def max(self, value: float):
+    def max(self, value: numbers.Number):
         """
         Get the maximum value for fitting.
         - implements undo/redo functionality.
@@ -403,7 +416,10 @@ class Parameter(Descriptor):
         :return: None
         :rtype: noneType
         """
-        self._max = value
+        if value >= self.raw_value:
+            self._max = value
+        else:
+            raise ValueError
 
     @property
     def fixed(self) -> bool:
@@ -427,6 +443,9 @@ class Parameter(Descriptor):
         :return: None
         :rtype: noneType
         """
+        # TODO Should we try and cast value to bool rather than throw ValueError?
+        if not isinstance(value, bool):
+            raise ValueError
         self._fixed = value
 
     @property
@@ -451,6 +470,8 @@ class Parameter(Descriptor):
         :return: None
         :rtype: noneType
         """
+        if value < 0:
+            raise ValueError
         self._args['error'] = value
         self._value._magnitude.std_dev = value
 
@@ -620,6 +641,7 @@ class BaseObj(MSONable):
 
         def getter(obj):
             return obj._kwargs[key]
+
         return lambda obj: getter(obj)
 
     @staticmethod
@@ -627,5 +649,5 @@ class BaseObj(MSONable):
         def setter(obj, value):
             if issubclass(obj._kwargs[key].__class__, Descriptor):
                 obj._kwargs[key].value = value
-        return lambda obj, value: setter(obj, value)
 
+        return lambda obj, value: setter(obj, value)
