@@ -40,3 +40,5 @@ build
 *.zip
 .ci/
 .idea/
+
+tests/unit_tests/Objects/.pytest_cache/

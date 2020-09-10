@@ -1,7 +1,6 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
-import sys
 import numbers
 import numpy as np
 
@@ -10,7 +9,7 @@ from typing import List, Union, Any, Iterable
 from functools import cached_property
 
 from easyCore import borg, ureg
-from easyCore.Utils.Hugger.Property import LoggedProperty
+from easyCore.Utils.classTools import addLoggedProp, addProp
 from easyCore.Utils.typing import noneType
 from easyCore.Utils.UndoRedo import stack_deco
 from easyCore.Utils.json import MSONable
@@ -238,14 +237,16 @@ class Descriptor(MSONable):
             sval += ' %s' % self.unit
         return "<%s '%s' %s>" % (self.__class__.__name__, self.name, sval)
 
-    def as_dict(self) -> dict:
+    def as_dict(self, skip: list = None) -> dict:
         """
         Convert ones self into a serialized form.
 
         :return: dictionary of ones self
         :rtype: dict
         """
-        super_dict = super().as_dict(skip=['parent'])
+        if skip is None:
+            skip = []
+        super_dict = super().as_dict(skip=skip + ['parent', 'callback'])
         super_dict['value'] = self.raw_value
         super_dict['units'] = self._args['units']
         # We'll have to serialize the callback option :face_palm:
@@ -345,9 +346,10 @@ class Parameter(Descriptor):
         #                                          fset=lambda obj, val: obj.__unit_setter(val),
         #                                          fdel=self.__class__.unit.fdel))
 
-        setattr(self.__class__, 'value', property(fget=self.__class__.value.fget,
-                                                  fset=lambda obj, val: self.__previous_set(obj, obj._validate(val)),
-                                                  fdel=self.__class__.value.fdel))
+        addProp(self, 'value',
+                fget=self.__class__.value.fget,
+                fset=lambda obj, val: self.__previous_set(obj, obj._validate(val)),
+                fdel=self.__class__.value.fdel)
 
     def convert_unit(self, new_unit: str):  # noqa: S1144
         """
@@ -557,16 +559,17 @@ class BaseObj(MSONable):
         for arg in args:
             if issubclass(arg.__class__, (BaseObj, Descriptor)):
                 kwargs[arg.name] = arg
-                self._borg.map.add_edge(self, arg)
-                self._borg.map.reset_type(arg, 'created_internal')
         # Set kwargs, also useful for serialization
         known_keys = self.__dict__.keys()
         self._kwargs = kwargs
         for key in kwargs.keys():
             if key in known_keys:
                 raise AttributeError
-            setattr(self.__class__, key, LoggedProperty(self.__getter(key), self.__setter(key),
-                                                        get_id=key, my_self=self, test_class=BaseObj))
+            if issubclass(kwargs[key].__class__, (BaseObj, Descriptor)):
+                self._borg.map.add_edge(self, kwargs[key])
+                self._borg.map.reset_type(kwargs[key], 'created_internal')
+            addLoggedProp(self, key, self.__getter(key), self.__setter(key), get_id=key, my_self=self,
+                          test_class=BaseObj)
 
     def fit_objects(self):
         """
@@ -602,21 +605,24 @@ class BaseObj(MSONable):
         :return: list of function and parameter names for auto-completion
         :rtype: List[str]
         """
-        new_objs = list(k for k in self.__dict__ if not k.startswith('_'))
-        class_objs = list(k for k in self.__class__.__dict__ if not k.startswith('_'))
-        return sorted(new_objs + class_objs)
+        # new_objs = list(k for k in self.__dict__ if not k.startswith('_'))
+        # class_objs = list(k for k in self.__class__.__dict__ if not k.startswith('_'))
+        new_class_objs = list(k for k in dir(self.__class__) if not k.startswith('_'))
+        return sorted(new_class_objs)
 
-    def as_dict(self) -> dict:
+    def as_dict(self, skip: list = None) -> dict:
         """
         Convert ones self into a serialized form.
 
         :return: dictionary of ones self
         :rtype: dict
         """
-        d = MSONable.as_dict(self)
+        if skip is None:
+            skip = []
+        d = MSONable.as_dict(self, skip=skip)
         for key, item in d.items():
             if hasattr(item, 'as_dict'):
-                d[key] = item.as_dict()
+                d[key] = item.as_dict(skip=skip)
         return d
 
     def set_binding(self, binding_name, binding_fun, *args, **kwargs):
@@ -649,5 +655,7 @@ class BaseObj(MSONable):
         def setter(obj, value):
             if issubclass(obj._kwargs[key].__class__, Descriptor):
                 obj._kwargs[key].value = value
+            else:
+                obj._kwargs[key] = value
 
         return lambda obj, value: setter(obj, value)

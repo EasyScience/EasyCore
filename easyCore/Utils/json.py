@@ -86,6 +86,13 @@ def _load_redirect(redirect_file):
     return dict(redirect_dict)
 
 
+def get_class_module(obj):
+    if hasattr(obj, '__old_class__'):
+        c = getattr(obj, '__old_class__')
+    else:
+        c = obj.__class__
+    return c.__module__
+
 class MSONable:
     """
     This is a mix-in base class specifying an API for msonable objects. MSON
@@ -135,12 +142,12 @@ class MSONable:
         A JSON serializable dict representation of an object.
         """
         d = {
-            "@module": self.__class__.__module__,
+            "@module": get_class_module(self),
             "@class": self.__class__.__name__
         }
 
         try:
-            parent_module = self.__class__.__module__.split('.')[0]
+            parent_module = get_class_module(self).split('.')[0]
             module_version = import_module(parent_module).__version__  # type: ignore
             d["@version"] = u"{}".format(module_version)
         except (AttributeError, ImportError):
