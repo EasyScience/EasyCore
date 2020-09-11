@@ -17,7 +17,8 @@ include = ["CHANGELOG.md"]
 packages = [ { include = "easyCore" } ]
 
 [tool.poetry.dependencies]
-python = "^3.6, <3.9" # "^3.8" generates error when installing PySide2 in easyAppGui
+python = "^3.8, <3.9" # "^3.8" generates error when installing PySide2 in easyAppGui
+pint = "^0.15"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
