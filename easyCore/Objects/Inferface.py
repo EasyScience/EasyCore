@@ -34,10 +34,7 @@ class InterfaceFactoryTemplate:
         if interface_name is None:
             if len(self._interfaces) > 0:
                 # Fallback name
-                interface_name = self._interfaces[0].__name__
-                # If the interface is created to spec, it should have a name field.
-                if hasattr(self._interfaces[0], 'name'):
-                    interface_name = self._interfaces[0].name
+                interface_name = self.return_name(self._interfaces[0])
             else:
                 raise NotImplementedError
 
@@ -72,7 +69,7 @@ class InterfaceFactoryTemplate:
         :return: List of available interface names
         :rtype: List[str]
         """
-        return [this_interface.__name__ for this_interface in self._interfaces]
+        return [self.return_name(this_interface) for this_interface in self._interfaces]
 
     @property
     def current_interface(self) -> _C:
@@ -83,6 +80,16 @@ class InterfaceFactoryTemplate:
         :rtype: InterfaceTemplate
         """
         return self._current_interface
+
+    @property
+    def current_interface_name(self) -> str:
+        """
+        Returns the constructor name for the currently selected interface.
+
+        :return: Interface constructor name
+        :rtype: str
+        """
+        return self.return_name(self._current_interface)
 
     def fit_func(self, x_array: np.ndarray, *args, **kwargs) -> np.ndarray:
         """
@@ -113,3 +120,13 @@ class InterfaceFactoryTemplate:
 
     def __call__(self, *args, **kwargs) -> _M:
         return self.__interface_obj
+
+    @staticmethod
+    def return_name(this_interface) -> str:
+        """
+        Return an interfaces name
+        """
+        interface_name = this_interface.__name__
+        if hasattr(this_interface, 'name'):
+            interface_name =  getattr(this_interface, 'name')
+        return interface_name
