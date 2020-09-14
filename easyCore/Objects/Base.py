@@ -3,6 +3,7 @@ __version__ = '0.0.1'
 
 import numbers
 import numpy as np
+import weakref
 
 from copy import deepcopy
 from typing import List, Union, Any, Iterable
@@ -85,9 +86,16 @@ class Descriptor(MSONable):
         self.description: str = description
         self._display_name: str = display_name
         self.url: str = url
+        if callback is None:
+            callback = property()
         self._callback: property = callback
         self.user_data: dict = {}
         self._type = type(value)
+
+        finalizer = None
+        if self._callback.fdel is not None:
+            weakref.finalize(self, self._callback.fdel)
+        self._finalizer = finalizer
 
     @property
     def display_name(self) -> str:
@@ -155,11 +163,16 @@ class Descriptor(MSONable):
         """
         # Cached property? Should reference callback.
         # Also should reference for undo/redo
+        if self._callback.fget is not None:
+            try:
+                value = self._callback.fget()
+                if value != self._value:
+                    self.__deepValueSetter(value)
+            except Exception as e:
+                raise e
         return self._value
 
-    @value.setter
-    @stack_deco
-    def value(self, value: Any):
+    def __deepValueSetter(self, value):
         """
         Set the value of self. This creates a pint with a unit.
 
@@ -175,6 +188,25 @@ class Descriptor(MSONable):
                 value = value.nominal_value
         self._args['value'] = value
         self._value = self.__class__._constructor(**self._args)
+
+    @value.setter
+    @stack_deco
+    def value(self, value: Any):
+        """
+        Set the value of self. This creates a pint with a unit.
+
+        :param value: new value of self
+        :type value: Any
+        :return: None
+        :rtype: noneType
+        """
+        self.__deepValueSetter(value)
+        if self._callback.fset is not None:
+            try:
+                self._callback.fset(value)
+            except Exception as e:
+                raise e
+
 
     @property
     def raw_value(self):
@@ -219,23 +251,13 @@ class Descriptor(MSONable):
         """
         return [str(u) for u in self.unit.compatible_units()]
 
-    def __del__(self):
-        """
-        This would remove ones self from the collective.
-
-        :return: None
-        :rtype: noneType
-        """
-        # TODO Remove oneself from the collective on deletion
-        # self.__borg.map.remove_vertices(id(self))
-        pass
-
     def __repr__(self):
         """Return printable representation of a Parameter object."""
         sval = "= %s" % self._value.magnitude
         if not self.value.unitless:
             sval += ' %s' % self.unit
         return "<%s '%s' %s>" % (self.__class__.__name__, self.name, sval)
+
 
     def as_dict(self, skip: list = None) -> dict:
         """
@@ -246,7 +268,7 @@ class Descriptor(MSONable):
         """
         if skip is None:
             skip = []
-        super_dict = super().as_dict(skip=skip + ['parent', 'callback'])
+        super_dict = super().as_dict(skip=skip + ['parent', 'callback', '_finalizer'])
         super_dict['value'] = self.raw_value
         super_dict['units'] = self._args['units']
         # We'll have to serialize the callback option :face_palm:
@@ -477,14 +499,14 @@ class Parameter(Descriptor):
         self._args['error'] = value
         self._value._magnitude.std_dev = value
 
-    def for_fit(self):
-        """
-        Coverts oneself into a type which can be used for fitting. Note that the type
-        is dependent on the fitting engine selected.
-
-        :return: parameter for fitting
-        """
-        return self._borg.fitting_engine.convert_to_par_object(self)
+    # def for_fit(self):
+    #     """
+    #     Coverts oneself into a type which can be used for fitting. Note that the type
+    #     is dependent on the fitting engine selected.
+    #
+    #     :return: parameter for fitting
+    #     """
+    #     return self._borg.fitting_engine.convert_to_par_object(self)
 
     def _validate(self, value: Any):
         """
@@ -571,17 +593,17 @@ class BaseObj(MSONable):
             addLoggedProp(self, key, self.__getter(key), self.__setter(key), get_id=key, my_self=self,
                           test_class=BaseObj)
 
-    def fit_objects(self):
-        """
-        Collect all objects which can be fitted, convert them to fitting engine objects and
-        return them as a list.
-
-        :return: List of fitting engine objects
-        """
-        return_objects = []
-        for par_obj in self.get_parameters():
-            return_objects.append(par_obj.for_fit())
-        return return_objects
+    # def fit_objects(self):
+    #     """
+    #     Collect all objects which can be fitted, convert them to fitting engine objects and
+    #     return them as a list.
+    #
+    #     :return: List of fitting engine objects
+    #     """
+    #     return_objects = []
+    #     for par_obj in self.get_parameters():
+    #         return_objects.append(par_obj.for_fit())
+    #     return return_objects
 
     def get_parameters(self) -> List[Parameter]:
         """
