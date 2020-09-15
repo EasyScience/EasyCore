@@ -8,16 +8,23 @@ build-backend = "poetry.masonry.api"
 name = "easyCore"
 version = "0.0.1"
 description = "Generic logic for easyScience libraries"
-license = "GPL-3.0-only"
+license = "GPL-3.0"
 authors = ["Andrew Sazonov", "Simon Ward"]
 readme = "README.md"
 homepage = "https://github.com/easyScience/easyCore"
 documentation = "https://github.com/easyScience/easyCore"
+classifiers=[
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",  # Define that your audience are developers
+    "Topic :: Scientific/Engineering :: Physics",
+    "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",  # Again, pick a license
+    "Programming Language :: Python :: 3.6",
+]
 include = ["CHANGELOG.md"]
 packages = [ { include = "easyCore" } ]
 
 [tool.poetry.dependencies]
-python = "^3.8, <3.9" # "^3.8" generates error when installing PySide2 in easyAppGui
+python = "^3.6, >=3.61, <3.9" # "^3.8" generates error when installing PySide2 in easyAppGui
 numpy = "^1.19"
 pint = "^0.15"
 uncertainties = "^3.1"
@@ -25,6 +32,35 @@ lmfit = "^1.0"
 bumps = "^0.7"
 
 [tool.poetry.dev-dependencies]
-pytest = "^5.2"
+pytest = "^5.4.3"
+pytest-cov = "^2.9.0"
+pytest-mock = "^3.1.1"
+codecov = "^2.1.4"
+black = "^19.10b0"
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+isolated_build = True
+envlist = py{36,37,38}
+[gh-actions]
+python =
+    3.6: py36
+    3.7: py37
+    3.8: py38
+[gh-actions:env]
+PLATFORM =
+    ubuntu-latest: linux
+    macos-latest: macos
+    windows-latest: windows
+[testenv]
+passenv = CI GITHUB_ACTION COVERAGE_FILE
+deps = coverage
+whitelist_externals = poetry
+commands =
+    poetry install -vvv
+    poetry run pytest
+    coverage xml -i
+"""
 
 # CUSTOM CONFIG

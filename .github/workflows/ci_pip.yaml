@@ -1,0 +1,74 @@
+name: CI using pip
+
+on: [push, pull_request]
+
+jobs:
+  test:
+
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+        os: [ubuntu-latest]
+
+    runs-on: ${{ matrix.os }}
+    if: "!contains(github.event.head_commit.message, '[ci skip]')"
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - uses: Gr1N/setup-poetry@v2
+
+#    - uses: actions/cache@v1
+#      with:
+#        path: ~/.cache/pypoetry/virtualenvs
+#        key: ${{ matrix.os }}-poetry-${{ hashFiles('poetry.lock') }}
+#        restore-keys: |
+#          ${{ matrix.os }}-poetry-
+
+    - name: Install dependencies
+      run: |
+        poetry add -D tox tox-gh-actions coverage
+        poetry update
+    - name: Test with tox
+      run: |
+        poetry run tox
+    - name: Upload coverage
+      uses: codecov/codecov-action@v1.0.7
+      with:
+        name: Pytest coverage
+        env_vars: OS,PYTHON
+      env:
+        OS: ${{ matrix.os }}
+        PYTHON: ${{ matrix.python-version }}
+
+  test_build:
+
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[ci skip]')"
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+
+      - uses: Gr1N/setup-poetry@v2
+
+#      - uses: actions/cache@v1
+#        with:
+#          path: ~/.cache/pypoetry/virtualenvs
+#          key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
+#          restore-keys: |
+#            ${{ runner.os }}-poetry-
+
+      - name: Check Build
+        run: |
+          pip install twine
+          poetry build
+          python -m twine check dist/*

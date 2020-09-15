@@ -185,9 +185,9 @@ def test_baseobj_dir(setup_pars):
     name = setup_pars['name']
     del setup_pars['name']
     obj = BaseObj(name, **setup_pars)
-    expected = ['REDIRECT', 'as_dict', 'des1', 'des2', 'fit_objects',
-                'from_dict', 'get_parameters', 'par1', 'par2', 'par3',
-                'set_binding', 'to_json', 'unsafe_hash']
+    expected = ['REDIRECT', 'as_dict', 'des1', 'des2', 'from_dict',
+                'generate_bindings', 'get_parameters', 'par1',
+                'par2', 'par3', 'switch_interface', 'to_json', 'unsafe_hash']
     obtained = dir(obj)
     assert len(obtained) == len(expected)
     assert obtained == sorted(obtained)
