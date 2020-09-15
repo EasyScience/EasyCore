@@ -123,6 +123,7 @@ class InterfaceFactoryTemplate:
         props = model.get_parameters()
         for prop in props:
             prop._callback = self.generate_binding(prop.name)
+            prop._callback.fset(prop.raw_value)
 
     @abstractmethod
     def generate_binding(self, name, *args, **kwargs) -> property:
