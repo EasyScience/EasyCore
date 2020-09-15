@@ -18,13 +18,13 @@ classifiers=[
     "Intended Audience :: Developers",  # Define that your audience are developers
     "Topic :: Scientific/Engineering :: Physics",
     "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",  # Again, pick a license
-    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.6, 3.7, 3.8",
 ]
 include = ["CHANGELOG.md"]
 packages = [ { include = "easyCore" } ]
 
 [tool.poetry.dependencies]
-python = "^3.6, >=3.61, <3.9" # "^3.8" generates error when installing PySide2 in easyAppGui
+python = "^3.6, >=3.6.1" # "^3.8" generates error when installing PySide2 in easyAppGui
 numpy = "^1.19"
 pint = "^0.15"
 uncertainties = "^3.1"
