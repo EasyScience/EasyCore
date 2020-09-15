@@ -258,7 +258,6 @@ class Descriptor(MSONable):
             sval += ' %s' % self.unit
         return "<%s '%s' %s>" % (self.__class__.__name__, self.name, sval)
 
-
     def as_dict(self, skip: list = None) -> dict:
         """
         Convert ones self into a serialized form.
@@ -576,6 +575,7 @@ class BaseObj(MSONable):
         """
 
         self._borg.map.add_vertex(self, obj_type='created')
+        self.interface = None
         self.__dict__['name'] = name
         # If Parameter or Descriptor is given as arguments...
         for arg in args:
@@ -647,22 +647,24 @@ class BaseObj(MSONable):
                 d[key] = item.as_dict(skip=skip)
         return d
 
-    def set_binding(self, binding_name, binding_fun, *args, **kwargs):
+    def generate_bindings(self):
         """
-        Set the binding of parameters of self to interface counterparts.
+        Generate or re-generate bindings to an interface (if exists)
 
-        :param binding_name: name of parameter to be bound
-        :type binding_name: str
-        :param binding_fun: function to do the binding
-        :type binding_fun: Callable
-        :param args: positional arguments for the binding function
-        :param kwargs: keyword/value pair arguments for the binding function
-        :return: None
-        :rtype: noneType
+        :raises: AttributeError
         """
-        parameters = [par.name for par in self.get_parameters()]
-        if binding_name in parameters:
-            setattr(self._kwargs[binding_name], '_callback', binding_fun(binding_name, *args, **kwargs))
+        if self.interface is None:
+            raise AttributeError
+        self.interface.generate_bindings(self)
+
+    def switch_interface(self, new_interface_name: str):
+        """
+        Switch or create a new interface.
+        """
+        if self.interface is None:
+            raise AttributeError
+        self.interface.switch(new_interface_name)
+        self.interface.generate_bindings(self)
 
     @staticmethod
     def __getter(key: str):

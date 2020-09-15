@@ -133,12 +133,16 @@ class lmfit(FittingTemplate):  # noqa: S101
 
         # Why do we do this? Because a fitting template has to have borg instantiated outside pre-runtime
         from easyCore import borg
-        borg.stack.beginMacro('Fitting routine')
-        if model is None:
-            model = self.make_model()
-        model_results = model.fit(y, x=x, weights=weights, **kwargs)
-        self._set_parameter_fit_result(model_results)
-        borg.stack.endMacro()
+        try:
+            borg.stack.beginMacro('Fitting routine')
+            if model is None:
+                model = self.make_model()
+            model_results = model.fit(y, x=x, weights=weights, **kwargs)
+            self._set_parameter_fit_result(model_results)
+        except Exception as e:
+            raise e
+        finally:
+            borg.stack.endMacro()
         return self._gen_fit_results(model_results)
 
     def convert_to_pars_obj(self, par_list: Union[list, noneType] = None) -> lmParameters:

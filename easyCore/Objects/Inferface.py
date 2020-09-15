@@ -1,9 +1,11 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
+
+import numpy as np
+
 from abc import ABCMeta, abstractmethod
 from typing import TypeVar, List
-import numpy as np
 
 _C = TypeVar("_C", bound=ABCMeta)
 _M = TypeVar("_M")
@@ -104,10 +106,26 @@ class InterfaceFactoryTemplate:
         :return: points calculated at positional values `x`
         :rtype: np.ndarray
         """
-        return self.__interface_obj.fit_func(x_array, *args, **kwargs)
+        def outer_fit_func(obj):
+            def inner_fit_func(x_array, *args, **kwargs):
+                return obj.__interface_obj.fit_func(x_array, *args, **kwargs)
+            return inner_fit_func
+        return outer_fit_func(self)(x_array, *args, **kwargs)
+
+    def generate_bindings(self, model):
+        """
+        Automatically bind a `Parameter` to the corresponding interface.
+        :param name: parameter name
+        :type name: str
+        :return: binding property
+        :rtype: property
+        """
+        props = model.get_parameters()
+        for prop in props:
+            prop._callback = self.generate_binding(prop.name)
 
     @abstractmethod
-    def generate_bindings(self, name, *args, **kwargs) -> property:
+    def generate_binding(self, name, *args, **kwargs) -> property:
         """
         Automatically bind a `Parameter` to the corresponding interface.
 
@@ -128,5 +146,5 @@ class InterfaceFactoryTemplate:
         """
         interface_name = this_interface.__name__
         if hasattr(this_interface, 'name'):
-            interface_name =  getattr(this_interface, 'name')
+            interface_name = getattr(this_interface, 'name')
         return interface_name
