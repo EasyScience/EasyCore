@@ -21,19 +21,19 @@ class Store:
     __ret_ident = 'ret_'
 
     def __init__(self):
-        self.log = self.__log  ## TODO Async problem?
+        self.log = self.__log  # TODO Async problem?
         self.var_ident = self.__var_ident
         self.ret_ident = self.__ret_ident
 
     @staticmethod
     def get_defaults() -> dict:
         return {
-            'log': Store.__log,
+            'log':         Store.__log,
             'create_list': Store.__create_list,
             'unique_args': Store.__unique_args,
             'unique_rets': Store.__unique_rets,
-            'var_ident': Store.__var_ident,
-            'ret_ident': Store.__ret_ident
+            'var_ident':   Store.__var_ident,
+            'ret_ident':   Store.__ret_ident
         }
 
     def append_log(self, log_entry: str):
@@ -185,7 +185,7 @@ class PatcherFactory(Hugger, metaclass=ABCMeta):
         option = {
             'create_list': self._store.create_list,
             'return_list': self._store.unique_rets,
-            'input_list': self._store.unique_args
+            'input_list':  self._store.unique_args
         }
         return this_id, option
 
@@ -216,6 +216,3 @@ class PatcherFactory(Hugger, metaclass=ABCMeta):
                 cls = method_in.__globals__.get(class_name)
             if isinstance(cls, type):
                 return cls
-
-
-

@@ -101,10 +101,10 @@ class lmfit(FittingTemplate):  # noqa: S101
         params = [inspect.Parameter('x',
                                     inspect.Parameter.POSITIONAL_OR_KEYWORD,
                                     annotation=inspect._empty), *[inspect.Parameter(name,
-                                                                                   inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                                                                                   annotation=inspect._empty,
-                                                                                   default=parameter.raw_value)
-                                                                 for name, parameter in self._cached_pars.items()]]
+                                                                                    inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                                                                                    annotation=inspect._empty,
+                                                                                    default=parameter.raw_value)
+                                                                  for name, parameter in self._cached_pars.items()]]
         # Sign the function
         fit_function.__signature__ = inspect.Signature(params)
         self._fit_function = fit_function

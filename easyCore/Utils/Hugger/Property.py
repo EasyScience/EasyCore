@@ -98,7 +98,7 @@ class LoggedProperty(property):
                 temp += f'{self._my_self.__class__.__name__.lower()}_{index}.{self._get_id}'
             if borg.map.convert_id(self._my_self) in borg.map.created_internal:
                 # We now have to trace....
-                route = borg.map.reverse_route(self._my_self)
+                route = borg.map.reverse_route(self._my_self)  # noqa: F841
                 index = borg.map.created_objs.index(borg.map.convert_id_to_key(self._my_self))
                 temp += f'{self._my_self.__class__.__name__.lower()}_{index}.{self._get_id}'
         elif log_type == 'set':

@@ -6,6 +6,7 @@ import functools
 from time import time
 from easyCore import borg
 
+
 class memoized:
     """
     Decorator. Caches a function's return value each time it is called.

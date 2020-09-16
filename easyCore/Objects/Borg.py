@@ -6,6 +6,7 @@ from easyCore.Utils.Hugger.Hugger import ScriptManager
 from easyCore.Utils.classUtils import singleton
 from easyCore.Utils.Logging import Logger
 
+
 @singleton
 class Borg:
     """

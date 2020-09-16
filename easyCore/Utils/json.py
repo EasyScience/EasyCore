@@ -60,6 +60,7 @@ except ImportError:
     except ImportError:
         yaml = None  # type: ignore
 
+
 def _load_redirect(redirect_file):
     try:
         with open(redirect_file, "rt") as f:
@@ -80,7 +81,7 @@ def _load_redirect(redirect_file):
 
         redirect_dict[old_module][old_class] = {
             "@module": new_module,
-            "@class": new_class,
+            "@class":  new_class,
         }
 
     return dict(redirect_dict)
@@ -92,6 +93,7 @@ def get_class_module(obj):
     else:
         c = obj.__class__
     return c.__module__
+
 
 class MSONable:
     """
@@ -143,7 +145,7 @@ class MSONable:
         """
         d = {
             "@module": get_class_module(self),
-            "@class": self.__class__.__name__
+            "@class":  self.__class__.__name__
         }
 
         try:
@@ -273,24 +275,24 @@ class MontyEncoder(json.JSONEncoder):
         if isinstance(o, datetime.datetime):
             return {
                 "@module": "datetime",
-                "@class": "datetime",
-                "string": o.__str__()
+                "@class":  "datetime",
+                "string":  o.__str__()
             }
         if np is not None:
             if isinstance(o, np.ndarray):
                 if str(o.dtype).startswith('complex'):
                     return {
                         "@module": "numpy",
-                        "@class": "array",
-                        "dtype": o.dtype.__str__(),
-                        "data": [o.real.tolist(),
-                                 o.imag.tolist()]
+                        "@class":  "array",
+                        "dtype":   o.dtype.__str__(),
+                        "data":    [o.real.tolist(),
+                                    o.imag.tolist()]
                     }
                 return {
                     "@module": "numpy",
-                    "@class": "array",
-                    "dtype": o.dtype.__str__(),
-                    "data": o.tolist()
+                    "@class":  "array",
+                    "dtype":   o.dtype.__str__(),
+                    "data":    o.tolist()
                 }
             if isinstance(o, np.generic):
                 return o.item()
@@ -298,8 +300,8 @@ class MontyEncoder(json.JSONEncoder):
             if isinstance(o, bson.objectid.ObjectId):
                 return {
                     "@module": "bson.objectid",
-                    "@class": "ObjectId",
-                    "oid": str(o)
+                    "@class":  "ObjectId",
+                    "oid":     str(o)
                 }
 
         try:
