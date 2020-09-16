@@ -41,7 +41,7 @@ jobs:
       uses: codecov/codecov-action@v1.0.7
       with:
         name: Pytest coverage
-        env_vars: OS,PYTHON
+        env_vars: OS,PYTHON,GITHUB_ACTIONS,GITHUB_ACTION,GITHUB_REF,GITHUB_REPOSITORY,GITHUB_HEAD_REF,GITHUB_RUN_ID,GITHUB_SHA,COVERAGE_FILE
       env:
         OS: ${{ matrix.os }}
         PYTHON: ${{ matrix.python-version }}

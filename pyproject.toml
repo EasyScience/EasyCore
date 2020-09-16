@@ -59,7 +59,13 @@ PLATFORM =
 [testenv]
 passenv =
     CI
-    GITHUB*
+    GITHUB_ACTIONS
+    GITHUB_ACTION
+    GITHUB_REF
+    GITHUB_REPOSITORY
+    GITHUB_HEAD_REF
+    GITHUB_RUN_ID
+    GITHUB_SHA
     COVERAGE_FILE
 deps = coverage
 whitelist_externals = poetry
