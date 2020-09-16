@@ -16,6 +16,6 @@ except ImportError:
     # TODO make this a proper message (use logging?)
     warnings.warn('bumps has not been installed.', ImportWarning, stacklevel=2)
 
-from easyCore.Fitting.fitting_template import FittingTemplate
+from easyCore.Fitting.fitting_template import FittingTemplate  # noqa: E402
 
 engines: list = FittingTemplate._engines

@@ -2,7 +2,7 @@ __author__ = "github.com/wardsimon"
 __version__ = "0.0.1"
 
 from types import FunctionType
-from typing import List, Callable,  TypeVar
+from typing import List, Callable, TypeVar
 
 from abc import ABCMeta
 from easyCore import borg, default_fitting_engine
