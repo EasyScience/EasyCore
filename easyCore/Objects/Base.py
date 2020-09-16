@@ -7,7 +7,7 @@ import weakref
 
 from copy import deepcopy
 from typing import List, Union, Any, Iterable
-from functools import cached_property
+# from functools import cached_property
 
 from easyCore import borg, ureg
 from easyCore.Utils.classTools import addLoggedProp, addProp
@@ -241,7 +241,7 @@ class Descriptor(MSONable):
         self._args['value'] = self.raw_value
         self._args['units'] = str(self.unit)
 
-    @cached_property
+    # @cached_property
     def compatible_units(self) -> List[str]:
         """
         Returns all possible units for which the current unit can be converted.
