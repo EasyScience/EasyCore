@@ -242,6 +242,7 @@ class Descriptor(MSONable):
         self._args['units'] = str(self.unit)
 
     # @cached_property
+    @property
     def compatible_units(self) -> List[str]:
         """
         Returns all possible units for which the current unit can be converted.
