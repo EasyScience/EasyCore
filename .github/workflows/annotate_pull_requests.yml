@@ -16,4 +16,4 @@ jobs:
       with:
         path: easyCore
         max_line_length: 127
-        ignore: F401,E126,E241
+        ignore: F401,E126,E241,W
