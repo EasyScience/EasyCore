@@ -1,16 +1,19 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
+import numbers
+import numpy as np
+import weakref
+
 from copy import deepcopy
 from typing import List, Union, Any, Iterable
-from functools import cached_property
+# from functools import cached_property
 
 from easyCore import borg, ureg
+from easyCore.Utils.classTools import addLoggedProp, addProp
 from easyCore.Utils.typing import noneType
 from easyCore.Utils.UndoRedo import stack_deco
 from easyCore.Utils.json import MSONable
-
-import numpy as np
 
 Q_ = ureg.Quantity
 M_ = ureg.Measurement
@@ -61,13 +64,11 @@ class Descriptor(MSONable):
         :param parent: The object which is the parent to this one
         :type parent:Any
         """
-        # Where did we come from
-        self._parent = parent
         # Let the collective know we've been assimilated
-        self._borg.map.add_vertex(id(self))
+        self._borg.map.add_vertex(self, obj_type='created')
         # Make the connection between self and parent
-        if self._parent is not None:
-            self._borg.map.add_edge({id(self._parent), id(self)})
+        if parent is not None:
+            self._borg.map.add_edge(parent, self)
 
         self.name: str = name
         # Attach units if necessary
@@ -85,35 +86,22 @@ class Descriptor(MSONable):
         self.description: str = description
         self._display_name: str = display_name
         self.url: str = url
+        if callback is None:
+            callback = property()
         self._callback: property = callback
         self.user_data: dict = {}
         self._type = type(value)
 
-    @property
-    def _parent(self) -> int:
-        """
-        Return the id of parent
-        :return: python id of parent
-        :rtype: int
-        """
-        return id(self._parent_store)
-
-    @_parent.setter
-    def _parent(self, parent: Any):
-        """
-        Set the parent of this self
-        :param parent: Parent object
-        :type parent: Any
-        :return: None
-        :rtype: noneType
-        """
-        # TODO This should also update the graph.....
-        self._parent_store = parent
+        finalizer = None
+        if self._callback.fdel is not None:
+            weakref.finalize(self, self._callback.fdel)
+        self._finalizer = finalizer
 
     @property
     def display_name(self) -> str:
         """
-        Get a pretty display name
+        Get a pretty display name.
+
         :return: the pretty display name
         :rtype: str
         """
@@ -127,7 +115,8 @@ class Descriptor(MSONable):
     @stack_deco
     def display_name(self, name_str: str):
         """
-        Set the pretty display name
+        Set the pretty display name.
+
         :param name_str: pretty display name
         :type name_str: str
         :return: None
@@ -136,9 +125,10 @@ class Descriptor(MSONable):
         self._display_name = name_str
 
     @property
-    def unit(self):
+    def unit(self) -> ureg.Unit:
         """
-        Get the unit associated with the value
+        Get the unit associated with the value.
+
         :return: Unit associated with self
         :rtype: ureg.Unit
         """
@@ -149,6 +139,7 @@ class Descriptor(MSONable):
     def unit(self, unit_str: str):
         """
         Set the unit to a new one.
+
         :param unit_str:
         :type unit_str: str
         :return: None
@@ -165,19 +156,26 @@ class Descriptor(MSONable):
     def value(self):
         """
         Get the value of self as a pint. This is should be usable for most cases. If a pint
-        is not acceptable then the raw value can be obtained through `obj.raw_value`
+        is not acceptable then the raw value can be obtained through `obj.raw_value`.
+
         :return: Value of self
         :rtype: Any
         """
         # Cached property? Should reference callback.
         # Also should reference for undo/redo
+        if self._callback.fget is not None:
+            try:
+                value = self._callback.fget()
+                if value != self._value:
+                    self.__deepValueSetter(value)
+            except Exception as e:
+                raise e
         return self._value
 
-    @value.setter
-    @stack_deco
-    def value(self, value: Any):
+    def __deepValueSetter(self, value):
         """
         Set the value of self. This creates a pint with a unit.
+
         :param value: new value of self
         :type value: Any
         :return: None
@@ -191,10 +189,30 @@ class Descriptor(MSONable):
         self._args['value'] = value
         self._value = self.__class__._constructor(**self._args)
 
+    @value.setter
+    @stack_deco
+    def value(self, value: Any):
+        """
+        Set the value of self. This creates a pint with a unit.
+
+        :param value: new value of self
+        :type value: Any
+        :return: None
+        :rtype: noneType
+        """
+        self.__deepValueSetter(value)
+        if self._callback.fset is not None:
+            try:
+                self._callback.fset(value)
+            except Exception as e:
+                raise e
+
+
     @property
     def raw_value(self):
         """
-        Return the raw value of self without a unit
+        Return the raw value of self without a unit.
+
         :return: raw value of self
         :rtype: Any
         """
@@ -208,6 +226,7 @@ class Descriptor(MSONable):
     def _validator(self, value: Any):
         """
         Check that type is consistent. We don't want to assign a float to a string etc.
+
         :param value: Value to be checked
         :type value: Any
         :return: None
@@ -218,27 +237,20 @@ class Descriptor(MSONable):
     def convert_unit(self, unit_str: str):
         new_unit = ureg.parse_expression(unit_str)
         self._value = self._value.to(new_unit)
+        self._units = new_unit
         self._args['value'] = self.raw_value
         self._args['units'] = str(self.unit)
 
-    @cached_property
+    # @cached_property
+    @property
     def compatible_units(self) -> List[str]:
         """
         Returns all possible units for which the current unit can be converted.
+
         :return: Possible conversion units
         :rtype: List[str]
         """
         return [str(u) for u in self.unit.compatible_units()]
-
-    def __del__(self):
-        """
-        This would remove ones self from the collective
-        :return: None
-        :rtype: noneType
-        """
-        # TODO Remove oneself from the collective on deletion
-        # self.__borg.map.remove_vertices(id(self))
-        pass
 
     def __repr__(self):
         """Return printable representation of a Parameter object."""
@@ -247,24 +259,28 @@ class Descriptor(MSONable):
             sval += ' %s' % self.unit
         return "<%s '%s' %s>" % (self.__class__.__name__, self.name, sval)
 
-    def as_dict(self) -> dict:
+    def as_dict(self, skip: list = None) -> dict:
         """
-        Convert ones self into a serialized form
+        Convert ones self into a serialized form.
+
         :return: dictionary of ones self
         :rtype: dict
         """
-        super_dict = super().as_dict()
+        if skip is None:
+            skip = []
+        super_dict = super().as_dict(skip=skip + ['parent', 'callback', '_finalizer'])
         super_dict['value'] = self.raw_value
         super_dict['units'] = self._args['units']
         # We'll have to serialize the callback option :face_palm:
-        keys = super_dict.keys()
-        if 'parent' in keys:
-            del super_dict['parent']
+        # keys = super_dict.keys()
+        # if 'parent' in keys:
+        #     del super_dict['parent']
         return super_dict
 
     def to_obj_type(self, data_type: Union['Descriptor', 'Parameter'], *kwargs):
         """
-        Convert between a `Parameter` and a `Descriptor`
+        Convert between a `Parameter` and a `Descriptor`.
+
         :param data_type: class constructor of what we want to be
         :type data_type: Callable
         :param kwargs: Additional keyword/value pairs for conversion
@@ -294,10 +310,10 @@ class Parameter(Descriptor):
 
     def __init__(self,
                  name: str,
-                 value: Union[float, np.ndarray, noneType],
-                 error: Union[float, np.ndarray] = 0.,
-                 min: float = -np.Inf,
-                 max: float = np.Inf,
+                 value: Union[numbers.Number, np.ndarray, noneType],
+                 error: Union[numbers.Number, np.ndarray] = 0.,
+                 min: numbers.Number = -np.Inf,
+                 max: numbers.Number = np.Inf,
                  fixed: bool = False,
                  **kwargs):
         """
@@ -320,11 +336,20 @@ class Parameter(Descriptor):
         """
         # Set the error
         self._args['error'] = error
+        if not isinstance(value, numbers.Number):
+            raise ValueError("In a parameter the `value` must be numeric")
+        if value < min:
+            raise ValueError("`value` can not be less than `min`")
+        if value > max:
+            raise ValueError("`value` can not be greater than `max`")
+        if error < 0:
+            raise ValueError("Standard deviation `error` must be positive")
+
         super().__init__(name, value, **kwargs)
 
         # Create additional fitting elements
-        self._min: float = min
-        self._max: float = max
+        self._min: numbers.Number = min
+        self._max: numbers.Number = max
         self._fixed: bool = fixed
         self.initial_value = self.value
         self.constraints: dict = {
@@ -337,37 +362,40 @@ class Parameter(Descriptor):
         self._kwargs = kwargs
         # Monkey patch the unit and the value to take into account the new max/min situation
         self.__previous_set = self.__class__.value.fset
-        self.__previous_unit = self.__class__.unit
+        # self.__previous_unit = self.__class__.unit
 
-        setattr(self.__class__, 'unit', property(fget=self.__class__.unit.fget,
-                                                 fset=lambda obj, new_value: obj.__unit_setter(new_value),
-                                                 fdel=self.__class__.unit.fdel))
+        # setattr(self.__class__, 'unit', property(fget=self.__class__.unit.fget,
+        #                                          fset=lambda obj, val: obj.__unit_setter(val),
+        #                                          fdel=self.__class__.unit.fdel))
 
-        setattr(self.__class__, 'value', property(fget=self.__class__.value.fget,
-                                                  fset=lambda obj, val: self.__previous_set(obj, obj._validate(val)),
-                                                  fdel=self.__class__.value.fdel))
+        addProp(self, 'value',
+                fget=self.__class__.value.fget,
+                fset=lambda obj, val: self.__previous_set(obj, obj._validate(val)),
+                fdel=self.__class__.value.fdel)
 
-    def __unit_setter(self, value_str: str):  # noqa: S1144
+    def convert_unit(self, new_unit: str):  # noqa: S1144
         """
         Perform unit conversion. The value, max and min can change on unit change.
+
         :param value_str: new unit
         :type value_str: str
         :return: None
         :rtype: noneType
         """
         old_unit = str(self._args['units'])
-        self.__previous_unit.fset(self, value_str)
-        # Deal with min/max
-        if not self.value.unitless:
+        super().convert_unit(new_unit)
+        # Deal with min/max. Error is auto corrected
+        if not self.value.unitless and not old_unit == 'dimensionless':
             self._min = Q_(self.min, old_unit).to(self._units).magnitude
             self._max = Q_(self.max, old_unit).to(self._units).magnitude
-        # Log the converted error
+        # Log the new converted error
         self._args['error'] = self.value.error.magnitude
 
     @property
-    def min(self) -> float:
+    def min(self) -> numbers.Number:
         """
-        Get the minimum value for fitting
+        Get the minimum value for fitting.
+
         :return: minimum value
         :rtype: float
         """
@@ -375,21 +403,26 @@ class Parameter(Descriptor):
 
     @min.setter
     @stack_deco
-    def min(self, value: float):
+    def min(self, value: numbers.Number):
         """
         Set the minimum value for fitting.
-        - implements undo/redo functionality
+        - implements undo/redo functionality.
+
         :param value: new minimum value
         :type value: float
         :return: None
         :rtype: noneType
         """
-        self._min = value
+        if value <= self.raw_value:
+            self._min = value
+        else:
+            raise ValueError
 
     @property
-    def max(self) -> float:
+    def max(self) -> numbers.Number:
         """
-        Get the maximum value for fitting
+        Get the maximum value for fitting.
+
         :return: maximum value
         :rtype: float
         """
@@ -397,21 +430,26 @@ class Parameter(Descriptor):
 
     @max.setter
     @stack_deco
-    def max(self, value: float):
+    def max(self, value: numbers.Number):
         """
         Get the maximum value for fitting.
-        - implements undo/redo functionality
+        - implements undo/redo functionality.
+
         :param value: new maximum value
         :type value: float
         :return: None
         :rtype: noneType
         """
-        self._max = value
+        if value >= self.raw_value:
+            self._max = value
+        else:
+            raise ValueError
 
     @property
     def fixed(self) -> bool:
         """
         Can the parameter vary while fitting?
+
         :return: True = fixed, False = can vary
         :rtype: bool
         """
@@ -421,19 +459,24 @@ class Parameter(Descriptor):
     @stack_deco
     def fixed(self, value: bool):
         """
-        Change the parameter vary while fitting state
-        - implements undo/redo functionality
+        Change the parameter vary while fitting state.
+        - implements undo/redo functionality.
+
         :param value: True = fixed, False = can vary
         :type value: bool
         :return: None
         :rtype: noneType
         """
+        # TODO Should we try and cast value to bool rather than throw ValueError?
+        if not isinstance(value, bool):
+            raise ValueError
         self._fixed = value
 
     @property
     def error(self) -> float:
         """
-        The error associated with the parameter
+        The error associated with the parameter.
+
         :return: Error associated with parameter
         :rtype: float
         """
@@ -443,27 +486,32 @@ class Parameter(Descriptor):
     @stack_deco
     def error(self, value: float):
         """
-        Set the error associated with the parameter
-        - implements undo/redo functionality
+        Set the error associated with the parameter.
+        - implements undo/redo functionality.
+
         :param value: New error value
         :type value: float
         :return: None
         :rtype: noneType
         """
+        if value < 0:
+            raise ValueError
         self._args['error'] = value
-        self._value.error.magnitude = value
+        self._value._magnitude.std_dev = value
 
-    def for_fit(self) -> borg.fitting_engine.property_type:
-        """
-        Coverts oneself into a type which can be used for fitting. Note that the type
-        is dependent on the fitting engine selected
-        :return: parameter for fitting
-        """
-        return self._borg.fitting_engine.convert_to_par_object(self)
+    # def for_fit(self):
+    #     """
+    #     Coverts oneself into a type which can be used for fitting. Note that the type
+    #     is dependent on the fitting engine selected.
+    #
+    #     :return: parameter for fitting
+    #     """
+    #     return self._borg.fitting_engine.convert_to_par_object(self)
 
     def _validate(self, value: Any):
         """
-        Verify value against constraints. This hasn't really been implemented as fitting is tricky
+        Verify value against constraints. This hasn't really been implemented as fitting is tricky.
+
         :param value: value to be verified
         :type value: Any
         :return: new value from constraint
@@ -509,15 +557,15 @@ class BaseObj(MSONable):
     This is the base class for which all higher level classes are built off of.
     NOTE: This object is serializable only if parameters are supplied as:
     `BaseObj(a=value, b=value)`. For `Parameter` or `Descriptor` objects we can
-    cheat with `BaseObj(*[Descriptor(...), Parameter(...), ...])`
+    cheat with `BaseObj(*[Descriptor(...), Parameter(...), ...])`.
     """
 
-    _parent_store = None
     _borg = borg
 
-    def __init__(self, name: str, *args, parent=None, **kwargs):
+    def __init__(self, name: str, *args, **kwargs):
         """
         Set up the base class.
+
         :param name: Name of this object
         :type name: str
         :param args: Any arguments?
@@ -527,103 +575,112 @@ class BaseObj(MSONable):
         :param kwargs: Fields which this class should contain
         """
 
-        self._parent = parent
+        self._borg.map.add_vertex(self, obj_type='created')
+        self.interface = None
         self.__dict__['name'] = name
         # If Parameter or Descriptor is given as arguments...
         for arg in args:
-            if issubclass(arg.__class__, Descriptor):
-                arg._parent = self
+            if issubclass(arg.__class__, (BaseObj, Descriptor)):
                 kwargs[arg.name] = arg
         # Set kwargs, also useful for serialization
         known_keys = self.__dict__.keys()
+        self._kwargs = kwargs
         for key in kwargs.keys():
             if key in known_keys:
                 raise AttributeError
-            # Should we do it like this or assign property to class?
-            # This way is easy, but can be overwritten i.e obj.foo = 1
-            # Assigning property is more complex but protects obj.foo
-            self.__dict__[key] = kwargs[key]
-        self._kwargs = kwargs
+            if issubclass(kwargs[key].__class__, (BaseObj, Descriptor)):
+                self._borg.map.add_edge(self, kwargs[key])
+                self._borg.map.reset_type(kwargs[key], 'created_internal')
+            addLoggedProp(self, key, self.__getter(key), self.__setter(key), get_id=key, my_self=self,
+                          test_class=BaseObj)
 
-    def fit_objects(self) -> List[borg.fitting_engine.property_type]:
-        """
-        Collect all objects which can be fitted, convert them to fitting engine objects and
-        return them as a list
-        :return: List of fitting engine objects
-        """
-        return_objects = []
-        for par_obj in self.get_parameters():
-            return_objects.append(par_obj.for_fit())
-        return return_objects
+    # def fit_objects(self):
+    #     """
+    #     Collect all objects which can be fitted, convert them to fitting engine objects and
+    #     return them as a list.
+    #
+    #     :return: List of fitting engine objects
+    #     """
+    #     return_objects = []
+    #     for par_obj in self.get_parameters():
+    #         return_objects.append(par_obj.for_fit())
+    #     return return_objects
 
     def get_parameters(self) -> List[Parameter]:
         """
-        Get all objects which can be fitted (and are not fixed) as a list
+        Get all objects which can be fitted (and are not fixed) as a list.
+
         :return: List of `Parameter` objects which can be used in fitting.
         :rtype: List[Parameter]
         """
         fit_list = []
-        for key, item in self.__dict__.items():
+        for key, item in self._kwargs.items():
             if hasattr(item, 'get_parameters'):
-                fit_list = [fit_list, *item.get_parameters()]
+                fit_list = [*fit_list, *item.get_parameters()]
             elif isinstance(item, Parameter) and not item.fixed:
                 fit_list.append(item)
         return fit_list
 
-    @property
-    def _parent(self) -> int:
-        """
-        Return the id of parent
-        :return: python id of parent
-        :rtype: int
-        """
-        return id(self._parent_store)
-
-    @_parent.setter
-    def _parent(self, parent: Any):
-        """
-        Set the parent of this self
-        :param parent: Parent object
-        :type parent: Any
-        :return: None
-        :rtype: noneType
-        """
-        self._parent_store = parent
-
     def __dir__(self) -> Iterable[str]:
         """
-        This creates auto-completion and helps out in iPython notebooks
+        This creates auto-completion and helps out in iPython notebooks.
+
         :return: list of function and parameter names for auto-completion
         :rtype: List[str]
         """
-        new_objs = list(k for k in self.__dict__ if not k.startswith('_'))
-        class_objs = list(k for k in self.__class__.__dict__ if not k.startswith('_'))
-        return sorted(new_objs + class_objs)
+        # new_objs = list(k for k in self.__dict__ if not k.startswith('_'))
+        # class_objs = list(k for k in self.__class__.__dict__ if not k.startswith('_'))
+        new_class_objs = list(k for k in dir(self.__class__) if not k.startswith('_'))
+        return sorted(new_class_objs)
 
-    def as_dict(self) -> dict:
+    def as_dict(self, skip: list = None) -> dict:
         """
-        Convert ones self into a serialized form
+        Convert ones self into a serialized form.
+
         :return: dictionary of ones self
         :rtype: dict
         """
-        d = MSONable.as_dict(self)
+        if skip is None:
+            skip = []
+        d = MSONable.as_dict(self, skip=skip)
         for key, item in d.items():
             if hasattr(item, 'as_dict'):
-                d[key] = item.as_dict()
+                d[key] = item.as_dict(skip=skip)
         return d
 
-    def set_binding(self, binding_name, binding_fun, *args, **kwargs):
+    def generate_bindings(self):
         """
-        Set the binding of parameters of self to interface counterparts
-        :param binding_name: name of parameter to be bound
-        :type binding_name: str
-        :param binding_fun: function to do the binding
-        :type binding_fun: Callable
-        :param args: positional arguments for the binding function
-        :param kwargs: keyword/value pair arguments for the binding function
-        :return: None
-        :rtype: noneType
+        Generate or re-generate bindings to an interface (if exists)
+
+        :raises: AttributeError
         """
-        parameters = [par.name for par in self.get_parameters()]
-        if binding_name in parameters:
-            setattr(self.__dict__[binding_name], '_callback', binding_fun(binding_name, *args, **kwargs))
+        if self.interface is None:
+            raise AttributeError
+        self.interface.generate_bindings(self)
+
+    def switch_interface(self, new_interface_name: str):
+        """
+        Switch or create a new interface.
+        """
+        if self.interface is None:
+            raise AttributeError
+        self.interface.switch(new_interface_name)
+        self.interface.generate_bindings(self)
+
+    @staticmethod
+    def __getter(key: str):
+
+        def getter(obj):
+            return obj._kwargs[key]
+
+        return lambda obj: getter(obj)
+
+    @staticmethod
+    def __setter(key):
+        def setter(obj, value):
+            if issubclass(obj._kwargs[key].__class__, Descriptor):
+                obj._kwargs[key].value = value
+            else:
+                obj._kwargs[key] = value
+
+        return lambda obj, value: setter(obj, value)

@@ -1,57 +1,149 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
-""" A Python Class
-A simple Python graph class, demonstrating the essential 
-facts and functionalities of graphs.
-"""
+import weakref
+import sys
+from typing import List, Union
+from weakref import WeakKeyDictionary
+from collections import defaultdict
+from uuid import uuid4, UUID
+
+
+class _EntryList(list):
+    def __init__(self, *args, my_type=None, **kwargs):
+        super(_EntryList, self).__init__(*args, **kwargs)
+        self.__known_types = {'argument', 'created', 'created_internal', 'returned'}
+        self.finalizer = None
+        self._type = []
+        if my_type in self.__known_types:
+            self._type.append(my_type)
+
+    def __repr__(self) -> str:
+        s = 'Graph entry of type: '
+        if self._type:
+            s += ', '.join(self._type)
+        else:
+            s += 'Undefined'
+        s += '. With'
+        if self.finalizer is None:
+            s += 'out'
+        s += 'a finalizer.'
+        return s
+
+    def remove_type(self, old_type: str):
+        if old_type in self.__known_types and old_type in self._type:
+            self._type.remove(old_type)
+
+    def reset_type(self, default_type: str = None):
+        self._type = []
+        self.type = default_type
+
+    @property
+    def type(self) -> List[str]:
+        return self._type
+
+    @type.setter
+    def type(self, value: str):
+        if value in self.__known_types and value not in self._type:
+            self._type.append(value)
+
+    @property
+    def is_argument(self) -> bool:
+        return 'argument' in self._type
+
+    @property
+    def is_created(self) -> bool:
+        return 'created' in self._type
+
+    @property
+    def is_created_internal(self) -> bool:
+        return 'created_internal' in self._type
+
+    @property
+    def is_returned(self) -> bool:
+        return 'returned' in self._type
+
+
+class UniqueIdMap(WeakKeyDictionary):
+    def __init__(self, dict: dict=None):
+        super().__init__(self)
+        # replace data with a defaultdict to generate uuids
+        self.data = defaultdict(uuid4)
+        if dict is not None:
+            self.update(dict)
+
+
+uniqueidmap = UniqueIdMap()
 
 
 class Graph:
 
-    def __init__(self, graph_dict=None):
-        """ initializes a graph object
-            If no dictionary or None is given, an empty dictionary will be used
-        """
-        if graph_dict == None:
-            graph_dict = {}
-        self.__graph_dict = graph_dict
+    def __init__(self):
+        self._store = weakref.WeakValueDictionary()
+        self.__graph_dict = {}
 
-    def vertices(self):
+    def vertices(self) -> List[int]:
         """ returns the vertices of a graph """
-        return list(self.__graph_dict.keys())
+        return list(self._store.keys())
 
     def edges(self):
         """ returns the edges of a graph """
         return self.__generate_edges()
 
-    def add_vertex(self, vertex):
-        """ If the vertex "vertex" is not in
-            self.__graph_dict, a key "vertex" with an empty
-            list as a value is added to the dictionary.
-            Otherwise nothing has to be done.
-        """
-        if vertex not in self.__graph_dict:
-            self.__graph_dict[vertex] = []
+    @property
+    def argument_objs(self) -> List[int]:
+        return self._nested_get('argument')
 
-    def add_edge(self, edge):
-        """ assumes that edge is of type set, tuple or list;
-            between two vertices can be multiple edges!
-        """
-        edge = set(edge)
-        vertex1 = edge.pop()
-        if edge:
-            # not a loop
-            vertex2 = edge.pop()
+    @property
+    def created_objs(self) -> List[int]:
+        return self._nested_get('created')
+
+    @property
+    def created_internal(self) -> List[int]:
+        return self._nested_get('created_internal')
+
+    @property
+    def returned_objs(self) -> List[int]:
+        return self._nested_get('returned')
+
+    def get_item_by_id(self, item_id: int) -> object:
+        if item_id in self._store.keys():
+            return self._store[item_id]
         else:
-            # a loop
-            vertex2 = vertex1
-        if vertex1 in self.__graph_dict:
+            raise ValueError
+
+    def is_known(self, vertex: object) -> bool:
+        return self.convert_id(vertex).int in self._store.keys()
+
+    def find_type(self, vertex: object) -> List[str]:
+        if self.is_known(vertex):
+            oid = self.convert_id(vertex)
+            return self.__graph_dict[oid].type
+
+    def reset_type(self, obj, default_type: str):
+        if self.convert_id(obj).int in self.__graph_dict.keys():
+            self.__graph_dict[self.convert_id(obj).int].reset_type(default_type)
+
+    def change_type(self, obj, new_type: str):
+        if self.convert_id(obj).int in self.__graph_dict.keys():
+            self.__graph_dict[self.convert_id(obj).int].type = new_type
+
+    def add_vertex(self, obj: object, obj_type: str = None):
+        oid = self.convert_id(obj).int
+        self._store[oid] = obj
+        self.__graph_dict[oid] = _EntryList()  # Enhanced list of keys
+        self.__graph_dict[oid].finalizer = weakref.finalize(self._store[oid], self.prune, oid)
+        self.__graph_dict[oid].type = obj_type
+
+    def add_edge(self, start_obj: object, end_obj: object):
+        vertex1 = self.convert_id(start_obj).int
+        vertex2 = self.convert_id(end_obj).int
+        if vertex1 in self.__graph_dict.keys():
             self.__graph_dict[vertex1].append(vertex2)
         else:
-            self.__graph_dict[vertex1] = [vertex2]
+            raise AttributeError
 
-    def __generate_edges(self):
+    def __generate_edges(self) -> list:
         """ A static method generating the edges of the
             graph "graph". Edges are represented as sets
             with one (a loop back to the vertex) or two
@@ -64,16 +156,11 @@ class Graph:
                     edges.append({vertex, neighbour})
         return edges
 
-    def __str__(self):
-        res = "vertices: "
-        for k in self.__graph_dict:
-            res += str(k) + " "
-        res += "\nedges: "
-        for edge in self.__generate_edges():
-            res += str(edge) + " "
-        return res
+    def prune(self, key: int):
+        if key in self.__graph_dict.keys():
+            del self.__graph_dict[key]
 
-    def find_isolated_vertices(self):
+    def find_isolated_vertices(self) -> list:
         """ returns a list of isolated vertices. """
         graph = self.__graph_dict
         isolated = []
@@ -83,15 +170,19 @@ class Graph:
                 isolated += [vertex]
         return isolated
 
-    def find_path(self, start_vertex, end_vertex, path=[]):
+    def find_path(self, start_obj, end_obj, path=[]) -> list:
         """ find a path from start_vertex to end_vertex
             in graph """
+
+        start_vertex = self.convert_id(start_obj).int
+        end_vertex = self.convert_id(end_obj).int
+
         graph = self.__graph_dict
         path = path + [start_vertex]
         if start_vertex == end_vertex:
             return path
         if start_vertex not in graph:
-            return None
+            return []
         for vertex in graph[start_vertex]:
             if vertex not in path:
                 extended_path = self.find_path(vertex,
@@ -99,11 +190,15 @@ class Graph:
                                                path)
                 if extended_path:
                     return extended_path
-        return None
+        return []
 
-    def find_all_paths(self, start_vertex, end_vertex, path=[]):
+    def find_all_paths(self, start_obj, end_obj, path=[]) -> list:
         """ find all paths from start_vertex to
             end_vertex in graph """
+
+        start_vertex = self.convert_id(start_obj).int
+        end_vertex = self.convert_id(end_obj).int
+
         graph = self.__graph_dict
         path = path + [start_vertex]
         if start_vertex == end_vertex:
@@ -120,111 +215,100 @@ class Graph:
                     paths.append(p)
         return paths
 
+    def reverse_route(self, end_obj, start_obj=None) -> List:
+        """
+        In this case we have an object and want to know the connections to get to another in reverse.
+        We might not know the start_object. In which case we follow the shortest path to a base vertex.
+        :param end_obj:
+        :type end_obj:
+        :param start_obj:
+        :type start_obj:
+        :return:
+        :rtype:
+        """
+        end_vertex = self.convert_id(end_obj).int
+
+        if end_vertex in self.find_isolated_vertices():
+            return []
+
+        path_length = sys.maxsize
+        optimum_path = []
+        if start_obj is None:
+            # We now have to find where to begin.....
+            for possible_start, vertices in self.__graph_dict.items():
+                if end_vertex in vertices:
+                    temp_path = self.find_path(possible_start, end_obj)
+                    if len(temp_path) < path_length:
+                        path_length = len(temp_path)
+                        optimum_path = temp_path
+        else:
+            optimum_path = self.find_path(start_obj, end_obj)
+        optimum_path.reverse()
+        return optimum_path
+
     def is_connected(self,
                      vertices_encountered=None,
-                     start_vertex=None):
+                     start_vertex=None) -> bool:
         """ determines if the graph is connected """
         if vertices_encountered is None:
             vertices_encountered = set()
-        gdict = self.__graph_dict
-        vertices = list(gdict.keys())  # "list" necessary in Python 3
+        graph = self.__graph_dict
+        vertices = list(graph.keys())
         if not start_vertex:
-            # chosse a vertex from graph as a starting point
+            # chose a vertex from graph as a starting point
             start_vertex = vertices[0]
         vertices_encountered.add(start_vertex)
         if len(vertices_encountered) != len(vertices):
-            for vertex in gdict[start_vertex]:
-                if vertex not in vertices_encountered:
-                    if self.is_connected(vertices_encountered, vertex):
-                        return True
+            for vertex in graph[start_vertex]:
+                if vertex not in vertices_encountered and self.is_connected(vertices_encountered, vertex):
+                    return True
         else:
             return True
         return False
 
-    def vertex_degree(self, vertex):
-        """ The degree of a vertex is the number of edges connecting
-            it, i.e. the number of adjacent vertices. Loops are counted
-            double, i.e. every occurence of vertex in the list
-            of adjacent vertices. """
-        adj_vertices = self.__graph_dict[vertex]
-        degree = len(adj_vertices) + adj_vertices.count(vertex)
-        return degree
-
-    def degree_sequence(self):
-        """ calculates the degree sequence """
-        seq = []
-        for vertex in self.__graph_dict:
-            seq.append(self.vertex_degree(vertex))
-        seq.sort(reverse=True)
-        return tuple(seq)
+    def _nested_get(self, obj_type: str) -> List[int]:
+        """Access a nested object in root by key sequence."""
+        extracted_list = []
+        for key, item in self.__graph_dict.items():
+            if obj_type in item.type:
+                extracted_list.append(key)
+        return extracted_list
 
     @staticmethod
-    def is_degree_sequence(sequence):
-        """ Method returns True, if the sequence "sequence" is a
-            degree sequence, i.e. a non-increasing sequence.
-            Otherwise False is returned.
-        """
-        # check if the sequence sequence is non-increasing:
-        return all(x >= y for x, y in zip(sequence, sequence[1:]))
-
-    def delta(self):
-        """ the minimum degree of the vertices """
-        min = 100000000
-        for vertex in self.__graph_dict:
-            vertex_degree = self.vertex_degree(vertex)
-            if vertex_degree < min:
-                min = vertex_degree
-        return min
-
-    def Delta(self):
-        """ the maximum degree of the vertices """
-        max = 0
-        for vertex in self.__graph_dict:
-            vertex_degree = self.vertex_degree(vertex)
-            if vertex_degree > max:
-                max = vertex_degree
-        return max
-
-    def density(self):
-        """ method to calculate the density of a graph """
-        g = self.__graph_dict
-        V = len(g.keys())
-        E = len(self.edges())
-        return 2.0 * E / (V * (V - 1))
-
-    def diameter(self):
-        """ calculates the diameter of the graph """
-
-        v = self.vertices()
-        pairs = [(v[i], v[j]) for i in range(len(v)) for j in range(i + 1, len(v) - 1)]
-        smallest_paths = []
-        for (s, e) in pairs:
-            paths = self.find_all_paths(s, e)
-            smallest = sorted(paths, key=len)[0]
-            smallest_paths.append(smallest)
-
-        smallest_paths.sort(key=len)
-
-        # longest path is at the end of list,
-        # i.e. diameter corresponds to the length of this path
-        diameter = len(smallest_paths[-1]) - 1
-        return diameter
+    def convert_id(input_value) -> UUID:
+        """ Sometimes we're dopy and """
+        if not validate_id(input_value):
+            input_value = unique_id(input_value)
+        return input_value
 
     @staticmethod
-    def erdoes_gallai(dsequence):
-        """ Checks if the condition of the Erdoes-Gallai inequality
-            is fullfilled
-        """
-        if sum(dsequence) % 2:
-            # sum of sequence is odd
-            return False
-        if Graph.is_degree_sequence(dsequence):
-            for k in range(1, len(dsequence) + 1):
-                left = sum(dsequence[:k])
-                right = k * (k - 1) + sum([min(x, k) for x in dsequence[k:]])
-                if left > right:
-                    return False
+    def convert_id_to_key(input_value: Union[object, UUID]) -> int:
+        """ Sometimes we're dopy and """
+        if not validate_id(input_value):
+            input_value: UUID = unique_id(input_value)
+        return input_value.int
+
+    def __repr__(self) -> str:
+        return f"Graph object of {len(self._store)} vertices."
+
+
+def unique_id(obj) -> UUID:
+    """Produce a unique integer id for the object.
+
+    Object must me *hashable*. Id is a UUID and should be unique
+    across Python invocations.
+
+    """
+    return uniqueidmap[obj]
+
+
+def validate_id(potential_id) -> bool:
+    test = True
+    try:
+        if isinstance(potential_id, UUID):
+            UUID(str(potential_id), version=4)
         else:
-            # sequence is increasing
-            return False
-        return True
+            UUID(potential_id, version=4)
+    except (ValueError, AttributeError):
+        test = False
+    return test

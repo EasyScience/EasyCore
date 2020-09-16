@@ -17,7 +17,8 @@ def fit_fun(x):
     return b.c.raw_value + b.m.raw_value * x
 
 
-f = Fitter.fitting_engine(b, fit_fun)
+f = Fitter()
+f.initialize(b, fit_fun)
 
 x = np.array([1, 2, 3])
 y = np.array([2, 4, 6]) - 1

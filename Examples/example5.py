@@ -2,16 +2,19 @@ __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
 import json
-from typing import Callable, List
+from typing import Callable, List, TypeVar
 from easyCore.Utils.json import MSONable
 
 import numpy as np
 
 from easyCore import borg
 from easyCore.Objects.Base import Parameter, BaseObj
+# from easyCore.Objects.Base import LoggedProperty
+from easyCore.Objects.Inferface import InterfaceFactoryTemplate
 from easyCore.Fitting.Fitting import Fitter
 
 from abc import ABCMeta, abstractmethod
+
 
 # This is a much more complex case where we have calculators, interfaces, interface factory and an
 # inherited object (from `BaseObj`). In this case the Line class is available with/without an interface
@@ -238,90 +241,11 @@ class Interface2(InterfaceTemplate):
         return self.calculator.calculate(x_array)
 
 
-class InterfaceFactory:
-    """
-    This class allows for the creation and transference of interfaces.
-    """
-
+class InterfaceFactory(InterfaceFactoryTemplate):
     def __init__(self):
-        self._interfaces: List[InterfaceTemplate] = InterfaceTemplate._interfaces
-        self._current_interface = None
-        self.__interface_obj = None
-        self.create()
+        super(InterfaceFactory, self).__init__(InterfaceTemplate._interfaces)
 
-    def create(self, interface_name: str = None):
-        """
-        Create an interface to a calculator from those initialized. Interfaces can be selected
-        by `interface_name` where `interface_name` is one of `obj.available_interfaces`. This
-        interface can now be accessed by obj()
-
-        :param interface_name: name of interface to be created
-        :type interface_name: str
-        :return: None
-        :rtype: noneType
-        """
-        if interface_name is None:
-            interface_name = self._interfaces[0].__name__
-
-        interfaces = self.available_interfaces
-        if interface_name in interfaces:
-            self._current_interface = self._interfaces[interfaces.index(interface_name)]
-        self.__interface_obj = self._current_interface()
-
-    def switch(self, new_interface: str):
-        """
-        Changes the current interface to a new interface. The current interface is destroyed and
-        all MSONable parameters carried over to the new interface. i.e. pick up where you left off.
-
-        :param new_interface: name of new interface to be created
-        :type new_interface: str
-        :return: None
-        :rtype: noneType
-        """
-        serialized = self.__interface_obj.as_dict()
-        interfaces = self.available_interfaces
-        if new_interface in interfaces:
-            self._current_interface: InterfaceTemplate = self._interfaces[interfaces.index(new_interface)]
-            self.__interface_obj = self._current_interface.from_dict(serialized)
-        else:
-            raise AttributeError
-
-    @property
-    def available_interfaces(self) -> List[str]:
-        """
-        Return all available interfaces.
-
-        :return: List of available interface names
-        :rtype: List[str]
-        """
-        return [this_interface.__name__ for this_interface in self._interfaces]
-
-    @property
-    def current_interface(self):
-        """
-        Returns the constructor for the currently selected interface
-
-        :return: Interface constructor
-        :rtype: InterfaceTemplate
-        """
-        return self._current_interface
-
-    def fit_func(self, x_array: np.ndarray, *args, **kwargs) -> np.ndarray:
-        """
-        Pass through to the underlying interfaces fitting function.
-
-        :param x_array: points to be calculated at
-        :type x_array: np.ndarray
-        :param args: positional arguments for the fitting function
-        :type args: Any
-        :param kwargs: key/value pair arguments for the fitting function.
-        :type kwargs: Any
-        :return: points calculated at positional values `x`
-        :rtype: np.ndarray
-        """
-        return self.__interface_obj.fit_func(x_array, *args, **kwargs)
-
-    def generate_bindings(self, name):
+    def generate_bindings(self, name, *args, **kwargs) -> property:
         """
         Automatically bind a `Parameter` to the corresponding interface.
 
@@ -331,9 +255,6 @@ class InterfaceFactory:
         :rtype: property
         """
         return property(self.__get_item(name), self.__set_item(self, name))
-
-    def __call__(self, *args, **kwargs) -> InterfaceTemplate:
-        return self.__interface_obj
 
     @staticmethod
     def __get_item(key: str) -> Callable:
@@ -375,7 +296,7 @@ class Line(BaseObj):
 
     def __init__(self, interface_factory: InterfaceFactory = None):
         """
-        Create a line and add an interface if requested
+        Create a line and add an interface if requested.
 
         :param interface_factory: interface controller object
         :type interface_factory: InterfaceFactory
@@ -394,21 +315,23 @@ class Line(BaseObj):
 
     @property
     def gradient(self):
-        if self.interface:
-            return self.interface().get_value('m')
-        else:
-            return self.m.raw_value
+        # if self.interface:
+        #     return self.interface().get_value('m')
+        # else:
+        return self.m.raw_value
 
     @property
     def intercept(self):
-        if self.interface:
-            return self.interface().get_value('c')
-        else:
-            return self.c.raw_value
+        # if self.interface:
+        #     return self.interface().get_value('c')
+        # else:
+        return self.c.raw_value
 
     def __repr__(self):
         return f'Line: m={self.m}, c={self.c}'
 
+
+borg.debug = True
 
 interface = InterfaceFactory()
 line = Line(interface_factory=interface)
@@ -416,7 +339,7 @@ f = Fitter(line, interface.fit_func)
 
 # y = 2x -1
 x = np.array([1, 2, 3])
-y = np.array([2, 4, 6]) - 1
+y = 2*x - 1
 
 f_res = f.fit(x, y)
 
@@ -424,15 +347,16 @@ print('\n######### Interface 1 #########\n')
 print(f_res)
 print(line)
 
-# This gets the interface name `'Interface2'`
-other_interface = interface.available_interfaces[1]
-# Switch over the interfaces
-line.interface.switch(other_interface)
-# Reset the values so we don't cheat
-line.m.value = 1
-line.c.value = 0
-f_res = f.fit(x, y)
+a = line.c
 
-print('\n######### Interface 2 #########\n')
+# Now lets change fitting engine
+f.switch_engine('bumps')
+# Reset the values so we don't cheat
+line.m = 1
+line.c = 0
+f_res = f.fit(x, y, weights=0.1*np.ones_like(x))
+print('\n######### bumps fitting #########\n')
 print(f_res)
 print(line)
+
+
