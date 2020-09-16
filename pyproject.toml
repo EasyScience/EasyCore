@@ -38,6 +38,9 @@ pytest-mock = "^3.1.1"
 codecov = "^2.1.4"
 black = "^19.10b0"
 
+[tool.coverage.run]
+source = ['easyCore']
+
 [tool.tox]
 legacy_tox_ini = """
 [tox]
@@ -59,7 +62,7 @@ deps = coverage
 whitelist_externals = poetry
 commands =
     poetry install -vvv
-    poetry run pytest
+    poetry run pytest --cov
     coverage xml -i
 """
 
