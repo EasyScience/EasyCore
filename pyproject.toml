@@ -57,13 +57,15 @@ PLATFORM =
     macos-latest: macos
     windows-latest: windows
 [testenv]
-passenv = CI GITHUB_ACTION COVERAGE_FILE
+passenv =
+    CI
+    GITHUB*
+    COVERAGE_FILE
 deps = coverage
 whitelist_externals = poetry
 commands =
     poetry install -vvv
-    poetry run pytest --cov
-    coverage xml -i
+    poetry run pytest --cov --cov-report=xml
 """
 
 # CUSTOM CONFIG
