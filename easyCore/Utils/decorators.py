@@ -3,7 +3,8 @@ __version__ = '0.0.1'
 
 import collections
 import functools
-
+from time import time
+from easyCore import borg
 
 class memoized:
     """
@@ -59,9 +60,9 @@ def time_it(func):
     :return: callable function with timer
     """
     name = func.__module__ + '.' + func.__name__
-    time_logger = logger.getLogger('timer.' + name)
+    time_logger = borg.log.getLogger('timer.' + name)
 
-    @wraps(func)
+    @functools.wraps(func)
     def _time_it(*args, **kwargs):
         start = int(round(time() * 1000))
         try:
@@ -69,5 +70,4 @@ def time_it(func):
         finally:
             end_ = int(round(time() * 1000)) - start
             time_logger.debug(f"\033[1;34;49mExecution time: {end_ if end_ > 0 else 0} ms\033[0m")
-
     return _time_it

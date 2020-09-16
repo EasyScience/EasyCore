@@ -589,5 +589,8 @@ class Cell(BaseObj):
         return np.array([vector_a, vector_b, vector_c], dtype=np.float64)
 
     def __repr__(self) -> str:
-        return 'Cell: (a:{:.2f}, b:{:.2f}, c:{:.2f}, alpha:{:.2f}, beta:{:.2f}, gamma:{:.2f}) '.format(self.a, self.b, self.c,
-                                                                               self.alpha, self.beta, self.gamma)
+        return 'Cell: (a:{:.2f}, b:{:.2f}, c:{:.2f}, alpha:{:.2f}, beta:{:.2f}, gamma:{:.2f}) '.format(self.a, self.b,
+                                                                                                       self.c,
+                                                                                                       self.alpha,
+                                                                                                       self.beta,
+                                                                                                       self.gamma)

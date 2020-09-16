@@ -4,7 +4,7 @@ __version__ = '0.0.1'
 from easyCore.Objects.Graph import Graph
 from easyCore.Utils.Hugger.Hugger import ScriptManager
 from easyCore.Utils.classUtils import singleton
-
+from easyCore.Utils.Logging import Logger
 
 @singleton
 class Borg:
@@ -12,7 +12,7 @@ class Borg:
     Borg is the assimilated knowledge of `easyCore`. Every class based on `easyCore` gets brought
     into the collective.
     """
-    __log = None
+    __log = Logger()
     __map = Graph()
     __stack = None
     __debug = False

@@ -155,74 +155,74 @@ class UndoCommand(metaclass=abc.ABCMeta):
         self._text = text
 
 
-class _EmptyCommand(UndoCommand):
-    """
-    The _EmptyCommand class is the custom base class of all undoable commands
-    stored on a UndoStack.
-    """
-
-    def __init__(self, dictionary: 'UndoableDict', key: Union[str, list], value: Any):
-        super().__init__(self)
-        self._dictionary = dictionary
-        self._key = key
-        self._new_value = value
-        self._old_value = dictionary.getItem(key)
-
-
-class _AddItemCommand(_EmptyCommand):
-    """
-    The _AddItemCommand class implements a command to add a key-value pair to
-    the UndoableDict-base_dict dictionary.
-    """
-
-    def __init__(self, dictionary: 'UndoableDict', key: Union[str, list], value: Any):
-        super().__init__(dictionary, key, value)
-        self.setText("Adding: {} = {}".format(self._key, self._new_value))
-
-    def undo(self) -> NoReturn:
-        self._dictionary._realDelItem(self._key)
-
-    def redo(self) -> NoReturn:
-        self._dictionary._realAddItem(self._key, self._new_value)
-
-
-class _SetItemCommand(_EmptyCommand):
-    """
-    The _SetItemCommand class implements a command to modify the value of
-    the existing key in the UndoableDict-base_dict dictionary.
-    """
-
-    def __init__(self, dictionary: 'UndoableDict', key: Union[str, list], value: Any):
-        super().__init__(dictionary, key, value)
-        self.setText("Setting: {} = {}".format(self._key, self._new_value))
-
-    def undo(self) -> NoReturn:
-        if self._new_value is not self._old_value:
-            if self._old_value is None:
-                self._dictionary._realDelItem(self._key)
-            else:
-                self._dictionary._realSetItem(self._key, self._old_value)
-
-    def redo(self) -> NoReturn:
-        if self._new_value is not self._old_value:
-            self._dictionary._realSetItem(self._key, self._new_value)
-
-
-class _RemoveItemCommand(_EmptyCommand):
-    """
-    The _SetItemCommand class implements a command to modify the value of
-    the existing key in the UndoableDict-base_dict dictionary.
-    """
-
-    def __init__(self, dictionary: 'UndoableDict', key: Union[str, list]):
-        super().__init__(dictionary, key, None)
-        self.setText("Removing: {}".format(self._key))
-
-    def undo(self) -> NoReturn:
-        self._dictionary._realAddItemByPath(self._key, self._old_value)
-
-    def redo(self) -> NoReturn:
-        self._dictionary._realDelItem(self._key)
+# class _EmptyCommand(UndoCommand):
+#     """
+#     The _EmptyCommand class is the custom base class of all undoable commands
+#     stored on a UndoStack.
+#     """
+#
+#     def __init__(self, dictionary: 'UndoableDict', key: Union[str, list], value: Any):
+#         super().__init__(self)
+#         self._dictionary = dictionary
+#         self._key = key
+#         self._new_value = value
+#         self._old_value = dictionary.getItem(key)
+#
+#
+# class _AddItemCommand(_EmptyCommand):
+#     """
+#     The _AddItemCommand class implements a command to add a key-value pair to
+#     the UndoableDict-base_dict dictionary.
+#     """
+#
+#     def __init__(self, dictionary: 'UndoableDict', key: Union[str, list], value: Any):
+#         super().__init__(dictionary, key, value)
+#         self.setText("Adding: {} = {}".format(self._key, self._new_value))
+#
+#     def undo(self) -> NoReturn:
+#         self._dictionary._realDelItem(self._key)
+#
+#     def redo(self) -> NoReturn:
+#         self._dictionary._realAddItem(self._key, self._new_value)
+#
+#
+# class _SetItemCommand(_EmptyCommand):
+#     """
+#     The _SetItemCommand class implements a command to modify the value of
+#     the existing key in the UndoableDict-base_dict dictionary.
+#     """
+#
+#     def __init__(self, dictionary: 'UndoableDict', key: Union[str, list], value: Any):
+#         super().__init__(dictionary, key, value)
+#         self.setText("Setting: {} = {}".format(self._key, self._new_value))
+#
+#     def undo(self) -> NoReturn:
+#         if self._new_value is not self._old_value:
+#             if self._old_value is None:
+#                 self._dictionary._realDelItem(self._key)
+#             else:
+#                 self._dictionary._realSetItem(self._key, self._old_value)
+#
+#     def redo(self) -> NoReturn:
+#         if self._new_value is not self._old_value:
+#             self._dictionary._realSetItem(self._key, self._new_value)
+#
+#
+# class _RemoveItemCommand(_EmptyCommand):
+#     """
+#     The _SetItemCommand class implements a command to modify the value of
+#     the existing key in the UndoableDict-base_dict dictionary.
+#     """
+#
+#     def __init__(self, dictionary: 'UndoableDict', key: Union[str, list]):
+#         super().__init__(dictionary, key, None)
+#         self.setText("Removing: {}".format(self._key))
+#
+#     def undo(self) -> NoReturn:
+#         self._dictionary._realAddItemByPath(self._key, self._old_value)
+#
+#     def redo(self) -> NoReturn:
+#         self._dictionary._realDelItem(self._key)
 
 
 class PropertyStack(UndoCommand):

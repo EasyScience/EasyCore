@@ -207,7 +207,6 @@ class Descriptor(MSONable):
             except Exception as e:
                 raise e
 
-
     @property
     def raw_value(self):
         """

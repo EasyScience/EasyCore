@@ -65,12 +65,12 @@ class _EntryList(list):
 
 
 class UniqueIdMap(WeakKeyDictionary):
-    def __init__(self, dict: dict=None):
+    def __init__(self, this_dict: dict = None):
         super().__init__(self)
         # replace data with a defaultdict to generate uuids
         self.data = defaultdict(uuid4)
-        if dict is not None:
-            self.update(dict)
+        if this_dict is not None:
+            self.update(this_dict)
 
 
 uniqueidmap = UniqueIdMap()
