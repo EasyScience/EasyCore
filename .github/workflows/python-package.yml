@@ -31,5 +31,5 @@ jobs:
         pip install ./dist/*.whl
     - name: Test with pytest
       run: |
-        cd ../
-        poetry pytest ./easyCore
+        rm -rf ./easyCore
+        poetry run pytest
