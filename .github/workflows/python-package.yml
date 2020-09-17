@@ -5,9 +5,9 @@ name: Python package testing
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, pre-release ]
   pull_request:
-    branches: [ master ]
+    branches: [ master, pre-release ]
 
 jobs:
   build:
@@ -32,3 +32,7 @@ jobs:
       run: |
         cd ./dist
         poetry run pytest ../
+    - uses: actions/upload-artifact@v2
+      with:	
+        name: easyCore - Python ${{ matrix.python-version }}
+        path: ${{ github.workspace }}/dist/*
