@@ -601,11 +601,26 @@ class BaseObj(MSONable):
     #     :return: List of fitting engine objects
     #     """
     #     return_objects = []
-    #     for par_obj in self.get_parameters():
+    #     for par_obj in self.get_fit_parameters():
     #         return_objects.append(par_obj.for_fit())
     #     return return_objects
 
     def get_parameters(self) -> List[Parameter]:
+        """
+        Get all parameter objects as a list.
+
+        :return: List of `Parameter` objects.
+        :rtype: List[Parameter]
+        """
+        fit_list = []
+        for key, item in self._kwargs.items():
+            if hasattr(item, 'get_fit_parameters'):
+                fit_list = [*fit_list, *item.get_fit_parameters()]
+            elif isinstance(item, Parameter):
+                fit_list.append(item)
+        return fit_list
+
+    def get_fit_parameters(self) -> List[Parameter]:
         """
         Get all objects which can be fitted (and are not fixed) as a list.
 
@@ -614,8 +629,8 @@ class BaseObj(MSONable):
         """
         fit_list = []
         for key, item in self._kwargs.items():
-            if hasattr(item, 'get_parameters'):
-                fit_list = [*fit_list, *item.get_parameters()]
+            if hasattr(item, 'get_fit_parameters'):
+                fit_list = [*fit_list, *item.get_fit_parameters()]
             elif isinstance(item, Parameter) and not item.fixed:
                 fit_list.append(item)
         return fit_list

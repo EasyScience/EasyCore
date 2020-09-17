@@ -354,7 +354,7 @@ class Line(BaseObj):
     def _set_interface(self):
         if self.interface:
             # If an interface is given, generate bindings
-            for parameter in self.get_parameters():
+            for parameter in self.get_fit_parameters():
                 name = parameter.name
                 self.set_binding(name, self.interface.generate_bindings)
 
@@ -386,7 +386,7 @@ class Curve(BaseObj):
     def _set_interface(self):
         if self.interface:
             # If an interface is given, generate bindings
-            for parameter in self.get_parameters():
+            for parameter in self.get_fit_parameters():
                 name = parameter.name
                 self.set_binding(name, self.interface.generate_bindings)
 

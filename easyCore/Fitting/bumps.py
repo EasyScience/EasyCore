@@ -71,7 +71,7 @@ class bumps(FittingTemplate):  # noqa: S101
         # Original fit function
         func = self._original_fit_function
         # Get a list of `Parameters`
-        for parameter in self._object.get_parameters():
+        for parameter in self._object.get_fit_parameters():
             self._cached_pars[parameter.name] = parameter
 
         # Make a new fit function
@@ -147,9 +147,13 @@ class bumps(FittingTemplate):  # noqa: S101
         # Why do we do this? Because a fitting template has to have borg instantiated outside pre-runtime
         from easyCore import borg
         borg.stack.beginMacro('Fitting routine')
-        model_results = bumps_fit(problem, **kwargs)
-        self._set_parameter_fit_result(model_results)
-        borg.stack.endMacro()
+        try:
+            model_results = bumps_fit(problem, **kwargs)
+            self._set_parameter_fit_result(model_results)
+        except Exception as e:
+            raise e
+        finally:
+            borg.stack.endMacro()
         return self._gen_fit_results(model_results)
 
     def convert_to_pars_obj(self, par_list: Union[list, noneType] = None) -> List[bumpsParameter]:
@@ -163,7 +167,7 @@ class bumps(FittingTemplate):  # noqa: S101
         """
         if par_list is None:
             # Assume that we have a BaseObj for which we can obtain a list
-            par_list = self._object.get_parameters()
+            par_list = self._object.get_fit_parameters()
         pars_obj = ([self.__class__.convert_to_par_object(obj) for obj in par_list])
         return pars_obj
 
@@ -205,11 +209,6 @@ class bumps(FittingTemplate):  # noqa: S101
         for name, value in kwargs.items():
             if getattr(results, name, False):
                 setattr(results, name, value)
-        pars = self._cached_pars
-        pars_dict = {}
-        for name, par in pars.items():
-            pars_dict[name] = par.raw_value
-
         results.success = fit_results.success
         pars = self._cached_pars
         item = {}

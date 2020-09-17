@@ -67,7 +67,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         # Original fit function
         func = self._original_fit_function
         # Get a list of `Parameters`
-        for parameter in self._object.get_parameters():
+        for parameter in self._object.get_fit_parameters():
             self._cached_pars[parameter.name] = parameter
 
         # Make a new fit function
@@ -156,7 +156,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         """
         if par_list is None:
             # Assume that we have a BaseObj for which we can obtain a list
-            par_list = self._object.get_parameters()
+            par_list = self._object.get_fit_parameters()
         pars_obj = lmParameters().add_many([self.__class__.convert_to_par_object(obj) for obj in par_list])
         return pars_obj
 

@@ -85,7 +85,7 @@ def test_baseobj_get_parameters(setup_pars: dict):
     name = setup_pars['name']
     del setup_pars['name']
     obj = BaseObj(name, **setup_pars)
-    pars = obj.get_parameters()
+    pars = obj.get_fit_parameters()
     assert isinstance(pars, list)
     assert len(pars) == 2
     par_names = [par.name for par in pars]
@@ -186,7 +186,7 @@ def test_baseobj_dir(setup_pars):
     del setup_pars['name']
     obj = BaseObj(name, **setup_pars)
     expected = ['REDIRECT', 'as_dict', 'des1', 'des2', 'from_dict',
-                'generate_bindings', 'get_parameters', 'par1',
+                'generate_bindings', 'get_fit_parameters', 'par1',
                 'par2', 'par3', 'switch_interface', 'to_json', 'unsafe_hash']
     obtained = dir(obj)
     assert len(obtained) == len(expected)
