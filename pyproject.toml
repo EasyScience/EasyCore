@@ -35,7 +35,7 @@ bumps = "^0.7"
 pytest = "^5.4.3"
 pytest-cov = "^2.9.0"
 pytest-mock = "^3.1.1"
-codecov = "^2.1.4"
+codecov = "^2.1.9"
 black = "^19.10b0"
 
 [tool.coverage.run]
