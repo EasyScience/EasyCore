@@ -2,13 +2,11 @@
 
 The building blocks for Neutron science libraries in the _easy_ universe.
 
-[![CI Build][20]][21]
+[![License][50]][51] [![Release][30]][31] [![Downloads][70]][71]
 
-[![Release][30]][31]
+[![CI Build][20]][21] 
 
-[![Downloads][70]][71] [![Lines of code][81]](<>) [![Total lines][80]](<>) [![Files][82]](<>)
-
-[![License][50]][51]
+[![CodeFactor][10]][11] [![Lines of code][81]](<>) [![Total lines][80]](<>) [![Files][82]](<>)
 
 
 <!---CI Build Status--->
@@ -16,6 +14,12 @@ The building blocks for Neutron science libraries in the _easy_ universe.
 [20]: https://github.com/easyScience/easyCore/workflows/CI%20using%20pip/badge.svg
 
 [21]: https://github.com/easyScience/easyCore/actions
+
+<!---CI Build Status--->
+
+[10]: https://www.codefactor.io/repository/github/easyscience/easycore/badge
+
+[11]: https://www.codefactor.io/repository/github/easyscience/easycore
 
 <!---Release--->
 
