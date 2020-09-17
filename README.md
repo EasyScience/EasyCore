@@ -36,7 +36,7 @@ The building blocks for Neutron science libraries in the _easy_ universe.
 
 <!---Downloads--->
 
-[70]: https://img.shields.io/github/downloads/easyScience/easyECore/total.svg
+[70]: https://img.shields.io/github/downloads/easyScience/easyCore/total.svg
 
 [71]: https://github.com/easyScience/easyCore/releases
 
