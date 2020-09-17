@@ -6,7 +6,7 @@ The building blocks for Neutron science libraries in the _easy_ universe.
 
 [![CI Build][20]][21] 
 
-[![CodeFactor][10]][11] [![Lines of code][81]](<>) [![Total lines][80]](<>) [![Files][82]](<>)
+[![CodeFactor][83]][84] [![Lines of code][81]](<>) [![Total lines][80]](<>) [![Files][82]](<>)
 
 
 <!---CI Build Status--->
@@ -15,11 +15,6 @@ The building blocks for Neutron science libraries in the _easy_ universe.
 
 [21]: https://github.com/easyScience/easyCore/actions
 
-<!---CI Build Status--->
-
-[10]: https://www.codefactor.io/repository/github/easyscience/easycore/badge
-
-[11]: https://www.codefactor.io/repository/github/easyscience/easycore
 
 <!---Release--->
 
@@ -47,3 +42,7 @@ The building blocks for Neutron science libraries in the _easy_ universe.
 [81]: https://tokei.rs/b1/github/easyScience/easyCore?category=code
 
 [82]: https://tokei.rs/b1/github/easyScience/easyCore?category=files
+
+[83]: https://www.codefactor.io/repository/github/easyscience/easycore/badge
+
+[84]: https://www.codefactor.io/repository/github/easyscience/easycore
