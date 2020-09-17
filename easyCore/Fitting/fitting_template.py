@@ -39,7 +39,6 @@ class FittingTemplate(metaclass=ABCMeta):
 
         :return: Callable model
         """
-        pass
 
     @abstractmethod
     def _generate_fit_function(self) -> Callable:
@@ -47,7 +46,6 @@ class FittingTemplate(metaclass=ABCMeta):
         Using the user supplied `fit_function`, wrap it in such a way we can update `Parameter` on
         iterations.
         """
-        pass
 
     @abstractmethod
     def fit(self, x: np.ndarray, y: np.ndarray,
@@ -66,7 +64,6 @@ class FittingTemplate(metaclass=ABCMeta):
         :param kwargs: Additional arguments for the fitting function.
         :return: Fit results
         """
-        pass
 
     def evaluate(self, x: np.ndarray, parameters: dict = None, **kwargs) -> np.ndarray:
         """
@@ -108,7 +105,6 @@ class FittingTemplate(metaclass=ABCMeta):
         :type par_list: List[str]
         :return: engine Parameters compatible object
         """
-        pass
 
     @staticmethod
     @abstractmethod
@@ -116,7 +112,6 @@ class FittingTemplate(metaclass=ABCMeta):
         """
         Convert an `easyCore.Objects.Base.Parameter` object to an engine Parameter object.
         """
-        pass
 
     @abstractmethod
     def _set_parameter_fit_result(self, fit_result):
@@ -127,7 +122,6 @@ class FittingTemplate(metaclass=ABCMeta):
         :return: None
         :rtype: noneType
         """
-        pass
 
     @abstractmethod
     def _gen_fit_results(self, fit_results, **kwargs) -> 'FitResults':
@@ -138,7 +132,6 @@ class FittingTemplate(metaclass=ABCMeta):
         :return: fit results container
         :rtype: FitResults
         """
-        pass
 
 
 class FitResults:
@@ -157,11 +150,3 @@ class FitResults:
         self.goodness_of_fit = np.Inf
         self.residual = np.ndarray([])
         self.engine_result = None
-
-    # def __repr__(self) -> str:
-    #     info = ''
-    #     return info
-    #
-    # def fit_report(self) -> str:
-    #     info = ''
-    #     return info

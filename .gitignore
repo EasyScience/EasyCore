@@ -17,6 +17,7 @@ __pycache__
 .venv
 .coverage
 .pyc
+coverage.xml
 
 # Poetry
 dist
@@ -40,5 +41,5 @@ build
 *.zip
 .ci/
 .idea/
-
-tests/unit_tests/Objects/.pytest_cache/
+*.pytest_cache/
+.tox
