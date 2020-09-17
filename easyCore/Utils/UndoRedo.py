@@ -107,25 +107,25 @@ class UndoStack:
         """
         Text associated with a redo item.
         """
+        text = ''
         if self.canRedo():
             if isinstance(self._future[0], dict):
-                return self._future[0]['text']
+                text = self._future[0]['text']
             else:
-                return self._future[0]._text
-        else:
-            return ''
+                text = self._future[0]._text
+        return text
 
     def undoText(self) -> str:
         """
         Text associated with a undo item.
         """
+        text = ''
         if self.canUndo():
             if isinstance(self._history[0], dict):
-                return self._history[0]['text']
+                text = self._history[0]['text']
             else:
-                return self._history[0]._text
-        else:
-            return ''
+                text = self._history[0]._text
+        return text
 
 
 class UndoCommand(metaclass=abc.ABCMeta):
@@ -142,14 +142,12 @@ class UndoCommand(metaclass=abc.ABCMeta):
         """
         Undo implementation which should be overwritten
         """
-        pass
 
     @abc.abstractmethod
     def redo(self) -> NoReturn:
         """
         Redo implementation which should be overwritten
         """
-        pass
 
     def setText(self, text: str) -> NoReturn:
         self._text = text

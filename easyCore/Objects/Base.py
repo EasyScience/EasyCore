@@ -384,7 +384,7 @@ class Parameter(Descriptor):
         old_unit = str(self._args['units'])
         super().convert_unit(new_unit)
         # Deal with min/max. Error is auto corrected
-        if not self.value.unitless and not old_unit == 'dimensionless':
+        if not self.value.unitless and old_unit != 'dimensionless':
             self._min = Q_(self.min, old_unit).to(self._units).magnitude
             self._max = Q_(self.max, old_unit).to(self._units).magnitude
         # Log the new converted error
@@ -672,7 +672,7 @@ class BaseObj(MSONable):
         def getter(obj):
             return obj._kwargs[key]
 
-        return lambda obj: getter(obj)
+        return getter
 
     @staticmethod
     def __setter(key):
@@ -682,4 +682,4 @@ class BaseObj(MSONable):
             else:
                 obj._kwargs[key] = value
 
-        return lambda obj, value: setter(obj, value)
+        return setter
