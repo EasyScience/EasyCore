@@ -7,7 +7,6 @@ import weakref
 
 from copy import deepcopy
 from typing import List, Union, Any, Iterable
-# from functools import cached_property
 
 from easyCore import borg, ureg
 from easyCore.Utils.classTools import addLoggedProp, addProp
@@ -356,8 +355,7 @@ class Parameter(Descriptor):
         self.constraints: dict = {
             'user':     [],
             'physical': [],
-            'builtin':  [Constraint(lambda x: x < self.min, self.min),
-                         Constraint(lambda x: x > self.max, self.max)]
+            'builtin':  []
         }
         # This is for the serialization. Otherwise we wouldn't catch the values given to `super()`
         self._kwargs = kwargs
@@ -535,22 +533,6 @@ class Parameter(Descriptor):
         s.append(super_str)
         s.append("bounds=[%s:%s]" % (repr(self.min), repr(self.max)))
         return "%s>" % ', '.join(s)
-
-
-class Constraint:
-    """
-    Toy constraint class. This need to be improved.
-    """
-
-    def __init__(self, validator, fail_value):
-        self._validator = validator
-        self._fail_value = fail_value
-
-    def __call__(self, *args, **kwargs):
-        return self._validator(*args, **kwargs)
-
-    def value(self):
-        return self._fail_value
 
 
 class BaseObj(MSONable):

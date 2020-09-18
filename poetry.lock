@@ -479,9 +479,8 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "0f0eb076a1284944fc9fa79bba6591433ffdebdc3b34c1d0b483f478bd3f0e63"
-lock-version = "1.0"
-python-versions = "^3.6, >=3.6.1"
+content-hash = "d1d35531b424433a019afab004d686b9e3a9afd372903b57b017a03051472796"
+python-versions = "^3.6, >=3.6.1" # "^3.8" generates error when installing PySide2 in easyAppGui
 
 [metadata.files]
 appdirs = [

@@ -106,7 +106,7 @@ class Graph:
     def returned_objs(self) -> List[int]:
         return self._nested_get('returned')
 
-    def get_item_by_id(self, item_id: int) -> object:
+    def get_item_by_key(self, item_id: int) -> object:
         if item_id in self._store.keys():
             return self._store[item_id]
         else:
