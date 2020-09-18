@@ -30,10 +30,6 @@ class Descriptor(MSONable):
 
     _constructor = Q_
     _borg = borg
-    _args = {
-        'value': None,
-        'units': ''
-    }
 
     def __init__(self, name: str,
                  value: Any,
@@ -64,6 +60,12 @@ class Descriptor(MSONable):
         :param parent: The object which is the parent to this one
         :type parent:Any
         """
+        if not hasattr(self, '_args'):
+            self._args = {
+                'value': None,
+                'units': ''
+            }
+
         # Let the collective know we've been assimilated
         self._borg.map.add_vertex(self, obj_type='created')
         # Make the connection between self and parent
@@ -301,11 +303,6 @@ class Parameter(Descriptor):
     """
 
     _constructor = M_
-    _args = {
-        'value': None,
-        'units': '',
-        'error': 0
-    }
 
     def __init__(self,
                  name: str,
@@ -334,7 +331,12 @@ class Parameter(Descriptor):
         :param kwargs: Key word arguments for the `Descriptor` class.
         """
         # Set the error
-        self._args['error'] = error
+        self._args = {
+            'value': value,
+            'units': '',
+            'error': error
+        }
+
         if not isinstance(value, numbers.Number):
             raise ValueError("In a parameter the `value` must be numeric")
         if value < min:
@@ -496,7 +498,7 @@ class Parameter(Descriptor):
         if value < 0:
             raise ValueError
         self._args['error'] = value
-        self._value._magnitude.std_dev = value
+        self._value = self.__class__._constructor(**self._args)
 
     # def for_fit(self):
     #     """
@@ -614,8 +616,8 @@ class BaseObj(MSONable):
         """
         fit_list = []
         for key, item in self._kwargs.items():
-            if hasattr(item, 'get_fit_parameters'):
-                fit_list = [*fit_list, *item.get_fit_parameters()]
+            if hasattr(item, 'get_parameters'):
+                fit_list = [*fit_list, *item.get_parameters()]
             elif isinstance(item, Parameter):
                 fit_list.append(item)
         return fit_list
@@ -632,21 +634,6 @@ class BaseObj(MSONable):
             if hasattr(item, 'get_fit_parameters'):
                 fit_list = [*fit_list, *item.get_fit_parameters()]
             elif isinstance(item, Parameter) and not item.fixed:
-                fit_list.append(item)
-        return fit_list
-
-    def get_all_parameters(self) -> List[Parameter]:
-        """
-        Get all parameter objects as a list.
-
-        :return: List of `Parameter` objects which can be used in fitting.
-        :rtype: List[Parameter]
-        """
-        fit_list = []
-        for key, item in self._kwargs.items():
-            if hasattr(item, 'get_parameters'):
-                fit_list = [*fit_list, *item.get_parameters()]
-            elif isinstance(item, Parameter):
                 fit_list.append(item)
         return fit_list
 

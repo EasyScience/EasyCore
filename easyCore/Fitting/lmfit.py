@@ -67,6 +67,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         # Original fit function
         func = self._original_fit_function
         # Get a list of `Parameters`
+        self._cached_pars = {}
         for parameter in self._object.get_fit_parameters():
             self._cached_pars[parameter.name] = parameter
 

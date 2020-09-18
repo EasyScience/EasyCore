@@ -71,6 +71,7 @@ class bumps(FittingTemplate):  # noqa: S101
         # Original fit function
         func = self._original_fit_function
         # Get a list of `Parameters`
+        self._cached_pars = {}
         for parameter in self._object.get_fit_parameters():
             self._cached_pars[parameter.name] = parameter
 
@@ -190,11 +191,11 @@ class bumps(FittingTemplate):  # noqa: S101
         :return: None
         :rtype: noneType
         """
-        pars = self._cached_pars
+        # pars = self._cached_pars
+        pars = self._object.get_fit_parameters()
         for index, name in enumerate(self._cached_model._pnames):
-            item = pars[name]
-            item.value = fit_result.x[index]
-            item.error = fit_result.dx[index]
+            pars[index].value = fit_result.x[index]
+            pars[index].error = fit_result.dx[index]
 
     def _gen_fit_results(self, fit_results, **kwargs) -> FitResults:
         """
