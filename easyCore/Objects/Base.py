@@ -635,6 +635,21 @@ class BaseObj(MSONable):
                 fit_list.append(item)
         return fit_list
 
+    def get_all_parameters(self) -> List[Parameter]:
+        """
+        Get all parameter objects as a list.
+
+        :return: List of `Parameter` objects which can be used in fitting.
+        :rtype: List[Parameter]
+        """
+        fit_list = []
+        for key, item in self._kwargs.items():
+            if hasattr(item, 'get_parameters'):
+                fit_list = [*fit_list, *item.get_parameters()]
+            elif isinstance(item, Parameter):
+                fit_list.append(item)
+        return fit_list
+
     def __dir__(self) -> Iterable[str]:
         """
         This creates auto-completion and helps out in iPython notebooks.
