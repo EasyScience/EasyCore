@@ -3,6 +3,7 @@ __version__ = '0.0.1'
 
 import inspect
 
+from easyCore.Fitting.Fitting import NameConverter
 from easyCore.Fitting.fitting_template import noneType, Union, Callable, FittingTemplate, np, FitResults
 
 # Import lmfit specific objects
@@ -69,7 +70,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         # Get a list of `Parameters`
         self._cached_pars = {}
         for parameter in self._object.get_fit_parameters():
-            self._cached_pars[parameter.name] = parameter
+            self._cached_pars[NameConverter().get_key(parameter)] = parameter
 
         # Make a new fit function
         def fit_function(x: np.ndarray, **kwargs):
@@ -101,7 +102,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         # Where we need to be generic. Note that this won't hold for much outside of this scope.
         params = [inspect.Parameter('x',
                                     inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                                    annotation=inspect._empty), *[inspect.Parameter(name,
+                                    annotation=inspect._empty), *[inspect.Parameter(str(name),
                                                                                     inspect.Parameter.POSITIONAL_OR_KEYWORD,
                                                                                     annotation=inspect._empty,
                                                                                     default=parameter.raw_value)
@@ -169,7 +170,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         :return: lmfit Parameter compatible object.
         :rtype: lmParameter
         """
-        return lmParameter(obj.name, value=obj.raw_value, vary=~obj.fixed,
+        return lmParameter(str(NameConverter().get_key(obj)), value=obj.raw_value, vary=~obj.fixed,
                            min=obj.min, max=obj.max, expr=None, brute_step=None
                            )
 
@@ -183,8 +184,8 @@ class lmfit(FittingTemplate):  # noqa: S101
         """
         pars = self._cached_pars
         for name in pars.keys():
-            pars[name].value = fit_result.params[name].value
-            pars[name].error = fit_result.params[name].stderr
+            pars[name].value = fit_result.params[str(name)].value
+            pars[name].error = fit_result.params[str(name)].stderr
 
     def _gen_fit_results(self, fit_results: ModelResult, **kwargs) -> FitResults:
         """

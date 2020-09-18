@@ -12,6 +12,19 @@ _C = TypeVar("_C", bound=ABCMeta)
 _M = TypeVar("_M", bound=Fitting.FittingTemplate)
 
 
+class NameConverter:
+    _borg = borg
+
+    def get_name_from_key(self, item_key: int) -> str:
+        return getattr(self._borg.map.get_item_by_id(item_key), 'name', '')
+
+    def get_item_from_key(self, item_key: int) -> object:
+        return self._borg.map.get_item_by_id(item_key)
+
+    def get_key(self, item: object) -> int:
+        return self._borg.map.convert_id_to_key(item)
+
+
 class Fitter:
     """
     Wrapper to the fitting engines
