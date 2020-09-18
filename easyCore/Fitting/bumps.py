@@ -4,7 +4,7 @@ __version__ = '0.0.1'
 import inspect
 from typing import List
 
-from easyCore.Fitting.fitting_template import noneType, Union, Callable, FittingTemplate, np, FitResults
+from easyCore.Fitting.fitting_template import noneType, Union, Callable, FittingTemplate, np, FitResults, NameConverter
 
 # Import bumps specific objects
 from bumps.names import Curve, FitProblem
@@ -50,10 +50,10 @@ class bumps(FittingTemplate):  # noqa: S101
                 par = {}
                 if not pars:
                     for name, item in obj._cached_pars.items():
-                        par[name] = obj.convert_to_par_object(item)
+                        par['p' + str(name)] = obj.convert_to_par_object(item)
                 else:
                     for item in pars:
-                        par[item.name] = obj.convert_to_par_object(item)
+                        par['p' + str(NameConverter().get_key(item))] = obj.convert_to_par_object(item)
                 return Curve(fit_func, x, y, weights, **par)
 
             return make_func
@@ -73,7 +73,7 @@ class bumps(FittingTemplate):  # noqa: S101
         # Get a list of `Parameters`
         self._cached_pars = {}
         for parameter in self._object.get_fit_parameters():
-            self._cached_pars[parameter.name] = parameter
+            self._cached_pars[NameConverter().get_key(parameter)] = parameter
 
         # Make a new fit function
         def fit_function(x: np.ndarray, **kwargs):
@@ -88,9 +88,10 @@ class bumps(FittingTemplate):  # noqa: S101
             """
             # Update the `Parameter` values and the callback if needed
             for name, value in kwargs.items():
-                if name in self._cached_pars.keys():
-                    self._cached_pars[name].value = value
-                    update_fun = self._cached_pars[name]._callback.fset
+                par_name = int(name[1:])
+                if par_name in self._cached_pars.keys():
+                    self._cached_pars[par_name].value = value
+                    update_fun = self._cached_pars[par_name]._callback.fset
                     if update_fun:
                         update_fun(value)
             # TODO Pre processing here
@@ -106,7 +107,7 @@ class bumps(FittingTemplate):  # noqa: S101
         self._cached_pars_order = tuple(self._cached_pars.keys())
         params = [inspect.Parameter('x',
                                     inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                                    annotation=inspect._empty), *[inspect.Parameter(name,
+                                    annotation=inspect._empty), *[inspect.Parameter('p' + str(name),
                                                                                     inspect.Parameter.POSITIONAL_OR_KEYWORD,
                                                                                     annotation=inspect._empty,
                                                                                     default=self._cached_pars[
@@ -181,7 +182,7 @@ class bumps(FittingTemplate):  # noqa: S101
         :return: bumps Parameter compatible object.
         :rtype: bumpsParameter
         """
-        return bumpsParameter(name=obj.name, value=obj.raw_value, bounds=[obj.min, obj.max], fixed=obj.fixed)
+        return bumpsParameter(name='p' + str(NameConverter().get_key(obj)), value=obj.raw_value, bounds=[obj.min, obj.max], fixed=obj.fixed)
 
     def _set_parameter_fit_result(self, fit_result):
         """
@@ -191,11 +192,11 @@ class bumps(FittingTemplate):  # noqa: S101
         :return: None
         :rtype: noneType
         """
-        # pars = self._cached_pars
-        pars = self._object.get_fit_parameters()
+        pars = self._cached_pars
         for index, name in enumerate(self._cached_model._pnames):
-            pars[index].value = fit_result.x[index]
-            pars[index].error = fit_result.dx[index]
+            dict_name = int(name[1:])
+            pars[dict_name].value = fit_result.x[index]
+            pars[dict_name].error = fit_result.dx[index]
 
     def _gen_fit_results(self, fit_results, **kwargs) -> FitResults:
         """
@@ -214,11 +215,12 @@ class bumps(FittingTemplate):  # noqa: S101
         pars = self._cached_pars
         item = {}
         for index, name in enumerate(self._cached_model._pnames):
-            item[name] = pars[name].raw_value
+            dict_name = int(name[1:])
+            item[name] = pars[dict_name].raw_value
         results.p = item
         results.x = self._cached_model.x
         results.y_obs = self._cached_model.y
-        results.y_calc = self.evaluate(results.x)
+        results.y_calc = self.evaluate(results.x, parameters=results.p)
         results.residual = results.y_obs - results.y_calc
         results.goodness_of_fit = fit_results.fun
 

@@ -3,8 +3,8 @@ __version__ = '0.0.1'
 
 import inspect
 
-from easyCore.Fitting.Fitting import NameConverter
-from easyCore.Fitting.fitting_template import noneType, Union, Callable, FittingTemplate, np, FitResults
+from easyCore.Fitting.fitting_template import noneType, Union, Callable, \
+    FittingTemplate, np, FitResults, NameConverter
 
 # Import lmfit specific objects
 from lmfit import Parameter as lmParameter, Parameters as lmParameters, Model as lmModel
@@ -44,14 +44,14 @@ class lmfit(FittingTemplate):  # noqa: S101
         if pars is None:
             pars = self._cached_pars
         # Create the model
-        model = lmModel(fit_func, independent_vars=['x'], param_names=list(pars.keys()))
+        model = lmModel(fit_func, independent_vars=['x'], param_names=['p' + str(key) for key in pars.keys()])
         # Assign values from the `Parameter` to the model
         for name, item in pars.items():
             if isinstance(item, lmParameter):
                 value = item.value
             else:
                 value = item.raw_value
-            model.set_param_hint(name, value=value, min=item.min, max=item.max)
+            model.set_param_hint('p' + str(name), value=value, min=item.min, max=item.max)
 
         # Cache the model for later reference
         self._cached_model = model
@@ -86,9 +86,10 @@ class lmfit(FittingTemplate):  # noqa: S101
             # Update the `Parameter` values and the callback if needed
             # TODO THIS IS NOT THREAD SAFE :-(
             for name, value in kwargs.items():
-                if name in self._cached_pars.keys():
-                    self._cached_pars[name].value = value
-                    update_fun = self._cached_pars[name]._callback.fset
+                par_name = int(name[1:])
+                if par_name in self._cached_pars.keys():
+                    self._cached_pars[par_name].value = value
+                    update_fun = self._cached_pars[par_name]._callback.fset
                     if update_fun:
                         update_fun(value)
             # TODO Pre processing here
@@ -102,7 +103,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         # Where we need to be generic. Note that this won't hold for much outside of this scope.
         params = [inspect.Parameter('x',
                                     inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                                    annotation=inspect._empty), *[inspect.Parameter(str(name),
+                                    annotation=inspect._empty), *[inspect.Parameter('p' + str(name),
                                                                                     inspect.Parameter.POSITIONAL_OR_KEYWORD,
                                                                                     annotation=inspect._empty,
                                                                                     default=parameter.raw_value)
@@ -170,7 +171,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         :return: lmfit Parameter compatible object.
         :rtype: lmParameter
         """
-        return lmParameter(str(NameConverter().get_key(obj)), value=obj.raw_value, vary=~obj.fixed,
+        return lmParameter('p' + str(NameConverter().get_key(obj)), value=obj.raw_value, vary=~obj.fixed,
                            min=obj.min, max=obj.max, expr=None, brute_step=None
                            )
 
@@ -184,8 +185,8 @@ class lmfit(FittingTemplate):  # noqa: S101
         """
         pars = self._cached_pars
         for name in pars.keys():
-            pars[name].value = fit_result.params[str(name)].value
-            pars[name].error = fit_result.params[str(name)].stderr
+            pars[name].value = fit_result.params['p' + str(name)].value
+            pars[name].error = fit_result.params['p' + str(name)].stderr
 
     def _gen_fit_results(self, fit_results: ModelResult, **kwargs) -> FitResults:
         """

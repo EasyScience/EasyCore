@@ -91,8 +91,9 @@ class FittingTemplate(metaclass=ABCMeta):
         if new_parameters is None:
             new_parameters = {}
         for name, item in pars.items():
-            if name not in new_parameters.keys():
-                new_parameters[name] = item.raw_value
+            fit_name = 'p' + str(name)
+            if fit_name not in new_parameters.keys():
+                new_parameters[fit_name] = item.raw_value
 
         return self._fit_function(x, **new_parameters, **kwargs)
 
@@ -150,3 +151,19 @@ class FitResults:
         self.goodness_of_fit = np.Inf
         self.residual = np.ndarray([])
         self.engine_result = None
+
+
+class NameConverter:
+
+    def __init__(self):
+        from easyCore import borg
+        self._borg = borg
+
+    def get_name_from_key(self, item_key: int) -> str:
+        return getattr(self._borg.map.get_item_by_id(item_key), 'name', '')
+
+    def get_item_from_key(self, item_key: int) -> object:
+        return self._borg.map.get_item_by_id(item_key)
+
+    def get_key(self, item: object) -> int:
+        return self._borg.map.convert_id_to_key(item)
