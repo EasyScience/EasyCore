@@ -571,7 +571,7 @@ class BaseObj(MSONable):
         # If Parameter or Descriptor is given as arguments...
         for arg in args:
             if issubclass(arg.__class__, (BaseObj, Descriptor)):
-                kwargs[arg.name] = arg
+                kwargs[getattr(arg, 'name')] = arg
         # Set kwargs, also useful for serialization
         known_keys = self.__dict__.keys()
         self._kwargs = kwargs
