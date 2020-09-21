@@ -31,6 +31,17 @@ class FittingTemplate(metaclass=ABCMeta):
         self._cached_pars = {}
         self._cached_model = None
         self._fit_function = None
+        self._constraints = []
+
+    @property
+    def all_constraints(self):
+        return [*self._constraints, *self._object.constraints]
+
+    def fit_constraints(self):
+        return self._constraints
+
+    def add_fit_constraint(self, constraint):
+        self._constraints.append(constraint)
 
     @abstractmethod
     def make_model(self, pars=None):

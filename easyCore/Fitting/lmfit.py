@@ -88,11 +88,12 @@ class lmfit(FittingTemplate):  # noqa: S101
             for name, value in kwargs.items():
                 par_name = int(name[1:])
                 if par_name in self._cached_pars.keys():
+                    # This will take in to account constraints
                     self._cached_pars[par_name].value = value
-                    update_fun = self._cached_pars[par_name]._callback.fset
-                    if update_fun:
-                        update_fun(value)
+                    # Since we are calling the parameter fset will be called.
             # TODO Pre processing here
+            for constraint in self.fit_constraints():
+                constraint()
             return_data = func(x)
             # TODO Loading or manipulating data here
             return return_data

@@ -32,6 +32,13 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
                 self.independent_obj_ids = [self.get_key(obj) for obj in independent_obj]
             else:
                 self.independent_obj_ids = self.get_key(independent_obj)
+            # Test if dependent is a parameter or a descriptor.
+            # We can not import `Parameter`, so......
+            if dependent_obj.__class__.__name__ == 'Parameter':
+                print(f'Dependent variable {dependent_obj}. It should be a `Descriptor`.'
+                      f'Setting to fixed')
+                dependent_obj.fixed = True
+
         self.operator = operator
         self.value = value
 
@@ -128,7 +135,7 @@ class NumericConstraint(ConstraintBase):
         return value
 
     def __repr__(self) -> str:
-        return ''
+        return f'{self.__class__.__name__} with `value` {self.operator} {self.value}'
 
 
 class SelfConstraint(ConstraintBase):
@@ -151,6 +158,9 @@ class SelfConstraint(ConstraintBase):
             self.aeval.symtable.clear()
         return value
 
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__} with `value` {self.operator} obj.{self.value}'
+
 
 class ObjConstraint(ConstraintBase):
 
@@ -168,6 +178,9 @@ class ObjConstraint(ConstraintBase):
         finally:
             self.aeval.symtable.clear()
         return value
+
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__} with `dependent_obj` = {self.operator} `independent_obj`'
 
 
 class MultiObjConstraint(ConstraintBase):
@@ -195,6 +208,9 @@ class MultiObjConstraint(ConstraintBase):
             self.aeval.symtable.clear()
         return value
 
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}'
+
 
 class FunctionalConstraint(ConstraintBase):
 
@@ -205,3 +221,6 @@ class FunctionalConstraint(ConstraintBase):
 
     def _parse_operator(self, obj: Union[Descriptor, Parameter], *args, **kwargs) -> Number:
         return self.function(obj.raw_value, *args, **kwargs)
+
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}'

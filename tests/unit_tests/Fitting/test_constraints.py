@@ -1,14 +1,12 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
-from collections import Set
-from numbers import Number
-
 import pytest
 
 from typing import List, Tuple
 from easyCore.Fitting.Constraints import NumericConstraint, ObjConstraint
 from easyCore.Objects.Base import Parameter
+
 
 @pytest.fixture
 def twoPars() -> Tuple[List[Parameter], List[int]]:

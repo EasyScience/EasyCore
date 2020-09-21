@@ -504,23 +504,30 @@ class Parameter(Descriptor):
         :return: new value from constraint
         :rtype: Any
         """
-        new_value = value
+        # Save the old state and create the new state
         old_value = self._value
-        old_raw_value = self.raw_value
-        self._value = self.__class__._constructor(value=new_value, units=self._args['units'], error=self._args['error'])
+        self._value = self.__class__._constructor(value=value, units=self._args['units'], error=self._args['error'])
+
+        def constraint_runner(this_constraint_type: dict, newer_value: numbers.Number):
+            for constraint in this_constraint_type.values():
+                this_new_value = constraint(no_set=True)
+                if this_new_value != newer_value:
+                    print(f'Constraint `{constraint}` has been applied')
+                    self._value = self.__class__._constructor(value=this_new_value, units=self._args['units'],
+                                                              error=self._args['error'])
+                newer_value = this_new_value
+            return newer_value
+
+        # First run the built in constraints. i.e. min/max
         constraint_type: dict = self.constraints['builtin']
-        for constraint in constraint_type.values():
-            this_new_value = constraint(no_set=True)
-            if this_new_value != new_value:
-                print(f'Constraint `{constraint}` has been applied')
-            new_value = this_new_value
+        new_value = constraint_runner(constraint_type, value)
+        # Then run any user constraints.
         constraint_type: dict = self.constraints['user']
-        for constraint in constraint_type.values():
-            this_new_value = constraint(no_set=True)
-            if this_new_value != new_value:
-                print(f'Constraint `{constraint}` has been applied')
-            new_value = this_new_value
-            self._value = old_value
+        new_value = constraint_runner(constraint_type, new_value)
+
+        # Restore to the old state
+        self._value = old_value
+        # Return the new value to be set
         return new_value
 
     def __repr__(self):
@@ -652,6 +659,16 @@ class BaseObj(MSONable):
             raise AttributeError
         self.interface.switch(new_interface_name)
         self.interface.generate_bindings(self)
+
+    @property
+    def constraints(self) -> list:
+        pars = self.get_parameters()
+        constraints = []
+        for par in pars:
+            con = par.constraints['user']
+            for key in con.keys():
+                constraints.append(con[key])
+        return constraints
 
     @staticmethod
     def __getter(key: str):
