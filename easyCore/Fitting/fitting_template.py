@@ -43,6 +43,9 @@ class FittingTemplate(metaclass=ABCMeta):
     def add_fit_constraint(self, constraint):
         self._constraints.append(constraint)
 
+    def remove_fit_constraint(self, index: int):
+        del self._constraints[index]
+
     @abstractmethod
     def make_model(self, pars=None):
         """

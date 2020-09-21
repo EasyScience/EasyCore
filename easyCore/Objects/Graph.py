@@ -174,8 +174,12 @@ class Graph:
         """ find a path from start_vertex to end_vertex
             in graph """
 
-        start_vertex = self.convert_id(start_obj).int
-        end_vertex = self.convert_id(end_obj).int
+        try:
+            start_vertex = self.convert_id(start_obj).int
+            end_vertex = self.convert_id(end_obj).int
+        except TypeError:
+            start_vertex = start_obj
+            end_vertex = end_obj
 
         graph = self.__graph_dict
         path = path + [start_vertex]
@@ -228,8 +232,8 @@ class Graph:
         """
         end_vertex = self.convert_id(end_obj).int
 
-        if end_vertex in self.find_isolated_vertices():
-            return []
+        # if end_vertex in self.find_isolated_vertices():
+        #     return []
 
         path_length = sys.maxsize
         optimum_path = []
@@ -237,7 +241,7 @@ class Graph:
             # We now have to find where to begin.....
             for possible_start, vertices in self.__graph_dict.items():
                 if end_vertex in vertices:
-                    temp_path = self.find_path(possible_start, end_obj)
+                    temp_path = self.find_path(possible_start, end_vertex)
                     if len(temp_path) < path_length:
                         path_length = len(temp_path)
                         optimum_path = temp_path

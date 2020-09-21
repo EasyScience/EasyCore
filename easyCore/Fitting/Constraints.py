@@ -27,6 +27,7 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
         self.aeval = Interpreter()
         self.dependent_obj_ids = self.get_key(dependent_obj)
         self.independent_obj_ids = None
+        self.enabled = True
         if independent_obj is not None:
             if isinstance(independent_obj, list):
                 self.independent_obj_ids = [self.get_key(obj) for obj in independent_obj]
@@ -48,6 +49,10 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
 
         :return: None
         """
+        if not self.enabled:
+            if no_set:
+                return None
+            return
         independent_objs = None
         if isinstance(self.dependent_obj_ids, int):
             dependent_obj = self.get_obj(self.dependent_obj_ids)
