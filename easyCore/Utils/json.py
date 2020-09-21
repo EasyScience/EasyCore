@@ -175,14 +175,32 @@ class MSONable:
                     try:
                         a = self.__getattribute__("_" + c)
                     except AttributeError:
-                        raise NotImplementedError(
-                            "Unable to automatically determine as_dict "
-                            "format from class. MSONAble requires all "
-                            "args to be present as either self.argname or "
-                            "self._argname, and kwargs to be present under"
-                            "a self.kwargs variable to automatically "
-                            "determine the dict format. Alternatively, "
-                            "you can implement both as_dict and from_dict.")
+                        err = True
+                        if hasattr(self, "kwargs"):
+                            # type: ignore
+                            option = getattr(self, "kwargs")
+                            if hasattr(option, c):
+                                v = getattr(option, c)
+                                delattr(option, c)
+                                d.update(v)  # pylint: disable=E1101
+                                err = False
+                        if hasattr(self, "_kwargs"):
+                            # type: ignore
+                            option = getattr(self, "_kwargs")
+                            if hasattr(option, c):
+                                v = getattr(option, c)
+                                delattr(option, c)
+                                d.update(v)  # pylint: disable=E1101
+                                err = False
+                        if err:
+                            raise NotImplementedError(
+                                "Unable to automatically determine as_dict "
+                                "format from class. MSONAble requires all "
+                                "args to be present as either self.argname or "
+                                "self._argname, and kwargs to be present under"
+                                "a self.kwargs variable to automatically "
+                                "determine the dict format. Alternatively, "
+                                "you can implement both as_dict and from_dict.")
                 d[c] = recursive_as_dict(a)
         if hasattr(self, "kwargs"):
             # type: ignore

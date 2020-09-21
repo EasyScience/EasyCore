@@ -13,6 +13,7 @@ from easyCore.Utils.classTools import addLoggedProp, addProp
 from easyCore.Utils.typing import noneType
 from easyCore.Utils.UndoRedo import stack_deco
 from easyCore.Utils.json import MSONable
+from easyCore.Fitting.Constraints import SelfConstraint
 
 Q_ = ureg.Quantity
 M_ = ureg.Measurement
@@ -346,6 +347,7 @@ class Parameter(Descriptor):
             raise ValueError("Standard deviation `error` must be positive")
 
         super().__init__(name, value, **kwargs)
+        self._args['units'] = str(self.unit)
 
         # Create additional fitting elements
         self._min: numbers.Number = min
@@ -353,19 +355,14 @@ class Parameter(Descriptor):
         self._fixed: bool = fixed
         self.initial_value = self.value
         self.constraints: dict = {
-            'user':     [],
-            'physical': [],
-            'builtin':  []
+            'user':     {},
+            'builtin':  {'min': SelfConstraint(self, '>=', '_min'),
+                         'max': SelfConstraint(self, '<=', '_max')}
         }
         # This is for the serialization. Otherwise we wouldn't catch the values given to `super()`
         self._kwargs = kwargs
         # Monkey patch the unit and the value to take into account the new max/min situation
         self.__previous_set = self.__class__.value.fset
-        # self.__previous_unit = self.__class__.unit
-
-        # setattr(self.__class__, 'unit', property(fget=self.__class__.unit.fget,
-        #                                          fset=lambda obj, val: obj.__unit_setter(val),
-        #                                          fdel=self.__class__.unit.fdel))
 
         addProp(self, 'value',
                 fget=self.__class__.value.fget,
@@ -498,16 +495,7 @@ class Parameter(Descriptor):
         self._args['error'] = value
         self._value = self.__class__._constructor(**self._args)
 
-    # def for_fit(self):
-    #     """
-    #     Coverts oneself into a type which can be used for fitting. Note that the type
-    #     is dependent on the fitting engine selected.
-    #
-    #     :return: parameter for fitting
-    #     """
-    #     return self._borg.fitting_engine.convert_to_par_object(self)
-
-    def _validate(self, value: Any):
+    def _validate(self, value: numbers.Number):
         """
         Verify value against constraints. This hasn't really been implemented as fitting is tricky.
 
@@ -517,10 +505,22 @@ class Parameter(Descriptor):
         :rtype: Any
         """
         new_value = value
-        for constraint in self.constraints.values():
-            for test in constraint:
-                if test(value):
-                    new_value = test.value()
+        old_value = self._value
+        old_raw_value = self.raw_value
+        self._value = self.__class__._constructor(value=new_value, units=self._args['units'], error=self._args['error'])
+        constraint_type: dict = self.constraints['builtin']
+        for constraint in constraint_type.values():
+            this_new_value = constraint(no_set=True)
+            if this_new_value != new_value:
+                print(f'Constraint `{constraint}` has been applied')
+            new_value = this_new_value
+        constraint_type: dict = self.constraints['user']
+        for constraint in constraint_type.values():
+            this_new_value = constraint(no_set=True)
+            if this_new_value != new_value:
+                print(f'Constraint `{constraint}` has been applied')
+            new_value = this_new_value
+            self._value = old_value
         return new_value
 
     def __repr__(self):
@@ -576,18 +576,6 @@ class BaseObj(MSONable):
                 self._borg.map.reset_type(kwargs[key], 'created_internal')
             addLoggedProp(self, key, self.__getter(key), self.__setter(key), get_id=key, my_self=self,
                           test_class=BaseObj)
-
-    # def fit_objects(self):
-    #     """
-    #     Collect all objects which can be fitted, convert them to fitting engine objects and
-    #     return them as a list.
-    #
-    #     :return: List of fitting engine objects
-    #     """
-    #     return_objects = []
-    #     for par_obj in self.get_fit_parameters():
-    #         return_objects.append(par_obj.for_fit())
-    #     return return_objects
 
     def get_parameters(self) -> List[Parameter]:
         """

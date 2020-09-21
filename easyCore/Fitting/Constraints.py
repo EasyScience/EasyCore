@@ -5,12 +5,14 @@ from abc import abstractmethod, ABCMeta
 
 from asteval import Interpreter
 from numbers import Number
-from typing import List, Union, Callable
+from typing import List, Union, Callable, TypeVar
 
 from easyCore import borg
 from easyCore.Utils.typing import noneType
 from easyCore.Utils.json import MSONable
-from easyCore.Objects.Base import Descriptor, Parameter
+
+Descriptor = TypeVar("Descriptor")
+Parameter = TypeVar("Parameter")
 
 
 class ConstraintBase(MSONable, metaclass=ABCMeta):
@@ -33,7 +35,7 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
         self.operator = operator
         self.value = value
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args, no_set=False, **kwargs):
         """
         Method which applies the constraint
 
@@ -52,7 +54,11 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
             value = self._parse_operator(independent_objs, *args, **kwargs)
         else:
             value = self._parse_operator(dependent_obj, *args, **kwargs)
-        dependent_obj.value = value
+
+        if no_set:
+            return value
+        else:
+            dependent_obj.value = value
 
     @abstractmethod
     def _parse_operator(self, obj: Union[Descriptor, Parameter], *args, **kwargs) -> Number:
@@ -62,6 +68,10 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
         :param obj: The object/objects which the constraint will use
         :return: A numeric result of the constraint logic
         """
+        pass
+
+    @abstractmethod
+    def __repr__(self):
         pass
 
     def get_key(self, obj) -> int:
@@ -84,8 +94,22 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
 
 
 class NumericConstraint(ConstraintBase):
+    """
+    A `NumericConstraint` is a constraint whereby a dependent parameters value is something of an independent parameters
+    value
+    """
 
     def __init__(self, dependent_obj: Union[Descriptor, Parameter], operator: str, value: Number):
+        """
+
+
+        :param dependent_obj:
+        :type dependent_obj:
+        :param operator:
+        :type operator:
+        :param value:
+        :type value:
+        """
         super(NumericConstraint, self).__init__(dependent_obj, operator=operator, value=value)
 
     def _parse_operator(self, obj: Union[Descriptor, Parameter], *args, **kwargs) -> Number:
@@ -103,11 +127,14 @@ class NumericConstraint(ConstraintBase):
             self.aeval.symtable.clear()
         return value
 
+    def __repr__(self) -> str:
+        return ''
+
 
 class SelfConstraint(ConstraintBase):
 
-    def __init__(self, dependent_obj: Union[Descriptor, Parameter], operator: str, item: str):
-        super(SelfConstraint, self).__init__(dependent_obj, operator=operator, value=item)
+    def __init__(self, dependent_obj: Union[Descriptor, Parameter], operator: str, value: str):
+        super(SelfConstraint, self).__init__(dependent_obj, operator=operator, value=value)
 
     def _parse_operator(self, obj: Union[Descriptor, Parameter], *args, **kwargs) -> Number:
         value = obj.raw_value
