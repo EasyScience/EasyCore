@@ -316,7 +316,7 @@ class Parameter(Descriptor):
         Class to describe a dynamic-property which can be optimised. It inherits from `Descriptor`
         and can as such be serialised.
 
-        :param name: Name of this object
+        :param name: Name of this obj
         :type name: str
         :param value: Value of this object
         :type value: Any

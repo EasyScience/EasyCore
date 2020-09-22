@@ -187,7 +187,10 @@ class lmfit(FittingTemplate):  # noqa: S101
         pars = self._cached_pars
         for name in pars.keys():
             pars[name].value = fit_result.params['p' + str(name)].value
-            pars[name].error = fit_result.params['p' + str(name)].stderr
+            if fit_result.errorbars:
+                pars[name].error = fit_result.params['p' + str(name)].stderr
+            else:
+                pars[name].error = 0.0
 
     def _gen_fit_results(self, fit_results: ModelResult, **kwargs) -> FitResults:
         """

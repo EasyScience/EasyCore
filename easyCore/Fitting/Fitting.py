@@ -65,8 +65,10 @@ class Fitter:
         if not self._is_initialized:
             print('The fitting engine must first be initialized')
             raise ReferenceError
+        constraints = self.__engine_obj._constraints
         self.create(engine_name)
         self.__initialize()
+        self.__engine_obj._constraints = constraints
 
     @property
     def available_engines(self) -> List[str]:
