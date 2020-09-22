@@ -153,6 +153,7 @@ class FitResults:
     """
     At the moment this is just a dummy way of unifying the returned fit parameters.
     """
+
     def __init__(self):
         self.success = False
         self.fitting_engine = None
@@ -181,3 +182,15 @@ class NameConverter:
 
     def get_key(self, item: object) -> int:
         return self._borg.map.convert_id_to_key(item)
+
+
+class FitError(Exception):
+
+    def __init__(self, e: Exception = None):
+        self.e = e
+
+    def __str__(self) -> str:
+        s = ''
+        if self.e is not None:
+            s = f'{self.e}\n'
+        return s + 'Something has gone wrong with the fit'

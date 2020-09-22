@@ -4,7 +4,8 @@ __version__ = '0.0.1'
 import inspect
 from typing import List
 
-from easyCore.Fitting.fitting_template import noneType, Union, Callable, FittingTemplate, np, FitResults, NameConverter
+from easyCore.Fitting.fitting_template import noneType, Union, Callable, \
+    FittingTemplate, np, FitResults, NameConverter, FitError
 
 # Import bumps specific objects
 from bumps.names import Curve, FitProblem
@@ -95,6 +96,8 @@ class bumps(FittingTemplate):  # noqa: S101
                     if update_fun:
                         update_fun(value)
             # TODO Pre processing here
+            for constraint in self.fit_constraints():
+                constraint()
             return_data = func(x)
             # TODO Loading or manipulating data here
             return return_data
@@ -153,7 +156,7 @@ class bumps(FittingTemplate):  # noqa: S101
             model_results = bumps_fit(problem, **kwargs)
             self._set_parameter_fit_result(model_results)
         except Exception as e:
-            raise e
+            raise FitError(e)
         finally:
             borg.stack.endMacro()
         return self._gen_fit_results(model_results)

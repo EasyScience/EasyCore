@@ -138,4 +138,5 @@ class Fitter:
             if func is None:
                 raise ValueError
             return func(*args, **kwargs)
+
         return inner
