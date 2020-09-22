@@ -260,7 +260,7 @@ description = "Physical quantities module"
 name = "pint"
 optional = false
 python-versions = ">=3.6"
-version = "0.16"
+version = "0.16.1"
 
 [package.dependencies]
 packaging = "*"
@@ -632,8 +632,8 @@ pathspec = [
     {file = "pathspec-0.8.0.tar.gz", hash = "sha256:da45173eb3a6f2a5a487efba21f050af2b41948be6ab52b6a1e3ff22bb8b7061"},
 ]
 pint = [
-    {file = "Pint-0.16-py2.py3-none-any.whl", hash = "sha256:703db26c4780b3c10ec92961d5bb20252f11aab311ff820714d343178c29bf84"},
-    {file = "Pint-0.16.tar.gz", hash = "sha256:e437420e65fa72a2805f4036f986669c48d54944eeb0e47c8ba16f98cbdcd599"},
+    {file = "Pint-0.16.1-py2.py3-none-any.whl", hash = "sha256:63ccb7153754923fd95477be69dcf8d7d0764ec2ebb3f6945f920c31fdf13392"},
+    {file = "Pint-0.16.1.tar.gz", hash = "sha256:d43a2e9ae003164978b60fdf8cd920d8581e1a5991df8dded29b00f4850ec83a"},
 ]
 pluggy = [
     {file = "pluggy-0.13.1-py2.py3-none-any.whl", hash = "sha256:966c145cd83c96502c3c3868f50408687b38434af77734af1e9ca461a4081d2d"},
