@@ -27,7 +27,7 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
         self.aeval = Interpreter()
         self.dependent_obj_ids = self.get_key(dependent_obj)
         self.independent_obj_ids = None
-        self.enabled = True
+        self._enabled = True
         if independent_obj is not None:
             if isinstance(independent_obj, list):
                 self.independent_obj_ids = [self.get_key(obj) for obj in independent_obj]
@@ -43,11 +43,21 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
         self.operator = operator
         self.value = value
 
+    @property
+    def enabled(self) -> bool:
+        return self._enabled
+
+    @enabled.setter
+    def enabled(self, value: bool):
+        self._enabled = value
+        if value:
+            self()
+
     def __call__(self, *args, no_set=False, **kwargs):
         """
         Method which applies the constraint
 
-        :return: None
+        :return: None if `no_set` is False, float otherwise.
         """
         if not self.enabled:
             if no_set:

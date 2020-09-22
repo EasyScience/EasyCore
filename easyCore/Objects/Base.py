@@ -578,7 +578,7 @@ class BaseObj(MSONable):
         for key in kwargs.keys():
             if key in known_keys:
                 raise AttributeError
-            if issubclass(kwargs[key].__class__, (BaseObj, Descriptor)):
+            if issubclass(kwargs[key].__class__, (BaseObj, Descriptor)) or kwargs[key].__class__ == 'BaseCollection':
                 self._borg.map.add_edge(self, kwargs[key])
                 self._borg.map.reset_type(kwargs[key], 'created_internal')
             addLoggedProp(self, key, self.__getter(key), self.__setter(key), get_id=key, my_self=self,
