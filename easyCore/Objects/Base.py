@@ -9,6 +9,7 @@ from typing import List, Union, Any, Iterable
 
 from easyCore import borg, ureg, np
 from easyCore.Utils.classTools import addLoggedProp, addProp
+from easyCore.Utils.Exceptions import CoreSetException
 from easyCore.Utils.typing import noneType
 from easyCore.Utils.UndoRedo import stack_deco
 from easyCore.Utils.json import MSONable
@@ -37,6 +38,7 @@ class Descriptor(MSONable):
                  url: str = '',
                  display_name: str = None,
                  callback: property = property(),
+                 enabled: bool = True,
                  parent=None):  # noqa: S107
         """
         Class to describe a static-property. i.e Not a property which is fitable. The value and unit of this property
@@ -83,6 +85,8 @@ class Descriptor(MSONable):
         self._args['value'] = value
         self._args['units'] = str(self.unit)
         self._value = self.__class__._constructor(**self._args)
+
+        self._enabled = enabled
 
         self.description: str = description
         self._display_name: str = display_name
@@ -201,12 +205,16 @@ class Descriptor(MSONable):
         :return: None
         :rtype: noneType
         """
+        if not self.enabled:
+            if self._borg.stack.enabled:
+                self._borg.stack.history.popleft()
+            raise CoreSetException(f'{str(self)} is not enabled.')
         self.__deepValueSetter(value)
         if self._callback.fset is not None:
             try:
                 self._callback.fset(value)
             except Exception as e:
-                raise e
+                raise CoreSetException(e)
 
     @property
     def raw_value(self):
@@ -222,6 +230,15 @@ class Descriptor(MSONable):
             if hasattr(value, 'nominal_value'):
                 value = value.nominal_value
         return value
+
+    @property
+    def enabled(self):
+        return self._enabled
+
+    @enabled.setter
+    @stack_deco
+    def enabled(self, value: bool):
+        self._enabled = value
 
     def _validator(self, value: Any):
         """
@@ -354,9 +371,9 @@ class Parameter(Descriptor):
         self._fixed: bool = fixed
         self.initial_value = self.value
         self.constraints: dict = {
-            'user':     {},
-            'builtin':  {'min': SelfConstraint(self, '>=', '_min'),
-                         'max': SelfConstraint(self, '<=', '_max')}
+            'user':    {},
+            'builtin': {'min': SelfConstraint(self, '>=', '_min'),
+                        'max': SelfConstraint(self, '<=', '_max')}
         }
         # This is for the serialization. Otherwise we wouldn't catch the values given to `super()`
         self._kwargs = kwargs
