@@ -297,3 +297,16 @@ class StarLoop(StarBase):
                     # depends on whether it was quoted in the input
                     q.append(s)
         return q
+
+
+class StarHeader:
+    def __init__(self, name: str):
+        self.name = name
+
+    def __str__(self) -> str:
+        return 'data_' + self.name
+
+    @classmethod
+    def from_string(cls, in_string: str):
+        name = in_string.split('data_')[0]
+        return cls(name)
