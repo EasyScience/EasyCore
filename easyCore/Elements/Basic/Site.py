@@ -8,6 +8,8 @@ from easyCore import np
 from easyCore.Objects.Base import Descriptor, Parameter, BaseObj
 from easyCore.Objects.Groups import BaseCollection
 
+from easyCore.Utils.io.star import StarLoop
+
 _SITE_DETAILS = {
     'label': {
         'description': 'A unique identifier for a particular site in the crystal',
@@ -32,6 +34,14 @@ _SITE_DETAILS = {
     },
 }
 
+_CIF_CONVERSIONS = [
+    ['label', 'atom_site_label'],
+    ['specie', 'atom_site_type_symbol'],
+    ['occupancy', 'atom_site_occupancy'],
+    ['x', 'atom_site_fract_x'],
+    ['y', 'atom_site_fract_y'],
+    ['z', 'atom_site_fract_z']
+]
 
 class Site(BaseObj):
 
@@ -61,14 +71,14 @@ class Site(BaseObj):
     @classmethod
     def from_pars(cls,
                   label: str,
-                  specie_label: str,
+                  specie: str,
                   occupancy: float = _SITE_DETAILS['occupancy']['value'],
                   x: float = _SITE_DETAILS['position']['value'],
                   y: float = _SITE_DETAILS['position']['value'],
                   z: float = _SITE_DETAILS['position']['value'],
                   interface=None):
         label = Descriptor('label', label, **_SITE_DETAILS['label'])
-        specie = Descriptor('specie', specie_label)
+        specie = Descriptor('specie', specie)
         pos = deepcopy(_SITE_DETAILS['position'])
         del pos['value']
         x_position = Parameter('x', x, **pos)
@@ -130,7 +140,7 @@ class Atoms(BaseCollection):
 
     @property
     def atom_labels(self) -> List[str]:
-        return [atom.name.raw_value for atom in self]
+        return [atom.label.raw_value for atom in self]
 
     @property
     def atom_species(self) -> List[str]:
@@ -143,3 +153,10 @@ class Atoms(BaseCollection):
     @property
     def atom_occupancies(self) -> np.ndarray:
         return np.array([atom.occupancy.raw_value for atom in self])
+
+    def to_star(self):
+        return StarLoop(self, [name[1] for name in _CIF_CONVERSIONS])
+
+    @classmethod
+    def from_star(cls, in_string):
+        return StarLoop.from_string(cls, Site, in_string, [name[0] for name in _CIF_CONVERSIONS])

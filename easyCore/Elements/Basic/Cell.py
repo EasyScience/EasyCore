@@ -11,6 +11,8 @@ from easyCore.Utils.decorators import memoized
 from easyCore.Utils.typing import Vector3Like
 from easyCore.Objects.Base import Parameter, BaseObj
 
+from easyCore.Utils.io.star import StarSection
+
 CELL_DETAILS = {
     'length': {
         'description': 'Unit-cell length of the selected structure in angstroms.',
@@ -32,12 +34,23 @@ CELL_DETAILS = {
     }
 }
 
+_CIF_CONVERSIONS = [
+    ['length_a', 'cell_length_a'],
+    ['length_b', 'cell_length_b'],
+    ['length_c', 'cell_length_c'],
+    ['angle_alpha', 'cell_angle_alpha'],
+    ['angle_beta', 'cell_angle_beta'],
+    ['angle_gamma', 'cell_angle_gammma'],
+]
+
+
+
 
 class Cell(BaseObj):
 
     def __init__(self, length_a: Parameter, length_b: Parameter, length_c: Parameter,
                  angle_alpha: Parameter, angle_beta: Parameter, angle_gamma: Parameter):
-        super().__init__('crystallographic_cell',
+        super().__init__('cell',
                          length_a=length_a, length_b=length_b, length_c=length_c,
                          angle_alpha=angle_alpha, angle_beta=angle_beta, angle_gamma=angle_gamma)
 
@@ -594,3 +607,10 @@ class Cell(BaseObj):
                                                                                                        self.alpha,
                                                                                                        self.beta,
                                                                                                        self.gamma)
+
+    def to_star(self):
+        return StarSection(self, [name[1] for name in _CIF_CONVERSIONS])
+
+    @classmethod
+    def from_star(cls, in_string):
+        return StarSection.from_string(cls, in_string, [name[0] for name in _CIF_CONVERSIONS])

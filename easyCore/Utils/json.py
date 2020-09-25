@@ -43,7 +43,7 @@ from importlib import import_module
 from inspect import getfullargspec
 
 from easyCore import np
-from easyCore.Utils.io.cif import CifBlock
+
 
 _KNOWN_CORE_TYPES = ('Descriptor', 'Parameter')
 
