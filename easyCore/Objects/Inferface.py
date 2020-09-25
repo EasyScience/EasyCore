@@ -2,10 +2,11 @@ __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
 
-import numpy as np
-
 from abc import ABCMeta, abstractmethod
 from typing import TypeVar, List
+
+from easyCore import np
+
 
 _C = TypeVar("_C", bound=ABCMeta)
 _M = TypeVar("_M")

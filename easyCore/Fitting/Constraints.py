@@ -7,7 +7,7 @@ from asteval import Interpreter
 from numbers import Number
 from typing import List, Union, Callable, TypeVar
 
-from easyCore import borg
+from easyCore import borg, np
 from easyCore.Utils.typing import noneType
 from easyCore.Utils.json import MSONable
 
@@ -136,13 +136,18 @@ class NumericConstraint(ConstraintBase):
 
     def _parse_operator(self, obj: Union[Descriptor, Parameter], *args, **kwargs) -> Number:
         value = obj.raw_value
+        if isinstance(value, list):
+            value = np.array(value)
         self.aeval.symtable['value1'] = value
         self.aeval.symtable['value2'] = self.value
         try:
             self.aeval.eval(f'value3 = value1 {self.operator} value2')
             logic = self.aeval.symtable['value3']
-            if not logic:
-                value = self.aeval.symtable['value2']
+            if isinstance(logic, np.ndarray):
+                value[~logic] = self.aeval.symtable['value2']
+            else:
+                if not logic:
+                    value = self.aeval.symtable['value2']
         except Exception as e:
             raise e
         finally:
@@ -165,8 +170,11 @@ class SelfConstraint(ConstraintBase):
         try:
             self.aeval.eval(f'value3 = value1 {self.operator} value2')
             logic = self.aeval.symtable['value3']
-            if not logic:
-                value = self.aeval.symtable['value2']
+            if isinstance(logic, np.ndarray):
+                value[~logic] = self.aeval.symtable['value2']
+            else:
+                if not logic:
+                    value = self.aeval.symtable['value2']
         except Exception as e:
             raise e
         finally:

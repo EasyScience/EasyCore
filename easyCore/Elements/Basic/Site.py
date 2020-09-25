@@ -1,15 +1,18 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
-import numpy as np
-
 from typing import List
 from copy import deepcopy
 
+from easyCore import np
 from easyCore.Objects.Base import Descriptor, Parameter, BaseObj
 from easyCore.Objects.Groups import BaseCollection
 
-_ATOM_DETAILS = {
+_SITE_DETAILS = {
+    'label': {
+        'description': 'A unique identifier for a particular site in the crystal',
+        'url':         'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic/Iatom_site_label.html',
+    },
     'type_symbol': {
         'description': 'A code to identify the atom species occupying this site.',
         'url':         'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic/Iatom_site_type_symbol.html',
@@ -30,11 +33,12 @@ _ATOM_DETAILS = {
 }
 
 
-class Atom(BaseObj):
+class Site(BaseObj):
 
-    def __init__(self, name: str, specie: Descriptor, occupancy: Parameter,
+    def __init__(self, label: Descriptor, specie: Descriptor, occupancy: Parameter,
                  x_position: Parameter, y_position: Parameter, z_position: Parameter, interface=None):
-        super(Atom, self).__init__(name,
+        super(Site, self).__init__('site',
+                                   label=label,
                                    specie=specie,
                                    occupancy=occupancy,
                                    x=x_position,
@@ -45,36 +49,61 @@ class Atom(BaseObj):
             self.interface.generate_bindings(self)
 
     @classmethod
-    def default(cls, name: str, specie_label: str, interface=None):
-        specie = Descriptor('specie', specie_label, **_ATOM_DETAILS['type_symbol'])
-        occupancy = Parameter('occupancy', **_ATOM_DETAILS['occupancy'])
-        x_position = Parameter('x', **_ATOM_DETAILS['position'])
-        y_position = Parameter('y', **_ATOM_DETAILS['position'])
-        z_position = Parameter('z', **_ATOM_DETAILS['position'])
-        return cls(name, specie, occupancy, x_position, y_position, z_position, interface=interface)
+    def default(cls, label: str, specie_label: str, interface=None):
+        label = Descriptor('label', label, **_SITE_DETAILS['label'])
+        specie = Descriptor('specie', specie_label, **_SITE_DETAILS['type_symbol'])
+        occupancy = Parameter('occupancy', **_SITE_DETAILS['occupancy'])
+        x_position = Parameter('x', **_SITE_DETAILS['position'])
+        y_position = Parameter('y', **_SITE_DETAILS['position'])
+        z_position = Parameter('z', **_SITE_DETAILS['position'])
+        return cls(label, specie, occupancy, x_position, y_position, z_position, interface=interface)
 
     @classmethod
-    def from_pars(cls, name: str, specie_label: str,
-                  occupancy: float = _ATOM_DETAILS['occupancy']['value'],
-                  x: float = _ATOM_DETAILS['position']['value'],
-                  y: float = _ATOM_DETAILS['position']['value'],
-                  z: float = _ATOM_DETAILS['position']['value'],
+    def from_pars(cls,
+                  label: str,
+                  specie_label: str,
+                  occupancy: float = _SITE_DETAILS['occupancy']['value'],
+                  x: float = _SITE_DETAILS['position']['value'],
+                  y: float = _SITE_DETAILS['position']['value'],
+                  z: float = _SITE_DETAILS['position']['value'],
                   interface=None):
+        label = Descriptor('label', label, **_SITE_DETAILS['label'])
         specie = Descriptor('specie', specie_label)
-        pos = deepcopy(_ATOM_DETAILS['position'])
+        pos = deepcopy(_SITE_DETAILS['position'])
         del pos['value']
         x_position = Parameter('x', x, **pos)
         y_position = Parameter('y', y, **pos)
         z_position = Parameter('z', z, **pos)
-        occ = deepcopy(_ATOM_DETAILS['occupancy'])
+        occ = deepcopy(_SITE_DETAILS['occupancy'])
         del occ['value']
         occupancy = Parameter('occupancy', occupancy, **occ)
 
-        return cls(name, specie, occupancy, x_position, y_position, z_position, interface=interface)
+        return cls(label, specie, occupancy, x_position, y_position, z_position, interface=interface)
 
     def __repr__(self) -> str:
         return f'Atom {self.name} ({self.specie.raw_value}) @' \
                f' ({self.x.raw_value}, {self.y.raw_value}, {self.z.raw_value})'
+
+    @property
+    def coords(self) -> np.ndarray:
+        """
+        Get the current sites fractional co-ordinates as an array
+
+        :return: Array containing fractional co-ordinates
+        :rtype: np.ndarray
+        """
+        return np.array([self.x.raw_value, self.y.raw_value, self.z.raw_value])
+
+    def distance(self, other_site: 'Site') -> float:
+        """
+        Get the distance between two sites
+
+        :param other_site: Second site
+        :type other_site: Site
+        :return: Distance between 2 sites
+        :rtype: float
+        """
+        return np.linalg.norm(other_site.coords - self.coords)
 
 
 class Atoms(BaseCollection):
@@ -85,7 +114,7 @@ class Atoms(BaseCollection):
             self.interface.generate_bindings(self)
 
     def __repr__(self) -> str:
-        return f'Collection of {len(self)} Atoms.'
+        return f'Collection of {len(self)} sites.'
 
     @property
     def x_positions(self) -> np.ndarray:

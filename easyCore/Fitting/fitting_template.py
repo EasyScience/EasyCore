@@ -1,10 +1,11 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
-import numpy as np
 
 from abc import ABCMeta, abstractmethod
 from typing import Union, Callable, List
+
+from easyCore import np
 from easyCore.Utils.typing import noneType
 
 

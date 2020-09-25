@@ -2,13 +2,12 @@ __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
 import numbers
-import numpy as np
 import weakref
 
 from copy import deepcopy
 from typing import List, Union, Any, Iterable
 
-from easyCore import borg, ureg
+from easyCore import borg, ureg, np
 from easyCore.Utils.classTools import addLoggedProp, addProp
 from easyCore.Utils.typing import noneType
 from easyCore.Utils.UndoRedo import stack_deco

@@ -3,7 +3,7 @@ __version__ = '0.0.1'
 
 from copy import deepcopy
 
-import numpy as np
+from easyCore import np
 from typing import Tuple, Union, List
 
 from easyCore import ureg
@@ -59,7 +59,7 @@ class Cell(BaseObj):
         return cls(length_a, length_b, length_c, angle_alpha, angle_beta, angle_gamma)
 
     @classmethod
-    def from_parameters(cls, length_a: float, length_b: float, length_c: float,
+    def from_pars(cls, length_a: float, length_b: float, length_c: float,
                         angle_alpha: float, angle_beta: float, angle_gamma: float, ang_unit: str = 'deg') -> "Cell":
         """
         Constructor of a crystallographic unit cell when parameters are known.
