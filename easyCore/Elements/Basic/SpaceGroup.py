@@ -1,2 +1,89 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
+
+from easyCore.Objects.Base import BaseObj, Descriptor
+from easyCore.Symmetry.groups import SpaceGroup as SpaceGroupOpts
+
+from easyCore.Utils.io.star import StarEntry
+
+_CIF_CONVERSIONS = [
+    ['_space_group_HM_name', 'symmetry_space_group_name_H-M']
+]
+
+
+class SpaceGroup(BaseObj):
+
+    def __init__(self, _space_group_HM_name: Descriptor):
+        super(SpaceGroup, self).__init__('space_group',
+                                         _space_group_HM_name=_space_group_HM_name)
+
+        self._sg_data = SpaceGroupOpts(self._space_group_HM_name.raw_value)
+
+    @classmethod
+    def from_pars(cls, _space_group_HM_name: str):
+        return cls(Descriptor('_space_group_HM_name', _space_group_HM_name))
+
+    @classmethod
+    def default(cls):
+        this_id = SpaceGroupOpts.SYMM_OPS[0]["hermann_mauguin"]
+        return cls(Descriptor('_space_group_HM_name', this_id))
+
+    @classmethod
+    def from_int_number(cls, int_number, hexagonal=True):
+        sg = SpaceGroupOpts.from_int_number(int_number, hexagonal)
+        return cls.from_pars(sg.full_symbol)
+
+    def __on_change(self, value):
+        self._sg_data = SpaceGroupOpts(value)
+        value = SpaceGroupOpts.SYMM_OPS[self._sg_data.int_number]["hermann_mauguin"]
+        return value
+
+    @property
+    def space_group_HM_name(self):
+        return self._space_group_HM_name
+
+    @space_group_HM_name.setter
+    def space_group_HM_name(self, value):
+        self._space_group_HM_name.value = self.__on_change(value)
+
+    @property
+    def full_symbol(self):
+        return self._sg_data.full_symbol
+
+    @property
+    def int_symbol(self):
+        return self._sg_data.int_number
+
+    @property
+    def point_group(self):
+        return self._sg_data.point_group
+
+    @property
+    def order(self):
+        return self._sg_data.order
+
+    @property
+    def crystal_system(self):
+        return self._sg_data.crystal_system
+
+    @property
+    def int_number(self):
+        return self._sg_data.int_number
+
+    @property
+    def hermann_mauguin(self):
+        return SpaceGroupOpts.SYMM_OPS[self.int_number]["hermann_mauguin"]
+
+    @property
+    def symmetry_opts(self):
+        return self._sg_data.symmetry_ops
+
+    def get_orbit(self, p, tol=1e-5):
+        return self._sg_data.get_orbit(p, tol=tol)
+
+    def to_star(self):
+        return StarEntry(self._space_group_HM_name, _CIF_CONVERSIONS[0][1])
+
+    @classmethod
+    def from_star(cls, in_string):
+        return StarEntry.from_string(cls, in_string, _CIF_CONVERSIONS[0][0])

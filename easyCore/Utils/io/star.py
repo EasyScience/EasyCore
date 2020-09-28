@@ -6,6 +6,8 @@ import warnings
 from collections import deque, OrderedDict
 from typing import List
 import re
+import operator
+from functools import reduce
 
 _MAX_LEN = 70
 _MAX_LABEL_LEN = 65
@@ -19,6 +21,11 @@ class FakeItem:
             self.error = 0
         if error is not None:
             self.error = error
+
+
+class FakeCore:
+    def __init__(self):
+        self._kwargs = {}
 
 
 class ItemHolder:
@@ -87,6 +94,9 @@ class ItemHolder:
     def from_string(cls, in_string: str):
         return cls(cls._makeFakeItem(in_string))
 
+    def to_fake_item(self):
+        return FakeItem(self.value, self.error, self.fixed)
+
 
 class StarEntry(ItemHolder):
     def __init__(self, item, entry_name: str = None, prefix='_'):
@@ -102,7 +112,7 @@ class StarEntry(ItemHolder):
         super(StarEntry, self).__init__(item)
 
     def __str__(self) -> str:
-        s = "{}{}   ".format(prefix, self.name) + super(StarEntry, self).__str__()
+        s = "{}{}   ".format(self.prefix, self.name) + super(StarEntry, self).__str__()
         return s
 
     @classmethod
@@ -113,152 +123,21 @@ class StarEntry(ItemHolder):
             name = name_conversion
         return cls(cls._makeFakeItem(value), name)
 
-
-class StarBase:
-    def __init__(self, core, entry_names: List[str] = None, prefix = '_'):
-
-        if not hasattr(core, '__len__'):
-            core = [core]
-        self.data = core
-        if entry_names is None:
-            entry_names = [self.data[0]._kwargs[key].name for key in self.data[0]._kwargs.keys()]
-
-        self.prefix = prefix
-        self.labels = entry_names
-        self.maxlen = _MAX_LEN
-
-
-class StarSection(StarBase):
-    def __str__(self) -> str:
-        return self._section_to_string()
-
-    def _section_to_string(self):
-        s = ''
-        for idx, key in enumerate(self.data[0]._kwargs.keys()):
-            s += f'{StarEntry(self.data[0]._kwargs[key], self.labels[idx], prefix=self.prefix)}\n'
-        return s
-
-    @classmethod
-    def from_string(cls, real_cls, in_string: str, name_conversion: List[str] = None, prefix='_'):
-        items = in_string.split('\n')
-        entries = []
-        pname = {}
-        for idx, item in enumerate(items):
-            if not item:
-                continue
-            conv_item = StarEntry.from_string(item, prefix=prefix)
-            p_name = conv_item.name
-            if name_conversion is not None:
-                p_name = name_conversion[idx]
-            pname[p_name] = conv_item.value
-            entry = {'name':  conv_item.name,
-                     'common_name': p_name,
-                     'value': conv_item.value,
-                     'fixed': conv_item.fixed,
-                     'error': conv_item.error}
-            entries.append(entry)
-        if hasattr(real_cls, 'from_pars'):
-            this_converted = real_cls.from_pars(**pname)
-        for idx, entry in enumerate(entries):
-            if entry['fixed'] is not None:
-                this_converted._kwargs[entry['common_name']].fixed = entry['fixed']
-            if entry['error'] is not None:
-                this_converted._kwargs[entry['common_name']].error = entry['error']
-        return this_converted
+    def to_class(self, cls, name_conversion: str = None):
+        if name_conversion is None:
+            name_conversion = self.name
+        if hasattr(cls, 'from_pars'):
+            new_obj = cls.from_pars(**{name_conversion: self.value})
+        if hasattr(new_obj, 'fixed'):
+            if self.fixed is not None:
+                new_obj.fixed = self.fixed
+        if hasattr(new_obj, 'error'):
+            if self.error is not None:
+                new_obj.error = self.error
+        return new_obj
 
 
-class StarLoop(StarBase):
-
-    def __str__(self) -> str:
-        return self._loop_to_string()
-
-    def _loop_to_string(self):
-        s = "loop_"
-        for idx, kw in enumerate(self.data[0]._kwargs.keys()):
-            label = self.data[0]._kwargs[kw].name
-            if self.labels[idx] is not None:
-                label = self.labels[idx]
-            s += '\n {}'.format(self.prefix) + label
-        for item in self.data:
-            line = "\n"
-            for kw in self.data[0]._kwargs.keys():
-                val = str(ItemHolder(item._kwargs[kw]))
-                if val[0] == ";":
-                    s += line + "\n" + val
-                    line = "\n"
-                elif len(line) + len(val) + 2 < self.maxlen:
-                    line += "  " + val
-                else:
-                    s += line
-                    line = '\n  ' + val
-            s += line
-        return s
-
-    @classmethod
-    def from_string(cls, groupClass, itemClass, in_string: str, name_conversion: List[str] = None, prefix='_'):
-        q = cls._process_string(in_string)
-        data = OrderedDict()
-        loops = []
-        while q:
-            s = q.popleft()
-            # cif keys aren't in quotes, so show up in s[0]
-            if s[0] == "_eof":
-                break
-            if s[0].startswith(prefix):
-                try:
-                    data[s[0]] = "".join(q.popleft())
-                except IndexError:
-                    data[s[0]] = ""
-            elif s[0].startswith("loop_"):
-                columns = []
-                items = []
-                while q:
-                    s = q[0]
-                    if s[0].startswith("loop_") or not s[0].startswith(prefix):
-                        break
-                    columns.append("".join(q.popleft()))
-                    data[columns[-1]] = []
-                while q:
-                    s = q[0]
-                    if s[0].startswith("loop_") or s[0].startswith(prefix):
-                        break
-                    items.append("".join(q.popleft()))
-                n = len(items) // len(columns)
-                assert len(items) % n == 0
-                loops.append(columns)
-                for k, v in zip(columns * n, items):
-                    data[k].append(v.strip())
-            elif "".join(s).strip() != "":
-                warnings.warn("Possible issue in cif file"
-                              " at line: {}".format("".join(s).strip()))
-
-        data_list = []
-        for idx in range(n):
-            d = dict.fromkeys([key[len(prefix):] for key in data.keys()])
-            pdata = {}
-            for idx2, key in enumerate(data.keys()):
-                item = ItemHolder.from_string(data[key][idx])
-                this_key = key[len(prefix):]
-                if name_conversion is not None:
-                    this_key = name_conversion[idx2]
-                pdata[this_key] = item.value
-                d[key] = item
-            if hasattr(itemClass, 'from_pars'):
-                made_item = itemClass.from_pars(**pdata)
-                for idx2, key in enumerate(data.keys()):
-                    this_key = key[len(prefix):]
-                    if name_conversion is not None:
-                        this_key = name_conversion[idx2]
-                    this_item = getattr(made_item, this_key)
-                    if d[key].fixed is not None:
-                        this_item.fixed = d[key].fixed
-                    if d[key].error is not None:
-                        this_item.error = d[key].error
-                data_list.append(made_item)
-            else:
-                raise AttributeError
-        return groupClass(groupClass.__name__, *data_list)
-
+class StarProcess:
     @classmethod
     def _process_string(cls, string):
         # remove comments
@@ -298,6 +177,226 @@ class StarLoop(StarBase):
                     q.append(s)
         return q
 
+    @classmethod
+    def _loadBlock(cls, in_string: str, prefix='_'):
+        q = cls._process_string(in_string)
+        data = OrderedDict()
+        loops = []
+        while q:
+            s = q.popleft()
+            # cif keys aren't in quotes, so show up in s[0]
+            if s[0] == "_eof":
+                break
+            if s[0].startswith(prefix):
+                try:
+                    data[s[0]] = "".join(q.popleft())
+                except IndexError:
+                    data[s[0]] = ""
+            elif s[0].startswith("loop_"):
+                columns = []
+                items = []
+                while q:
+                    s = q[0]
+                    if s[0].startswith("loop_") or not s[0].startswith(prefix):
+                        break
+                    columns.append("".join(q.popleft()))
+                    data[columns[-1]] = []
+                while q:
+                    s = q[0]
+                    if s[0].startswith("loop_") or s[0].startswith(prefix):
+                        break
+                    items.append("".join(q.popleft()))
+                n = len(items) // len(columns)
+                assert len(items) % n == 0
+                loops.append(columns)
+                for k, v in zip(columns * n, items):
+                    data[k].append(v.strip())
+            elif "".join(s).strip() != "":
+                warnings.warn("Possible issue in cif file"
+                              " at line: {}".format("".join(s).strip()))
+        return data, loops
+
+
+class StarBase(StarProcess):
+    def __init__(self, core, entry_names: List[str] = None, prefix: str = '_'):
+
+        if not hasattr(core, '__len__'):
+            core = [core]
+        self.data = core
+        if entry_names is None:
+            entry_names = [self.data[0]._kwargs[key].name for key in self.data[0]._kwargs.keys()]
+
+        self.prefix = prefix
+        self.labels = entry_names
+        self.maxlen = _MAX_LEN
+
+
+class StarCollection(StarProcess):
+    def __init__(self, *star_objects):
+        self.data = star_objects
+
+    def __str__(self) -> str:
+        return '\n\n'.join([str(data) for data in self.data])
+
+    @classmethod
+    def from_string(cls, in_string, prefix='_'):
+
+        in_string = '\n'.join([item for item in in_string.split('\n') if item and item[0] != '#'])
+
+        blocks = in_string.split('data_')
+        data_blocks = []
+        for block in blocks:
+            if not block:
+                continue
+            items = block.split('\n')
+            if len(items) == 0:
+                continue
+            data_block = [StarHeader.from_string('data_' + items[0])]
+            data, loops = cls._loadBlock('\n'.join(items[1:]))
+            for loop in loops:
+                data_block.append(StarLoop.from_data(data, [loop], prefix=prefix))
+            flattened_loop = reduce(operator.concat, loops)
+            data = {k: data[k] for k in data.keys() if k not in flattened_loop}
+            for key in data.keys():
+                data_block.append(StarEntry.from_string("{}   {}".format(key, data[key])))
+            data_blocks.append(data_block)
+        if len(data_blocks) == 1:
+            data_blocks = data_blocks[0]
+        return data_blocks
+
+
+class StarSection(StarBase):
+    def __str__(self) -> str:
+        return self._section_to_string()
+
+    def _section_to_string(self):
+        s = ''
+        for idx, key in enumerate(self.data[0]._kwargs.keys()):
+            s += f'{StarEntry(self.data[0]._kwargs[key], self.labels[idx], prefix=self.prefix)}\n'
+        return s
+
+    def to_class(self, cls, name_conversions=None):
+        if not hasattr(cls, 'from_pars'):
+            raise AttributeError
+        if name_conversions is None:
+            name_conversions = self.labels
+        new_object = cls.from_pars(**{k[0]: self.data[0]._kwargs[k[1]].raw_value for k in name_conversions})
+        for key in name_conversions:
+            attr = getattr(new_object, key[0])
+            if hasattr(self.data[0]._kwargs[key[1]], 'fixed'):
+                if self.data[0]._kwargs[key[1]].fixed is not None:
+                    attr.fixed = self.data[0]._kwargs[key[1]].fixed
+                if self.data[0]._kwargs[key[1]].error is not None:
+                    attr.error = self.data[0]._kwargs[key[1]].error
+        return new_object
+
+    @classmethod
+    def from_string(cls, in_string: str, name_conversion: List[str] = None, prefix='_'):
+        items = in_string.split('\n')
+        data = [FakeCore()]
+        names = []
+        for idx, item in enumerate(items):
+            if not item:
+                continue
+            this_name = None
+            if name_conversion is not None:
+                this_name = name_conversion[idx]
+            conv_item = StarEntry.from_string(item, name_conversion=this_name, prefix=prefix)
+            names.append(conv_item.name)
+            data[0]._kwargs[conv_item.name] = conv_item.to_fake_item()
+        return cls(data, entry_names=names, prefix=prefix)
+
+    @classmethod
+    def from_StarEntries(cls, star_entries: List[StarEntry], name_conversions: List[str] = None, prefix='_'):
+        data = [FakeCore()]
+        names = []
+        for idx, entry in enumerate(star_entries):
+            names.append(entry.name)
+            data[0]._kwargs[entry.name] = entry.to_fake_item()
+        return cls(data, entry_names=name_conversions, prefix=prefix)
+
+
+class StarLoop(StarBase):
+
+    def __str__(self) -> str:
+        return self._loop_to_string()
+
+    def _loop_to_string(self):
+        s = "loop_"
+        if len(self.data) == 0:
+            return ''
+        for idx, kw in enumerate(self.data[0]._kwargs.keys()):
+            label = kw
+            if not isinstance(self.data[0]._kwargs[kw], FakeItem):
+                label = self.data[0]._kwargs[kw].name
+            if self.labels[idx] is not None:
+                label = self.labels[idx]
+            s += '\n {}'.format(self.prefix) + label
+        for item in self.data:
+            line = "\n"
+            for kw in self.data[0]._kwargs.keys():
+                val = str(ItemHolder(item._kwargs[kw]))
+                if val[0] == ";":
+                    s += line + "\n" + val
+                    line = "\n"
+                elif len(line) + len(val) + 2 < self.maxlen:
+                    line += "  " + val
+                else:
+                    s += line
+                    line = '\n  ' + val
+            s += line
+        return s
+
+    @classmethod
+    def from_string(cls, in_string: str, name_conversion: List[str] = None, prefix='_'):
+        data, loops = cls._loadBlock(in_string, prefix=prefix)
+        return cls.from_data(data, loops, name_conversion, prefix)
+
+    @classmethod
+    def from_data(cls, data: OrderedDict, loops=None, name_conversion: List[str] = None, prefix='_'):
+        if loops is None:
+            loops = [list(data.keys())]
+        if len(loops) > 1:
+            raise NotImplementedError
+        for loop in loops:
+            # How many elements are there?
+            len_elements = len(data[loop[0]])
+            this_data = []
+            all_names = []
+            for element_idx in range(len_elements):
+                fk = FakeCore()
+                for idx2, item in enumerate(loop):
+                    this_name = item
+                    if this_name[0] == '_':
+                        this_name = this_name[1:]
+                    if name_conversion is not None:
+                        this_name = name_conversion[idx2]
+                    if element_idx == 0:
+                        all_names.append(this_name)
+                    conv_item = StarEntry.from_string("{}{}   {}".format(prefix, this_name, data[item][element_idx]),
+                                                      this_name, prefix=prefix)
+                    fk._kwargs[conv_item.name] = conv_item.to_fake_item()
+                this_data.append(fk)
+            return cls(this_data, all_names, prefix=prefix)
+
+    def to_class(self, cls_outer, cls_inner, name_conversions=None):
+        if not hasattr(cls_inner, 'from_pars'):
+            raise AttributeError
+        new_objects = []
+        for idx in range(len(self.data)):
+            if name_conversions is None:
+                name_conversions = [[k, k] for k in self.data[idx]._kwargs.keys()]
+            new_object = cls_inner.from_pars(**{k[0]: self.data[idx]._kwargs[k[1]].raw_value for k in name_conversions})
+            for key in name_conversions:
+                attr = getattr(new_object, key[0])
+                if hasattr(self.data[idx]._kwargs[key[1]], 'fixed'):
+                    if self.data[idx]._kwargs[key[1]].fixed is not None:
+                        attr.fixed = self.data[idx]._kwargs[key[1]].fixed
+                    if self.data[idx]._kwargs[key[1]].error is not None:
+                        attr.error = self.data[idx]._kwargs[key[1]].error
+            new_objects.append(new_object)
+        return cls_outer(cls_outer.__name__, *new_objects)
+
 
 class StarHeader:
     def __init__(self, name: str):
@@ -308,5 +407,5 @@ class StarHeader:
 
     @classmethod
     def from_string(cls, in_string: str):
-        name = in_string.split('data_')[0]
+        name = in_string.split('data_')[1]
         return cls(name)

@@ -3,14 +3,40 @@ __version__ = '0.0.1'
 
 from easyCore.Elements.Basic.Cell import Cell
 from easyCore.Elements.Basic.Site import Site, Atoms
-class crystal:
+from easyCore.Elements.Basic.SpaceGroup import SpaceGroup
 
-    def __init__(self, name):
+from easyCore.Utils.io.cif import CrystalCif
+
+
+class Crystal:
+
+    def __init__(self, name, spacegroup=None, cell=None, atoms=None):
         self.name = name
-        self.cell = Cell.default()
-        self.atoms = Atoms('atom_list')
+        if spacegroup is None:
+            self.spacegroup = SpaceGroup.default()
+        else:
+            self.spacegroup = spacegroup
+        if cell is None:
+            self.cell = Cell.default()
+        else:
+            self.cell = cell
+        if atoms is None:
+            self.atoms = Atoms('atom_list')
+        else:
+            self.atoms = atoms
 
     def add_atom(self, *args, **kwargs):
         self.atoms.append(Site.from_pars(*args, **kwargs))
 
+    def to_cif_str(self) -> str:
+        return str(CrystalCif(self.name, self.spacegroup, self.cell, self.atoms))
 
+    @classmethod
+    def from_cif_str(cls, in_string: str):
+        star = CrystalCif.from_cif_str(in_string)
+        items = star.items
+        return cls(star.name,
+                   *[item for item in items if isinstance(item, SpaceGroup)],
+                   *[item for item in items if isinstance(item, Cell)],
+                   *[item for item in items if isinstance(item, Atoms)]
+                   )

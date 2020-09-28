@@ -40,10 +40,8 @@ _CIF_CONVERSIONS = [
     ['length_c', 'cell_length_c'],
     ['angle_alpha', 'cell_angle_alpha'],
     ['angle_beta', 'cell_angle_beta'],
-    ['angle_gamma', 'cell_angle_gammma'],
+    ['angle_gamma', 'cell_angle_gamma'],
 ]
-
-
 
 
 class Cell(BaseObj):
@@ -73,7 +71,7 @@ class Cell(BaseObj):
 
     @classmethod
     def from_pars(cls, length_a: float, length_b: float, length_c: float,
-                        angle_alpha: float, angle_beta: float, angle_gamma: float, ang_unit: str = 'deg') -> "Cell":
+                  angle_alpha: float, angle_beta: float, angle_gamma: float, ang_unit: str = 'deg') -> "Cell":
         """
         Constructor of a crystallographic unit cell when parameters are known.
 
@@ -134,7 +132,7 @@ class Cell(BaseObj):
             angles[i] = np.dot(matrix[j], matrix[k]) / (lengths[j] * lengths[k])
             angles[i] = max(min(angles[i], 1), - 1)
         angles = np.arccos(angles) * 180.0 / np.pi
-        return cls.from_parameters(*lengths, *angles)
+        return cls.from_pars(*lengths, *angles)
 
     @classmethod
     def cubic(cls, a: float) -> "Cell":
@@ -146,7 +144,7 @@ class Cell(BaseObj):
         :return: Crystallographic unit cell container
         :rtype: Cell
         """
-        return cls.from_parameters(a, a, a, 90, 90, 90)
+        return cls.from_pars(a, a, a, 90, 90, 90)
 
     @classmethod
     def tetragonal(cls, a: float, c: float) -> "Cell":
@@ -160,7 +158,7 @@ class Cell(BaseObj):
         :return: Crystallographic unit cell container
         :rtype: Cell
         """
-        return cls.from_parameters(a, a, c, 90, 90, 90)
+        return cls.from_pars(a, a, c, 90, 90, 90)
 
     @classmethod
     def orthorhombic(cls, a: float, b: float, c: float) -> "Cell":
@@ -176,7 +174,7 @@ class Cell(BaseObj):
         :return: Crystallographic unit cell container
         :rtype: Cell
         """
-        return cls.from_parameters(a, b, c, 90, 90, 90)
+        return cls.from_pars(a, b, c, 90, 90, 90)
 
     @classmethod
     def monoclinic(cls, a: float, b: float, c: float, beta: float) -> "Cell":
@@ -195,7 +193,7 @@ class Cell(BaseObj):
         :return: Crystallographic unit cell container
         :rtype: Cell
         """
-        return cls.from_parameters(a, b, c, 90, beta, 90)
+        return cls.from_pars(a, b, c, 90, beta, 90)
 
     @classmethod
     def hexagonal(cls, a: float, c: float) -> "Cell":
@@ -209,7 +207,7 @@ class Cell(BaseObj):
         :return: Crystallographic unit cell container
         :rtype: Cell
         """
-        return cls.from_parameters(a, a, c, 90, 90, 120)
+        return cls.from_pars(a, a, c, 90, 90, 120)
 
     @classmethod
     def rhombohedral(cls, a: float, alpha: float) -> "Cell":
@@ -223,7 +221,7 @@ class Cell(BaseObj):
         :return: Crystallographic unit cell container
         :rtype: Cell
         """
-        return cls.from_parameters(a, a, a, alpha, alpha, alpha)
+        return cls.from_pars(a, a, a, alpha, alpha, alpha)
 
     # Dynamic properties
     @property
@@ -479,7 +477,7 @@ class Cell(BaseObj):
         if isinstance(length_scales, float):
             length_scales = 3 * [length_scales]
         new_lengths = np.array(length_scales) * np.array(self.lengths)
-        return self.__class__.from_parameters(*new_lengths, *self.angles)
+        return self.__class__.from_pars(*new_lengths, *self.angles)
 
     # Get functions
     def get_cartesian_coords(self, fractional_coords: Vector3Like) -> np.ndarray:

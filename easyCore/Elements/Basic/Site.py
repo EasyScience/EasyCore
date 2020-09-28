@@ -11,7 +11,7 @@ from easyCore.Objects.Groups import BaseCollection
 from easyCore.Utils.io.star import StarLoop
 
 _SITE_DETAILS = {
-    'label': {
+    'label':       {
         'description': 'A unique identifier for a particular site in the crystal',
         'url':         'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic/Iatom_site_label.html',
     },
@@ -42,6 +42,7 @@ _CIF_CONVERSIONS = [
     ['y', 'atom_site_fract_y'],
     ['z', 'atom_site_fract_z']
 ]
+
 
 class Site(BaseObj):
 
@@ -154,9 +155,10 @@ class Atoms(BaseCollection):
     def atom_occupancies(self) -> np.ndarray:
         return np.array([atom.occupancy.raw_value for atom in self])
 
-    def to_star(self):
+    def to_star(self) -> StarLoop:
         return StarLoop(self, [name[1] for name in _CIF_CONVERSIONS])
 
     @classmethod
-    def from_star(cls, in_string):
-        return StarLoop.from_string(cls, Site, in_string, [name[0] for name in _CIF_CONVERSIONS])
+    def from_string(cls, in_string: str):
+        s = StarLoop.from_string(in_string, [name[0] for name in _CIF_CONVERSIONS])
+        return s.to_class(cls, Site)
