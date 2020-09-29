@@ -2,7 +2,6 @@ __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
 from typing import List
-from copy import deepcopy
 
 from easyCore import np
 from easyCore.Objects.Base import Descriptor, Parameter, BaseObj
@@ -34,17 +33,17 @@ _SITE_DETAILS = {
     },
 }
 
-_CIF_CONVERSIONS = [
-    ['label', 'atom_site_label'],
-    ['specie', 'atom_site_type_symbol'],
-    ['occupancy', 'atom_site_occupancy'],
-    ['x', 'atom_site_fract_x'],
-    ['y', 'atom_site_fract_y'],
-    ['z', 'atom_site_fract_z']
-]
-
 
 class Site(BaseObj):
+
+    _CIF_CONVERSIONS = [
+        ['label', 'atom_site_label'],
+        ['specie', 'atom_site_type_symbol'],
+        ['occupancy', 'atom_site_occupancy'],
+        ['x', 'atom_site_fract_x'],
+        ['y', 'atom_site_fract_y'],
+        ['z', 'atom_site_fract_z']
+    ]
 
     def __init__(self, label: Descriptor, specie: Descriptor, occupancy: Parameter,
                  x_position: Parameter, y_position: Parameter, z_position: Parameter, interface=None):
@@ -78,16 +77,18 @@ class Site(BaseObj):
                   y: float = _SITE_DETAILS['position']['value'],
                   z: float = _SITE_DETAILS['position']['value'],
                   interface=None):
+
         label = Descriptor('label', label, **_SITE_DETAILS['label'])
-        specie = Descriptor('specie', specie)
-        pos = deepcopy(_SITE_DETAILS['position'])
-        del pos['value']
-        x_position = Parameter('x', x, **pos)
-        y_position = Parameter('y', y, **pos)
-        z_position = Parameter('z', z, **pos)
-        occ = deepcopy(_SITE_DETAILS['occupancy'])
-        del occ['value']
-        occupancy = Parameter('occupancy', occupancy, **occ)
+        specie = Descriptor('specie', value=specie,
+                            **{k: _SITE_DETAILS['type_symbol'][k]
+                               for k in _SITE_DETAILS['type_symbol'].keys() if k != 'value'})
+        pos = {k: _SITE_DETAILS['position'][k] for k in _SITE_DETAILS['position'].keys() if k != 'value'}
+        x_position = Parameter('x', value=x, **pos)
+        y_position = Parameter('y', value=y, **pos)
+        z_position = Parameter('z', value=z, **pos)
+        occupancy = Parameter('occupancy', value=occupancy, **{k: _SITE_DETAILS['occupancy'][k]
+                                                               for k in _SITE_DETAILS['occupancy'].keys() if
+                                                               k != 'value'})
 
         return cls(label, specie, occupancy, x_position, y_position, z_position, interface=interface)
 
@@ -156,9 +157,9 @@ class Atoms(BaseCollection):
         return np.array([atom.occupancy.raw_value for atom in self])
 
     def to_star(self) -> StarLoop:
-        return StarLoop(self, [name[1] for name in _CIF_CONVERSIONS])
+        return StarLoop(self, [name[1] for name in Site._CIF_CONVERSIONS])
 
     @classmethod
     def from_string(cls, in_string: str):
-        s = StarLoop.from_string(in_string, [name[0] for name in _CIF_CONVERSIONS])
+        s = StarLoop.from_string(in_string, [name[0] for name in Site._CIF_CONVERSIONS])
         return s.to_class(cls, Site)

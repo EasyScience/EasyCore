@@ -27,6 +27,16 @@ def addProp(inst, name, *args, **kwargs):
     setattr(cls, name, property(*args, **kwargs))
 
 
+def removeProp(inst, name):
+    cls = type(inst)
+    if not hasattr(cls, '__perinstance'):
+        cls = type(cls.__name__, (cls,), {})
+        cls.__perinstance = True
+        inst.__old_class__ = inst.__class__
+        inst.__class__ = cls
+    delattr(cls, name)
+
+
 def generatePath(model_obj, skip_first: bool = False) -> Tuple[List[int], List[str]]:
     pars = model_obj.get_parameters()
     start_idx = 0 + int(skip_first)

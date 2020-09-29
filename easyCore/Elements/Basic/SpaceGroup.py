@@ -6,32 +6,34 @@ from easyCore.Symmetry.groups import SpaceGroup as SpaceGroupOpts
 
 from easyCore.Utils.io.star import StarEntry
 
-_CIF_CONVERSIONS = [
-    ['_space_group_HM_name', 'symmetry_space_group_name_H-M']
-]
-
 
 class SpaceGroup(BaseObj):
+    _CIF_CONVERSIONS = [
+        ['_space_group_HM_name', 'symmetry_space_group_name_H-M']
+    ]
 
-    def __init__(self, _space_group_HM_name: Descriptor):
+
+    def __init__(self, _space_group_HM_name: Descriptor, interface=None):
         super(SpaceGroup, self).__init__('space_group',
                                          _space_group_HM_name=_space_group_HM_name)
-
         self._sg_data = SpaceGroupOpts(self._space_group_HM_name.raw_value)
+        self.interface = interface
+        if self.interface is not None:
+            self.interface.generate_bindings(self)
 
     @classmethod
-    def from_pars(cls, _space_group_HM_name: str):
-        return cls(Descriptor('_space_group_HM_name', _space_group_HM_name))
+    def from_pars(cls, _space_group_HM_name: str, interface=None):
+        return cls(Descriptor('_space_group_HM_name', _space_group_HM_name), interface=interface)
 
     @classmethod
-    def default(cls):
+    def default(cls, interface=None):
         this_id = SpaceGroupOpts.SYMM_OPS[0]["hermann_mauguin"]
-        return cls(Descriptor('_space_group_HM_name', this_id))
+        return cls(Descriptor('_space_group_HM_name', this_id), interface=interface)
 
     @classmethod
-    def from_int_number(cls, int_number, hexagonal=True):
+    def from_int_number(cls, int_number, hexagonal=True, interface=None):
         sg = SpaceGroupOpts.from_int_number(int_number, hexagonal)
-        return cls.from_pars(sg.full_symbol)
+        return cls.from_pars(sg.full_symbol, interface=interface)
 
     def __on_change(self, value):
         self._sg_data = SpaceGroupOpts(value)
@@ -82,8 +84,8 @@ class SpaceGroup(BaseObj):
         return self._sg_data.get_orbit(p, tol=tol)
 
     def to_star(self):
-        return StarEntry(self._space_group_HM_name, _CIF_CONVERSIONS[0][1])
+        return StarEntry(self._space_group_HM_name, self._CIF_CONVERSIONS[0][1])
 
     @classmethod
     def from_star(cls, in_string):
-        return StarEntry.from_string(cls, in_string, _CIF_CONVERSIONS[0][0])
+        return StarEntry.from_string(cls, in_string, cls._CIF_CONVERSIONS[0][0])

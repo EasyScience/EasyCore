@@ -232,26 +232,34 @@ class Descriptor(MSONable):
         return value
 
     @property
-    def enabled(self):
+    def enabled(self) -> bool:
+        """
+        Logical property to see if the objects value can be directly set.
+
+        :return: Can the objects value be set
+        :rtype: bool
+        """
         return self._enabled
 
     @enabled.setter
     @stack_deco
     def enabled(self, value: bool):
+        """
+        Enable and disable the direct setting of an objects value field.
+
+        :param value: True - objects value can be set, False - the opposite
+        :type value: bool
+        """
         self._enabled = value
 
-    def _validator(self, value: Any):
-        """
-        Check that type is consistent. We don't want to assign a float to a string etc.
-
-        :param value: Value to be checked
-        :type value: Any
-        :return: None
-        :rtype: noneType
-        """
-        assert isinstance(value, self._type)
-
     def convert_unit(self, unit_str: str):
+        """
+        Convert the value from one unit system to another. You will should use
+        `compatible_units` to see if your new unit is compatible.
+
+        :param unit_str: New unit in string form
+        :type unit_str: str
+        """
         new_unit = ureg.parse_expression(unit_str)
         self._value = self._value.to(new_unit)
         self._units = new_unit

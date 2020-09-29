@@ -313,7 +313,13 @@ class StarSection(StarBase):
         for idx, entry in enumerate(star_entries):
             names.append(entry.name)
             data[0]._kwargs[entry.name] = entry.to_fake_item()
+        if name_conversions is None:
+            name_conversions = names
         return cls(data, entry_names=name_conversions, prefix=prefix)
+
+    def to_StarEntries(self) -> List[StarEntry]:
+        return [StarEntry(self.data[0]._kwargs[key], self.labels[idx], prefix=self.prefix)
+                for idx, key in enumerate(self.data[0]._kwargs.keys())]
 
 
 class StarLoop(StarBase):
@@ -353,6 +359,17 @@ class StarLoop(StarBase):
         return cls.from_data(data, loops, name_conversion, prefix)
 
     @classmethod
+    def from_StarSections(cls, star_sections: List[StarSection], name_conversion: List[str] = None, prefix='_'):
+        this_data = [section.data[0] for section in star_sections]
+        all_names = star_sections[0].labels
+        if name_conversion is not None:
+            all_names = name_conversion
+        return cls(this_data, all_names, prefix)
+
+    def to_StarSections(self) -> List[StarSection]:
+        return [StarSection(section, self.labels, prefix=self.prefix) for section in self.data]
+
+    @classmethod
     def from_data(cls, data: OrderedDict, loops=None, name_conversion: List[str] = None, prefix='_'):
         if loops is None:
             loops = [list(data.keys())]
@@ -378,6 +395,7 @@ class StarLoop(StarBase):
                     fk._kwargs[conv_item.name] = conv_item.to_fake_item()
                 this_data.append(fk)
             return cls(this_data, all_names, prefix=prefix)
+
 
     def to_class(self, cls_outer, cls_inner, name_conversions=None):
         if not hasattr(cls_inner, 'from_pars'):
