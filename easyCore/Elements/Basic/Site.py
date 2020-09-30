@@ -1,12 +1,13 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
-from typing import List
+from typing import List, Union
 
 from easyCore import np
 from easyCore.Objects.Base import Descriptor, Parameter, BaseObj
 from easyCore.Objects.Groups import BaseCollection
-
+from easyCore.Elements.Basic.AtomicDisplacement import AtomicDisplacement
+from easyCore.Utils.classTools import addLoggedProp
 from easyCore.Utils.io.star import StarLoop
 
 _SITE_DETAILS = {
@@ -35,7 +36,6 @@ _SITE_DETAILS = {
 
 
 class Site(BaseObj):
-
     _CIF_CONVERSIONS = [
         ['label', 'atom_site_label'],
         ['specie', 'atom_site_type_symbol'],
@@ -46,14 +46,19 @@ class Site(BaseObj):
     ]
 
     def __init__(self, label: Descriptor, specie: Descriptor, occupancy: Parameter,
-                 x_position: Parameter, y_position: Parameter, z_position: Parameter, interface=None):
+                 x_position: Parameter, y_position: Parameter, z_position: Parameter,
+                 interface=None, **kwargs):
+        # We can attach adp etc, which would be in kwargs. Filter them out...
+        k_wargs = {k: kwargs[k] for k in kwargs.keys() if issubclass(kwargs[k], (Descriptor, Parameter, BaseObj))}
+        kwargs = {k: kwargs[k] for k in kwargs.keys() if not issubclass(kwargs[k], (Descriptor, Parameter, BaseObj))}
         super(Site, self).__init__('site',
                                    label=label,
                                    specie=specie,
                                    occupancy=occupancy,
                                    x=x_position,
                                    y=y_position,
-                                   z=z_position)
+                                   z=z_position,
+                                   **k_wargs)
         self.interface = interface
         if self.interface is not None:
             self.interface.generate_bindings(self)
@@ -92,6 +97,23 @@ class Site(BaseObj):
 
         return cls(label, specie, occupancy, x_position, y_position, z_position, interface=interface)
 
+    def add_adp(self, adp_type: Union[str, AtomicDisplacement], **kwargs):
+        if isinstance(adp_type, str):
+            adp_type = AtomicDisplacement.from_pars(adp_type, interface=self.interface, **kwargs)
+        self.add_component(adp_type)
+
+    def add_component(self, component):
+        key = ''
+        if isinstance(component, AtomicDisplacement):
+            key = 'adp'
+        if not key:
+            raise ValueError
+        self._kwargs[key] = component
+        self._borg.map.add_edge(self, component)
+        self._borg.map.reset_type(component, 'created_internal')
+        addLoggedProp(self, key, self.__getter(key), self.__setter(key), get_id=key, my_self=self,
+                      test_class=BaseObj)
+
     def __repr__(self) -> str:
         return f'Atom {self.name} ({self.specie.raw_value}) @' \
                f' ({self.x.raw_value}, {self.y.raw_value}, {self.z.raw_value})'
@@ -117,6 +139,24 @@ class Site(BaseObj):
         """
         return np.linalg.norm(other_site.coords - self.coords)
 
+    @staticmethod
+    def __getter(key: str):
+
+        def getter(obj):
+            return obj._kwargs[key]
+
+        return getter
+
+    @staticmethod
+    def __setter(key):
+        def setter(obj, value):
+            if issubclass(obj._kwargs[key].__class__, Descriptor):
+                obj._kwargs[key].value = value
+            else:
+                obj._kwargs[key] = value
+
+        return setter
+
 
 class Atoms(BaseCollection):
     def __init__(self, name: str, *args, interface=None, **kwargs):
@@ -127,6 +167,18 @@ class Atoms(BaseCollection):
 
     def __repr__(self) -> str:
         return f'Collection of {len(self)} sites.'
+
+    def __getitem__(self, i: Union[int, slice]) -> Union[Parameter, Descriptor, BaseObj, 'BaseCollection']:
+        if isinstance(i, str) and i in self.atom_labels:
+            i = self.atom_labels.index(i)
+        return super(Atoms, self).__getitem__(i)
+
+    def append(self, item: Site):
+        if not isinstance(item, Site):
+            raise TypeError('Item must be a Site')
+        if item.label.raw_value in self.atom_labels:
+            raise AttributeError(f'An atom of name {item.label.raw_value} already exists.')
+        super(Atoms, self).append(item)
 
     @property
     def x_positions(self) -> np.ndarray:
@@ -156,8 +208,56 @@ class Atoms(BaseCollection):
     def atom_occupancies(self) -> np.ndarray:
         return np.array([atom.occupancy.raw_value for atom in self])
 
-    def to_star(self) -> StarLoop:
-        return StarLoop(self, [name[1] for name in Site._CIF_CONVERSIONS])
+    def to_star(self) -> List[StarLoop]:
+        default_items = [name[1] for name in Site._CIF_CONVERSIONS]
+        adps = [hasattr(item, 'adp') for item in self]
+        has_adp = any(adps)
+        add_loops = []
+        if has_adp:
+            if all(adps):
+                adp_types = [item.adp.adp_type.raw_value for item in self]
+                if all(adp_types):
+                    entries = []
+                    for item in self:
+                        entries.append(item.adp.to_star(item.label))
+                    add_loops.append(StarLoop.from_StarSections(entries))
+                else:
+                    # Split up into types
+                    adp_type_set = set(adp_types)
+                    num_occ = [[adp_types.count(c), c] for c in adp_type_set]
+                    num_occ.sort(reverse=True)
+                    # Attach
+                    for num, nam in num_occ:
+                        entries = []
+                        for item in self:
+                            if nam == item.adp.adp_type.raw_value:
+                                entries.append(item.adp.to_star(item.label))
+                        add_loops.append(StarLoop.from_StarSections(entries))
+            else:
+                subset_items = []
+                for item in self:
+                    if hasattr(item, 'adp'):
+                        subset_items.append(item)
+                adp_types = [item.adp.adp_type.raw_value for item in subset_items]
+                if all(adp_types):
+                    entries = []
+                    for item in subset_items:
+                        entries.append(item.adp.to_star(item.label))
+                    add_loops.append(StarLoop.from_StarSections(entries))
+                else:
+                    # Split up into types
+                    adp_type_set = set(adp_types)
+                    num_occ = [[adp_types.count(c), c] for c in adp_type_set]
+                    num_occ.sort(reverse=True)
+                    # Attach
+                    for num, nam in num_occ:
+                        entries = []
+                        for item in subset_items:
+                            if nam == item.adp.adp_type.raw_value:
+                                entries.append(item.adp.to_star(item.label))
+                        add_loops.append(StarLoop.from_StarSections(entries))
+        loops = [StarLoop(self, default_items, exclude=['adp']), *add_loops]
+        return loops
 
     @classmethod
     def from_string(cls, in_string: str):

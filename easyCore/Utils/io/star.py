@@ -4,7 +4,7 @@ __version__ = '0.0.1'
 import textwrap
 import warnings
 from collections import deque, OrderedDict
-from typing import List
+from typing import List, Tuple, Dict
 import re
 import operator
 from functools import reduce
@@ -178,7 +178,7 @@ class StarProcess:
         return q
 
     @classmethod
-    def _loadBlock(cls, in_string: str, prefix='_'):
+    def _loadBlock(cls, in_string: str, prefix='_') -> Tuple[Dict[str, str], List[Dict[str, str]]]:
         q = cls._process_string(in_string)
         data = OrderedDict()
         loops = []
@@ -195,12 +195,13 @@ class StarProcess:
             elif s[0].startswith("loop_"):
                 columns = []
                 items = []
+                this_data = OrderedDict()
                 while q:
                     s = q[0]
                     if s[0].startswith("loop_") or not s[0].startswith(prefix):
                         break
                     columns.append("".join(q.popleft()))
-                    data[columns[-1]] = []
+                    this_data[columns[-1]] = []
                 while q:
                     s = q[0]
                     if s[0].startswith("loop_") or s[0].startswith(prefix):
@@ -208,9 +209,10 @@ class StarProcess:
                     items.append("".join(q.popleft()))
                 n = len(items) // len(columns)
                 assert len(items) % n == 0
-                loops.append(columns)
+                # loops.append(columns)
                 for k, v in zip(columns * n, items):
-                    data[k].append(v.strip())
+                    this_data[k].append(v.strip())
+                loops.append(this_data)
             elif "".join(s).strip() != "":
                 warnings.warn("Possible issue in cif file"
                               " at line: {}".format("".join(s).strip()))
@@ -218,13 +220,16 @@ class StarProcess:
 
 
 class StarBase(StarProcess):
-    def __init__(self, core, entry_names: List[str] = None, prefix: str = '_'):
+    def __init__(self, core, entry_names: List[str] = None, exclude: list = None, prefix: str = '_'):
 
         if not hasattr(core, '__len__'):
             core = [core]
         self.data = core
+        if exclude is None:
+            exclude = []
+        self.exclude = exclude
         if entry_names is None:
-            entry_names = [self.data[0]._kwargs[key].name for key in self.data[0]._kwargs.keys()]
+            entry_names = [self.data[0]._kwargs[key].name for key in self.data[0]._kwargs.keys() if key not in exclude]
 
         self.prefix = prefix
         self.labels = entry_names
@@ -254,9 +259,7 @@ class StarCollection(StarProcess):
             data_block = [StarHeader.from_string('data_' + items[0])]
             data, loops = cls._loadBlock('\n'.join(items[1:]))
             for loop in loops:
-                data_block.append(StarLoop.from_data(data, [loop], prefix=prefix))
-            flattened_loop = reduce(operator.concat, loops)
-            data = {k: data[k] for k in data.keys() if k not in flattened_loop}
+                data_block.append(StarLoop.from_data(loop, prefix=prefix))
             for key in data.keys():
                 data_block.append(StarEntry.from_string("{}   {}".format(key, data[key])))
             data_blocks.append(data_block)
@@ -271,7 +274,8 @@ class StarSection(StarBase):
 
     def _section_to_string(self):
         s = ''
-        for idx, key in enumerate(self.data[0]._kwargs.keys()):
+        keys = [key for key in self.data[0]._kwargs.keys() if key not in self.exclude]
+        for idx, key in enumerate(keys):
             s += f'{StarEntry(self.data[0]._kwargs[key], self.labels[idx], prefix=self.prefix)}\n'
         return s
 
@@ -318,8 +322,9 @@ class StarSection(StarBase):
         return cls(data, entry_names=name_conversions, prefix=prefix)
 
     def to_StarEntries(self) -> List[StarEntry]:
+        keys = [key for key in self.data[0]._kwargs.keys() if key not in self.exclude]
         return [StarEntry(self.data[0]._kwargs[key], self.labels[idx], prefix=self.prefix)
-                for idx, key in enumerate(self.data[0]._kwargs.keys())]
+                for idx, key in enumerate(keys)]
 
 
 class StarLoop(StarBase):
@@ -331,7 +336,8 @@ class StarLoop(StarBase):
         s = "loop_"
         if len(self.data) == 0:
             return ''
-        for idx, kw in enumerate(self.data[0]._kwargs.keys()):
+        keys = [key for key in self.data[0]._kwargs.keys() if key not in self.exclude]
+        for idx, kw in enumerate(keys):
             label = kw
             if not isinstance(self.data[0]._kwargs[kw], FakeItem):
                 label = self.data[0]._kwargs[kw].name
@@ -340,7 +346,7 @@ class StarLoop(StarBase):
             s += '\n {}'.format(self.prefix) + label
         for item in self.data:
             line = "\n"
-            for kw in self.data[0]._kwargs.keys():
+            for kw in keys:
                 val = str(ItemHolder(item._kwargs[kw]))
                 if val[0] == ";":
                     s += line + "\n" + val
@@ -356,7 +362,9 @@ class StarLoop(StarBase):
     @classmethod
     def from_string(cls, in_string: str, name_conversion: List[str] = None, prefix='_'):
         data, loops = cls._loadBlock(in_string, prefix=prefix)
-        return cls.from_data(data, loops, name_conversion, prefix)
+        if len(loops) > 1:
+            raise ValueError(f'String has more than one loop: {len(loops)}')
+        return cls.from_data(loops[0], name_conversion, prefix)
 
     @classmethod
     def from_StarSections(cls, star_sections: List[StarSection], name_conversion: List[str] = None, prefix='_'):
@@ -364,38 +372,29 @@ class StarLoop(StarBase):
         all_names = star_sections[0].labels
         if name_conversion is not None:
             all_names = name_conversion
-        return cls(this_data, all_names, prefix)
+        return cls(this_data, all_names, prefix=prefix)
 
     def to_StarSections(self) -> List[StarSection]:
         return [StarSection(section, self.labels, prefix=self.prefix) for section in self.data]
 
     @classmethod
-    def from_data(cls, data: OrderedDict, loops=None, name_conversion: List[str] = None, prefix='_'):
-        if loops is None:
-            loops = [list(data.keys())]
-        if len(loops) > 1:
-            raise NotImplementedError
-        for loop in loops:
-            # How many elements are there?
-            len_elements = len(data[loop[0]])
-            this_data = []
-            all_names = []
-            for element_idx in range(len_elements):
-                fk = FakeCore()
-                for idx2, item in enumerate(loop):
-                    this_name = item
-                    if this_name[0] == '_':
-                        this_name = this_name[1:]
-                    if name_conversion is not None:
-                        this_name = name_conversion[idx2]
-                    if element_idx == 0:
-                        all_names.append(this_name)
-                    conv_item = StarEntry.from_string("{}{}   {}".format(prefix, this_name, data[item][element_idx]),
-                                                      this_name, prefix=prefix)
-                    fk._kwargs[conv_item.name] = conv_item.to_fake_item()
-                this_data.append(fk)
-            return cls(this_data, all_names, prefix=prefix)
-
+    def from_data(cls, loop: dict, name_conversion: List[str] = None, prefix='_'):
+        all_names = []
+        all_data = []
+        keys = list(loop.keys())
+        for idx2 in range(len(loop[keys[0]])):
+            fk = FakeCore()
+            for idx, key in enumerate(keys):
+                this_name = key
+                if this_name[0] == '_':
+                    this_name = this_name[1:]
+                if name_conversion is not None:
+                    this_name = name_conversion[idx]
+                all_names.append(this_name)
+                conv_item = StarEntry.from_string("{}{}   {}".format(prefix, this_name, loop[key][idx2]), this_name, prefix=prefix)
+                fk._kwargs[conv_item.name] = conv_item.to_fake_item()
+            all_data.append(fk)
+        return cls(all_data, all_names, prefix=prefix)
 
     def to_class(self, cls_outer, cls_inner, name_conversions=None):
         if not hasattr(cls_inner, 'from_pars'):
@@ -403,7 +402,8 @@ class StarLoop(StarBase):
         new_objects = []
         for idx in range(len(self.data)):
             if name_conversions is None:
-                name_conversions = [[k, k] for k in self.data[idx]._kwargs.keys()]
+                keys = [key for key in self.data[idx]._kwargs.keys() if key not in self.exclude]
+                name_conversions = [[k, k] for k in keys]
             new_object = cls_inner.from_pars(**{k[0]: self.data[idx]._kwargs[k[1]].raw_value for k in name_conversions})
             for key in name_conversions:
                 attr = getattr(new_object, key[0])

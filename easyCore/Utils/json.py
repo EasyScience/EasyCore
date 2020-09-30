@@ -247,26 +247,6 @@ class MSONable:
             return out_dict
         return parse_dict(d)
 
-    def to_cif_object(self, skip=[]):
-        d = self.as_dict(skip=skip)
-
-        def parse_dict(in_dict):
-            out_dict = dict()
-            name = ''
-            for key in in_dict.keys():
-                if key[0] == '@':
-                    if key == '@class' and in_dict[key] not in _KNOWN_CORE_TYPES:
-                        name = in_dict[key]
-                    continue
-                out_dict[key] = in_dict[key]
-                if isinstance(in_dict[key], dict):
-                    name, out_dict[key] = parse_dict(in_dict[key])
-            return CifBlock(out_dict, [], name)
-        name, out_dict = parse_dict(d)
-        return
-        return d
-
-
     def unsafe_hash(self):
         """
         Returns an hash of the current object. This uses a generic but low
