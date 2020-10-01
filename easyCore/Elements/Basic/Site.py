@@ -40,9 +40,9 @@ class Site(BaseObj):
         ['label', 'atom_site_label'],
         ['specie', 'atom_site_type_symbol'],
         ['occupancy', 'atom_site_occupancy'],
-        ['x', 'atom_site_fract_x'],
-        ['y', 'atom_site_fract_y'],
-        ['z', 'atom_site_fract_z']
+        ['fract_x', 'atom_site_fract_x'],
+        ['fract_y', 'atom_site_fract_y'],
+        ['fract_z', 'atom_site_fract_z']
     ]
 
     def __init__(self, label: Descriptor, specie: Descriptor, occupancy: Parameter,
@@ -55,9 +55,9 @@ class Site(BaseObj):
                                    label=label,
                                    specie=specie,
                                    occupancy=occupancy,
-                                   x=x_position,
-                                   y=y_position,
-                                   z=z_position,
+                                   fract_x=x_position,
+                                   fract_y=y_position,
+                                   fract_z=z_position,
                                    **k_wargs)
         self.interface = interface
         if self.interface is not None:
@@ -68,9 +68,9 @@ class Site(BaseObj):
         label = Descriptor('label', label, **_SITE_DETAILS['label'])
         specie = Descriptor('specie', specie_label, **_SITE_DETAILS['type_symbol'])
         occupancy = Parameter('occupancy', **_SITE_DETAILS['occupancy'])
-        x_position = Parameter('x', **_SITE_DETAILS['position'])
-        y_position = Parameter('y', **_SITE_DETAILS['position'])
-        z_position = Parameter('z', **_SITE_DETAILS['position'])
+        x_position = Parameter('fract_x', **_SITE_DETAILS['position'])
+        y_position = Parameter('fract_y', **_SITE_DETAILS['position'])
+        z_position = Parameter('fract_z', **_SITE_DETAILS['position'])
         return cls(label, specie, occupancy, x_position, y_position, z_position, interface=interface)
 
     @classmethod
@@ -86,14 +86,19 @@ class Site(BaseObj):
         label = Descriptor('label', label, **_SITE_DETAILS['label'])
         specie = Descriptor('specie', value=specie,
                             **{k: _SITE_DETAILS['type_symbol'][k]
-                               for k in _SITE_DETAILS['type_symbol'].keys() if k != 'value'})
-        pos = {k: _SITE_DETAILS['position'][k] for k in _SITE_DETAILS['position'].keys() if k != 'value'}
-        x_position = Parameter('x', value=x, **pos)
-        y_position = Parameter('y', value=y, **pos)
-        z_position = Parameter('z', value=z, **pos)
+                               for k in _SITE_DETAILS['type_symbol'].keys()
+                               if k != 'value'})
+
+        pos = {k: _SITE_DETAILS['position'][k]
+               for k in _SITE_DETAILS['position'].keys()
+               if k != 'value'}
+
+        x_position = Parameter('fract_x', value=x, **pos)
+        y_position = Parameter('fract_y', value=y, **pos)
+        z_position = Parameter('fract_z', value=z, **pos)
         occupancy = Parameter('occupancy', value=occupancy, **{k: _SITE_DETAILS['occupancy'][k]
-                                                               for k in _SITE_DETAILS['occupancy'].keys() if
-                                                               k != 'value'})
+                                                               for k in _SITE_DETAILS['occupancy'].keys()
+                                                               if k != 'value'})
 
         return cls(label, specie, occupancy, x_position, y_position, z_position, interface=interface)
 
@@ -116,19 +121,19 @@ class Site(BaseObj):
 
     def __repr__(self) -> str:
         return f'Atom {self.name} ({self.specie.raw_value}) @' \
-               f' ({self.x.raw_value}, {self.y.raw_value}, {self.z.raw_value})'
+               f' ({self.fract_x.raw_value}, {self.fract_y.raw_value}, {self.fract_z.raw_value})'
 
     @property
-    def coords(self) -> np.ndarray:
+    def fract_coords(self) -> np.ndarray:
         """
         Get the current sites fractional co-ordinates as an array
 
         :return: Array containing fractional co-ordinates
         :rtype: np.ndarray
         """
-        return np.array([self.x.raw_value, self.y.raw_value, self.z.raw_value])
+        return np.array([self.fract_x.raw_value, self.fract_y.raw_value, self.fract_z.raw_value])
 
-    def distance(self, other_site: 'Site') -> float:
+    def fract_distance(self, other_site: 'Site') -> float:
         """
         Get the distance between two sites
 
@@ -137,7 +142,7 @@ class Site(BaseObj):
         :return: Distance between 2 sites
         :rtype: float
         """
-        return np.linalg.norm(other_site.coords - self.coords)
+        return np.linalg.norm(other_site.fract_coords - self.fract_coords)
 
     @staticmethod
     def __getter(key: str):
@@ -181,28 +186,12 @@ class Atoms(BaseCollection):
         super(Atoms, self).append(item)
 
     @property
-    def x_positions(self) -> np.ndarray:
-        return np.array([atom.x.raw_value for atom in self])
-
-    @property
-    def y_positions(self) -> np.ndarray:
-        return np.array([atom.y.raw_value for atom in self])
-
-    @property
-    def z_positions(self) -> np.ndarray:
-        return np.array([atom.z.raw_value for atom in self])
-
-    @property
     def atom_labels(self) -> List[str]:
         return [atom.label.raw_value for atom in self]
 
     @property
     def atom_species(self) -> List[str]:
         return [atom.specie.raw_value for atom in self]
-
-    @property
-    def atom_positions(self) -> np.ndarray:
-        return np.array([self.x_positions, self.y_positions, self.z_positions]).transpose()
 
     @property
     def atom_occupancies(self) -> np.ndarray:

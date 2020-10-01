@@ -12,7 +12,6 @@ class SpaceGroup(BaseObj):
         ['_space_group_HM_name', 'symmetry_space_group_name_H-M']
     ]
 
-
     def __init__(self, _space_group_HM_name: Descriptor, interface=None):
         super(SpaceGroup, self).__init__('space_group',
                                          _space_group_HM_name=_space_group_HM_name)
