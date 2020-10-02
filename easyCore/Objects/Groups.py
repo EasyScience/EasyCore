@@ -40,7 +40,7 @@ class BaseCollection(MSONable, Sequence):
         self.name = name
 
         for arg in args:
-            if issubclass(arg.__class__, (BaseObj, Descriptor, BaseCollection)):
+            if issubclass(arg.__class__, (BaseObj, Descriptor, BaseCollection, BaseCollection)):
                 kwargs[str(borg.map.convert_id_to_key(arg))] = arg
 
         # Set kwargs, also useful for serialization
@@ -56,6 +56,7 @@ class BaseCollection(MSONable, Sequence):
     def append(self, item: Union[Parameter, Descriptor, BaseObj, 'BaseCollection']):
         if issubclass(item.__class__, (BaseObj, Descriptor, BaseCollection)):
             self._kwargs[str(borg.map.convert_id_to_key(item))] = item
+            self._borg.map.add_edge(self, self._kwargs[str(borg.map.convert_id_to_key(item))])
 
     def __getitem__(self, i: Union[int, slice]) -> Union[Parameter, Descriptor, BaseObj, 'BaseCollection']:
         if isinstance(i, slice):

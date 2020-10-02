@@ -163,6 +163,16 @@ class Site(BaseObj):
         return setter
 
 
+class PeriodicSite(Site):
+
+    def __init__(self, lattice, label: Descriptor, specie: Descriptor, occupancy: Parameter,
+                 x_position: Parameter, y_position: Parameter, z_position: Parameter,
+                 interface=None, **kwargs):
+        super(PeriodicSite, self).__init__(label, specie, occupancy,
+                 x_position, y_position, z_position, interface, **kwargs)
+        self.lattice = lattice
+
+
 class Atoms(BaseCollection):
     def __init__(self, name: str, *args, interface=None, **kwargs):
         super(Atoms, self).__init__(name, *args, **kwargs)

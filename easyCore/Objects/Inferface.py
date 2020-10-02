@@ -113,7 +113,7 @@ class InterfaceFactoryTemplate:
             return inner_fit_func
         return outer_fit_func(self)(x_array, *args, **kwargs)
 
-    def generate_bindings(self, model):
+    def generate_bindings(self, model, *args, ifun=None, **kwargs):
         """
         Automatically bind a `Parameter` to the corresponding interface.
         :param name: parameter name
@@ -121,9 +121,12 @@ class InterfaceFactoryTemplate:
         :return: binding property
         :rtype: property
         """
+
+        if ifun is None:
+            ifun = self.generate_binding
         props = model.get_parameters()
         for prop in props:
-            prop._callback = self.generate_binding(prop.name)
+            prop._callback = ifun(prop.name, *args, **kwargs)
             prop._callback.fset(prop.raw_value)
 
     @abstractmethod

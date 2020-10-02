@@ -1,6 +1,8 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
+from typing import Dict
+
 from easyCore import np
 from easyCore.Elements.Basic.Cell import Cell
 from easyCore.Elements.Basic.Site import Site, Atoms
@@ -29,18 +31,17 @@ class Crystal:
         self.extent = np.array([1, 1, 1])
         self.centre = np.array([0, 0, 0])
 
-
     def add_atom(self, *args, **kwargs):
         self.atoms.append(Site.from_pars(*args, **kwargs))
 
-    def all_sites(self):
+    def all_sites(self) -> Dict[str, np.ndarray]:
         sym_op = self.spacegroup.symmetry_opts
         sites = {}
         for site in self.atoms:
-            pos = np.unique(np.array([op.operate(site.coords) for op in sym_op]), axis=0) - self.centre
-            sites[site.label.raw_value] = pos[np.all(pos >= 0, axis=1) & np.all(pos <= self.extent, axis=1), :] + self.centre
+            site_positions = np.unique(np.array([op.operate(site.fract_coords) for op in sym_op]), axis=0) - self.centre
+            sites[site.label.raw_value] = \
+                site_positions[np.all(site_positions >= 0, axis=1) & np.all(site_positions <= self.extent, axis=1), :] + self.centre
         return sites
-
 
     def to_cif_str(self) -> str:
         return str(CrystalCif(self.name, self.spacegroup, self.cell, self.atoms))

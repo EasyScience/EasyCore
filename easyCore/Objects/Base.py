@@ -591,6 +591,7 @@ class BaseObj(MSONable):
 
         self._borg.map.add_vertex(self, obj_type='created')
         self.interface = None
+        self.user_data: dict = {}
         self.__dict__['name'] = name
         # If Parameter or Descriptor is given as arguments...
         for arg in args:
@@ -602,7 +603,8 @@ class BaseObj(MSONable):
         for key in kwargs.keys():
             if key in known_keys:
                 raise AttributeError
-            if issubclass(kwargs[key].__class__, (BaseObj, Descriptor)) or kwargs[key].__class__ == 'BaseCollection':
+            if issubclass(kwargs[key].__class__, (BaseObj, Descriptor)) or \
+                    'BaseCollection' in [c.__name__ for c in type(kwargs[key]).__bases__]:
                 self._borg.map.add_edge(self, kwargs[key])
                 self._borg.map.reset_type(kwargs[key], 'created_internal')
             addLoggedProp(self, key, self.__getter(key), self.__setter(key), get_id=key, my_self=self,
