@@ -67,9 +67,6 @@ _ANIO_DETAILS = {
 
 
 class AtomicDisplacement(BaseObj):
-    _CIF_CONVERSIONS = [
-        ['adp_class', 'atom_site_adp_type']
-    ]
 
     def __init__(self, adp_type: Descriptor, interface=None, **kwargs):
         adp_class_name = adp_type.raw_value
@@ -162,10 +159,9 @@ class AtomicDisplacement(BaseObj):
         return [name for name in _AVAILABLE_ISO_TYPES.keys()]
 
     def to_star(self, atom_label: Descriptor) -> StarEntry:
-        from easyCore.Elements.Basic.Site import Site
-        s = [StarEntry(atom_label, Site._CIF_CONVERSIONS[0][1]),
-             StarEntry(self.adp_type, self._CIF_CONVERSIONS[0][1]),
-             *[StarEntry(getattr(self, label[0]), label[1]) for label in self.adp_class._CIF_CONVERSIONS]
+        s = [StarEntry(atom_label, 'label'),
+             StarEntry(self.adp_type),
+             *[StarEntry(par) for par in self.adp_class.get_parameters()]
              ]
         return StarSection.from_StarEntries(s)
 
@@ -205,8 +201,6 @@ class AdpBase(BaseObj):
             matrix[2, 2] = pars[5].raw_value
         return matrix
 
-
-
     @abstractmethod
     def default(cls, interface=None):
         pass
@@ -217,14 +211,6 @@ class AdpBase(BaseObj):
 
 
 class Anisotropic(AdpBase):
-    _CIF_CONVERSIONS = [
-        ['U_11', 'atom_site_aniso_U_11'],
-        ['U_12', 'atom_site_aniso_U_12'],
-        ['U_13', 'atom_site_aniso_U_13'],
-        ['U_22', 'atom_site_aniso_U_22'],
-        ['U_23', 'atom_site_aniso_U_23'],
-        ['U_33', 'atom_site_aniso_U_33']
-    ]
 
     def __init__(self,
                  U_11: Parameter, U_12: Parameter, U_13: Parameter,
@@ -239,7 +225,8 @@ class Anisotropic(AdpBase):
 
     @classmethod
     def default(cls, interface=None):
-        return cls(*[Parameter(name[0], **_ANIO_DETAILS['Uani']) for name in cls._CIF_CONVERSIONS],
+        return cls(*[Parameter(name, **_ANIO_DETAILS['Uani']) for name in ['U_11', 'U_12', 'U_13',
+                                                                           'U_22', 'U_23', 'U_33']],
                    interface=interface)
 
     @classmethod
@@ -256,9 +243,6 @@ class Anisotropic(AdpBase):
 
 
 class Isotropic(AdpBase):
-    _CIF_CONVERSIONS = [
-        ['Uiso', 'atom_site_U_iso_or_equiv']
-    ]
 
     def __init__(self, Uiso: Parameter, interface=None):
         super(Isotropic, self).__init__('Uiso', Uiso=Uiso)
@@ -276,37 +260,7 @@ class Isotropic(AdpBase):
         return cls(Parameter('Uiso', value=Uiso, **u), interface=interface)
 
 
-# class Overall(AdpBase):
-#
-#     @classmethod
-#     def default(cls):
-#         pass
-#
-#     @classmethod
-#     def from_pars(cls, adp_type: str, **kwargs):
-#         pass
-#
-#
-# class MultipoleExpansion(AdpBase):
-#
-#     @classmethod
-#     def default(cls):
-#         pass
-#
-#     @classmethod
-#     def from_pars(cls, adp_type: str, **kwargs):
-#         pass
-#
-#
 class AnisotropicBij(AdpBase):
-    _CIF_CONVERSIONS = [
-        ['B_11', 'atom_site_aniso_B_11'],
-        ['B_12', 'atom_site_aniso_B_12'],
-        ['B_13', 'atom_site_aniso_B_13'],
-        ['B_22', 'atom_site_aniso_B_22'],
-        ['B_23', 'atom_site_aniso_B_23'],
-        ['B_33', 'atom_site_aniso_B_33']
-    ]
 
     def __init__(self,
                  B_11: Parameter, B_12: Parameter, B_13: Parameter,
@@ -321,7 +275,8 @@ class AnisotropicBij(AdpBase):
 
     @classmethod
     def default(cls, interface=None):
-        return cls(*[Parameter(name[0], **_ANIO_DETAILS['Bani']) for name in cls._CIF_CONVERSIONS],
+        return cls(*[Parameter(name, **_ANIO_DETAILS['Bani']) for name in ['B_11', 'B_12', 'B_13',
+                                                                           'B_22', 'B_23', 'B_33']],
                    interface=interface)
 
     @classmethod
@@ -338,9 +293,6 @@ class AnisotropicBij(AdpBase):
 
 
 class IsotropicB(AdpBase):
-    _CIF_CONVERSIONS = [
-        ['Biso', 'atom_site_B_iso_or_equiv']
-    ]
 
     def __init__(self, Biso: Parameter, interface=None):
         super(IsotropicB, self).__init__('Biso', Biso=Biso)
@@ -356,13 +308,3 @@ class IsotropicB(AdpBase):
     def from_pars(cls, Biso: float = _ANIO_DETAILS['Biso']['value'], interface=None):
         u = {k: _ANIO_DETAILS['Biso'][k] for k in _ANIO_DETAILS['Biso'].keys() if k != 'value'}
         return cls(Parameter('Biso', value=Biso, **u), interface=interface)
-#
-#
-# class OverallB(AdpBase):
-#     @classmethod
-#     def default(cls):
-#         pass
-#
-#     @classmethod
-#     def from_pars(cls, adp_type: str, **kwargs):
-#         pass

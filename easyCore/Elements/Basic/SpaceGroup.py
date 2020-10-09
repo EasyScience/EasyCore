@@ -8,9 +8,6 @@ from easyCore.Utils.io.star import StarEntry
 
 
 class SpaceGroup(BaseObj):
-    _CIF_CONVERSIONS = [
-        ['_space_group_HM_name', 'symmetry_space_group_name_H-M']
-    ]
 
     def __init__(self, _space_group_HM_name: Descriptor, interface=None):
         super(SpaceGroup, self).__init__('space_group',
@@ -83,8 +80,8 @@ class SpaceGroup(BaseObj):
         return self._sg_data.get_orbit(p, tol=tol)
 
     def to_star(self):
-        return StarEntry(self._space_group_HM_name, self._CIF_CONVERSIONS[0][1])
+        return StarEntry(self._space_group_HM_name)
 
     @classmethod
     def from_star(cls, in_string):
-        return StarEntry.from_string(cls, in_string, cls._CIF_CONVERSIONS[0][0])
+        return StarEntry.from_string(cls, in_string)

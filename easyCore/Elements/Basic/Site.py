@@ -18,7 +18,6 @@ _SITE_DETAILS = {
     'type_symbol': {
         'description': 'A code to identify the atom species occupying this site.',
         'url':         'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic/Iatom_site_type_symbol.html',
-        'value':       '',
     },
     'position':    {
         'description': 'Atom-site coordinate as fractions of the unit cell length.',
@@ -78,24 +77,21 @@ class Site(BaseObj):
                   label: str,
                   specie: str,
                   occupancy: float = _SITE_DETAILS['occupancy']['value'],
-                  x: float = _SITE_DETAILS['position']['value'],
-                  y: float = _SITE_DETAILS['position']['value'],
-                  z: float = _SITE_DETAILS['position']['value'],
+                  fract_x: float = _SITE_DETAILS['position']['value'],
+                  fract_y: float = _SITE_DETAILS['position']['value'],
+                  fract_z: float = _SITE_DETAILS['position']['value'],
                   interface=None):
 
         label = Descriptor('label', label, **_SITE_DETAILS['label'])
-        specie = Descriptor('specie', value=specie,
-                            **{k: _SITE_DETAILS['type_symbol'][k]
-                               for k in _SITE_DETAILS['type_symbol'].keys()
-                               if k != 'value'})
+        specie = Descriptor('specie', value=specie, **_SITE_DETAILS['type_symbol'])
 
         pos = {k: _SITE_DETAILS['position'][k]
                for k in _SITE_DETAILS['position'].keys()
                if k != 'value'}
 
-        x_position = Parameter('fract_x', value=x, **pos)
-        y_position = Parameter('fract_y', value=y, **pos)
-        z_position = Parameter('fract_z', value=z, **pos)
+        x_position = Parameter('fract_x', value=fract_x, **pos)
+        y_position = Parameter('fract_y', value=fract_y, **pos)
+        z_position = Parameter('fract_z', value=fract_z, **pos)
         occupancy = Parameter('occupancy', value=occupancy, **{k: _SITE_DETAILS['occupancy'][k]
                                                                for k in _SITE_DETAILS['occupancy'].keys()
                                                                if k != 'value'})
@@ -208,54 +204,67 @@ class Atoms(BaseCollection):
         return np.array([atom.occupancy.raw_value for atom in self])
 
     def to_star(self) -> List[StarLoop]:
-        default_items = [name[1] for name in Site._CIF_CONVERSIONS]
         adps = [hasattr(item, 'adp') for item in self]
         has_adp = any(adps)
+        main_loop = StarLoop(self, exclude=['adp'])
+        if not has_adp:
+            return [main_loop]
         add_loops = []
-        if has_adp:
-            if all(adps):
-                adp_types = [item.adp.adp_type.raw_value for item in self]
-                if all(adp_types):
-                    entries = []
-                    for item in self:
-                        entries.append(item.adp.to_star(item.label))
-                    add_loops.append(StarLoop.from_StarSections(entries))
-                else:
-                    # Split up into types
-                    adp_type_set = set(adp_types)
-                    num_occ = [[adp_types.count(c), c] for c in adp_type_set]
-                    num_occ.sort(reverse=True)
-                    # Attach
-                    for num, nam in num_occ:
-                        entries = []
-                        for item in self:
-                            if nam == item.adp.adp_type.raw_value:
-                                entries.append(item.adp.to_star(item.label))
-                        add_loops.append(StarLoop.from_StarSections(entries))
+        adp_types = [item.adp.adp_type.raw_value for item in self]
+        if all(adp_types):
+            if adp_types[0] in ['Uiso', 'Biso']:
+                main_loop = main_loop.join(StarLoop.from_StarSections([getattr(item, 'adp').to_star(item.label) for item in self]), 'label')
             else:
-                subset_items = []
+                entries = []
                 for item in self:
-                    if hasattr(item, 'adp'):
-                        subset_items.append(item)
-                adp_types = [item.adp.adp_type.raw_value for item in subset_items]
-                if all(adp_types):
-                    entries = []
-                    for item in subset_items:
-                        entries.append(item.adp.to_star(item.label))
-                    add_loops.append(StarLoop.from_StarSections(entries))
-                else:
-                    # Split up into types
-                    adp_type_set = set(adp_types)
-                    num_occ = [[adp_types.count(c), c] for c in adp_type_set]
-                    num_occ.sort(reverse=True)
-                    # Attach
-                    for num, nam in num_occ:
-                        entries = []
-                        for item in subset_items:
-                            if nam == item.adp.adp_type.raw_value:
-                                entries.append(item.adp.to_star(item.label))
-                        add_loops.append(StarLoop.from_StarSections(entries))
-        loops = [StarLoop(self, default_items, exclude=['adp']), *add_loops]
+                    entries.append(item.adp.to_star(item.label))
+                add_loops.append(StarLoop.from_StarSections(entries))
+        else:
+            raise NotImplementedError('Multiple types of ADP are not supported')
+        # if has_adp:
+        #     if all(adps):
+        #         adp_types = [item.adp.adp_type.raw_value for item in self]
+        #         if all(adp_types):
+        #             entries = []
+        #             for item in self:
+        #                 entries.append(item.adp.to_star(item.label))
+        #             add_loops.append(StarLoop.from_StarSections(entries))
+        #         else:
+        #             # Split up into types
+        #             adp_type_set = set(adp_types)
+        #             num_occ = [[adp_types.count(c), c] for c in adp_type_set]
+        #             num_occ.sort(reverse=True)
+        #             # Attach
+        #             for num, nam in num_occ:
+        #                 entries = []
+        #                 for item in self:
+        #                     if nam == item.adp.adp_type.raw_value:
+        #                         entries.append(item.adp.to_star(item.label))
+        #                 add_loops.append(StarLoop.from_StarSections(entries))
+        #     else:
+        #         subset_items = []
+        #         for item in self:
+        #             if hasattr(item, 'adp'):
+        #                 subset_items.append(item)
+        #         adp_types = [item.adp.adp_type.raw_value for item in subset_items]
+        #         if all(adp_types):
+        #             entries = []
+        #             for item in subset_items:
+        #                 entries.append(item.adp.to_star(item.label))
+        #             add_loops.append(StarLoop.from_StarSections(entries))
+        #         else:
+        #             # Split up into types
+        #             adp_type_set = set(adp_types)
+        #             num_occ = [[adp_types.count(c), c] for c in adp_type_set]
+        #             num_occ.sort(reverse=True)
+        #             # Attach
+        #             for num, nam in num_occ:
+        #                 entries = []
+        #                 for item in subset_items:
+        #                     if nam == item.adp.adp_type.raw_value:
+        #                         entries.append(item.adp.to_star(item.label))
+        #                 add_loops.append(StarLoop.from_StarSections(entries))
+        loops = [main_loop, *add_loops]
         return loops
 
     @classmethod

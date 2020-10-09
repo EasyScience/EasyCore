@@ -253,19 +253,33 @@ class StarCollection(StarProcess):
         for block in blocks:
             if not block:
                 continue
+            data_block = {
+                'header': None,
+                'loops':  [],
+                'data':   {}
+            }
             items = block.split('\n')
             if len(items) == 0:
                 continue
-            data_block = [StarHeader.from_string('data_' + items[0])]
+            data_block['header'] = StarHeader.from_string('data_' + items[0])
             data, loops = cls._loadBlock('\n'.join(items[1:]))
             for loop in loops:
-                data_block.append(StarLoop.from_data(loop, prefix=prefix))
+                data_block['loops'].append(StarLoop.from_data(loop, prefix=prefix))
             for key in data.keys():
-                data_block.append(StarEntry.from_string("{}   {}".format(key, data[key])))
+                entry = StarEntry.from_string("{}   {}".format(key, data[key]))
+                data_block['data'][entry.name] = entry
             data_blocks.append(data_block)
         if len(data_blocks) == 1:
             data_blocks = data_blocks[0]
         return data_blocks
+
+    @classmethod
+    def from_file(cls, filename: str):
+        with open(filename, 'r') as reader:
+            in_string = reader.read()
+        if not in_string:
+            in_string = filename
+        return cls.from_string(in_string)
 
 
 class StarSection(StarBase):
@@ -279,11 +293,11 @@ class StarSection(StarBase):
             s += f'{StarEntry(self.data[0]._kwargs[key], self.labels[idx], prefix=self.prefix)}\n'
         return s
 
-    def to_class(self, cls, name_conversions=None):
+    def to_class(self, cls, name_conversions=None, skip=[]):
         if not hasattr(cls, 'from_pars'):
             raise AttributeError
         if name_conversions is None:
-            name_conversions = self.labels
+            name_conversions = [[k1, k2] for k1, k2 in zip(self.labels, self.data[0]._kwargs.keys())]
         new_object = cls.from_pars(**{k[0]: self.data[0]._kwargs[k[1]].raw_value for k in name_conversions})
         for key in name_conversions:
             attr = getattr(new_object, key[0])
@@ -414,6 +428,22 @@ class StarLoop(StarBase):
                         attr.error = self.data[idx]._kwargs[key[1]].error
             new_objects.append(new_object)
         return cls_outer(cls_outer.__name__, *new_objects)
+
+    def join(self, otherLoop: 'StarLoop', key: str) -> 'StarLoop':
+        if key not in self.labels or key not in otherLoop.labels:
+            raise AttributeError('Key must be common in both StarLoops')
+        if len(self.data) != len(otherLoop.data):
+            raise AttributeError('There must be the same number of entries in both StarLoops')
+        joint = StarLoop.from_string(str(self))
+        for dataset in otherLoop.data:
+            lookup_value = dataset._kwargs['label'].raw_value
+            try:
+                lookup_idx = [d._kwargs['label'].raw_value for d in self.data].index(lookup_value)
+            except ValueError:
+                raise AttributeError('Both StarLoops must contain the joining same keys')
+            joint.data[lookup_idx]._kwargs.update(dataset._kwargs)
+        joint.labels.extend([k for k in otherLoop.labels if k != key])
+        return joint
 
 
 class StarHeader:
