@@ -419,12 +419,12 @@ class CifParser:
             for lattice_label in ["symmetry_cell_setting",
                                   "space_group_crystal_system"]:
                 if data.get(lattice_label):
-                    lattice_type = data.get(lattice_label).lower()
+                    lattice_type = data.get(lattice_label).value.lower()
                     try:
                         sig = signature(getattr(Cell, lattice_type))
                         required_args = [arg for arg in sig.parameters.keys() if arg != 'interface']
-                        lengths = (l for l in length_strings if l in required_args)
-                        angles = (a for a in angle_strings if a in required_args)
+                        lengths = [l for l in length_strings if l in required_args]
+                        angles = [a for a in angle_strings if a in required_args]
                         return self.get_lattice(lengths, angles, lattice_type=lattice_type)
                     except AttributeError as exc:
                         self.warnings.append(str(exc))
