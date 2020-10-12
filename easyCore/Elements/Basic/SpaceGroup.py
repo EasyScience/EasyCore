@@ -80,7 +80,7 @@ class SpaceGroup(BaseObj):
         return self._sg_data.get_orbit(p, tol=tol)
 
     def to_star(self):
-        return StarEntry(self._space_group_HM_name)
+        return StarEntry(self.space_group_HM_name)
 
     @classmethod
     def from_star(cls, in_string):

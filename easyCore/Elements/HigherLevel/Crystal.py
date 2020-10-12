@@ -8,7 +8,7 @@ from easyCore.Elements.Basic.Cell import Cell
 from easyCore.Elements.Basic.Site import Site, Atoms
 from easyCore.Elements.Basic.SpaceGroup import SpaceGroup
 
-from easyCore.Utils.io.cif import CrystalCif
+from easyCore.Utils.io.cif import CifIO
 
 
 class Crystal:
@@ -44,14 +44,10 @@ class Crystal:
         return sites
 
     def to_cif_str(self) -> str:
-        return str(CrystalCif(self.name, self.spacegroup, self.cell, self.atoms))
+        return str(CifIO.from_objects(self.name, self.cell, self.spacegroup, self.atoms))
 
     @classmethod
     def from_cif_str(cls, in_string: str):
-        star = CrystalCif.from_cif_str(in_string)
-        items = star.items
-        return cls(star.name,
-                   *[item for item in items if isinstance(item, SpaceGroup)],
-                   *[item for item in items if isinstance(item, Cell)],
-                   *[item for item in items if isinstance(item, Atoms)]
-                   )
+        cif = CifIO.from_cif_str(in_string)
+        name, kwargs = cif.to_crystal_form()
+        return cls(name, **kwargs)

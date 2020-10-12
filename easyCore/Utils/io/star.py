@@ -404,7 +404,8 @@ class StarLoop(StarBase):
                     this_name = this_name[1:]
                 if name_conversion is not None:
                     this_name = name_conversion[idx]
-                all_names.append(this_name)
+                if idx2 == 0:
+                    all_names.append(this_name)
                 conv_item = StarEntry.from_string("{}{}   {}".format(prefix, this_name, loop[key][idx2]), this_name, prefix=prefix)
                 fk._kwargs[conv_item.name] = conv_item.to_fake_item()
             all_data.append(fk)
