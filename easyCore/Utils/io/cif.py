@@ -94,9 +94,9 @@ class CifParser:
         """
         self._occupancy_tolerance = occupancy_tolerance
         self._site_tolerance = site_tolerance
-        if isinstance(filename, Path) or os.path.isfile(filename):
+        if isinstance(filename, Path) and os.path.isfile(filename):
             self._cif = StarCollection.from_file(filename)
-        elif isinstance(filename, TextIOWrapper):
+        elif isinstance(filename, (TextIOWrapper, StringIO)):
             self._cif = StarCollection.from_string(filename.read())
         else:
             self._cif = StarCollection.from_string(filename)
@@ -1142,7 +1142,7 @@ class CifWriter:
 
         adp_U_must = ['label', 'U_11', 'U_12', 'U_13', 'U_22', 'U_23', 'U_33']
         adp_B_must = [item.replace('U_', 'B_') for item in adp_U_must]
-        adp_U_must_conv = ['atom_site_aniso_label', 'atom_site_aniso_U_11', 'atom_site_aniso_U_12',
+        adp_U_must_conv = ['atom_site_aniso_label', 'atom_site_adp_type','atom_site_aniso_U_11', 'atom_site_aniso_U_12',
                            'atom_site_aniso_U_13',
                            'atom_site_aniso_U_22', 'atom_site_aniso_U_23', 'atom_site_aniso_U_33']
         adp_B_must_conv = [item.replace('U_', 'B_') for item in adp_U_must_conv]

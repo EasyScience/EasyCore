@@ -178,7 +178,7 @@ class StarProcess:
         return q
 
     @classmethod
-    def _loadBlock(cls, in_string: str, prefix='_') -> Tuple[Dict[str, str], List[Dict[str, str]]]:
+    def _loadBlock(cls, in_string: str, prefix='_'):
         q = cls._process_string(in_string)
         data = OrderedDict()
         loops = []
@@ -228,8 +228,12 @@ class StarBase(StarProcess):
         if exclude is None:
             exclude = []
         self.exclude = exclude
-        if entry_names is None:
-            entry_names = [self.data[0]._kwargs[key].name for key in self.data[0]._kwargs.keys() if key not in exclude]
+
+        if self.data:
+            if entry_names is None:
+                entry_names = [self.data[0]._kwargs[key].name for key in self.data[0]._kwargs.keys() if key not in exclude]
+        else:
+            entry_names = []
 
         self.prefix = prefix
         self.labels = entry_names

@@ -32,7 +32,13 @@ class Crystal:
         self.centre = np.array([0, 0, 0])
 
     def add_atom(self, *args, **kwargs):
-        self.atoms.append(Site.from_pars(*args, **kwargs))
+        supplied_atom = False
+        for arg in args:
+            if isinstance(arg, Site):
+                self.atoms.append(arg)
+                supplied_atom = True
+        if not supplied_atom:
+            self.atoms.append(Site.from_pars(*args, **kwargs))
 
     def all_sites(self) -> Dict[str, np.ndarray]:
         sym_op = self.spacegroup.symmetry_opts
