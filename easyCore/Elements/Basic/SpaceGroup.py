@@ -19,22 +19,26 @@ class SpaceGroup(BaseObj):
 
     @classmethod
     def from_pars(cls, _space_group_HM_name: str, interface=None):
-        return cls(Descriptor('_space_group_HM_name', _space_group_HM_name), interface=interface)
+        return cls(Descriptor('_space_group_HM_name',
+                              SpaceGroupOpts(_space_group_HM_name).op['hermann_mauguin_fmt']),
+                   interface=interface)
 
     @classmethod
     def default(cls, interface=None):
-        this_id = SpaceGroupOpts.SYMM_OPS[0]["hermann_mauguin"]
+        this_id = SpaceGroupOpts.SYMM_OPS[0]["hermann_mauguin_fmt"]
         return cls(Descriptor('_space_group_HM_name', this_id), interface=interface)
 
     @classmethod
     def from_int_number(cls, int_number, hexagonal=True, interface=None):
         sg = SpaceGroupOpts.from_int_number(int_number, hexagonal)
-        return cls.from_pars(sg.full_symbol, interface=interface)
+        return cls.from_pars(sg.op['hermann_mauguin_fmt'], interface=interface)
 
     def __on_change(self, value):
-        self._sg_data = SpaceGroupOpts(value)
-        value = SpaceGroupOpts.SYMM_OPS[self._sg_data.int_number]["hermann_mauguin"]
-        return value
+        if isinstance(value, int):
+            self._sg_data = SpaceGroupOpts.from_int_number(value)
+        else:
+            self._sg_data = SpaceGroupOpts(value)
+        return self._sg_data.op["hermann_mauguin_fmt"]
 
     @property
     def space_group_HM_name(self):
@@ -70,7 +74,7 @@ class SpaceGroup(BaseObj):
 
     @property
     def hermann_mauguin(self):
-        return SpaceGroupOpts.SYMM_OPS[self.int_number]["hermann_mauguin"]
+        return self._sg_data.op['hermann_mauguin_fmt']
 
     @property
     def symmetry_opts(self):

@@ -50,7 +50,11 @@ class Crystal:
         return sites
 
     def to_cif_str(self) -> str:
-        return str(CifIO.from_objects(self.name, self.cell, self.spacegroup, self.atoms))
+        return str(self.cif)
+
+    @property
+    def cif(self):
+        return CifIO.from_objects(self.name, self.cell, self.spacegroup, self.atoms)
 
     @classmethod
     def from_cif_str(cls, in_string: str):

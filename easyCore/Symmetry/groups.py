@@ -189,6 +189,7 @@ class SpaceGroup(SymmetryGroup):
                                    "symm_ops.json"))
     SG_SYMBOLS = set(_get_symm_data("space_group_encoding").keys())
     for op in SYMM_OPS:
+        op["hermann_mauguin_fmt"] = op["hermann_mauguin"]
         op["hermann_mauguin"] = re.sub(r" ", "", op["hermann_mauguin"])
         op["universal_h_m"] = re.sub(r" ", "", op["universal_h_m"])
         SG_SYMBOLS.add(op["hermann_mauguin"])

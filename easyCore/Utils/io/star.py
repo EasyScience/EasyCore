@@ -46,6 +46,8 @@ class ItemHolder:
 
     def __str__(self) -> str:
         s = "{}"
+        if isinstance(self.value, str):
+            s = "'" + s + "'"
         v_in = [self.value]
         if self.error is not None:
             digits = self._get_error_digits()
@@ -366,6 +368,8 @@ class StarLoop(StarBase):
             line = "\n"
             for kw in keys:
                 val = str(ItemHolder(item._kwargs[kw]))
+                if val.count(' ') == 0 and val.count('\'') > 0:
+                    val = val.strip('\'')
                 if val[0] == ";":
                     s += line + "\n" + val
                     line = "\n"
