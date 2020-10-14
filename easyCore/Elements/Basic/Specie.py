@@ -16,8 +16,6 @@ class Specie(BaseObj):
     def __init__(self, specie: Descriptor, interface=None):
         super(Specie, self).__init__('specie', specie=specie)
         self.interface = interface
-        if self.interface is not None:
-            self.interface.generate_bindings(self)
 
     @classmethod
     def from_str(cls, specie_str):

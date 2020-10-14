@@ -14,8 +14,6 @@ class SpaceGroup(BaseObj):
                                          _space_group_HM_name=_space_group_HM_name)
         self._sg_data = SpaceGroupOpts(self._space_group_HM_name.raw_value)
         self.interface = interface
-        if self.interface is not None:
-            self.interface.generate_bindings(self)
 
     @classmethod
     def from_pars(cls, _space_group_HM_name: str, interface=None):

@@ -43,8 +43,6 @@ class Cell(BaseObj):
                          length_a=length_a, length_b=length_b, length_c=length_c,
                          angle_alpha=angle_alpha, angle_beta=angle_beta, angle_gamma=angle_gamma)
         self.interface = interface
-        if self.interface is not None:
-            self.interface.generate_bindings(self)
 
     # Class constructors
     @classmethod

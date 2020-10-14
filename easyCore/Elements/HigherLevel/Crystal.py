@@ -30,8 +30,6 @@ class Crystal(BaseObj):
                                       spacegroup=spacegroup,
                                       atoms=atoms)
         self.interface = interface
-        if self.interface is not None:
-            self.interface.generate_bindings(self)
 
         self.extent = np.array([1, 1, 1])
         self.centre = np.array([0, 0, 0])
@@ -80,8 +78,6 @@ class Crystals(BaseCollection):
     def __init__(self, name: str = 'phases', *args, interface=None, **kwargs):
         super(Crystals, self).__init__(name, *args, **kwargs)
         self.interface = interface
-        if self.interface is not None:
-            self.interface.generate_bindings(self)
 
     def __repr__(self) -> str:
         return f'Collection of {len(self)} phases.'

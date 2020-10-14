@@ -82,7 +82,7 @@ class CifParser:
     CifParser's errors attribute.
     """
 
-    def __init__(self, filename: Union[str, Path, TextIOWrapper], occupancy_tolerance=1., site_tolerance=1e-4):
+    def __init__(self, filename: Union[str, StringIO, TextIOWrapper], occupancy_tolerance=1., site_tolerance=1e-4):
         """
         Args:
             filename (str): CIF filename, bzipped or gzipped CIF files are fine too.
@@ -94,7 +94,7 @@ class CifParser:
         """
         self._occupancy_tolerance = occupancy_tolerance
         self._site_tolerance = site_tolerance
-        if isinstance(filename, Path) and os.path.isfile(filename):
+        if hasattr(filename, '__str__') and os.path.isfile(str(filename)):
             self._cif = StarCollection.from_file(filename)
         elif isinstance(filename, (TextIOWrapper, StringIO)):
             self._cif = StarCollection.from_string(filename.read())
@@ -259,6 +259,7 @@ class CifParser:
                 "atom_site_occupancy" not in data.labels:
             for this_data in data.data:
                 this_data._kwargs['atom_site_occupancy'] = FakeItem(1)
+            data.labels.append('atom_site_occupancy')
 
         """
         This fixes inconsistencies in naming of several magCIF tags

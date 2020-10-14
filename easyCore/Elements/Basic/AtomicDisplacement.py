@@ -85,8 +85,6 @@ class AtomicDisplacement(BaseObj):
         for par in adp_class.get_parameters():
             addProp(self, par.name, fget=self.__a_getter(par.name), fset=self.__a_setter(par.name))
         self.interface = interface
-        if self.interface is not None:
-            self.interface.generate_bindings(self)
 
     def switch_type(self, adp_string: str, **kwargs):
         if adp_string in _AVAILABLE_ISO_TYPES.keys():
@@ -220,8 +218,6 @@ class Anisotropic(AdpBase):
                                           U_11=U_11, U_12=U_12, U_13=U_13,
                                           U_22=U_22, U_23=U_23, U_33=U_33)
         self.interface = interface
-        if self.interface is not None:
-            self.interface.generate_bindings(self)
 
     @classmethod
     def default(cls, interface=None):
@@ -247,8 +243,6 @@ class Isotropic(AdpBase):
     def __init__(self, Uiso: Parameter, interface=None):
         super(Isotropic, self).__init__('Uiso', Uiso=Uiso)
         self.interface = interface
-        if self.interface is not None:
-            self.interface.generate_bindings(self)
 
     @classmethod
     def default(cls, interface=None):
@@ -270,8 +264,6 @@ class AnisotropicBij(AdpBase):
                                              B_11=B_11, B_12=B_12, B_13=B_13,
                                              B_22=B_22, B_23=B_23, B_33=B_33)
         self.interface = interface
-        if self.interface is not None:
-            self.interface.generate_bindings(self)
 
     @classmethod
     def default(cls, interface=None):
@@ -297,8 +289,6 @@ class IsotropicB(AdpBase):
     def __init__(self, Biso: Parameter, interface=None):
         super(IsotropicB, self).__init__('Biso', Biso=Biso)
         self.interface = interface
-        if self.interface is not None:
-            self.interface.generate_bindings(self)
 
     @classmethod
     def default(cls, interface=None):
