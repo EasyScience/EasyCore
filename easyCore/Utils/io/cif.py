@@ -14,15 +14,13 @@ from easyCore.Elements.Basic.AtomicDisplacement import AtomicDisplacement
 from easyCore.Elements.Basic.Cell import Cell
 from easyCore.Elements.Basic.Site import Atoms, Site
 # from easyCore.Symmetry.SymOp import SymmOp
-from easyCore.Symmetry.groups import SYMM_DATA
+from easyCore.Symmetry.groups import SpaceGroup as SpaceGroup2
 from easyCore.Elements.Basic.SpaceGroup import SpaceGroup
 
 from easyCore.Utils.io.star import StarCollection, StarEntry, StarLoop, FakeItem, FakeCore, StarHeader, StarSection
 
 sub_spgrp = partial(re.sub, r"[\s_]", "")
-space_groups = {sub_spgrp(k): k for k in SYMM_DATA['space_group_encoding'].keys()}  # type: ignore
-space_groups.update({sub_spgrp(k): k for k in SYMM_DATA['space_group_encoding'].keys()})  # type: ignore
-
+space_groups = {sub_spgrp(k): k for k in [opt['hermann_mauguin_fmt'] for opt in SpaceGroup2.SYMM_OPS]}  # type: ignore
 
 class CifIO:
 
@@ -546,6 +544,7 @@ class CifParser:
                                "space_group_name_H-M_alt",
                                "space_group_name_H-M_alt_",
                                "symmetry_space_group_name_hall",
+                               "symmetry_space_group_name_Hall",
                                "symmetry_space_group_name_hall_",
                                "symmetry_space_group_name_h-m",
                                "symmetry_space_group_name_h-m_"]:

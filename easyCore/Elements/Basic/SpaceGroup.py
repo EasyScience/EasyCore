@@ -18,7 +18,7 @@ class SpaceGroup(BaseObj):
     @classmethod
     def from_pars(cls, _space_group_HM_name: str, interface=None):
         return cls(Descriptor('_space_group_HM_name',
-                              SpaceGroupOpts(_space_group_HM_name).op['hermann_mauguin_fmt']),
+                              SpaceGroupOpts(_space_group_HM_name).hm_for_cif),
                    interface=interface)
 
     @classmethod
@@ -29,14 +29,14 @@ class SpaceGroup(BaseObj):
     @classmethod
     def from_int_number(cls, int_number, hexagonal=True, interface=None):
         sg = SpaceGroupOpts.from_int_number(int_number, hexagonal)
-        return cls.from_pars(sg.op['hermann_mauguin_fmt'], interface=interface)
+        return cls.from_pars(sg.hm_for_cif, interface=interface)
 
     def __on_change(self, value):
         if isinstance(value, int):
             self._sg_data = SpaceGroupOpts.from_int_number(value)
         else:
             self._sg_data = SpaceGroupOpts(value)
-        return self._sg_data.op["hermann_mauguin_fmt"]
+        return self._sg_data.hm_for_cif
 
     @property
     def space_group_HM_name(self):
@@ -72,7 +72,7 @@ class SpaceGroup(BaseObj):
 
     @property
     def hermann_mauguin(self):
-        return self._sg_data.op['hermann_mauguin_fmt']
+        return self._sg_data.hm_for_cif
 
     @property
     def symmetry_opts(self):

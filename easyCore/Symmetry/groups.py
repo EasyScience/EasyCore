@@ -241,6 +241,7 @@ class SpaceGroup(SymmetryGroup):
                     self.full_symbol = re.sub(r" ", "",
                                               spg["universal_h_m"])
                     self.point_group = spg["schoenflies"]
+                self.hm_for_cif = spg["hermann_mauguin_fmt"]
                 self.int_number = spg["number"]
                 self.order = len(ops)
                 self._symmetry_ops = ops
@@ -273,6 +274,7 @@ class SpaceGroup(SymmetryGroup):
             self.point_group = data["point_group"]
             self.int_number = data["int_number"]
             self.order = data["order"]
+            self.hm_for_cif = data["full_symbol"]
 
             self._symmetry_ops = None
 
