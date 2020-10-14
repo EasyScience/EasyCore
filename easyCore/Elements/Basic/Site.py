@@ -45,22 +45,27 @@ class Site(BaseObj):
     ]
 
     def __init__(self, label: Descriptor, specie: Descriptor, occupancy: Parameter,
-                 x_position: Parameter, y_position: Parameter, z_position: Parameter,
+                 fract_x: Parameter, fract_y: Parameter, fract_z: Parameter,
                  interface=None, **kwargs):
         # We can attach adp etc, which would be in kwargs. Filter them out...
-        k_wargs = {k: kwargs[k] for k in kwargs.keys() if issubclass(kwargs[k], (Descriptor, Parameter, BaseObj))}
-        kwargs = {k: kwargs[k] for k in kwargs.keys() if not issubclass(kwargs[k], (Descriptor, Parameter, BaseObj))}
+        # But first, check if we've been given an adp..
+        adp = None
+        if 'adp' in kwargs.keys():
+            adp = kwargs['adp']
+            del kwargs['adp']
+        k_wargs = {k: kwargs[k] for k in kwargs.keys() if issubclass(kwargs[k].__class__, (Descriptor, Parameter, BaseObj))}
+        kwargs = {k: kwargs[k] for k in kwargs.keys() if not issubclass(kwargs[k].__class__, (Descriptor, Parameter, BaseObj))}
         super(Site, self).__init__('site',
                                    label=label,
                                    specie=specie,
                                    occupancy=occupancy,
-                                   fract_x=x_position,
-                                   fract_y=y_position,
-                                   fract_z=z_position,
+                                   fract_x=fract_x,
+                                   fract_y=fract_y,
+                                   fract_z=fract_z,
                                    **k_wargs)
         self.interface = interface
-        if self.interface is not None:
-            self.interface.generate_bindings(self)
+        if adp is not None:
+            self.add_adp(adp)
 
     @classmethod
     def default(cls, label: str, specie_label: str, interface=None):
@@ -173,8 +178,6 @@ class Atoms(BaseCollection):
     def __init__(self, name: str, *args, interface=None, **kwargs):
         super(Atoms, self).__init__(name, *args, **kwargs)
         self.interface = interface
-        if self.interface is not None:
-            self.interface.generate_bindings(self)
 
     def __repr__(self) -> str:
         return f'Collection of {len(self)} sites.'
