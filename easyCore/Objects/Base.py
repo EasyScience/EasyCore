@@ -300,6 +300,7 @@ class Descriptor(MSONable):
         # keys = super_dict.keys()
         # if 'parent' in keys:
         #     del super_dict['parent']
+        super_dict['@id'] = self._borg.map.convert_id(self).int
         return super_dict
 
     def to_obj_type(self, data_type: Union['Descriptor', 'Parameter'], *kwargs):
@@ -665,6 +666,7 @@ class BaseObj(MSONable):
         for key, item in d.items():
             if hasattr(item, 'as_dict'):
                 d[key] = item.as_dict(skip=skip)
+        d['@id'] = self._borg.map.convert_id(self).int
         return d
 
     def generate_bindings(self):

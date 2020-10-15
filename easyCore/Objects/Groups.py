@@ -131,10 +131,29 @@ class BaseCollection(MSONable, Sequence):
         if skip is None:
             skip = []
         d = MSONable.as_dict(self, skip=skip)
-        for key, item in d.items():
-            if hasattr(item, 'as_dict'):
-                d[key] = item.as_dict(skip=skip)
-        return d
+        for key in d.keys():
+            if hasattr(d[key], 'as_dict'):
+                d[key] = d[key].as_dict(skip=skip)
+        data = []
+        dd = {}
+        for key in d.keys():
+            if isinstance(d[key], dict):
+                data.append(d[key])
+            else:
+                dd[key] = d[key]
+        dd['data'] = data
+        dd['@id'] = self._borg.map.convert_id(self).int
+        return dd
+
+    @classmethod
+    def from_dict(cls, d):
+        d = d.copy()
+        if len(d['data']) > 0:
+            for idx, item in enumerate(d['data'][1:]):
+                d[str(idx)] = item
+            d['data'] = d['data'][0]
+        return super(BaseCollection, cls).from_dict(d)
+
 
     def generate_bindings(self):
         """
