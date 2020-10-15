@@ -54,24 +54,46 @@ class BaseCollection(MSONable, Sequence):
             # TODO wrap getter and setter in Logger
 
     def append(self, item: Union[Parameter, Descriptor, BaseObj, 'BaseCollection']):
+        """
+        Add an idem to the end of the collection
+
+        :param item: New item to be added
+        :type item: Union[Parameter, Descriptor, BaseObj, 'BaseCollection']
+        """
         if issubclass(item.__class__, (BaseObj, Descriptor, BaseCollection)):
             self._kwargs[str(borg.map.convert_id_to_key(item))] = item
             self._borg.map.add_edge(self, self._kwargs[str(borg.map.convert_id_to_key(item))])
 
-    def __getitem__(self, i: Union[int, slice]) -> Union[Parameter, Descriptor, BaseObj, 'BaseCollection']:
-        if isinstance(i, slice):
-            start, stop, step = i.indices(len(self))
+    def __getitem__(self, idx: Union[int, slice]) -> Union[Parameter, Descriptor, BaseObj, 'BaseCollection']:
+        """
+        Get an item in the collection based on it's index.
+        
+        :param idx: index or slice of the collection.
+        :type idx: Union[int, slice]
+        :return: Object at index `idx`
+        :rtype: Union[Parameter, Descriptor, BaseObj, 'BaseCollection']
+        """
+        if isinstance(idx, slice):
+            start, stop, step = idx.indices(len(self))
             return self.__class__(getattr(self, 'name'), *[self[i] for i in range(start, stop, step)])
-        if str(i) in self._kwargs.keys():
-            return self._kwargs[str(i)]
+        if str(idx) in self._kwargs.keys():
+            return self._kwargs[str(idx)]
         else:
-            if i > len(self):
+            if idx > len(self):
                 raise IndexError
             else:
                 keys = list(self._kwargs.keys())
-                return self._kwargs[keys[i]]
+                return self._kwargs[keys[idx]]
 
     def __setitem__(self, key: int, value: Number):
+        """
+        Set an item via it's index.
+        
+        :param key: Index in self. 
+        :type key: int
+        :param value: Value which index key should be set to.
+        :type value: Any
+        """
         item = self.__getitem__(key)
         if isinstance(value, Number):  # noqa: S3827
             item.value = value
@@ -79,6 +101,12 @@ class BaseCollection(MSONable, Sequence):
             raise NotImplementedError
 
     def __len__(self) -> int:
+        """
+        Get the number of items in this collection
+        
+        :return: Number of items in this collection 
+        :rtype: int
+        """
         return len(self._kwargs.keys())
 
     def get_parameters(self) -> List[Parameter]:
@@ -142,18 +170,27 @@ class BaseCollection(MSONable, Sequence):
             else:
                 dd[key] = d[key]
         dd['data'] = data
-        dd['@id'] = self._borg.map.convert_id(self).int
+        # Attach the id. This might be useful in connected applications.
+        # Note that it is converted to int and then str because javascript....
+        dd['@id'] = str(self._borg.map.convert_id(self).int)
         return dd
 
     @classmethod
-    def from_dict(cls, d):
-        d = d.copy()
+    def from_dict(cls, input_dict: dict):
+        """
+        De-serialise the data and try to recreate the object. 
+        
+        :param input_dict: serialised dictionary of an object. Usually generated from `obj.as_dict()`
+        :type input_dict: dict
+        :return: Class constructed from the input_dict
+        """
+        
+        d = input_dict.copy()
         if len(d['data']) > 0:
             for idx, item in enumerate(d['data'][1:]):
                 d[str(idx)] = item
             d['data'] = d['data'][0]
         return super(BaseCollection, cls).from_dict(d)
-
 
     def generate_bindings(self):
         """

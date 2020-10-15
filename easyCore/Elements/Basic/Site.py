@@ -182,10 +182,10 @@ class Atoms(BaseCollection):
     def __repr__(self) -> str:
         return f'Collection of {len(self)} sites.'
 
-    def __getitem__(self, i: Union[int, slice]) -> Union[Parameter, Descriptor, BaseObj, 'BaseCollection']:
-        if isinstance(i, str) and i in self.atom_labels:
-            i = self.atom_labels.index(i)
-        return super(Atoms, self).__getitem__(i)
+    def __getitem__(self, idx: Union[int, slice]) -> Union[Parameter, Descriptor, BaseObj, 'BaseCollection']:
+        if isinstance(idx, str) and idx in self.atom_labels:
+            idx = self.atom_labels.index(idx)
+        return super(Atoms, self).__getitem__(idx)
 
     def append(self, item: Site):
         if not isinstance(item, Site):

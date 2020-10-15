@@ -296,11 +296,9 @@ class Descriptor(MSONable):
         super_dict = super().as_dict(skip=skip + ['parent', 'callback', '_finalizer'])
         super_dict['value'] = self.raw_value
         super_dict['units'] = self._args['units']
-        # We'll have to serialize the callback option :face_palm:
-        # keys = super_dict.keys()
-        # if 'parent' in keys:
-        #     del super_dict['parent']
-        super_dict['@id'] = self._borg.map.convert_id(self).int
+        # Attach the id. This might be useful in connected applications.
+        # Note that it is converted to int and then str because javascript....
+        super_dict['@id'] = str(self._borg.map.convert_id(self).int)
         return super_dict
 
     def to_obj_type(self, data_type: Union['Descriptor', 'Parameter'], *kwargs):
@@ -666,7 +664,9 @@ class BaseObj(MSONable):
         for key, item in d.items():
             if hasattr(item, 'as_dict'):
                 d[key] = item.as_dict(skip=skip)
-        d['@id'] = self._borg.map.convert_id(self).int
+        # Attach the id. This might be useful in connected applications.
+        # Note that it is converted to int and then str because javascript....
+        d['@id'] = str(self._borg.map.convert_id(self).int)
         return d
 
     def generate_bindings(self):
