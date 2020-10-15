@@ -22,6 +22,7 @@ from easyCore.Utils.io.star import StarCollection, StarEntry, StarLoop, FakeItem
 sub_spgrp = partial(re.sub, r"[\s_]", "")
 space_groups = {sub_spgrp(k): k for k in [opt['hermann_mauguin_fmt'] for opt in SpaceGroup2.SYMM_OPS]}  # type: ignore
 
+
 class CifIO:
 
     def __init__(self, parser: 'CifParser' = None):
@@ -535,42 +536,162 @@ class CifParser:
     def get_symmetry(self):
         data = self._cif['data']
         space_group = None
-        for symmetry_label in ["symmetry_space_group_name_H-M",
-                               "symmetry_space_group_name_H_M",
-                               "symmetry_space_group_name_H-M_",
-                               "symmetry_space_group_name_H_M_",
-                               "space_group_name_Hall",
-                               "space_group_name_Hall_",
-                               "space_group_name_H-M_alt",
-                               "space_group_name_H-M_alt_",
-                               "symmetry_space_group_name_hall",
-                               "symmetry_space_group_name_Hall",
-                               "symmetry_space_group_name_hall_",
-                               "symmetry_space_group_name_h-m",
-                               "symmetry_space_group_name_h-m_"]:
-            sg = data.get(symmetry_label, None)
-            if sg:
-                sg = sub_spgrp(sg.value)
-                try:
-                    spg = space_groups.get(sg, None)
-                    if spg:
-                        space_group = SpaceGroup.from_pars(spg)
-                        break
-                except ValueError:
-                    # Ignore any errors
-                    pass
-        if space_group is None:
-            for symmetry_label in ["_space_group_IT_number",
-                                   "_space_group_IT_number_",
-                                   "_symmetry_Int_Tables_number",
-                                   "_symmetry_Int_Tables_number_"]:
-                if data.get(symmetry_label):
-                    try:
-                        i = int(str2float(data.get(symmetry_label)))
-                        space_group = SpaceGroup.from_int_number(i)
-                        break
-                    except ValueError:
-                        continue
+        lower_labels = [key.lower() for key in data.keys()]
+
+        # All of these keys can be upper and lower case.
+        # All of these keys may have the form:
+        #   'C m c m'
+        #   'C 2/c 2/m 21/m'
+        #   'A m a m'
+
+        def caller(str1, str2, current_sep):
+            test_label = str1 + current_sep + str2.lower()
+            is_found = False
+            if test_label in lower_labels:
+                is_found = True
+            if not is_found:
+                test_label = test_label + '_'
+                if test_label in lower_labels:
+                    is_found = True
+            return is_found, test_label
+
+        def check_hm(code):
+            found_op = None
+            for op in SpaceGroup2.SYMM_OPS:
+                if code in [op['hermann_mauguin_fmt'], op['hermann_mauguin'], op['universal_h_m']]:
+                    found_op = op
+                    break
+            return found_op
+
+        def check_hall(code):
+            found_op = None
+            for op in SpaceGroup2.SYMM_OPS:
+                if op['hall'] in [code, ' ' + code]:
+                    found_op = op
+                    break
+            return found_op
+
+        def check_full(code):
+            code = sub_spgrp(code)
+            found_op = None
+            for key in SpaceGroup2.sgencoding.keys():
+                if code in [SpaceGroup2.sgencoding[key]['full_symbol']]:
+                    found_op = check_hm(key)
+                    break
+            return found_op
+
+        seps = ["_", "."]
+        for symmetry_label in [["symmetry_space", "group_name_H-M"],
+                               ["space_group", "name_Hall"],
+                               ["space_group", "name_H-M_alt"],
+                               ["symmetry_space", "group_name_Hall"]
+                               ]:
+
+            found = False
+            this_label = ''
+            for sep in seps:
+                found, this_label = caller(symmetry_label[0], symmetry_label[1], sep)
+                if found:
+                    break
+            if not found:
+                continue
+
+            key_idx = lower_labels.index(this_label)
+            real_symmetry_label = list(data.keys())[key_idx]
+
+            sg = data.get(real_symmetry_label)
+            sg = sub_spgrp(sg.value)
+            for check in [check_hm, check_hall, check_full]:
+                op = check(sg)
+                if op is not None:
+                    break
+            if op is None:
+                pass
+            space_group = SpaceGroup.from_pars(op['hermann_mauguin_fmt'])
+            if space_group is not None:
+                return space_group
+
+        # All of these keys can be upper and lower case.
+        # All of these keys may have the form:
+        #   'C m c m'
+        for symmetry_label in [["space_group", "name_H-M_ref"]]:
+
+            found = False
+            this_label = ''
+            for sep in seps:
+                found, this_label = caller(symmetry_label[0], symmetry_label[1], sep)
+                if found:
+                    break
+            if not found:
+                continue
+
+            key_idx = lower_labels.index(this_label)
+            real_symmetry_label = list(data.keys())[key_idx]
+
+            sg = data.get(real_symmetry_label)
+            sg = sub_spgrp(sg.value)
+            for check in [check_hm]:
+                op = check(sg)
+                if op is not None:
+                    break
+            if op is None:
+                pass
+            space_group = SpaceGroup.from_pars(op['hermann_mauguin_fmt'])
+            if space_group is not None:
+                return space_group
+
+        # All of these keys can be upper and lower case.
+        # All of these keys may have the form:
+        #   'C m c m'
+        for symmetry_label in [["space_group", "name_H-M_full"]]:
+
+            found = False
+            this_label = ''
+            for sep in seps:
+                found, this_label = caller(symmetry_label[0], symmetry_label[1], sep)
+                if found:
+                    break
+            if not found:
+                continue
+
+            key_idx = lower_labels.index(this_label)
+            real_symmetry_label = list(data.keys())[key_idx]
+
+            sg = data.get(real_symmetry_label)
+            sg = sub_spgrp(sg.value)
+            for check in [check_full]:
+                op = check(sg)
+                if op is not None:
+                    break
+            if op is None:
+                pass
+            space_group = SpaceGroup.from_pars(op['hermann_mauguin_fmt'])
+
+            if space_group is not None:
+                return space_group
+
+        for symmetry_label in [["space_group", "IT_number"],
+                               ["symmetry_Int", "Tables_number"]]:
+
+            found = False
+            this_label = ''
+            for sep in seps:
+                found, this_label = caller(symmetry_label[0], symmetry_label[1], sep)
+                if found:
+                    break
+
+            if not found:
+                continue
+
+            key_idx = lower_labels.index(this_label)
+            real_symmetry_label = list(data.keys())[key_idx]
+
+            try:
+                i = int(str2float(data.get(real_symmetry_label)))
+                space_group = SpaceGroup.from_int_number(i)
+                break
+            except ValueError:
+                continue
         return space_group
 
     # def get_symops(self):
@@ -1142,7 +1263,8 @@ class CifWriter:
 
         adp_U_must = ['label', 'U_11', 'U_12', 'U_13', 'U_22', 'U_23', 'U_33']
         adp_B_must = [item.replace('U_', 'B_') for item in adp_U_must]
-        adp_U_must_conv = ['atom_site_aniso_label', 'atom_site_adp_type','atom_site_aniso_U_11', 'atom_site_aniso_U_12',
+        adp_U_must_conv = ['atom_site_aniso_label', 'atom_site_adp_type', 'atom_site_aniso_U_11',
+                           'atom_site_aniso_U_12',
                            'atom_site_aniso_U_13',
                            'atom_site_aniso_U_22', 'atom_site_aniso_U_23', 'atom_site_aniso_U_33']
         adp_B_must_conv = [item.replace('U_', 'B_') for item in adp_U_must_conv]
