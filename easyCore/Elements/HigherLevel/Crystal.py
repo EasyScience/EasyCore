@@ -223,6 +223,7 @@ class Crystals(BaseCollection):
 
     @property
     def cif(self):
+        self._create_cif()
         return self._cif
 
     @classmethod
