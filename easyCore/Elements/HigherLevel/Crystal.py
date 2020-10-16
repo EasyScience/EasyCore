@@ -33,6 +33,7 @@ class Crystal(BaseObj):
 
         self._extent = np.array([1, 1, 1])
         self._centre = np.array([0, 0, 0])
+        self.atom_tolerance = 1e-4
 
     def add_atom(self, *args, **kwargs):
         """
@@ -70,7 +71,8 @@ class Crystal(BaseObj):
                                            axis=0)
             site_positions = np.unique(all_sites, axis=0) - self.center
             sites[site.label.raw_value] = \
-                site_positions[np.all(site_positions >= 0, axis=1) & np.all(site_positions <= self.extent, axis=1),
+                site_positions[np.all(site_positions >= -self.atom_tolerance, axis=1) &
+                               np.all(site_positions <= self.extent + self.atom_tolerance, axis=1),
                 :] + self.center
         return sites
 
