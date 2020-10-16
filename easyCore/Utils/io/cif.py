@@ -56,12 +56,12 @@ class CifIO:
         parser = CifParser(file_path)
         return cls(parser)
 
-    def to_string(self, index=None):
-        return self.__str__(index)
+    def to_string(self, cif_index=None):
+        return self.__str__(cif_index)
 
-    def to_file(self, file_name: Union[str, Path, TextIOWrapper]):
+    def to_file(self, file_name: Union[str, Path, TextIOWrapper], cif_index=None):
         with open(file_name, 'w') as writer:
-            writer.write(str(self))
+            writer.write(self.__str__(cif_index))
 
     def __str__(self, index: Union[int, slice] = None):
         out_str = ''
