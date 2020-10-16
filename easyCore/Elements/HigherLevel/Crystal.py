@@ -191,6 +191,7 @@ class Crystals(BaseCollection):
 
         super(Crystals, self).__init__(name, *args, **kwargs)
         self.interface = interface
+        self._cif = None
         self._create_cif()
 
     def __repr__(self) -> str:
@@ -215,7 +216,7 @@ class Crystals(BaseCollection):
 
     def _create_cif(self):
         if len(self) == 0:
-            return None
+            return
         self._cif = CifIO.from_objects(self[0].name, self[0].cell, self[0].spacegroup, self[0].atoms)
         for item in self[1:]:
             self._cif.add_cif_from_objects(item.name, item.cell, item.spacegroup, item.atoms)

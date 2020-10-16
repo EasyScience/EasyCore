@@ -158,8 +158,9 @@ class CifParser:
 
         self.feature_flags['magcif_incommensurate'] = is_magcif_incommensurate()
 
-        new_data = {}
+
         for cif in self._cif:
+            new_data = {}
             for k in cif['data'].keys():
                 # pass individual CifBlocks to _sanitize_data
                 obj = self._sanitize_data(cif['data'][k])
