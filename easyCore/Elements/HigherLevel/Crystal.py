@@ -47,6 +47,36 @@ class Crystal(BaseObj):
         if not supplied_atom:
             self.atoms.append(Site.from_pars(*args, **kwargs))
 
+    def _generate_positions(self, atom_index):
+        if self.spacegroup is None:
+            return {atom.label: atom.fract_coords for atom in self.atoms}
+
+        sym_op = self.spacegroup.symmetry_opts
+        offsets = np.array(np.meshgrid(range(-1, self.extent[0] + 1),
+                                       range(-1, self.extent[1] + 1),
+                                       range(-1, self.extent[2] + 1))).T.reshape(-1, 3)
+        site = self.atoms[atom_index]
+        all_sites = np.array([op.operate(site.fract_coords) for op in sym_op])
+        for offset in offsets[1:, :]:
+            all_sites = np.concatenate((all_sites,
+                                        np.array([op.operate(site.fract_coords + offset) for op in sym_op])),
+                                       axis=0)
+        unique = np.unique(all_sites, axis=0)
+        return all_sites, unique
+
+    def site_multiplicity(self) -> Dict[str, list]:
+        sites = {}
+        for site_idx, site in enumerate(self.atoms):
+            all_sites, unique = self._generate_positions(site_idx)
+            unique = unique[np.all(unique >= -self.atom_tolerance, axis=1) & \
+                            np.all(unique <= self.extent + self.atom_tolerance, axis=1), :]
+            sites[site.label.raw_value] = []
+            for item in unique:
+                sites[site.label.raw_value].append([item,
+                                                    sum(np.all((all_sites > item - 1e-3) & (all_sites < item + 1e-3),
+                                                               axis=1))])
+        return sites
+
     def all_sites(self) -> Dict[str, np.ndarray]:
         """
         Generate all atomic positions from the atom array and symmetry operations over an extent.
@@ -55,21 +85,10 @@ class Crystal(BaseObj):
         (0, 0, 0) -> obj.extent
         :rtype: Dict[str, np.ndarray]
         """
-        if self.spacegroup is None:
-            return {atom.label: atom.fract_coords for atom in self.atoms}
-
-        sym_op = self.spacegroup.symmetry_opts
         sites = {}
-        offsets = np.array(np.meshgrid(range(-1, self.extent[0] + 1),
-                                       range(-1, self.extent[1] + 1),
-                                       range(-1, self.extent[2] + 1))).T.reshape(-1, 3)
-        for site in self.atoms:
-            all_sites = np.array([op.operate(site.fract_coords) for op in sym_op])
-            for offset in offsets[1:, :]:
-                all_sites = np.concatenate((all_sites,
-                                            np.array([op.operate(site.fract_coords + offset) for op in sym_op])),
-                                           axis=0)
-            site_positions = np.unique(all_sites, axis=0) - self.center
+        for site_idx, site in enumerate(self.atoms):
+            all_sites, unique = self._generate_positions(site_idx)
+            site_positions = unique - self.center
             sites[site.label.raw_value] = \
                 site_positions[np.all(site_positions >= -self.atom_tolerance, axis=1) &
                                np.all(site_positions <= self.extent + self.atom_tolerance, axis=1),

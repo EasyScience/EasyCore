@@ -56,16 +56,24 @@ class CifIO:
         parser = CifParser(file_path)
         return cls(parser)
 
-    def to_string(self):
-        return str(self)
+    def to_string(self, index=None):
+        return self.__str__(index)
 
     def to_file(self, file_name: Union[str, Path, TextIOWrapper]):
         with open(file_name, 'w') as writer:
             writer.write(str(self))
 
-    def __str__(self):
+    def __str__(self, index: Union[int, slice] = None):
         out_str = ''
-        for writer in self._writer:
+        items = self._writer
+        if index is not None:
+            if isinstance(index, int):
+                items = [items[index]]
+            elif isinstance(index, slice):
+                items = items[index]
+            else:
+                raise AttributeError('Index must be a slice or int')
+        for writer in items:
             if writer is not None:
                 out_str += str(writer) + '\n'
         return out_str
