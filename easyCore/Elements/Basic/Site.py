@@ -125,6 +125,10 @@ class Site(BaseObj):
                f' ({self.fract_x.raw_value}, {self.fract_y.raw_value}, {self.fract_z.raw_value})'
 
     @property
+    def name(self):
+        return self.label.raw_value
+
+    @property
     def fract_coords(self) -> np.ndarray:
         """
         Get the current sites fractional co-ordinates as an array

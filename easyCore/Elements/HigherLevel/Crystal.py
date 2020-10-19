@@ -249,20 +249,20 @@ class Crystals(BaseCollection):
 
     @classmethod
     def from_cif_str(cls, in_string: str):
-        cif = CifIO.from_cif_str(in_string)
-        name = 'FromCif'
-        crystals = []
-        for cif_index in range(cif._parser.number_of_cifs):
-            name, kwargs = cif.to_crystal_form(cif_index=cif_index)
-            crystals.append(Crystal(name, **kwargs))
+        name, crystals = cls._from_external(CifIO.from_cif_str, in_string)
         return cls(name, *crystals)
 
     @classmethod
     def from_cif_file(cls, file_path: Path):
-        cif = CifIO.from_file(file_path)
+        name, crystals = cls._from_external(CifIO.from_file, file_path)
+        return cls(name, *crystals)
+
+    @staticmethod
+    def _from_external(constructor, *args):
+        cif = constructor(*args)
         name = 'FromCif'
         crystals = []
         for cif_index in range(cif._parser.number_of_cifs):
             name, kwargs = cif.to_crystal_form(cif_index=cif_index)
             crystals.append(Crystal(name, **kwargs))
-        return cls(name, *crystals)
+        return name, crystals
