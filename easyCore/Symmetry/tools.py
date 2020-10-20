@@ -45,20 +45,24 @@ class SpacegroupInfo:
             return "hexagonal"
         return "cubic"
 
-    def get_symbol_from_int_number(self, int_number: int):
+    @staticmethod
+    def get_symbol_from_int_number(int_number: int):
         return sg_symbol_from_int_number(int_number)
 
-    def get_compatible_HM_from_int(self, int_number: int):
+    @staticmethod
+    def get_compatible_HM_from_int(int_number: int):
         return [sop['hermann_mauguin_fmt'] for sop in SpaceGroup.SYMM_OPS if sop['number'] == int_number]
 
-    def get_compatible_HM_from_name(self, name: str):
+    @staticmethod
+    def get_compatible_HM_from_name(name: str):
         enc: dict = _get_symm_data("space_group_encoding")
         opt = enc.get(name.replace(' ', ''), None)
         if opt is None:
             raise AttributeError
-        return self.get_compatible_HM_from_int(opt['int_number'])
+        return SpacegroupInfo.get_compatible_HM_from_int(opt['int_number'])
 
-    def get_int_from_HM(self, HM_str: str):
+    @staticmethod
+    def get_int_from_HM(HM_str: str):
         ints = [sop['number'] for sop in SpaceGroup.SYMM_OPS if sop['hermann_mauguin'] == HM_str.replace(' ', '')]
         if not ints:
             raise AttributeError
