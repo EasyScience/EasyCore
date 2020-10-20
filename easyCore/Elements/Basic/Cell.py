@@ -593,11 +593,13 @@ class Cell(BaseObj):
         return np.array([vector_a, vector_b, vector_c], dtype=np.float64)
 
     def __repr__(self) -> str:
-        return 'Cell: (a:{:.2f}, b:{:.2f}, c:{:.2f}, alpha:{:.2f}, beta:{:.2f}, gamma:{:.2f}) '.format(self.a, self.b,
-                                                                                                       self.c,
-                                                                                                       self.alpha,
-                                                                                                       self.beta,
-                                                                                                       self.gamma)
+        return '<Cell: (a: {:.2f} {:~P}, b: {:.2f} {:~P}, c: {:.2f}{:~P}, alpha: {:.2f} {:~P}, beta: {:.2f} {:~P}, ' \
+               'gamma: {:.2f} {:~P}>'.format(self.length_a.raw_value, self.length_a.unit,
+                                              self.length_b.raw_value, self.length_b.unit,
+                                              self.length_c.raw_value, self.length_c.unit,
+                                              self.angle_alpha.raw_value, self.angle_alpha.unit,
+                                              self.angle_beta.raw_value, self.angle_beta.unit,
+                                              self.angle_gamma.raw_value, self.angle_gamma.unit)
 
     def to_star(self):
         return StarSection(self)

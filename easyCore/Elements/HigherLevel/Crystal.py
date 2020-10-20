@@ -27,15 +27,19 @@ class Crystal(BaseObj):
 
         super(Crystal, self).__init__(name,
                                       cell=cell,
-                                      spacegroup=spacegroup,
+                                      _spacegroup=spacegroup,
                                       atoms=atoms)
         self.spacegroup.enforce_sym(self.cell)
         self.interface = interface
 
         self._extent = np.array([1, 1, 1])
         self._centre = np.array([0, 0, 0])
+        self.atom_tolerance = 1e-4
 
     def add_atom(self, *args, **kwargs):
+        """
+        Add an atom to the crystal
+        """
         supplied_atom = False
         for arg in args:
             if isinstance(arg, Site):
@@ -44,33 +48,88 @@ class Crystal(BaseObj):
         if not supplied_atom:
             self.atoms.append(Site.from_pars(*args, **kwargs))
 
-    def all_sites(self) -> Dict[str, np.ndarray]:
+    def _generate_positions(self, atom_index):
+        if self.spacegroup is None:
+            return {atom.label: atom.fract_coords for atom in self.atoms}
+
         sym_op = self.spacegroup.symmetry_opts
+        offsets = np.array(np.meshgrid(range(-1, self.extent[0] + 1),
+                                       range(-1, self.extent[1] + 1),
+                                       range(-1, self.extent[2] + 1))).T.reshape(-1, 3)
+        site = self.atoms[atom_index]
+        all_sites = np.array([op.operate(site.fract_coords) for op in sym_op])
+        for offset in offsets[1:, :]:
+            all_sites = np.concatenate((all_sites,
+                                        np.array([op.operate(site.fract_coords + offset) for op in sym_op])),
+                                       axis=0)
+        unique = np.unique(all_sites, axis=0)
+        return all_sites, unique
+
+    def site_multiplicity(self) -> Dict[str, list]:
         sites = {}
-        offsets = np.array(np.meshgrid(range(0, self.extent[0] + 1),
-                                       range(0, self.extent[1] + 1),
-                                       range(0, self.extent[2] + 1))).T.reshape(-1, 3)
-        for site in self.atoms:
-            all_sites = np.array([op.operate(site.fract_coords) for op in sym_op])
-            for offset in offsets[1:, :]:
-                all_sites = np.concatenate((all_sites,
-                                            np.array([op.operate(site.fract_coords + offset) for op in sym_op])),
-                                           axis=0)
-            site_positions = np.unique(all_sites, axis=0) - self.center
+        for site_idx, site in enumerate(self.atoms):
+            all_sites, unique = self._generate_positions(site_idx)
+            unique = unique[np.all(unique >= -self.atom_tolerance, axis=1) & \
+                            np.all(unique <= self.extent + self.atom_tolerance, axis=1), :]
+            sites[site.label.raw_value] = []
+            for item in unique:
+                sites[site.label.raw_value].append([item,
+                                                    sum(np.all((all_sites > item - 1e-3) & (all_sites < item + 1e-3),
+                                                               axis=1))])
+        return sites
+
+    def all_sites(self) -> Dict[str, np.ndarray]:
+        """
+        Generate all atomic positions from the atom array and symmetry operations over an extent.
+
+        :return:  dictionary with keys of atom labels, containing numpy arrays of unique points in the extent
+        (0, 0, 0) -> obj.extent
+        :rtype: Dict[str, np.ndarray]
+        """
+        sites = {}
+        for site_idx, site in enumerate(self.atoms):
+            all_sites, unique = self._generate_positions(site_idx)
+            site_positions = unique - self.center
             sites[site.label.raw_value] = \
-                site_positions[np.all(site_positions >= 0, axis=1) & np.all(site_positions <= self.extent, axis=1),
+                site_positions[np.all(site_positions >= -self.atom_tolerance, axis=1) &
+                               np.all(site_positions <= self.extent + self.atom_tolerance, axis=1),
                 :] + self.center
         return sites
 
     def to_cif_str(self) -> str:
+        """
+        Generate a cif string from the current crystal
+
+        :return: cif string from the current crystal
+        :rtype: str
+        """
         return str(self.cif)
 
     @property
-    def extent(self):
+    def spacegroup(self):
+        return self._spacegroup
+
+    def set_spacegroup(self, value):
+        self._spacegroup.value = value
+
+    @property
+    def extent(self) -> np.ndarray:
+        """
+        Get the current extent in unit cells
+
+        :return: current extent in unit cells
+        :rtype: np.ndarray
+        """
         return self._extent
 
     @extent.setter
     def extent(self, new_extent: Union[list, np.ndarray]):
+        """
+        The current extent of in unit cells. Default (1, 1, 1)
+
+        :param new_extent: The new extent in unit cells.
+        :type new_extent: Union[list, tuple, np.ndarray]
+        """
         if isinstance(new_extent, list):
             new_extent = np.array(new_extent)
         if np.prod(new_extent.shape) != 3:
@@ -79,11 +138,24 @@ class Crystal(BaseObj):
         self._extent = new_extent
 
     @property
-    def center(self):
+    def center(self) -> np.ndarray:
+        """
+        Get the center position
+
+        :return: center position
+        :rtype: np.ndarray
+        """
         return self._centre
 
     @center.setter
-    def center(self, new_center):
+    def center(self, new_center: Union[list, tuple, np.ndarray]):
+        """
+        Set the center position. Default (0, 0, 0)
+
+        :param new_center: New center position.
+        :type new_center: Union[list, tuple, np.ndarray]
+        """
+
         if isinstance(new_center, list):
             new_center = np.array(new_center)
         if np.prod(new_center.shape) != 3:
@@ -92,17 +164,41 @@ class Crystal(BaseObj):
         self._centre = new_center
 
     @property
-    def cif(self):
+    def cif(self) -> CifIO:
+        """
+        The current structure in a cif form.
+
+        :return: Cif object representing the current crystal
+        :rtype: CifIO
+        """
         return CifIO.from_objects(self.name, self.cell, self.spacegroup, self.atoms)
 
     @classmethod
     def from_cif_str(cls, in_string: str):
+        """
+        Generate a crystal from a cif string.
+        !Note! If more than one phase is present, only the first will be used.
+
+        :param in_string: cif string
+        :type in_string: str
+        :return: Crystal parsed from a cif string
+        :rtype: Crystal
+        """
         cif = CifIO.from_cif_str(in_string)
         name, kwargs = cif.to_crystal_form()
         return cls(name, **kwargs)
 
     @classmethod
-    def from_cif_file(cls, file_path: Path):
+    def from_cif_file(cls, file_path: Union[str, Path]):
+        """
+        Generate a crystal from a cif file.
+        !Note! If more than one phase is present, only the first will be used.
+
+        :param file_path: cif file path
+        :type file_path: str, Path
+        :return: Crystal parsed from a cif file
+        :rtype: Crystal
+        """
         cif = CifIO.from_file(file_path)
         name, kwargs = cif.to_crystal_form()
         return cls(name, **kwargs)
@@ -111,8 +207,21 @@ class Crystal(BaseObj):
 class Crystals(BaseCollection):
 
     def __init__(self, name: str = 'phases', *args, interface=None, **kwargs):
+        """
+        Generate a collection of crystals.
+
+        :param name: Name of the crystals collection
+        :type name: str
+        :param args: objects to create the crystal
+        :type args: *Crystal
+        """
+        if not isinstance(name, str):
+            raise AttributeError('Name should be a string!')
+
         super(Crystals, self).__init__(name, *args, **kwargs)
         self.interface = interface
+        self._cif = None
+        self._create_cif()
 
     def __repr__(self) -> str:
         return f'Collection of {len(self)} phases.'
@@ -128,7 +237,40 @@ class Crystals(BaseCollection):
         if item.name in self.phase_names:
             raise AttributeError(f'An atom of name {item.name} already exists.')
         super(Crystals, self).append(item)
+        self._create_cif()
 
     @property
     def phase_names(self) -> List[str]:
         return [phase.name for phase in self]
+
+    def _create_cif(self):
+        if len(self) == 0:
+            return
+        self._cif = CifIO.from_objects(self[0].name, self[0].cell, self[0].spacegroup, self[0].atoms)
+        for item in self[1:]:
+            self._cif.add_cif_from_objects(item.name, item.cell, item.spacegroup, item.atoms)
+
+    @property
+    def cif(self):
+        self._create_cif()
+        return self._cif
+
+    @classmethod
+    def from_cif_str(cls, in_string: str):
+        name, crystals = cls._from_external(CifIO.from_cif_str, in_string)
+        return cls(name, *crystals)
+
+    @classmethod
+    def from_cif_file(cls, file_path: Path):
+        name, crystals = cls._from_external(CifIO.from_file, file_path)
+        return cls(name, *crystals)
+
+    @staticmethod
+    def _from_external(constructor, *args):
+        cif = constructor(*args)
+        name = 'FromCif'
+        crystals = []
+        for cif_index in range(cif._parser.number_of_cifs):
+            name, kwargs = cif.to_crystal_form(cif_index=cif_index)
+            crystals.append(Crystal(name, **kwargs))
+        return name, crystals

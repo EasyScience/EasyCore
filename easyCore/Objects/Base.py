@@ -282,10 +282,10 @@ class Descriptor(MSONable):
 
     def __repr__(self):
         """Return printable representation of a Parameter object."""
-        sval = "= %s" % self._value.magnitude
-        if not self.value.unitless:
-            sval += ' %s' % self.unit
-        return "<%s '%s' %s>" % (self.__class__.__name__, self.name, sval)
+        return "<{:s} '{:s}': {:0.04f} {:~P}>".format(self.__class__.__name__,
+                                                      self.name,
+                                                      self._value.magnitude,
+                                                      self.unit)
 
     def as_dict(self, skip: list = None) -> dict:
         """

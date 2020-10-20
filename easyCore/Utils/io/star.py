@@ -29,13 +29,14 @@ class FakeCore:
 
 
 class ItemHolder:
-    def __init__(self, item):
+    def __init__(self, item, decimal_places: int = 8):
 
         self.maxlen = _MAX_LEN
 
         self.value = item.raw_value
         self.fixed = None
         self.error = None
+        self.decimal_places = decimal_places
         if hasattr(item, 'fixed'):
             self.fixed = item.fixed
             if item.error != 0:
@@ -47,13 +48,16 @@ class ItemHolder:
     def __str__(self) -> str:
         s = "{}"
         if isinstance(self.value, str):
-            s = "'" + s + "'"
-        v_in = [self.value]
-        if self.error is not None:
-            digits = self._get_error_digits()
-            v_in.append(int(self.error * 10 ** digits))
-            s = "{" + f":0.0{digits}f" + "}({})"
-        s = s.format(*v_in)
+            s = '{:s}'.format(self.value)
+        else:
+            v_in = [round(self.value, self.decimal_places)]
+            if self.error is not None:
+                digits = self._get_error_digits()
+                if digits > self.decimal_places:
+                    v_in = [round(self.value, digits)]
+                v_in.append(int(self.error * 10 ** digits))
+                s = "{" + f":0.0{digits}f" + "}({})"
+            s = s.format(*v_in)
         if self.fixed is not None and not self.fixed and self.error is None:
             s += '()'
         return self._format_field(s)
