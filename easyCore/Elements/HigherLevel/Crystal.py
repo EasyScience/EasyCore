@@ -16,7 +16,7 @@ from easyCore.Utils.io.cif import CifIO
 
 class Crystal(BaseObj):
 
-    def __init__(self, name, spacegroup=None, cell=None, atoms=None, interface=None):
+    def __init__(self, name, spacegroup=None, cell=None, atoms=None, interface=None, enforce_sym=True):
         self.name = name
         if spacegroup is None:
             spacegroup = SpaceGroup.default()
@@ -29,7 +29,9 @@ class Crystal(BaseObj):
                                       cell=cell,
                                       _spacegroup=spacegroup,
                                       atoms=atoms)
-        self.spacegroup.enforce_sym(self.cell)
+        if enforce_sym:
+            self.spacegroup.enforce_sym(self.cell)
+        self._enforce_sym = enforce_sym
         self.interface = interface
 
         self._extent = np.array([1, 1, 1])
@@ -106,11 +108,26 @@ class Crystal(BaseObj):
         return str(self.cif)
 
     @property
+    def enforce_sym(self):
+        return self._enforce_sym
+
+    @enforce_sym.setter
+    def enforce_sym(self, value: bool):
+        if value:
+            self.spacegroup.enforce_sym(self.cell)
+        else:
+            self.spacegroup.clear_sym(self.cell)
+
+    @property
     def spacegroup(self):
         return self._spacegroup
 
     def set_spacegroup(self, value):
         self._spacegroup.value = value
+        if self._enforce_sym:
+            self.spacegroup.enforce_sym(self.cell)
+        else:
+            self.spacegroup.clear_sym(self.cell)
 
     @property
     def extent(self) -> np.ndarray:
