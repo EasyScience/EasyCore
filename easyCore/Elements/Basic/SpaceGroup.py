@@ -1,10 +1,21 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
+from copy import deepcopy
 from easyCore.Objects.Base import BaseObj, Descriptor
 from easyCore.Symmetry.groups import SpaceGroup as SpaceGroupOpts
 
 from easyCore.Utils.io.star import StarEntry
+
+
+SG_DETAILS = {
+    'space_group_HM_name': {
+        'description': 'Hermann-Mauguin symbols given in Table 4.3.2.1 of International Tables for Crystallography '
+                       'Vol. A (2002) or a Hermann-Mauguin symbol for a conventional or unconventional setting.',
+        'url':         'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic/Ispace_group_name_H-M_alt.html',
+        'value':       'P 1',
+    }
+}
 
 
 class SpaceGroup(BaseObj):
@@ -17,14 +28,15 @@ class SpaceGroup(BaseObj):
 
     @classmethod
     def from_pars(cls, _space_group_HM_name: str, interface=None):
+        default_options = deepcopy(SG_DETAILS)
+        del default_options['space_group_HM_name']['value']
         return cls(Descriptor('_space_group_HM_name',
-                              SpaceGroupOpts(_space_group_HM_name).hm_for_cif),
+                              SpaceGroupOpts(_space_group_HM_name).hm_for_cif, **default_options['space_group_HM_name']),
                    interface=interface)
 
     @classmethod
     def default(cls, interface=None):
-        this_id = SpaceGroupOpts.SYMM_OPS[0]["hermann_mauguin_fmt"]
-        return cls(Descriptor('_space_group_HM_name', this_id), interface=interface)
+        return cls(Descriptor('_space_group_HM_name', **SG_DETAILS['space_group_HM_name']), interface=interface)
 
     @classmethod
     def from_int_number(cls, int_number, hexagonal=True, interface=None):
@@ -47,7 +59,7 @@ class SpaceGroup(BaseObj):
         self._space_group_HM_name.value = self.__on_change(value)
 
     @property
-    def full_symbol(self):
+    def full_symbol(self) -> str:
         return self._sg_data.full_symbol
 
     @property
@@ -55,19 +67,19 @@ class SpaceGroup(BaseObj):
         return self._sg_data.int_number
 
     @property
-    def point_group(self):
+    def point_group(self) -> str:
         return self._sg_data.point_group
 
     @property
-    def order(self):
+    def order(self) -> int:
         return self._sg_data.order
 
     @property
-    def crystal_system(self):
+    def crystal_system(self) -> str:
         return self._sg_data.crystal_system
 
     @property
-    def int_number(self):
+    def int_number(self) -> int:
         return self._sg_data.int_number
 
     @property
@@ -85,5 +97,8 @@ class SpaceGroup(BaseObj):
         return StarEntry(self.space_group_HM_name)
 
     @classmethod
-    def from_star(cls, in_string):
-        return StarEntry.from_string(cls, in_string)
+    def from_star(cls, in_string: str):
+        return StarEntry.from_stfrring(cls, in_string)
+
+    def __repr__(self) -> str:
+        return "<Spacegroup: system: '{:s}', number: {}, H-M: '{:s}'>".format(self.crystal_system, self.int_number, self.hermann_mauguin)

@@ -27,7 +27,7 @@ class Crystal(BaseObj):
 
         super(Crystal, self).__init__(name,
                                       cell=cell,
-                                      spacegroup=spacegroup,
+                                      _spacegroup=spacegroup,
                                       atoms=atoms)
         self.interface = interface
 
@@ -103,6 +103,13 @@ class Crystal(BaseObj):
         :rtype: str
         """
         return str(self.cif)
+
+    @property
+    def spacegroup(self):
+        return self._spacegroup
+
+    def set_spacegroup(self, value):
+        self._spacegroup.value = value
 
     @property
     def extent(self) -> np.ndarray:

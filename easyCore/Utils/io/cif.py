@@ -773,10 +773,11 @@ class CifWriter:
     #     A wrapper around CifFile to write CIF files from easyCore structures.
     #     """
 
-    def __init__(self, name, *args, significant_figures: int = 8):
+    def __init__(self, name, *args, decimal_places: int = 8):
 
         self.name = name
         self._items = list(args)
+        self.decimal_places = decimal_places
         self._cif = self._create_cif_obj()
 
     @property
