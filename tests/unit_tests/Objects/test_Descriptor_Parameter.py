@@ -6,7 +6,7 @@ from typing import List
 
 import pytest
 import numpy as np
-from easyCore.Objects.Base import Descriptor, Parameter, ureg, Q_, CoreSetException
+from easyCore.Objects.Base import Descriptor, Parameter, ureg, Q_, CoreSetException, borg
 
 
 @pytest.fixture
@@ -98,10 +98,11 @@ def test_Parameter_value_get(element, expected):
     d = Parameter('test', 1, units=element)
     assert str(d.value) == expected
 
-
+@pytest.mark.parametrize('debug', (True, False))
 @pytest.mark.parametrize('enabled', (None, True, False))
 @pytest.mark.parametrize('instance', (Descriptor, Parameter), indirect=True)
-def test_item_value_set(instance, enabled):
+def test_item_value_set(instance, enabled, debug):
+    borg.debug = debug
     set_value = 2
     d = instance('test', 1)
     if enabled is not None:
@@ -112,8 +113,9 @@ def test_item_value_set(instance, enabled):
         d.value = set_value
         assert d.raw_value == set_value
     else:
-        with pytest.raises(CoreSetException):
-            d.value = set_value
+        if debug:
+            with pytest.raises(CoreSetException):
+                d.value = set_value
     d = instance('test', 1, units='kelvin')
     if enabled is not None:
         d.enabled = enabled
@@ -125,8 +127,9 @@ def test_item_value_set(instance, enabled):
         assert d.raw_value == set_value
         assert str(d.unit) == 'kelvin'
     else:
-        with pytest.raises(CoreSetException):
-            d.value = set_value
+        if debug:
+            with pytest.raises(CoreSetException):
+                d.value = set_value
 
 
 @pytest.mark.parametrize('instance', (Descriptor, Parameter), indirect=True)

@@ -28,6 +28,7 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
         self.dependent_obj_ids = self.get_key(dependent_obj)
         self.independent_obj_ids = None
         self._enabled = True
+        self.external = False
         if independent_obj is not None:
             if isinstance(independent_obj, list):
                 self.independent_obj_ids = [self.get_key(obj) for obj in independent_obj]
@@ -36,9 +37,10 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
             # Test if dependent is a parameter or a descriptor.
             # We can not import `Parameter`, so......
             if dependent_obj.__class__.__name__ == 'Parameter':
-                print(f'Dependent variable {dependent_obj}. It should be a `Descriptor`.'
-                      f'Setting to fixed')
-                dependent_obj.fixed = True
+                if borg.debug:
+                    print(f'Dependent variable {dependent_obj}. It should be a `Descriptor`.'
+                          f'Setting to fixed')
+                dependent_obj.enabled = False
 
         self.operator = operator
         self.value = value
@@ -80,7 +82,13 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
         if no_set:
             return value
         else:
+            toggle = False
+            if not dependent_obj.enabled:
+                dependent_obj.enabled = True
+                toggle = True
             dependent_obj.value = value
+            if toggle:
+                dependent_obj.enabled = False
 
     @abstractmethod
     def _parse_operator(self, obj: Union[Descriptor, Parameter], *args, **kwargs) -> Number:
@@ -189,6 +197,7 @@ class ObjConstraint(ConstraintBase):
 
     def __init__(self, dependent_obj: Parameter, operator: str, independent_obj: Parameter):
         super(ObjConstraint, self).__init__(dependent_obj, independent_obj=independent_obj, operator=operator)
+        self.external = True
 
     def _parse_operator(self, obj: Union[Descriptor, Parameter], *args, **kwargs) -> Number:
         value = obj.raw_value
@@ -213,6 +222,7 @@ class MultiObjConstraint(ConstraintBase):
                  value: Number):
         super(MultiObjConstraint, self).__init__(dependent_obj, independent_obj=independent_objs,
                                                  operator=operator, value=value)
+        self.external = True
 
     def _parse_operator(self, independent_objs: List[Union[Descriptor, Parameter]], *args, **kwargs) -> Number:
         in_str = ''

@@ -208,7 +208,10 @@ class Descriptor(MSONable):
         if not self.enabled:
             if self._borg.stack.enabled:
                 self._borg.stack.history.popleft()
-            raise CoreSetException(f'{str(self)} is not enabled.')
+                if borg.debug:
+                    raise CoreSetException(f'{str(self)} is not enabled.')
+                else:
+                    return
         self.__deepValueSetter(value)
         if self._callback.fset is not None:
             try:
@@ -533,9 +536,13 @@ class Parameter(Descriptor):
 
         def constraint_runner(this_constraint_type: dict, newer_value: numbers.Number):
             for constraint in this_constraint_type.values():
+                if constraint.external:
+                    constraint()
+                    return newer_value
                 this_new_value = constraint(no_set=True)
                 if this_new_value != newer_value:
-                    print(f'Constraint `{constraint}` has been applied')
+                    if borg.debug:
+                        print(f'Constraint `{constraint}` has been applied')
                     self._value = self.__class__._constructor(value=this_new_value, units=self._args['units'],
                                                               error=self._args['error'])
                 newer_value = this_new_value
@@ -635,7 +642,7 @@ class BaseObj(MSONable):
         for key, item in self._kwargs.items():
             if hasattr(item, 'get_fit_parameters'):
                 fit_list = [*fit_list, *item.get_fit_parameters()]
-            elif isinstance(item, Parameter) and not item.fixed:
+            elif isinstance(item, Parameter) and item.enabled and not item.fixed:
                 fit_list.append(item)
         return fit_list
 

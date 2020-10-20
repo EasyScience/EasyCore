@@ -29,6 +29,7 @@ class Crystal(BaseObj):
                                       cell=cell,
                                       spacegroup=spacegroup,
                                       atoms=atoms)
+        self.spacegroup.enforce_sym(self.cell)
         self.interface = interface
 
         self._extent = np.array([1, 1, 1])
