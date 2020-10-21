@@ -115,7 +115,7 @@ class SpaceGroup(BaseObj):
 
     @classmethod
     def from_star(cls, in_string: str):
-        return StarEntry.from_stfrring(cls, in_string)
+        return StarEntry.from_string(cls, in_string)
 
     def __repr__(self) -> str:
         return "<Spacegroup: system: '{:s}', number: {}, H-M: '{:s}'>".format(self.crystal_system, self.int_number, self.hermann_mauguin)
