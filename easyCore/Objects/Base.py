@@ -208,10 +208,10 @@ class Descriptor(MSONable):
         if not self.enabled:
             if self._borg.stack.enabled:
                 self._borg.stack.history.popleft()
-                if borg.debug:
-                    raise CoreSetException(f'{str(self)} is not enabled.')
-                else:
-                    return
+            if borg.debug:
+                raise CoreSetException(f'{str(self)} is not enabled.')
+            else:
+                return
         self.__deepValueSetter(value)
         if self._callback.fset is not None:
             try:
@@ -282,10 +282,15 @@ class Descriptor(MSONable):
 
     def __repr__(self):
         """Return printable representation of a Parameter object."""
-        return "<{:s} '{:s}': {:0.04f} {:~P}>".format(self.__class__.__name__,
+        out_str = "<{:s} '{:s}': {:0.04f} {:~P}>".format(self.__class__.__name__,
                                                       self.name,
                                                       self._value.magnitude,
                                                       self.unit)
+
+        # Fix formatting for dimensionless
+        if out_str[-2] == ' ':
+            out_str = out_str[:-2] + '>'
+        return out_str
 
     def as_dict(self, skip: list = None) -> dict:
         """
