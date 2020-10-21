@@ -3,7 +3,19 @@ __version__ = '0.0.1'
 
 from typing import List
 
-from .groups import SpaceGroup, _get_symm_data, sg_symbol_from_int_number
+from .groups import SpaceGroup, _get_symm_data
+
+
+def _make_SG_names() -> list:
+    sg_list = []
+    for ind in range(1, 231):
+        for op in SpaceGroup.SYMM_OPS:
+            if op['number'] == ind:
+                sg_list.append(op['hermann_mauguin_fmt'])
+                break
+    return sg_list
+
+SG_NAMES = _make_SG_names()
 
 
 class SpacegroupInfo:
@@ -47,7 +59,7 @@ class SpacegroupInfo:
 
     @staticmethod
     def get_symbol_from_int_number(int_number: int):
-        return sg_symbol_from_int_number(int_number)
+        return SG_NAMES[int_number -1]
 
     @staticmethod
     def get_compatible_HM_from_int(int_number: int):
