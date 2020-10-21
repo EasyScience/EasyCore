@@ -30,6 +30,9 @@ class _EntryList(list):
         s += 'a finalizer.'
         return s
 
+    def __delitem__(self, key):
+        super(_EntryList, self).__delitem__(key)
+
     def remove_type(self, old_type: str):
         if old_type in self.__known_types and old_type in self._type:
             self._type.remove(old_type)
@@ -155,6 +158,13 @@ class Graph:
                 if {neighbour, vertex} not in edges:
                     edges.append({vertex, neighbour})
         return edges
+
+    def prune_vertex_from_edge(self, parent_obj, child_obj):
+        vertex1 = self.convert_id(parent_obj).int
+        vertex2 = self.convert_id(child_obj).int
+
+        if vertex1 in self.__graph_dict.keys() and vertex2 in self.__graph_dict[vertex1]:
+            del self.__graph_dict[vertex1][self.__graph_dict[vertex1].index(vertex2)]
 
     def prune(self, key: int):
         if key in self.__graph_dict.keys():

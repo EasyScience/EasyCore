@@ -191,6 +191,11 @@ class Atoms(BaseCollection):
             idx = self.atom_labels.index(idx)
         return super(Atoms, self).__getitem__(idx)
 
+    def __delitem__(self, key):
+        if isinstance(key, str) and key in self.atom_labels:
+            key = self.atom_labels.index(key)
+        return super(Atoms, self).__delitem__(key)
+
     def append(self, item: Site):
         if not isinstance(item, Site):
             raise TypeError('Item must be a Site')

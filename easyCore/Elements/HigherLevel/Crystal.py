@@ -50,6 +50,9 @@ class Crystal(BaseObj):
         if not supplied_atom:
             self.atoms.append(Site.from_pars(*args, **kwargs))
 
+    def remove_atom(self, key):
+        del self.atoms[key]
+
     def _generate_positions(self, atom_index):
         if self.spacegroup is None:
             return {atom.label: atom.fract_coords for atom in self.atoms}
@@ -247,6 +250,11 @@ class Crystals(BaseCollection):
         if isinstance(idx, str) and idx in self.phase_names:
             idx = self.phase_names.index(idx)
         return super(Crystals, self).__getitem__(idx)
+
+    def __delitem__(self, key):
+        if isinstance(key, str) and key in self.phase_names:
+            key = self.phase_names.index(key)
+        return super(Crystals, self).__delitem__(key)
 
     def append(self, item: Crystal):
         if not isinstance(item, Crystal):

@@ -100,6 +100,20 @@ class BaseCollection(MSONable, Sequence):
         else:
             raise NotImplementedError
 
+    def __delitem__(self, key: int):
+        """
+        Try to delete  an idem by key.
+
+        :param key:
+        :type key:
+        :return:
+        :rtype:
+        """
+        keys = list(self._kwargs.keys())
+        item = self._kwargs[keys[key]]
+        self._borg.map.prune_vertex_from_edge(self, item)
+        del self._kwargs[keys[key]]
+
     def __len__(self) -> int:
         """
         Get the number of items in this collection
