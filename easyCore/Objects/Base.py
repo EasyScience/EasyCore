@@ -576,6 +576,18 @@ class Parameter(Descriptor):
         s.append("bounds=[%s:%s]" % (repr(self.min), repr(self.max)))
         return "%s>" % ', '.join(s)
 
+    def as_dict(self, skip: List[str] = None) -> dict:
+        """
+        Include enabled in the dict output as it's unfortunately skipped
+
+        :param skip: Which items to skip when serializing
+        :type skip: list
+        :return: Serialized dictionary
+        :rtype: dict
+        """
+        new_dict = super(Parameter, self).as_dict()
+        new_dict['enabled'] = self.enabled
+        return new_dict
 
 class BaseObj(MSONable):
     """
