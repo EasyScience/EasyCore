@@ -11,9 +11,13 @@ def _make_SG_names() -> list:
     for ind in range(1, 231):
         for op in SpaceGroup.SYMM_OPS:
             if op['number'] == ind:
-                sg_list.append(op['hermann_mauguin_fmt'])
+                s = op['hermann_mauguin_fmt']
+                if ':' in s:
+                    s = s.split(':')[0]
+                sg_list.append(s)
                 break
     return sg_list
+
 
 SG_NAMES = _make_SG_names()
 
@@ -59,7 +63,7 @@ class SpacegroupInfo:
 
     @staticmethod
     def get_symbol_from_int_number(int_number: int):
-        return SG_NAMES[int_number -1]
+        return SG_NAMES[int_number - 1]
 
     @staticmethod
     def get_compatible_HM_from_int(int_number: int):
@@ -79,4 +83,3 @@ class SpacegroupInfo:
         if not ints:
             raise AttributeError
         return ints[0]
-

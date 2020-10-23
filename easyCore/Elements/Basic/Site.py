@@ -106,19 +106,7 @@ class Site(BaseObj):
     def add_adp(self, adp_type: Union[str, AtomicDisplacement], **kwargs):
         if isinstance(adp_type, str):
             adp_type = AtomicDisplacement.from_pars(adp_type, interface=self.interface, **kwargs)
-        self.add_component(adp_type)
-
-    def add_component(self, component):
-        key = ''
-        if isinstance(component, AtomicDisplacement):
-            key = 'adp'
-        if not key:
-            raise ValueError
-        self._kwargs[key] = component
-        self._borg.map.add_edge(self, component)
-        self._borg.map.reset_type(component, 'created_internal')
-        addLoggedProp(self, key, self.__getter(key), self.__setter(key), get_id=key, my_self=self,
-                      test_class=BaseObj)
+        self._add_component('adp', adp_type)
 
     def __repr__(self) -> str:
         return f'Atom {self.name} ({self.specie.raw_value}) @' \
@@ -142,6 +130,7 @@ class Site(BaseObj):
         """
         Get the distance between two sites
 
+        :param other_site: Second site
         :param other_site: Second site
         :type other_site: Site
         :return: Distance between 2 sites

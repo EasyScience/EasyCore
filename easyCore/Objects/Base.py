@@ -589,6 +589,7 @@ class Parameter(Descriptor):
         new_dict['enabled'] = self.enabled
         return new_dict
 
+
 class BaseObj(MSONable):
     """
     This is the base class for which all higher level classes are built off of.
@@ -711,6 +712,13 @@ class BaseObj(MSONable):
             raise AttributeError
         self.interface.switch(new_interface_name)
         self.interface.generate_bindings(self)
+
+    def _add_component(self, key: str, component):
+        self._kwargs[key] = component
+        self._borg.map.add_edge(self, component)
+        self._borg.map.reset_type(component, 'created_internal')
+        addLoggedProp(self, key, self.__getter(key), self.__setter(key), get_id=key, my_self=self,
+                      test_class=BaseObj)
 
     @property
     def constraints(self) -> list:

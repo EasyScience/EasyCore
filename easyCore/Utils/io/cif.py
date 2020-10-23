@@ -672,7 +672,19 @@ class CifParser:
                     break
             if op is None:
                 pass
-            space_group = SpaceGroup.from_pars(op['hermann_mauguin_fmt'])
+            setting = ''
+            if ':' in sg:
+                setting = sg.split(':')[1]
+            setting_additional = 'space_group.IT_coordinate_system_code'
+            if setting_additional.lower() in lower_labels:
+                key_idx = lower_labels.index(setting_additional.lower())
+                real_symmetry_setting = list(data.keys())[key_idx]
+                setting = data.get(real_symmetry_setting).value
+                if isinstance(setting, float) and setting.is_integer():
+                    setting = int(setting)
+            setting = str(setting)
+            in_string = op['hermann_mauguin_fmt'].split(':')[0]
+            space_group = SpaceGroup.from_pars(in_string, setting=setting)
             if space_group is not None:
                 return space_group
 
@@ -829,6 +841,10 @@ class CifWriter:
         def parse_section(item: StarSection):
             if set(item.labels).issuperset(set(lattice_must)):
                 item.labels = lattice_conv
+            if set(item.labels).issuperset(set(sg_must)):
+                for idx, label in enumerate(sg_must):
+                    if label in item.labels:
+                        item.labels[item.labels.index(label)] = sg_conv[idx]
 
         def parse_entry(item: StarEntry):
             if item.name in sg_must:

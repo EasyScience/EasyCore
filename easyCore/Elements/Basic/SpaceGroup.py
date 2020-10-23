@@ -5,9 +5,8 @@ from copy import deepcopy
 from easyCore.Objects.Base import BaseObj, Descriptor
 from easyCore.Symmetry.groups import SpaceGroup as SpaceGroupOpts
 
-from easyCore.Utils.io.star import StarEntry
+from easyCore.Utils.io.star import StarEntry, StarSection, FakeCore, FakeItem
 from easyCore.Fitting.Constraints import ObjConstraint
-
 
 SG_DETAILS = {
     'space_group_HM_name': {
@@ -22,28 +21,35 @@ SG_DETAILS = {
 class SpaceGroup(BaseObj):
 
     def __init__(self, _space_group_HM_name: Descriptor, interface=None, setting=''):
-        super(SpaceGroup, self).__init__('space_group',
-                                         _space_group_HM_name=_space_group_HM_name)
         if setting and setting[0] != ':':
             setting = ':' + setting
+            in_value = self._space_group_HM_name.raw_value
+            if ':' in in_value:
+                setting = ':' + self._space_group_HM_name.raw_value.split(':')[1]
+            else:
+                self._space_group_HM_name.raw_value = self._space_group_HM_name.raw_value + setting
+        super(SpaceGroup, self).__init__('space_group',
+                                         _space_group_HM_name=_space_group_HM_name)
         self.setting = setting
-        self._sg_data = SpaceGroupOpts(self._space_group_HM_name.raw_value + self.setting)
+        self._sg_data = SpaceGroupOpts(self._space_group_HM_name.raw_value)
         self.interface = interface
         self._cell = None
 
     @classmethod
-    def from_pars(cls, _space_group_HM_name: str, interface=None):
-        setting = ''
+    def from_pars(cls, _space_group_HM_name: str, setting: str = '', interface=None):
         if ':' in _space_group_HM_name:
             opt = _space_group_HM_name.split(':')
-            setting =opt[1]
+            setting = opt[1]
             _space_group_HM_name = opt[0]
         default_options = deepcopy(SG_DETAILS)
         del default_options['space_group_HM_name']['value']
+        in_setting = setting
+        if setting:
+            in_setting = ':' + in_setting
         return cls(Descriptor('_space_group_HM_name',
-                              SpaceGroupOpts(_space_group_HM_name).hm_for_cif, **default_options['space_group_HM_name']),
-                        interface=interface, setting=setting)
-        return obj
+                              SpaceGroupOpts(_space_group_HM_name + in_setting).hm_for_cif,
+                              **default_options['space_group_HM_name']),
+                   interface=interface, setting=in_setting)
 
     @classmethod
     def default(cls, interface=None):
@@ -111,14 +117,29 @@ class SpaceGroup(BaseObj):
         return self._sg_data.get_orbit(p, tol=tol)
 
     def to_star(self):
-        return StarEntry(self.space_group_HM_name)
+        if ':' in self.space_group_HM_name.raw_value:
+            s = FakeCore()
+            s_list = self.space_group_HM_name.raw_value.split(':')
+            item = FakeItem(s_list[0])
+            item.name = '_space_group_HM_name'
+            s._kwargs['space_group_HM_name'] = item
+            item = FakeItem(s_list[1])
+            item.name = 'space_group.IT_coordinate_system_code'
+            s._kwargs['space_group.IT_coordinate_system_code'] = item
+            return StarSection(s)
+        else:
+            return StarEntry(self.space_group_HM_name)
 
     @classmethod
     def from_star(cls, in_string: str):
         return StarEntry.from_string(cls, in_string)
 
     def __repr__(self) -> str:
-        return "<Spacegroup: system: '{:s}', number: {}, H-M: '{:s}'>".format(self.crystal_system, self.int_number, self.hermann_mauguin)
+        out_str = "<Spacegroup: system: '{:s}', number: {}, H-M: '{:s}'".format(self.crystal_system, self.int_number,
+                                                                                self.hermann_mauguin)
+        if self.setting:
+            out_str = "{:s} setting: '{:s}'".format(out_str, self.setting)
+        return out_str + '>'
 
     def clear_sym(self, cell=None):
         if cell is None and self._cell is None:
@@ -128,7 +149,8 @@ class SpaceGroup(BaseObj):
         cell = self._cell
         pars = cell.get_parameters()
         for par in pars:
-            new_con = {con: par.constraints['user'][con] for con in par.constraints['user'].keys() if not con.startswith('sg_')}
+            new_con = {con: par.constraints['user'][con] for con in par.constraints['user'].keys() if
+                       not con.startswith('sg_')}
             par.constraints['user'] = new_con
             if not par.enabled:
                 par.enabled = True
@@ -150,9 +172,9 @@ class SpaceGroup(BaseObj):
 
         # Go through the cell systems
         if crys_system == "cubic":
-            cell.length_a.constraints['user']['sg_1'] = ObjConstraint(cell.length_b, '',  cell.length_a)
+            cell.length_a.constraints['user']['sg_1'] = ObjConstraint(cell.length_b, '', cell.length_a)
             cell.length_a.constraints['user']['sg_1']()
-            cell.length_a.constraints['user']['sg_2'] = ObjConstraint(cell.length_c, '',  cell.length_a)
+            cell.length_a.constraints['user']['sg_2'] = ObjConstraint(cell.length_c, '', cell.length_a)
             cell.length_a.constraints['user']['sg_2']()
             cell.angle_alpha = 90
             cell.angle_alpha.enabled = False
@@ -167,7 +189,7 @@ class SpaceGroup(BaseObj):
                 self.int_number in [143, 144, 145, 147, 149, 150, 151, 152,
                                     153, 154, 156, 157, 158, 159, 162, 163,
                                     164, 165])):
-            cell.length_a.constraints['user']['sg_1'] = ObjConstraint(cell.length_b, '',  cell.length_a)
+            cell.length_a.constraints['user']['sg_1'] = ObjConstraint(cell.length_b, '', cell.length_a)
             cell.length_a.constraints['user']['sg_1']()
             cell.angle_alpha = 90
             cell.angle_alpha.enabled = False
@@ -177,17 +199,17 @@ class SpaceGroup(BaseObj):
             cell.angle_gamma.enabled = False
             return
         if crys_system == "trigonal":
-            cell.length_a.constraints['user']['sg_1'] = ObjConstraint(cell.length_b, '',  cell.length_a)
+            cell.length_a.constraints['user']['sg_1'] = ObjConstraint(cell.length_b, '', cell.length_a)
             cell.length_a.constraints['user']['sg_1']()
-            cell.length_a.constraints['user']['sg_2'] = ObjConstraint(cell.length_c, '',  cell.length_a)
+            cell.length_a.constraints['user']['sg_2'] = ObjConstraint(cell.length_c, '', cell.length_a)
             cell.length_a.constraints['user']['sg_2']()
-            cell.angle_alpha.constraints['user']['sg_1'] = ObjConstraint(cell.angle_beta, '',  cell.angle_alpha)
+            cell.angle_alpha.constraints['user']['sg_1'] = ObjConstraint(cell.angle_beta, '', cell.angle_alpha)
             cell.angle_alpha.constraints['user']['sg_1']()
-            cell.angle_alpha.constraints['user']['sg_2'] = ObjConstraint(cell.angle_gamma, '',  cell.angle_alpha)
+            cell.angle_alpha.constraints['user']['sg_2'] = ObjConstraint(cell.angle_gamma, '', cell.angle_alpha)
             cell.angle_alpha.constraints['user']['sg_2']()
             return
         if crys_system == "tetragonal":
-            cell.length_a.constraints['user']['sg_1'] = ObjConstraint(cell.length_b, '',  cell.length_a)
+            cell.length_a.constraints['user']['sg_1'] = ObjConstraint(cell.length_b, '', cell.length_a)
             cell.length_a.constraints['user']['sg_1']()
             cell.angle_alpha = 90
             cell.angle_alpha.enabled = False
