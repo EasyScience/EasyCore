@@ -43,7 +43,7 @@ class ItemHolder:
                 self.error = item.error
 
     def _get_error_digits(self) -> int:
-        return len(f'{self.error}'.split('.')[-1])
+        return len(f'{round(self.error, self.decimal_places)}'.split('.')[-1])
 
     def __str__(self) -> str:
         s = "{}"
@@ -55,7 +55,9 @@ class ItemHolder:
                 digits = self._get_error_digits()
                 if digits > self.decimal_places:
                     v_in = [round(self.value, digits)]
-                v_in.append(int(self.error * 10 ** digits))
+                this_err = int(self.error * 10 ** digits)
+                v_in.append(this_err)
+                digits = digits - (len(str(this_err)) - 1)
                 s = "{" + f":0.0{digits}f" + "}({})"
             s = s.format(*v_in)
         if self.fixed is not None and not self.fixed and self.error is None:
