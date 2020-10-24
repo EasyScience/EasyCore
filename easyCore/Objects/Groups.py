@@ -78,12 +78,10 @@ class BaseCollection(MSONable, Sequence):
             return self.__class__(getattr(self, 'name'), *[self[i] for i in range(start, stop, step)])
         if str(idx) in self._kwargs.keys():
             return self._kwargs[str(idx)]
-        else:
-            if idx > len(self):
-                raise IndexError
-            else:
-                keys = list(self._kwargs.keys())
-                return self._kwargs[keys[idx]]
+        if idx > len(self):
+            raise IndexError
+        keys = list(self._kwargs.keys())
+        return self._kwargs[keys[idx]]
 
     def __setitem__(self, key: int, value: Number):
         """

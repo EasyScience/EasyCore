@@ -79,9 +79,7 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
         else:
             value = self._parse_operator(dependent_obj, *args, **kwargs)
 
-        if no_set:
-            return value
-        else:
+        if not no_set:
             toggle = False
             if not dependent_obj.enabled:
                 dependent_obj.enabled = True
@@ -89,6 +87,7 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
             dependent_obj.value = value
             if toggle:
                 dependent_obj.enabled = False
+        return value
 
     @abstractmethod
     def _parse_operator(self, obj: Union[Descriptor, Parameter], *args, **kwargs) -> Number:
@@ -98,7 +97,6 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
         :param obj: The object/objects which the constraint will use
         :return: A numeric result of the constraint logic
         """
-        pass
 
     @abstractmethod
     def __repr__(self):

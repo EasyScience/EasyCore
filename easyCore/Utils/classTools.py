@@ -51,5 +51,3 @@ def generatePath(model_obj, skip_first: bool = False) -> Tuple[List[int], List[s
         names.append('.'.join(objs[start_idx:]))
         ids.append(elem.int)
     return ids, names
-
-

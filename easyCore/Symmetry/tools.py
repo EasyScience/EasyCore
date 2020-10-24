@@ -32,18 +32,17 @@ class SpacegroupInfo:
     def get_ints_from_system(system: str) -> List[int]:
         if system == "triclinic":
             return list(range(1, 3))
-        elif system == "monoclinic":
+        if system == "monoclinic":
             return list(range(3, 16))
-        elif system == "orthorhombic":
+        if system == "orthorhombic":
             return list(range(16, 75))
-        elif system == "tetragonal":
+        if system == "tetragonal":
             return list(range(75, 143))
-        elif system == "trigonal":
+        if system == "trigonal":
             return list(range(143, 168))
-        elif system == "hexagonal":
+        if system == "hexagonal":
             return list(range(168, 195))
-        else:
-            return list(range(195, 231))
+        return list(range(195, 231))
 
     @staticmethod
     def get_system_from_int(int_number: int):

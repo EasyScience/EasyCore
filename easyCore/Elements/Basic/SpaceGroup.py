@@ -127,8 +127,7 @@ class SpaceGroup(BaseObj):
             item.name = 'space_group.IT_coordinate_system_code'
             s._kwargs['space_group.IT_coordinate_system_code'] = item
             return StarSection(s)
-        else:
-            return StarEntry(self.space_group_HM_name)
+        return StarEntry(self.space_group_HM_name)
 
     @classmethod
     def from_star(cls, in_string: str):
