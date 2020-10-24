@@ -112,8 +112,7 @@ class Graph:
     def get_item_by_key(self, item_id: int) -> object:
         if item_id in self._store.keys():
             return self._store[item_id]
-        else:
-            raise ValueError
+        raise ValueError
 
     def is_known(self, vertex: object) -> bool:
         return self.convert_id(vertex).int in self._store.keys()

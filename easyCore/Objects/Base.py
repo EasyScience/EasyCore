@@ -210,8 +210,7 @@ class Descriptor(MSONable):
                 self._borg.stack.history.popleft()
             if borg.debug:
                 raise CoreSetException(f'{str(self)} is not enabled.')
-            else:
-                return
+            return
         self.__deepValueSetter(value)
         if self._callback.fset is not None:
             try:

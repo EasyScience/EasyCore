@@ -38,7 +38,7 @@ class Fitter:
         self.create()
 
         fit_methods = [x for x, y in Fitting.FittingTemplate.__dict__.items()
-                       if type(y) == FunctionType
+                       if isinstance(y, FunctionType)
                        and not x.startswith('_')]
         for method_name in fit_methods:
             setattr(self, method_name, self.__pass_through_generator(method_name))

@@ -308,56 +308,6 @@ class CifParser:
         specification being finalized (on advice of Branton Campbell).
         """
 
-        # if self.feature_flags["magcif"]:
-        #
-        #     raise NotImplementedError
-        #
-        #     # CIF-1 style has all underscores, interim standard
-        #     # had period before magn instead of before the final
-        #     # component (e.g. xyz)
-        #     # we want to standardize on a specific key, to simplify
-        #     # parsing code
-        #     correct_keys = ["_space_group_symop_magn_operation.xyz",
-        #                     "_space_group_symop_magn_centering.xyz",
-        #                     "_space_group_magn.name_BNS",
-        #                     "_space_group_magn.number_BNS",
-        #                     "_atom_site_moment_crystalaxis_x",
-        #                     "_atom_site_moment_crystalaxis_y",
-        #                     "_atom_site_moment_crystalaxis_z",
-        #                     "_atom_site_moment_label"]
-        #
-        #     # cannot mutate OrderedDict during enumeration,
-        #     # so store changes we want to make
-        #     changes_to_make = {}
-        #
-        #     for original_key in data.data:
-        #         for correct_key in correct_keys:
-        #             # convert to all underscore
-        #             trial_key = "_".join(correct_key.split("."))
-        #             test_key = "_".join(original_key.split("."))
-        #             if trial_key == test_key:
-        #                 changes_to_make[correct_key] = original_key
-        #
-        #     # make changes
-        #     for correct_key, original_key in changes_to_make.items():
-        #         data.data[correct_key] = data.data[original_key]
-        #
-        #     # renamed_keys maps interim_keys to final_keys
-        #     renamed_keys = {
-        #         "_magnetic_space_group.transform_to_standard_Pp_abc":
-        #             "_space_group_magn.transform_BNS_Pp_abc"}
-        #     changes_to_make = {}
-        #
-        #     for interim_key, final_key in renamed_keys.items():
-        #         if data.data.get(interim_key):
-        #             changes_to_make[final_key] = interim_key
-        #
-        #     if len(changes_to_make) > 0:
-        #         self.warnings.append("Keys changed to match new magCIF specification.")
-        #
-        #     for final_key, interim_key in changes_to_make.items():
-        #         data.data[final_key] = data.data[interim_key]
-
         # check for finite precision frac co-ordinates (e.g. 0.6667 instead of 0.6666666...7)
         # this can sometimes cause serious issues when applying symmetry operations
         important_fracs = (1 / 3., 2 / 3.)
