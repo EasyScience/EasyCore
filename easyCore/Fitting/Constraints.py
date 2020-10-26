@@ -1,6 +1,8 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
+import weakref
+
 from abc import abstractmethod, ABCMeta
 
 from asteval import Interpreter
@@ -29,6 +31,7 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
         self.independent_obj_ids = None
         self._enabled = True
         self.external = False
+        self._finalizer = None
         if independent_obj is not None:
             if isinstance(independent_obj, list):
                 self.independent_obj_ids = [self.get_key(obj) for obj in independent_obj]
@@ -41,6 +44,7 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
                     print(f'Dependent variable {dependent_obj}. It should be a `Descriptor`.'
                           f'Setting to fixed')
                 dependent_obj.enabled = False
+                self._finalizer = weakref.finalize(self, cleanup_constraint, self.dependent_obj_ids, True)
 
         self.operator = operator
         self.value = value
@@ -255,3 +259,8 @@ class FunctionalConstraint(ConstraintBase):
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}'
+
+
+def cleanup_constraint(obj_id, enabled):
+    obj = borg.map.get_item_by_key(obj_id)
+    obj.enabled = enabled
