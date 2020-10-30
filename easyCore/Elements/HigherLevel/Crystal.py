@@ -53,35 +53,16 @@ class Crystal(BaseObj):
     def remove_atom(self, key):
         del self.atoms[key]
 
-    def _generate_positions(self, atom_index):
-        if self.spacegroup is None:
-            return {atom.label: atom.fract_coords for atom in self.atoms}
+    def _generate_positions(self, site) -> np.ndarray:
+        """
+        Generate all orbits for a given fractional position.
 
-        sym_op = self.spacegroup.symmetry_opts
-        offsets = np.array(np.meshgrid(range(-1, self.extent[0] + 1),
-                                       range(-1, self.extent[1] + 1),
-                                       range(-1, self.extent[2] + 1))).T.reshape(-1, 3)
-        site = self.atoms[atom_index]
-        all_sites = np.array([op.operate(site.fract_coords) for op in sym_op])
-        for offset in offsets[1:, :]:
-            all_sites = np.concatenate((all_sites,
-                                        np.array([op.operate(site.fract_coords + offset) for op in sym_op])),
-                                       axis=0)
-        unique = np.unique(all_sites, axis=0)
-        return all_sites, unique
-
-    def site_multiplicity(self) -> Dict[str, list]:
-        sites = {}
-        for site_idx, site in enumerate(self.atoms):
-            all_sites, unique = self._generate_positions(site_idx)
-            unique = unique[np.all(unique >= -self.atom_tolerance, axis=1) & \
-                            np.all(unique <= self.extent + self.atom_tolerance, axis=1), :]
-            sites[site.label.raw_value] = []
-            for item in unique:
-                sites[site.label.raw_value].append([item,
-                                                    sum(np.all((all_sites > item - 1e-3) & (all_sites < item + 1e-3),
-                                                               axis=1))])
-        return sites
+        """
+        sym_op = self.spacegroup._sg_data.get_orbit
+        offsets = np.array(np.meshgrid(range(0, self.extent[0] + 1),
+                                       range(0, self.extent[1] + 1),
+                                       range(0, self.extent[2] + 1))).T.reshape(-1, 3)
+        return np.apply_along_axis(np.add, 1, offsets, np.array(sym_op(site.fract_coords))).reshape((-1, 3))
 
     def all_sites(self) -> Dict[str, np.ndarray]:
         """
@@ -91,10 +72,13 @@ class Crystal(BaseObj):
         (0, 0, 0) -> obj.extent
         :rtype: Dict[str, np.ndarray]
         """
+        if self.spacegroup is None:
+            return {atom.label: atom.fract_coords for atom in self.atoms}
+
         sites = {}
-        for site_idx, site in enumerate(self.atoms):
-            all_sites, unique = self._generate_positions(site_idx)
-            site_positions = unique - self.center
+        for site in self.atoms:
+            unique_sites = self._generate_positions(site)
+            site_positions = unique_sites - self.center
             sites[site.label.raw_value] = \
                 site_positions[np.all(site_positions >= -self.atom_tolerance, axis=1) &
                                np.all(site_positions <= self.extent + self.atom_tolerance, axis=1),
