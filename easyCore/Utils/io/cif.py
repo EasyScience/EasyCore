@@ -412,7 +412,8 @@ class CifParser:
             raise AttributeError
         loops = self._cif[cif_index]['loops']
 
-        atoms = Atoms('sites')
+        atoms_obj_name = 'atoms'
+        atoms = Atoms(atoms_obj_name)
         # We should have parsed the loop so that there is at least the following
         required_fields = ['atom_site_label', 'atom_site_type_symbol', 'atom_site_occupancy', 'atom_site_fract_x',
                            'atom_site_fract_y',
@@ -430,6 +431,7 @@ class CifParser:
                         this_loop.data[idx]._kwargs[key] = loop.data[idx]._kwargs[key]
                 atoms = this_loop.to_class(Atoms, Site,
                                            [[k1, k2] for k1, k2 in zip(our_fields, required_fields)])
+                atoms.name = atoms_obj_name
                 for idx0, atom in enumerate(atoms):
                     for idx, key in enumerate(our_fields):
                         obj = getattr(atom, key)
@@ -482,8 +484,8 @@ class CifParser:
                                 temp_value = section.data[0]._kwargs[key].raw_value
                                 if not isinstance(temp_value, Number):
                                     temp_value = 0
-                                    self.warnings.append(
-                                        f'Atom {section.data[0]._kwargs[needed_labels[0]].raw_value} has non-numeric '
+                                    self.append = self.warnings.append(
+                                        f'Atom {section.data[0]._kwargs[needed_labels[0]].raw_value} has non-numeric ' \
                                         f'{key}. Setting to 0')
                                 data_dict[adp_types[adp_type][idx2]] = temp_value
                             adps = AtomicDisplacement.from_pars(adp_type, **data_dict)

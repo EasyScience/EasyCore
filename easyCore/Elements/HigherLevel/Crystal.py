@@ -23,7 +23,7 @@ class Crystal(BaseObj):
         if cell is None:
             cell = Cell.default()
         if atoms is None:
-            atoms = Atoms('atom_list')
+            atoms = Atoms('atoms')
 
         super(Crystal, self).__init__(name,
                                       cell=cell,
