@@ -40,7 +40,7 @@ class BaseCollection(MSONable, Sequence):
         self.name = name
 
         for arg in args:
-            if issubclass(arg.__class__, (BaseObj, Descriptor, BaseCollection, BaseCollection)):
+            if issubclass(arg.__class__, (BaseObj, Descriptor, Parameter, BaseCollection)):
                 kwargs[str(borg.map.convert_id_to_key(arg))] = arg
 
         # Set kwargs, also useful for serialization
