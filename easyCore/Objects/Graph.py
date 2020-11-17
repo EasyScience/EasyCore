@@ -30,6 +30,9 @@ class _EntryList(list):
         s += 'a finalizer.'
         return s
 
+    def __delitem__(self, key):
+        super(_EntryList, self).__delitem__(key)
+
     def remove_type(self, old_type: str):
         if old_type in self.__known_types and old_type in self._type:
             self._type.remove(old_type)
@@ -106,11 +109,10 @@ class Graph:
     def returned_objs(self) -> List[int]:
         return self._nested_get('returned')
 
-    def get_item_by_id(self, item_id: int) -> object:
+    def get_item_by_key(self, item_id: int) -> object:
         if item_id in self._store.keys():
             return self._store[item_id]
-        else:
-            raise ValueError
+        raise ValueError
 
     def is_known(self, vertex: object) -> bool:
         return self.convert_id(vertex).int in self._store.keys()
@@ -156,6 +158,13 @@ class Graph:
                     edges.append({vertex, neighbour})
         return edges
 
+    def prune_vertex_from_edge(self, parent_obj, child_obj):
+        vertex1 = self.convert_id(parent_obj).int
+        vertex2 = self.convert_id(child_obj).int
+
+        if vertex1 in self.__graph_dict.keys() and vertex2 in self.__graph_dict[vertex1]:
+            del self.__graph_dict[vertex1][self.__graph_dict[vertex1].index(vertex2)]
+
     def prune(self, key: int):
         if key in self.__graph_dict.keys():
             del self.__graph_dict[key]
@@ -174,8 +183,12 @@ class Graph:
         """ find a path from start_vertex to end_vertex
             in graph """
 
-        start_vertex = self.convert_id(start_obj).int
-        end_vertex = self.convert_id(end_obj).int
+        try:
+            start_vertex = self.convert_id(start_obj).int
+            end_vertex = self.convert_id(end_obj).int
+        except TypeError:
+            start_vertex = start_obj
+            end_vertex = end_obj
 
         graph = self.__graph_dict
         path = path + [start_vertex]
@@ -228,8 +241,8 @@ class Graph:
         """
         end_vertex = self.convert_id(end_obj).int
 
-        if end_vertex in self.find_isolated_vertices():
-            return []
+        # if end_vertex in self.find_isolated_vertices():
+        #     return []
 
         path_length = sys.maxsize
         optimum_path = []
@@ -237,7 +250,7 @@ class Graph:
             # We now have to find where to begin.....
             for possible_start, vertices in self.__graph_dict.items():
                 if end_vertex in vertices:
-                    temp_path = self.find_path(possible_start, end_obj)
+                    temp_path = self.find_path(possible_start, end_vertex)
                     if len(temp_path) < path_length:
                         path_length = len(temp_path)
                         optimum_path = temp_path

@@ -2,18 +2,18 @@ __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
 import numbers
-import numpy as np
 import weakref
 
 from copy import deepcopy
 from typing import List, Union, Any, Iterable
-# from functools import cached_property
 
-from easyCore import borg, ureg
+from easyCore import borg, ureg, np
 from easyCore.Utils.classTools import addLoggedProp, addProp
+from easyCore.Utils.Exceptions import CoreSetException
 from easyCore.Utils.typing import noneType
 from easyCore.Utils.UndoRedo import stack_deco
 from easyCore.Utils.json import MSONable
+from easyCore.Fitting.Constraints import SelfConstraint
 
 Q_ = ureg.Quantity
 M_ = ureg.Measurement
@@ -38,6 +38,7 @@ class Descriptor(MSONable):
                  url: str = '',
                  display_name: str = None,
                  callback: property = property(),
+                 enabled: bool = True,
                  parent=None):  # noqa: S107
         """
         Class to describe a static-property. i.e Not a property which is fitable. The value and unit of this property
@@ -84,6 +85,8 @@ class Descriptor(MSONable):
         self._args['value'] = value
         self._args['units'] = str(self.unit)
         self._value = self.__class__._constructor(**self._args)
+
+        self._enabled = enabled
 
         self.description: str = description
         self._display_name: str = display_name
@@ -202,12 +205,18 @@ class Descriptor(MSONable):
         :return: None
         :rtype: noneType
         """
+        if not self.enabled:
+            if self._borg.stack.enabled:
+                self._borg.stack.history.popleft()
+            if borg.debug:
+                raise CoreSetException(f'{str(self)} is not enabled.')
+            return
         self.__deepValueSetter(value)
         if self._callback.fset is not None:
             try:
                 self._callback.fset(value)
             except Exception as e:
-                raise e
+                raise CoreSetException(e)
 
     @property
     def raw_value(self):
@@ -224,18 +233,35 @@ class Descriptor(MSONable):
                 value = value.nominal_value
         return value
 
-    def _validator(self, value: Any):
+    @property
+    def enabled(self) -> bool:
         """
-        Check that type is consistent. We don't want to assign a float to a string etc.
+        Logical property to see if the objects value can be directly set.
 
-        :param value: Value to be checked
-        :type value: Any
-        :return: None
-        :rtype: noneType
+        :return: Can the objects value be set
+        :rtype: bool
         """
-        assert isinstance(value, self._type)
+        return self._enabled
+
+    @enabled.setter
+    @stack_deco
+    def enabled(self, value: bool):
+        """
+        Enable and disable the direct setting of an objects value field.
+
+        :param value: True - objects value can be set, False - the opposite
+        :type value: bool
+        """
+        self._enabled = value
 
     def convert_unit(self, unit_str: str):
+        """
+        Convert the value from one unit system to another. You will should use
+        `compatible_units` to see if your new unit is compatible.
+
+        :param unit_str: New unit in string form
+        :type unit_str: str
+        """
         new_unit = ureg.parse_expression(unit_str)
         self._value = self._value.to(new_unit)
         self._units = new_unit
@@ -255,10 +281,15 @@ class Descriptor(MSONable):
 
     def __repr__(self):
         """Return printable representation of a Parameter object."""
-        sval = "= %s" % self._value.magnitude
-        if not self.value.unitless:
-            sval += ' %s' % self.unit
-        return "<%s '%s' %s>" % (self.__class__.__name__, self.name, sval)
+        out_str = "<{:s} '{:s}': {:0.04f} {:~P}>".format(self.__class__.__name__,
+                                                      self.name,
+                                                      self._value.magnitude,
+                                                      self.unit)
+
+        # Fix formatting for dimensionless
+        if out_str[-2] == ' ':
+            out_str = out_str[:-2] + '>'
+        return out_str
 
     def as_dict(self, skip: list = None) -> dict:
         """
@@ -272,10 +303,9 @@ class Descriptor(MSONable):
         super_dict = super().as_dict(skip=skip + ['parent', 'callback', '_finalizer'])
         super_dict['value'] = self.raw_value
         super_dict['units'] = self._args['units']
-        # We'll have to serialize the callback option :face_palm:
-        # keys = super_dict.keys()
-        # if 'parent' in keys:
-        #     del super_dict['parent']
+        # Attach the id. This might be useful in connected applications.
+        # Note that it is converted to int and then str because javascript....
+        super_dict['@id'] = str(self._borg.map.convert_id(self).int)
         return super_dict
 
     def to_obj_type(self, data_type: Union['Descriptor', 'Parameter'], *kwargs):
@@ -316,7 +346,7 @@ class Parameter(Descriptor):
         Class to describe a dynamic-property which can be optimised. It inherits from `Descriptor`
         and can as such be serialised.
 
-        :param name: Name of this object
+        :param name: Name of this obj
         :type name: str
         :param value: Value of this object
         :type value: Any
@@ -347,6 +377,7 @@ class Parameter(Descriptor):
             raise ValueError("Standard deviation `error` must be positive")
 
         super().__init__(name, value, **kwargs)
+        self._args['units'] = str(self.unit)
 
         # Create additional fitting elements
         self._min: numbers.Number = min
@@ -354,20 +385,14 @@ class Parameter(Descriptor):
         self._fixed: bool = fixed
         self.initial_value = self.value
         self.constraints: dict = {
-            'user':     [],
-            'physical': [],
-            'builtin':  [Constraint(lambda x: x < self.min, self.min),
-                         Constraint(lambda x: x > self.max, self.max)]
+            'user':    {},
+            'builtin': {'min': SelfConstraint(self, '>=', '_min'),
+                        'max': SelfConstraint(self, '<=', '_max')}
         }
         # This is for the serialization. Otherwise we wouldn't catch the values given to `super()`
         self._kwargs = kwargs
         # Monkey patch the unit and the value to take into account the new max/min situation
         self.__previous_set = self.__class__.value.fset
-        # self.__previous_unit = self.__class__.unit
-
-        # setattr(self.__class__, 'unit', property(fget=self.__class__.unit.fget,
-        #                                          fset=lambda obj, val: obj.__unit_setter(val),
-        #                                          fdel=self.__class__.unit.fdel))
 
         addProp(self, 'value',
                 fget=self.__class__.value.fget,
@@ -500,16 +525,7 @@ class Parameter(Descriptor):
         self._args['error'] = value
         self._value = self.__class__._constructor(**self._args)
 
-    # def for_fit(self):
-    #     """
-    #     Coverts oneself into a type which can be used for fitting. Note that the type
-    #     is dependent on the fitting engine selected.
-    #
-    #     :return: parameter for fitting
-    #     """
-    #     return self._borg.fitting_engine.convert_to_par_object(self)
-
-    def _validate(self, value: Any):
+    def _validate(self, value: numbers.Number):
         """
         Verify value against constraints. This hasn't really been implemented as fitting is tricky.
 
@@ -518,11 +534,34 @@ class Parameter(Descriptor):
         :return: new value from constraint
         :rtype: Any
         """
-        new_value = value
-        for constraint in self.constraints.values():
-            for test in constraint:
-                if test(value):
-                    new_value = test.value()
+        # Save the old state and create the new state
+        old_value = self._value
+        self._value = self.__class__._constructor(value=value, units=self._args['units'], error=self._args['error'])
+
+        def constraint_runner(this_constraint_type: dict, newer_value: numbers.Number):
+            for constraint in this_constraint_type.values():
+                if constraint.external:
+                    constraint()
+                    return newer_value
+                this_new_value = constraint(no_set=True)
+                if this_new_value != newer_value:
+                    if borg.debug:
+                        print(f'Constraint `{constraint}` has been applied')
+                    self._value = self.__class__._constructor(value=this_new_value, units=self._args['units'],
+                                                              error=self._args['error'])
+                newer_value = this_new_value
+            return newer_value
+
+        # First run the built in constraints. i.e. min/max
+        constraint_type: dict = self.constraints['builtin']
+        new_value = constraint_runner(constraint_type, value)
+        # Then run any user constraints.
+        constraint_type: dict = self.constraints['user']
+        new_value = constraint_runner(constraint_type, new_value)
+
+        # Restore to the old state
+        self._value = old_value
+        # Return the new value to be set
         return new_value
 
     def __repr__(self):
@@ -536,21 +575,18 @@ class Parameter(Descriptor):
         s.append("bounds=[%s:%s]" % (repr(self.min), repr(self.max)))
         return "%s>" % ', '.join(s)
 
+    def as_dict(self, skip: List[str] = None) -> dict:
+        """
+        Include enabled in the dict output as it's unfortunately skipped
 
-class Constraint:
-    """
-    Toy constraint class. This need to be improved.
-    """
-
-    def __init__(self, validator, fail_value):
-        self._validator = validator
-        self._fail_value = fail_value
-
-    def __call__(self, *args, **kwargs):
-        return self._validator(*args, **kwargs)
-
-    def value(self):
-        return self._fail_value
+        :param skip: Which items to skip when serializing
+        :type skip: list
+        :return: Serialized dictionary
+        :rtype: dict
+        """
+        new_dict = super(Parameter, self).as_dict()
+        new_dict['enabled'] = self.enabled
+        return new_dict
 
 
 class BaseObj(MSONable):
@@ -578,34 +614,24 @@ class BaseObj(MSONable):
 
         self._borg.map.add_vertex(self, obj_type='created')
         self.interface = None
+        self.user_data: dict = {}
         self.__dict__['name'] = name
         # If Parameter or Descriptor is given as arguments...
         for arg in args:
             if issubclass(arg.__class__, (BaseObj, Descriptor)):
-                kwargs[arg.name] = arg
+                kwargs[getattr(arg, 'name')] = arg
         # Set kwargs, also useful for serialization
         known_keys = self.__dict__.keys()
         self._kwargs = kwargs
         for key in kwargs.keys():
             if key in known_keys:
                 raise AttributeError
-            if issubclass(kwargs[key].__class__, (BaseObj, Descriptor)):
+            if issubclass(kwargs[key].__class__, (BaseObj, Descriptor)) or \
+                    'BaseCollection' in [c.__name__ for c in type(kwargs[key]).__bases__]:
                 self._borg.map.add_edge(self, kwargs[key])
                 self._borg.map.reset_type(kwargs[key], 'created_internal')
             addLoggedProp(self, key, self.__getter(key), self.__setter(key), get_id=key, my_self=self,
                           test_class=BaseObj)
-
-    # def fit_objects(self):
-    #     """
-    #     Collect all objects which can be fitted, convert them to fitting engine objects and
-    #     return them as a list.
-    #
-    #     :return: List of fitting engine objects
-    #     """
-    #     return_objects = []
-    #     for par_obj in self.get_fit_parameters():
-    #         return_objects.append(par_obj.for_fit())
-    #     return return_objects
 
     def get_parameters(self) -> List[Parameter]:
         """
@@ -633,7 +659,7 @@ class BaseObj(MSONable):
         for key, item in self._kwargs.items():
             if hasattr(item, 'get_fit_parameters'):
                 fit_list = [*fit_list, *item.get_fit_parameters()]
-            elif isinstance(item, Parameter) and not item.fixed:
+            elif isinstance(item, Parameter) and item.enabled and not item.fixed:
                 fit_list.append(item)
         return fit_list
 
@@ -662,6 +688,9 @@ class BaseObj(MSONable):
         for key, item in d.items():
             if hasattr(item, 'as_dict'):
                 d[key] = item.as_dict(skip=skip)
+        # Attach the id. This might be useful in connected applications.
+        # Note that it is converted to int and then str because javascript....
+        d['@id'] = str(self._borg.map.convert_id(self).int)
         return d
 
     def generate_bindings(self):
@@ -682,6 +711,23 @@ class BaseObj(MSONable):
             raise AttributeError
         self.interface.switch(new_interface_name)
         self.interface.generate_bindings(self)
+
+    def _add_component(self, key: str, component):
+        self._kwargs[key] = component
+        self._borg.map.add_edge(self, component)
+        self._borg.map.reset_type(component, 'created_internal')
+        addLoggedProp(self, key, self.__getter(key), self.__setter(key), get_id=key, my_self=self,
+                      test_class=BaseObj)
+
+    @property
+    def constraints(self) -> list:
+        pars = self.get_parameters()
+        constraints = []
+        for par in pars:
+            con = par.constraints['user']
+            for key in con.keys():
+                constraints.append(con[key])
+        return constraints
 
     @staticmethod
     def __getter(key: str):

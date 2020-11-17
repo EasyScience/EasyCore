@@ -3,13 +3,15 @@ __version__ = '0.0.1'
 
 from copy import deepcopy
 
-import numpy as np
+from easyCore import np
 from typing import Tuple, Union, List
 
 from easyCore import ureg
 from easyCore.Utils.decorators import memoized
 from easyCore.Utils.typing import Vector3Like
 from easyCore.Objects.Base import Parameter, BaseObj
+
+from easyCore.Utils.io.star import StarSection
 
 CELL_DETAILS = {
     'length': {
@@ -36,14 +38,15 @@ CELL_DETAILS = {
 class Cell(BaseObj):
 
     def __init__(self, length_a: Parameter, length_b: Parameter, length_c: Parameter,
-                 angle_alpha: Parameter, angle_beta: Parameter, angle_gamma: Parameter):
-        super().__init__('crystallographic_cell',
+                 angle_alpha: Parameter, angle_beta: Parameter, angle_gamma: Parameter, interface=None):
+        super().__init__('cell',
                          length_a=length_a, length_b=length_b, length_c=length_c,
                          angle_alpha=angle_alpha, angle_beta=angle_beta, angle_gamma=angle_gamma)
+        self.interface = interface
 
     # Class constructors
     @classmethod
-    def default(cls) -> "Cell":
+    def default(cls, interface=None) -> "Cell":
         """
         Default constructor for a crystallographic unit cell.
 
@@ -56,11 +59,12 @@ class Cell(BaseObj):
         angle_alpha = Parameter('angle_alpha', **CELL_DETAILS['angle'])
         angle_beta = Parameter('angle_beta', **CELL_DETAILS['angle'])
         angle_gamma = Parameter('angle_gamma', **CELL_DETAILS['angle'])
-        return cls(length_a, length_b, length_c, angle_alpha, angle_beta, angle_gamma)
+        return cls(length_a, length_b, length_c, angle_alpha, angle_beta, angle_gamma, interface=interface)
 
     @classmethod
-    def from_parameters(cls, length_a: float, length_b: float, length_c: float,
-                        angle_alpha: float, angle_beta: float, angle_gamma: float, ang_unit: str = 'deg') -> "Cell":
+    def from_pars(cls, length_a: float, length_b: float, length_c: float,
+                  angle_alpha: float, angle_beta: float, angle_gamma: float, ang_unit: str = 'deg',
+                  interface=None) -> "Cell":
         """
         Constructor of a crystallographic unit cell when parameters are known.
 
@@ -98,10 +102,10 @@ class Cell(BaseObj):
         angle_gamma = Parameter('angle_gamma', angle_gamma, **default_options['angle'])
 
         return cls(length_a=length_a, length_b=length_b, length_c=length_c,
-                   angle_alpha=angle_alpha, angle_beta=angle_beta, angle_gamma=angle_gamma)
+                   angle_alpha=angle_alpha, angle_beta=angle_beta, angle_gamma=angle_gamma, interface=interface)
 
     @classmethod
-    def from_matrix(cls, matrix: Union[List[float], List[List[float]], np.ndarray]) -> "Cell":
+    def from_matrix(cls, matrix: Union[List[float], List[List[float]], np.ndarray], interface=None) -> "Cell":
         """
         Construct a crystallographic unit cell from the lattice matrix
 
@@ -121,10 +125,10 @@ class Cell(BaseObj):
             angles[i] = np.dot(matrix[j], matrix[k]) / (lengths[j] * lengths[k])
             angles[i] = max(min(angles[i], 1), - 1)
         angles = np.arccos(angles) * 180.0 / np.pi
-        return cls.from_parameters(*lengths, *angles)
+        return cls.from_pars(*lengths, *angles, interface=interface)
 
     @classmethod
-    def cubic(cls, a: float) -> "Cell":
+    def cubic(cls, a: float, interface=None) -> "Cell":
         """
         Convenience constructor for a cubic lattice.
 
@@ -133,10 +137,10 @@ class Cell(BaseObj):
         :return: Crystallographic unit cell container
         :rtype: Cell
         """
-        return cls.from_parameters(a, a, a, 90, 90, 90)
+        return cls.from_pars(a, a, a, 90, 90, 90, interface=interface)
 
     @classmethod
-    def tetragonal(cls, a: float, c: float) -> "Cell":
+    def tetragonal(cls, a: float, c: float, interface=None) -> "Cell":
         """
         Convenience constructor for a tetragonal lattice.
 
@@ -147,10 +151,10 @@ class Cell(BaseObj):
         :return: Crystallographic unit cell container
         :rtype: Cell
         """
-        return cls.from_parameters(a, a, c, 90, 90, 90)
+        return cls.from_pars(a, a, c, 90, 90, 90, interface=interface)
 
     @classmethod
-    def orthorhombic(cls, a: float, b: float, c: float) -> "Cell":
+    def orthorhombic(cls, a: float, b: float, c: float, interface=None) -> "Cell":
         """
         Convenience constructor for an orthorhombic lattice.
 
@@ -163,10 +167,10 @@ class Cell(BaseObj):
         :return: Crystallographic unit cell container
         :rtype: Cell
         """
-        return cls.from_parameters(a, b, c, 90, 90, 90)
+        return cls.from_pars(a, b, c, 90, 90, 90, interface=interface)
 
     @classmethod
-    def monoclinic(cls, a: float, b: float, c: float, beta: float) -> "Cell":
+    def monoclinic(cls, a: float, b: float, c: float, beta: float, interface=None) -> "Cell":
         """
         Convenience constructor for a monoclinic lattice of dimensions a x b x c with non right-angle
         beta between lattice vectors a and c.
@@ -182,10 +186,10 @@ class Cell(BaseObj):
         :return: Crystallographic unit cell container
         :rtype: Cell
         """
-        return cls.from_parameters(a, b, c, 90, beta, 90)
+        return cls.from_pars(a, b, c, 90, beta, 90, interface=interface)
 
     @classmethod
-    def hexagonal(cls, a: float, c: float) -> "Cell":
+    def hexagonal(cls, a: float, c: float, interface=None) -> "Cell":
         """
         Convenience constructor for a hexagonal lattice of dimensions a x a x c
 
@@ -196,10 +200,10 @@ class Cell(BaseObj):
         :return: Crystallographic unit cell container
         :rtype: Cell
         """
-        return cls.from_parameters(a, a, c, 90, 90, 120)
+        return cls.from_pars(a, a, c, 90, 90, 120, interface=interface)
 
     @classmethod
-    def rhombohedral(cls, a: float, alpha: float) -> "Cell":
+    def rhombohedral(cls, a: float, alpha: float, interface=None) -> "Cell":
         """
         Convenience constructor for a rhombohedral lattice of dimensions a x a x a.
 
@@ -210,7 +214,7 @@ class Cell(BaseObj):
         :return: Crystallographic unit cell container
         :rtype: Cell
         """
-        return cls.from_parameters(a, a, a, alpha, alpha, alpha)
+        return cls.from_pars(a, a, a, alpha, alpha, alpha, interface=interface)
 
     # Dynamic properties
     @property
@@ -421,7 +425,7 @@ class Cell(BaseObj):
         :rtype: Cell
         """
         v = np.linalg.inv(self.matrix).T
-        return self.__class__.from_matrix(v * 2 * np.pi)
+        return self.__class__.from_matrix(v * 2 * np.pi, interface=self.interface)
 
     @property
     def reciprocal_lattice_crystallographic(self) -> "Cell":
@@ -432,7 +436,7 @@ class Cell(BaseObj):
         :return: New cell in the *crystallographic* reciprocal lattice
         :rtype: Cell
         """
-        return Cell.from_matrix(self.reciprocal_lattice.matrix / (2 * np.pi))
+        return self.__class__.from_matrix(self.reciprocal_lattice.matrix / (2 * np.pi), interface=self.interface)
 
     def scale(self, new_volume: float) -> "Cell":
         """
@@ -451,7 +455,7 @@ class Cell(BaseObj):
         geo_factor = np.abs(np.dot(np.cross(versors[0], versors[1]), versors[2]))
         ratios = np.array(lengths) / lengths[2]
         new_c = (new_volume / (geo_factor * np.prod(ratios))) ** (1 / 3.0)
-        return self.__class__.from_matrix(versors * (new_c * ratios))
+        return self.__class__.from_matrix(versors * (new_c * ratios), interface=self.interface)
 
     def scale_lengths(self, length_scales: Union[float, Vector3Like]) -> "Cell":
         """
@@ -466,7 +470,7 @@ class Cell(BaseObj):
         if isinstance(length_scales, float):
             length_scales = 3 * [length_scales]
         new_lengths = np.array(length_scales) * np.array(self.lengths)
-        return self.__class__.from_parameters(*new_lengths, *self.angles)
+        return self.__class__.from_pars(*new_lengths, *self.angles, interface=self.interface)
 
     # Get functions
     def get_cartesian_coords(self, fractional_coords: Vector3Like) -> np.ndarray:
@@ -589,8 +593,17 @@ class Cell(BaseObj):
         return np.array([vector_a, vector_b, vector_c], dtype=np.float64)
 
     def __repr__(self) -> str:
-        return 'Cell: (a:{:.2f}, b:{:.2f}, c:{:.2f}, alpha:{:.2f}, beta:{:.2f}, gamma:{:.2f}) '.format(self.a, self.b,
-                                                                                                       self.c,
-                                                                                                       self.alpha,
-                                                                                                       self.beta,
-                                                                                                       self.gamma)
+        return '<Cell: (a: {:.2f} {:~P}, b: {:.2f} {:~P}, c: {:.2f}{:~P}, alpha: {:.2f} {:~P}, beta: {:.2f} {:~P}, ' \
+               'gamma: {:.2f} {:~P}>'.format(self.length_a.raw_value, self.length_a.unit,
+                                              self.length_b.raw_value, self.length_b.unit,
+                                              self.length_c.raw_value, self.length_c.unit,
+                                              self.angle_alpha.raw_value, self.angle_alpha.unit,
+                                              self.angle_beta.raw_value, self.angle_beta.unit,
+                                              self.angle_gamma.raw_value, self.angle_gamma.unit)
+
+    def to_star(self):
+        return StarSection(self)
+
+    @classmethod
+    def from_star(cls, in_string):
+        return StarSection.from_string(cls, in_string)

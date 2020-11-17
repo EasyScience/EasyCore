@@ -38,7 +38,7 @@ class Fitter:
         self.create()
 
         fit_methods = [x for x, y in Fitting.FittingTemplate.__dict__.items()
-                       if type(y) == FunctionType
+                       if isinstance(y, FunctionType)
                        and not x.startswith('_')]
         for method_name in fit_methods:
             setattr(self, method_name, self.__pass_through_generator(method_name))
@@ -65,8 +65,10 @@ class Fitter:
         if not self._is_initialized:
             print('The fitting engine must first be initialized')
             raise ReferenceError
+        constraints = self.__engine_obj._constraints
         self.create(engine_name)
         self.__initialize()
+        self.__engine_obj._constraints = constraints
 
     @property
     def available_engines(self) -> List[str]:
@@ -138,4 +140,5 @@ class Fitter:
             if func is None:
                 raise ValueError
             return func(*args, **kwargs)
+
         return inner

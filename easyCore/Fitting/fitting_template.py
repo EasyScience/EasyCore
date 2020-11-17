@@ -1,10 +1,11 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
-import numpy as np
 
 from abc import ABCMeta, abstractmethod
 from typing import Union, Callable, List
+
+from easyCore import np
 from easyCore.Utils.typing import noneType
 
 
@@ -31,6 +32,20 @@ class FittingTemplate(metaclass=ABCMeta):
         self._cached_pars = {}
         self._cached_model = None
         self._fit_function = None
+        self._constraints = []
+
+    @property
+    def all_constraints(self):
+        return [*self._constraints, *self._object.constraints]
+
+    def fit_constraints(self):
+        return self._constraints
+
+    def add_fit_constraint(self, constraint):
+        self._constraints.append(constraint)
+
+    def remove_fit_constraint(self, index: int):
+        del self._constraints[index]
 
     @abstractmethod
     def make_model(self, pars=None):
@@ -91,8 +106,9 @@ class FittingTemplate(metaclass=ABCMeta):
         if new_parameters is None:
             new_parameters = {}
         for name, item in pars.items():
-            if name not in new_parameters.keys():
-                new_parameters[name] = item.raw_value
+            fit_name = 'p' + str(name)
+            if fit_name not in new_parameters.keys():
+                new_parameters[fit_name] = item.raw_value
 
         return self._fit_function(x, **new_parameters, **kwargs)
 
@@ -138,6 +154,7 @@ class FitResults:
     """
     At the moment this is just a dummy way of unifying the returned fit parameters.
     """
+
     def __init__(self):
         self.success = False
         self.fitting_engine = None
@@ -150,3 +167,31 @@ class FitResults:
         self.goodness_of_fit = np.Inf
         self.residual = np.ndarray([])
         self.engine_result = None
+
+
+class NameConverter:
+
+    def __init__(self):
+        from easyCore import borg
+        self._borg = borg
+
+    def get_name_from_key(self, item_key: int) -> str:
+        return getattr(self._borg.map.get_item_by_key(item_key), 'name', '')
+
+    def get_item_from_key(self, item_key: int) -> object:
+        return self._borg.map.get_item_by_key(item_key)
+
+    def get_key(self, item: object) -> int:
+        return self._borg.map.convert_id_to_key(item)
+
+
+class FitError(Exception):
+
+    def __init__(self, e: Exception = None):
+        self.e = e
+
+    def __str__(self) -> str:
+        s = ''
+        if self.e is not None:
+            s = f'{self.e}\n'
+        return s + 'Something has gone wrong with the fit'

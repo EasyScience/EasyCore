@@ -6,7 +6,7 @@ from typing import List
 
 import pytest
 import numpy as np
-from easyCore.Objects.Base import Descriptor, Parameter, ureg, Q_
+from easyCore.Objects.Base import Descriptor, Parameter, ureg, Q_, CoreSetException, borg
 
 
 @pytest.fixture
@@ -98,16 +98,38 @@ def test_Parameter_value_get(element, expected):
     d = Parameter('test', 1, units=element)
     assert str(d.value) == expected
 
-
+@pytest.mark.parametrize('debug', (True, False))
+@pytest.mark.parametrize('enabled', (None, True, False))
 @pytest.mark.parametrize('instance', (Descriptor, Parameter), indirect=True)
-def test_item_value_set(instance):
+def test_item_value_set(instance, enabled, debug):
+    borg.debug = debug
+    set_value = 2
     d = instance('test', 1)
-    d.value = 2
-    assert d.raw_value == 2
+    if enabled is not None:
+        d.enabled = enabled
+    else:
+        enabled = True
+    if enabled:
+        d.value = set_value
+        assert d.raw_value == set_value
+    else:
+        if debug:
+            with pytest.raises(CoreSetException):
+                d.value = set_value
     d = instance('test', 1, units='kelvin')
-    d.value = 2
-    assert d.raw_value == 2
-    assert str(d.unit) == 'kelvin'
+    if enabled is not None:
+        d.enabled = enabled
+    else:
+        enabled = True
+
+    if enabled:
+        d.value = set_value
+        assert d.raw_value == set_value
+        assert str(d.unit) == 'kelvin'
+    else:
+        if debug:
+            with pytest.raises(CoreSetException):
+                d.value = set_value
 
 
 @pytest.mark.parametrize('instance', (Descriptor, Parameter), indirect=True)
@@ -165,21 +187,21 @@ def test_item_compatible_units(instance):
 
 def test_descriptor_repr():
     d = Descriptor('test', 1)
-    assert repr(d) == f'<{d.__class__.__name__} \'test\' = 1>'
+    assert repr(d) == f'<{d.__class__.__name__} \'test\': 1.0000>'
     d = Descriptor('test', 1, units='cm')
-    assert repr(d) == f'<{d.__class__.__name__} \'test\' = 1 centimeter>'
+    assert repr(d) == f'<{d.__class__.__name__} \'test\': 1.0000 cm>'
 
 
 def test_parameter_repr():
     d = Parameter('test', 1)
-    assert repr(d) == f'<{d.__class__.__name__} \'test\' = 1.0+/-0, bounds=[-inf:inf]>'
+    assert repr(d) == f'<{d.__class__.__name__} \'test\': 1.0000+/-0, bounds=[-inf:inf]>'
     d = Parameter('test', 1, units='cm')
-    assert repr(d) == f'<{d.__class__.__name__} \'test\' = 1.0+/-0 centimeter, bounds=[-inf:inf]>'
+    assert repr(d) == f'<{d.__class__.__name__} \'test\': 1.0000+/-0 cm, bounds=[-inf:inf]>'
 
     d = Parameter('test', 1, fixed=True)
-    assert repr(d) == f'<{d.__class__.__name__} \'test\' = 1.0+/-0 (fixed), bounds=[-inf:inf]>'
+    assert repr(d) == f'<{d.__class__.__name__} \'test\': 1.0000+/-0 (fixed), bounds=[-inf:inf]>'
     d = Parameter('test', 1, units='cm', fixed=True)
-    assert repr(d) == f'<{d.__class__.__name__} \'test\' = 1.0+/-0 centimeter (fixed), bounds=[-inf:inf]>'
+    assert repr(d) == f'<{d.__class__.__name__} \'test\': 1.0000+/-0 cm (fixed), bounds=[-inf:inf]>'
 
 
 def test_descriptor_as_dict():
