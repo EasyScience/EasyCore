@@ -77,9 +77,7 @@ class SpaceGroup(BaseObj):
 
     @space_group_HM_name.setter
     def space_group_HM_name(self, value):
-        self.clear_sym()
         self._space_group_HM_name.value = self.__on_change(value)
-        self.enforce_sym()
 
     @property
     def full_symbol(self) -> str:
@@ -139,95 +137,3 @@ class SpaceGroup(BaseObj):
         if self.setting:
             out_str = "{:s} setting: '{:s}'".format(out_str, self.setting)
         return out_str + '>'
-
-    def clear_sym(self, cell=None):
-        if cell is None and self._cell is None:
-            return
-        if cell is not None:
-            self._cell = cell
-        cell = self._cell
-        pars = cell.get_parameters()
-        for par in pars:
-            new_con = {con: par.constraints['user'][con] for con in par.constraints['user'].keys() if
-                       not con.startswith('sg_')}
-            par.constraints['user'] = new_con
-            if not par.enabled:
-                par.enabled = True
-
-    def enforce_sym(self, cell=None):
-        """
-        Enforce symmetry constraints on to a cell
-        :param cell: Cell for which the symmetry applies
-        :return: None
-        """
-        if cell is None and self._cell is None:
-            return
-        if cell is not None:
-            self._cell = cell
-        cell = self._cell
-
-        # SG system
-        crys_system = self.crystal_system
-
-        # Go through the cell systems
-        if crys_system == "cubic":
-            cell.length_a.constraints['user']['sg_1'] = ObjConstraint(cell.length_b, '', cell.length_a)
-            cell.length_a.constraints['user']['sg_1']()
-            cell.length_a.constraints['user']['sg_2'] = ObjConstraint(cell.length_c, '', cell.length_a)
-            cell.length_a.constraints['user']['sg_2']()
-            cell.angle_alpha = 90
-            cell.angle_alpha.enabled = False
-            cell.angle_beta = 90
-            cell.angle_beta.enabled = False
-            cell.angle_gamma = 90
-            cell.angle_gamma.enabled = False
-            return
-        if crys_system == "hexagonal" or (
-                crys_system == "trigonal" and (
-                self.setting.endswith("H") or
-                self.int_number in [143, 144, 145, 147, 149, 150, 151, 152,
-                                    153, 154, 156, 157, 158, 159, 162, 163,
-                                    164, 165])):
-            cell.length_a.constraints['user']['sg_1'] = ObjConstraint(cell.length_b, '', cell.length_a)
-            cell.length_a.constraints['user']['sg_1']()
-            cell.angle_alpha = 90
-            cell.angle_alpha.enabled = False
-            cell.angle_beta = 90
-            cell.angle_beta.enabled = False
-            cell.angle_gamma = 120
-            cell.angle_gamma.enabled = False
-            return
-        if crys_system == "trigonal":
-            cell.length_a.constraints['user']['sg_1'] = ObjConstraint(cell.length_b, '', cell.length_a)
-            cell.length_a.constraints['user']['sg_1']()
-            cell.length_a.constraints['user']['sg_2'] = ObjConstraint(cell.length_c, '', cell.length_a)
-            cell.length_a.constraints['user']['sg_2']()
-            cell.angle_alpha.constraints['user']['sg_1'] = ObjConstraint(cell.angle_beta, '', cell.angle_alpha)
-            cell.angle_alpha.constraints['user']['sg_1']()
-            cell.angle_alpha.constraints['user']['sg_2'] = ObjConstraint(cell.angle_gamma, '', cell.angle_alpha)
-            cell.angle_alpha.constraints['user']['sg_2']()
-            return
-        if crys_system == "tetragonal":
-            cell.length_a.constraints['user']['sg_1'] = ObjConstraint(cell.length_b, '', cell.length_a)
-            cell.length_a.constraints['user']['sg_1']()
-            cell.angle_alpha = 90
-            cell.angle_alpha.enabled = False
-            cell.angle_beta = 90
-            cell.angle_beta.enabled = False
-            cell.angle_gamma = 90
-            cell.angle_gamma.enabled = False
-            return
-        if crys_system == "orthorhombic":
-            cell.angle_alpha = 90
-            cell.angle_alpha.enabled = False
-            cell.angle_beta = 90
-            cell.angle_beta.enabled = False
-            cell.angle_gamma = 90
-            cell.angle_gamma.enabled = False
-            return
-        if crys_system == "monoclinic":
-            cell.angle_alpha = 90
-            cell.angle_alpha.enabled = False
-            cell.angle_gamma = 90
-            cell.angle_gamma.enabled = False
-            return

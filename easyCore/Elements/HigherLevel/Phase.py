@@ -5,8 +5,8 @@ from pathlib import Path
 from typing import Dict, Union, List
 
 from easyCore import np
-from easyCore.Elements.Basic.Cell import Cell
-from easyCore.Elements.Basic.Site import Site, Atoms
+from easyCore.Elements.Basic.Lattice import Lattice, PeriodicLattice
+from easyCore.Elements.Basic.Site import Site, PeriodicSite, PeriodicAtoms, Atoms
 from easyCore.Elements.Basic.SpaceGroup import SpaceGroup
 from easyCore.Objects.Base import BaseObj, Parameter, Descriptor
 from easyCore.Objects.Groups import BaseCollection
@@ -14,23 +14,28 @@ from easyCore.Objects.Groups import BaseCollection
 from easyCore.Utils.io.cif import CifIO
 
 
-class Crystal(BaseObj):
+class Phase(BaseObj):
 
     def __init__(self, name, spacegroup=None, cell=None, atoms=None, interface=None, enforce_sym=True):
         self.name = name
         if spacegroup is None:
             spacegroup = SpaceGroup.default()
         if cell is None:
-            cell = Cell.default()
+            cell = Lattice.default()
+        if isinstance(cell, Lattice):
+            cell = PeriodicLattice.from_lattice_and_spacegroup(cell, spacegroup)
         if atoms is None:
-            atoms = Atoms('atoms')
+            atoms = Atoms('atom_list')
+        ## TODO get PeriodicAtoms to work :-/
+        # if isinstance(atoms, Atoms):
+        #     atoms = PeriodicAtoms(atoms.name, *atoms, lattice=cell, interface=atoms.interface)
 
-        super(Crystal, self).__init__(name,
-                                      cell=cell,
-                                      _spacegroup=spacegroup,
-                                      atoms=atoms)
-        if enforce_sym:
-            self.spacegroup.enforce_sym(self.cell)
+        super(Phase, self).__init__(name,
+                                    cell=cell,
+                                    _spacegroup=spacegroup,
+                                    atoms=atoms)
+        if not enforce_sym:
+            self.cell.clear_sym()
         self._enforce_sym = enforce_sym
         self.interface = interface
 
@@ -44,7 +49,7 @@ class Crystal(BaseObj):
         """
         supplied_atom = False
         for arg in args:
-            if isinstance(arg, Site):
+            if issubclass(arg.__class__, Site):
                 self.atoms.append(arg)
                 supplied_atom = True
         if not supplied_atom:
@@ -53,18 +58,7 @@ class Crystal(BaseObj):
     def remove_atom(self, key):
         del self.atoms[key]
 
-    def _generate_positions(self, site) -> np.ndarray:
-        """
-        Generate all orbits for a given fractional position.
-
-        """
-        sym_op = self.spacegroup._sg_data.get_orbit
-        offsets = np.array(np.meshgrid(range(0, self.extent[0] + 1),
-                                       range(0, self.extent[1] + 1),
-                                       range(0, self.extent[2] + 1))).T.reshape(-1, 3)
-        return np.apply_along_axis(np.add, 1, offsets, np.array(sym_op(site.fract_coords))).reshape((-1, 3))
-
-    def all_sites(self) -> Dict[str, np.ndarray]:
+    def all_orbits(self) -> Dict[str, np.ndarray]:
         """
         Generate all atomic positions from the atom array and symmetry operations over an extent.
 
@@ -72,18 +66,20 @@ class Crystal(BaseObj):
         (0, 0, 0) -> obj.extent
         :rtype: Dict[str, np.ndarray]
         """
-        if self.spacegroup is None:
-            return {atom.label: atom.fract_coords for atom in self.atoms}
 
-        sites = {}
-        for site in self.atoms:
-            unique_sites = self._generate_positions(site)
-            site_positions = unique_sites - self.center
-            sites[site.label.raw_value] = \
+        offsets = np.array(np.meshgrid(range(0, self.extent[0] + 1),
+                                       range(0, self.extent[1] + 1),
+                                       range(0, self.extent[2] + 1))).T.reshape(-1, 3)
+
+        orbits = self.atoms.get_orbits()
+        for orbit_key in orbits.keys():
+            orbit = orbits[orbit_key]
+            site_positions = np.apply_along_axis(np.add, 1, offsets, orbit).reshape((-1, 3)) - self.center
+            orbits[orbit_key] = \
                 site_positions[np.all(site_positions >= -self.atom_tolerance, axis=1) &
                                np.all(site_positions <= self.extent + self.atom_tolerance, axis=1),
                 :] + self.center
-        return sites
+        return orbits
 
     def to_cif_str(self) -> str:
         """
@@ -101,20 +97,19 @@ class Crystal(BaseObj):
     @enforce_sym.setter
     def enforce_sym(self, value: bool):
         if value:
-            self.spacegroup.enforce_sym(self.cell)
+            self.cell.enforce_sym()
         else:
-            self.spacegroup.clear_sym(self.cell)
+            self.cell.clear_sym()
 
     @property
     def spacegroup(self):
         return self._spacegroup
 
     def set_spacegroup(self, value):
-        self._spacegroup.value = value
         if self._enforce_sym:
-            self.spacegroup.enforce_sym(self.cell)
+            self.cell.space_group_HM_name = value
         else:
-            self.spacegroup.clear_sym(self.cell)
+            self._spacegroup.space_group_HM_name = value
 
     @property
     def extent(self) -> np.ndarray:
@@ -185,8 +180,8 @@ class Crystal(BaseObj):
 
         :param in_string: cif string
         :type in_string: str
-        :return: Crystal parsed from a cif string
-        :rtype: Crystal
+        :return: Phase parsed from a cif string
+        :rtype: Phase
         """
         cif = CifIO.from_cif_str(in_string)
         name, kwargs = cif.to_crystal_form()
@@ -200,15 +195,45 @@ class Crystal(BaseObj):
 
         :param file_path: cif file path
         :type file_path: str, Path
-        :return: Crystal parsed from a cif file
-        :rtype: Crystal
+        :return: Phase parsed from a cif file
+        :rtype: Phase
         """
         cif = CifIO.from_file(file_path)
         name, kwargs = cif.to_crystal_form()
         return cls(name, **kwargs)
 
+    def _generate_positions(self, site) -> np.ndarray:
+        """
+        Generate all orbits for a given fractional position.
+        """
+        sym_op = self.spacegroup._sg_data.get_orbit
+        offsets = np.array(np.meshgrid(range(0, self.extent[0] + 1),
+                                       range(0, self.extent[1] + 1),
+                                       range(0, self.extent[2] + 1))).T.reshape(-1, 3)
+        return np.apply_along_axis(np.add, 1, offsets, np.array(sym_op(site.fract_coords))).reshape((-1, 3))
 
-class Crystals(BaseCollection):
+    def all_sites(self) -> Dict[str, np.ndarray]:
+        """
+        Generate all atomic positions from the atom array and symmetry operations over an extent.
+        :return:  dictionary with keys of atom labels, containing numpy arrays of unique points in the extent
+        (0, 0, 0) -> obj.extent
+        :rtype: Dict[str, np.ndarray]
+        """
+        if self.spacegroup is None:
+            return {atom.label: atom.fract_coords for atom in self.atoms}
+
+        sites = {}
+        for site in self.atoms:
+            unique_sites = self._generate_positions(site)
+            site_positions = unique_sites - self.center
+            sites[site.label.raw_value] = \
+                site_positions[np.all(site_positions >= -self.atom_tolerance, axis=1) &
+                               np.all(site_positions <= self.extent + self.atom_tolerance, axis=1),
+                :] + self.center
+        return sites
+
+
+class Phases(BaseCollection):
 
     def __init__(self, name: str = 'phases', *args, interface=None, **kwargs):
         """
@@ -217,12 +242,12 @@ class Crystals(BaseCollection):
         :param name: Name of the crystals collection
         :type name: str
         :param args: objects to create the crystal
-        :type args: *Crystal
+        :type args: *Phase
         """
         if not isinstance(name, str):
             raise AttributeError('Name should be a string!')
 
-        super(Crystals, self).__init__(name, *args, **kwargs)
+        super(Phases, self).__init__(name, *args, **kwargs)
         self.interface = interface
         self._cif = None
         self._create_cif()
@@ -233,19 +258,19 @@ class Crystals(BaseCollection):
     def __getitem__(self, idx: Union[int, slice]) -> Union[Parameter, Descriptor, BaseObj, BaseCollection]:
         if isinstance(idx, str) and idx in self.phase_names:
             idx = self.phase_names.index(idx)
-        return super(Crystals, self).__getitem__(idx)
+        return super(Phases, self).__getitem__(idx)
 
     def __delitem__(self, key):
         if isinstance(key, str) and key in self.phase_names:
             key = self.phase_names.index(key)
-        return super(Crystals, self).__delitem__(key)
+        return super(Phases, self).__delitem__(key)
 
-    def append(self, item: Crystal):
-        if not isinstance(item, Crystal):
-            raise TypeError('Item must be a Crystal')
+    def append(self, item: Phase):
+        if not isinstance(item, Phase):
+            raise TypeError('Item must be a Phase')
         if item.name in self.phase_names:
             raise AttributeError(f'An atom of name {item.name} already exists.')
-        super(Crystals, self).append(item)
+        super(Phases, self).append(item)
         self._create_cif()
 
     @property
@@ -281,5 +306,5 @@ class Crystals(BaseCollection):
         crystals = []
         for cif_index in range(cif._parser.number_of_cifs):
             name, kwargs = cif.to_crystal_form(cif_index=cif_index)
-            crystals.append(Crystal(name, **kwargs))
+            crystals.append(Phase(name, **kwargs))
         return name, crystals
