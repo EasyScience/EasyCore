@@ -8,11 +8,11 @@ python-versions = "*"
 
 [[package]]
 name = "asteval"
-version = "0.9.19"
+version = "0.9.21"
 description = "Safe, minimalistic evaluator of python expression using ast module"
 category = "main"
 optional = false
-python-versions = ">=3.5"
+python-versions = ">=3.6"
 
 [[package]]
 name = "atomicwrites"
@@ -461,7 +461,7 @@ testing = ["pytest (>=3.5,!=3.7.3)", "pytest-checkdocs (>=1.2.3)", "pytest-flake
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6, >=3.6.1"
-content-hash = "cd4db93fee21a1af15a1b5d3b5aa39fc99a6946c2d3bb0efba6efbdc6dfd2793"
+content-hash = "ea6198ca09488673b516f46aba04aa0b4231c2b612d5e5a7349fbcb08fab16ec"
 
 [metadata.files]
 appdirs = [
@@ -469,7 +469,7 @@ appdirs = [
     {file = "appdirs-1.4.4.tar.gz", hash = "sha256:7d5d0167b2b1ba821647616af46a749d1c653740dd0d2415100fe26e27afdf41"},
 ]
 asteval = [
-    {file = "asteval-0.9.19.tar.gz", hash = "sha256:445f3a59df692c0c0ff2868c0bbf9b293884db4a9f9a13c73555485ba75ed08b"},
+    {file = "asteval-0.9.21.tar.gz", hash = "sha256:ee14ba2211cda1c76114e3e7b552cdd57e940309203d5f4106e6d6f2c2346a2e"},
 ]
 atomicwrites = [
     {file = "atomicwrites-1.4.0-py2.py3-none-any.whl", hash = "sha256:6d1784dea7c0c8d4a5172b6c620f40b6e4cbfdf96d783691f2e1302a7b88e197"},
