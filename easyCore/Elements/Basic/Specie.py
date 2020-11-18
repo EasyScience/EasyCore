@@ -15,7 +15,9 @@ _SPECIE_DETAILS = {
 
 class Specie(Descriptor):
 
-    def __init__(self, specie):
+    def __init__(self, specie, **kwargs):
+        if kwargs:
+           specie = kwargs['value']
         super(Specie, self).__init__('specie', specie, **_SPECIE_DETAILS['type_symbol'])
         self.__gen_data(specie)
         # Monkey patch the unit and the value to take into account the new max/min situation
@@ -65,3 +67,10 @@ class Specie(Descriptor):
 
     def __repr__(self) -> str:
         return str(self._specie)
+
+    def as_dict(self, skip: list = None) -> dict:
+        if skip is None:
+            skip = []
+        skip.append('value')
+        return super(Specie, self).as_dict(skip=skip)
+            

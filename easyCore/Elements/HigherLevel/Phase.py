@@ -232,6 +232,10 @@ class Phase(BaseObj):
                 :] + self.center
         return sites
 
+    def as_dict(self, skip: list = None) -> dict:
+        d = super(Phase, self).as_dict(skip=skip)
+        del d['_spacegroup']
+        return d
 
 class Phases(BaseCollection):
 
