@@ -71,7 +71,7 @@ class Phase(BaseObj):
                                        range(0, self.extent[1] + 1),
                                        range(0, self.extent[2] + 1))).T.reshape(-1, 3)
 
-        orbits = self.atoms.get_orbits()
+        orbits = self.get_orbits()
         for orbit_key in orbits.keys():
             orbit = orbits[orbit_key]
             site_positions = np.apply_along_axis(np.add, 1, offsets, orbit).reshape((-1, 3)) - self.center
@@ -79,6 +79,18 @@ class Phase(BaseObj):
                 site_positions[np.all(site_positions >= -self.atom_tolerance, axis=1) &
                                np.all(site_positions <= self.extent + self.atom_tolerance, axis=1),
                 :] + self.center
+        return orbits
+
+    def get_orbits(self, magnetic_only=False) -> Dict[str, np.ndarray]:
+        """
+        Generate all atomic positions from the atom array and symmetry operations over an extent.
+
+        :return:  dictionary with keys of atom labels, containing numpy arrays of unique points in the extent
+        (0, 0, 0) -> obj.extent
+        :rtype: Dict[str, np.ndarray]
+        """
+        atoms = PeriodicAtoms.from_atoms(self.cell, self.atoms)
+        orbits = atoms.get_orbits(magnetic_only=magnetic_only)
         return orbits
 
     def to_cif_str(self) -> str:

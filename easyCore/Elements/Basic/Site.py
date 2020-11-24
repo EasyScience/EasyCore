@@ -150,6 +150,10 @@ class Site(BaseObj):
     def z(self):
         return self.fract_z
 
+    @property
+    def is_magnetic(self):
+        return self.specie.spin is not None
+
     @staticmethod
     def __getter(key: str):
 
@@ -294,8 +298,10 @@ class PeriodicAtoms(Atoms):
             item = PeriodicSite.from_site(self.lattice, item)
         super(PeriodicAtoms, self).append(item)
 
-    def get_orbits(self):
+    def get_orbits(self, magnetic_only=False):
         orbit_dict = {}
         for item in self:
+            if magnetic_only and not item.is_magnetic:
+                continue
             orbit_dict[item.label.raw_value] = item.get_orbit()
         return orbit_dict
