@@ -134,8 +134,7 @@ class Fitter:
 
         def inner(*args, **kwargs):
             if not obj.can_fit:
-                print('The fitting engine must first be initialized')
-                raise ReferenceError
+                raise ReferenceError('The fitting engine must first be initialized')
             func = getattr(obj.engine, name, None)
             if func is None:
                 raise ValueError

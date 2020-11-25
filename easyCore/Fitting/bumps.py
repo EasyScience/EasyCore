@@ -10,7 +10,7 @@ from easyCore.Fitting.fitting_template import noneType, Union, Callable, \
 # Import bumps specific objects
 from bumps.names import Curve, FitProblem
 from bumps.parameter import Parameter as bumpsParameter
-from bumps.fitters import fit as bumps_fit
+from bumps.fitters import fit as bumps_fit, FIT_AVAILABLE_IDS
 
 
 class bumps(FittingTemplate):  # noqa: S101
@@ -122,7 +122,7 @@ class bumps(FittingTemplate):  # noqa: S101
         return fit_function
 
     def fit(self, x: np.ndarray, y: np.ndarray, weights: Union[np.ndarray, noneType] = None,
-            model=None, parameters=None, xtol=1e-6, ftol=1e-8, **kwargs) -> FitResults:
+            model=None, parameters=None, method: str = None, xtol: float = 1e-6, ftol: float = 1e-8, **kwargs) -> FitResults:
         """
         Perform a fit using the lmfit engine.
 
@@ -137,9 +137,15 @@ class bumps(FittingTemplate):  # noqa: S101
         :param parameters: Optional parameters for the fit
         :type parameters: List[bumpsParameter]
         :param kwargs: Additional arguments for the fitting function.
+        :param method: Method for minimization
+        :type method: str
         :return: Fit results
         :rtype: ModelResult
         """
+
+        default_method = {}
+        if method is not None and method is self.available_methods():
+            default_method['method'] = method
 
         if weights is None:
             weights = np.sqrt(x)
@@ -231,3 +237,6 @@ class bumps(FittingTemplate):  # noqa: S101
         results.fit_args = None
 
         return results
+
+    def available_methods(self) -> List[str]:
+        return FIT_AVAILABLE_IDS
