@@ -231,4 +231,5 @@ class lmfit(FittingTemplate):  # noqa: S101
         return results
 
     def available_methods(self) -> List[str]:
-        return list(SCALAR_METHODS.keys())
+        return ['leastsq', 'least_squares', 'differential_evolution', 'basinhopping', 'ampgo', 'nelder', 'lbfgsb',
+                     'powell', 'cg', 'newton', 'cobyla', 'bfgs']
