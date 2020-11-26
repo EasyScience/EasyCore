@@ -144,7 +144,7 @@ class bumps(FittingTemplate):  # noqa: S101
         """
 
         default_method = {}
-        if method is not None and method is self.available_methods():
+        if method is not None and method in self.available_methods():
             default_method['method'] = method
 
         if weights is None:
