@@ -25,7 +25,7 @@ class Phase(BaseObj):
         if isinstance(cell, Lattice):
             cell = PeriodicLattice.from_lattice_and_spacegroup(cell, spacegroup)
         if atoms is None:
-            atoms = Atoms('atom_list')
+            atoms = Atoms('atoms')
         ## TODO get PeriodicAtoms to work :-/
         # if isinstance(atoms, Atoms):
         #     atoms = PeriodicAtoms(atoms.name, *atoms, lattice=cell, interface=atoms.interface)
