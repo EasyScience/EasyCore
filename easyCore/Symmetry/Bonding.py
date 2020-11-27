@@ -205,7 +205,7 @@ def bond(r: np.ndarray, bv: np.ndarray, bond: np.ndarray,
     if np.any(iNew):
         raise ArithmeticError('The generated positions for atom2 are wrong!')
     dist = np.sqrt(np.sum(np.dot(bv.T, (r.T[:, atom2] - r.T[:, atom1] + dlnew)) ** 2, axis=0))
-    rightDist = np.abs(dist - dist[1]) < tol
+    rightDist = np.abs(dist - dist[0]) < tol
     if not np.all(rightDist):
         # TODO This should raise a warning
         print('Symmetry generated couplings are dropped!')

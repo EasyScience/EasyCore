@@ -12,8 +12,6 @@ except ImportError:
 
 
 import os.path
-from Cython.Build import cythonize
-import numpy
 
 readme = ''
 here = os.path.abspath(os.path.dirname(__file__))

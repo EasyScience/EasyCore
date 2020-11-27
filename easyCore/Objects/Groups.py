@@ -40,6 +40,7 @@ class BaseCollection(MSONable, Sequence):
         self._borg.map.add_vertex(self, obj_type='created')
         self.interface = None
         self.name = name
+        self.user_data = {}
 
         for arg in args:
             if issubclass(arg.__class__, (BaseObj, Descriptor, Parameter, BaseCollection)):
