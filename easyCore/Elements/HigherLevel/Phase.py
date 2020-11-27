@@ -58,7 +58,7 @@ class Phase(BaseObj):
     def remove_atom(self, key):
         del self.atoms[key]
 
-    def all_orbits(self) -> Dict[str, np.ndarray]:
+    def all_orbits(self, extent=None) -> Dict[str, np.ndarray]:
         """
         Generate all atomic positions from the atom array and symmetry operations over an extent.
 
@@ -67,9 +67,12 @@ class Phase(BaseObj):
         :rtype: Dict[str, np.ndarray]
         """
 
-        offsets = np.array(np.meshgrid(range(0, self.extent[0] + 1),
-                                       range(0, self.extent[1] + 1),
-                                       range(0, self.extent[2] + 1))).T.reshape(-1, 3)
+        if extent is None:
+            extent = self._extent
+
+        offsets = np.array(np.meshgrid(range(0, extent[0] + 1),
+                                       range(0, extent[1] + 1),
+                                       range(0, extent[2] + 1))).T.reshape(-1, 3)
 
         orbits = self.get_orbits()
         for orbit_key in orbits.keys():
@@ -77,7 +80,7 @@ class Phase(BaseObj):
             site_positions = np.apply_along_axis(np.add, 1, offsets, orbit).reshape((-1, 3)) - self.center
             orbits[orbit_key] = \
                 site_positions[np.all(site_positions >= -self.atom_tolerance, axis=1) &
-                               np.all(site_positions <= self.extent + self.atom_tolerance, axis=1),
+                               np.all(site_positions <= extent + self.atom_tolerance, axis=1),
                 :] + self.center
         return orbits
 
@@ -214,17 +217,17 @@ class Phase(BaseObj):
         name, kwargs = cif.to_crystal_form()
         return cls(name, **kwargs)
 
-    def _generate_positions(self, site) -> np.ndarray:
+    def _generate_positions(self, site, extent) -> np.ndarray:
         """
         Generate all orbits for a given fractional position.
         """
         sym_op = self.spacegroup._sg_data.get_orbit
-        offsets = np.array(np.meshgrid(range(0, self.extent[0] + 1),
-                                       range(0, self.extent[1] + 1),
-                                       range(0, self.extent[2] + 1))).T.reshape(-1, 3)
+        offsets = np.array(np.meshgrid(range(0, extent[0] + 1),
+                                       range(0, extent[1] + 1),
+                                       range(0, extent[2] + 1))).T.reshape(-1, 3)
         return np.apply_along_axis(np.add, 1, offsets, np.array(sym_op(site.fract_coords))).reshape((-1, 3))
 
-    def all_sites(self) -> Dict[str, np.ndarray]:
+    def all_sites(self, extent=None) -> Dict[str, np.ndarray]:
         """
         Generate all atomic positions from the atom array and symmetry operations over an extent.
         :return:  dictionary with keys of atom labels, containing numpy arrays of unique points in the extent
@@ -234,13 +237,16 @@ class Phase(BaseObj):
         if self.spacegroup is None:
             return {atom.label: atom.fract_coords for atom in self.atoms}
 
+        if extent is None:
+            extent = self._extent
+
         sites = {}
         for site in self.atoms:
-            unique_sites = self._generate_positions(site)
+            unique_sites = self._generate_positions(site, extent)
             site_positions = unique_sites - self.center
             sites[site.label.raw_value] = \
                 site_positions[np.all(site_positions >= -self.atom_tolerance, axis=1) &
-                               np.all(site_positions <= self.extent + self.atom_tolerance, axis=1),
+                               np.all(site_positions <= extent + self.atom_tolerance, axis=1),
                 :] + self.center
         return sites
 
