@@ -25,4 +25,4 @@ y = np.array([2, 4, 6]) - 1
 
 f_res = f.fit(x, y)
 
-print(f_res.fit_report())
+print(f_res.goodness_of_fit)

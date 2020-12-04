@@ -2,6 +2,7 @@ __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
 import inspect
+from typing import List
 
 from easyCore.Fitting.fitting_template import noneType, Union, Callable, \
     FittingTemplate, np, FitResults, NameConverter, FitError
@@ -9,7 +10,7 @@ from easyCore.Fitting.fitting_template import noneType, Union, Callable, \
 # Import lmfit specific objects
 from lmfit import Parameter as lmParameter, Parameters as lmParameters, Model as lmModel
 from lmfit.model import ModelResult
-
+from lmfit.minimizer import SCALAR_METHODS
 
 class lmfit(FittingTemplate):  # noqa: S101
     """
@@ -116,10 +117,12 @@ class lmfit(FittingTemplate):  # noqa: S101
 
     def fit(self, x: np.ndarray, y: np.ndarray,
             weights: Union[np.ndarray, noneType] = None, model: Union[lmModel, noneType] = None,
-            parameters: Union[lmParameters, noneType] = None, **kwargs) -> FitResults:
+            parameters: Union[lmParameters, noneType] = None, method: str = None, **kwargs) -> FitResults:
         """
         Perform a fit using the lmfit engine.
 
+        :param method:
+        :type method:
         :param x: points to be calculated at
         :type x: np.ndarray
         :param y: measured points
@@ -134,6 +137,10 @@ class lmfit(FittingTemplate):  # noqa: S101
         :return: Fit results
         :rtype: ModelResult
         """
+        default_method = {}
+        if method is not None and method in self.available_methods():
+            default_method['method'] = method
+
 
         # Why do we do this? Because a fitting template has to have borg instantiated outside pre-runtime
         from easyCore import borg
@@ -141,7 +148,8 @@ class lmfit(FittingTemplate):  # noqa: S101
             borg.stack.beginMacro('Fitting routine')
             if model is None:
                 model = self.make_model()
-            model_results = model.fit(y, x=x, weights=weights, **kwargs)
+
+            model_results = model.fit(y, x=x, weights=weights, **default_method, **kwargs)
             self._set_parameter_fit_result(model_results)
         except Exception as e:
             raise FitError(e)
@@ -221,3 +229,7 @@ class lmfit(FittingTemplate):  # noqa: S101
 
         results.engine_result = fit_results
         return results
+
+    def available_methods(self) -> List[str]:
+        return ['leastsq', 'least_squares', 'differential_evolution', 'basinhopping', 'ampgo', 'nelder', 'lbfgsb',
+                     'powell', 'cg', 'newton', 'cobyla', 'bfgs']

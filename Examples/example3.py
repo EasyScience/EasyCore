@@ -40,10 +40,9 @@ class Line(BaseObj):
                  Parameter('c', 0)]
 
     def __init__(self, interface=None):
-        self.interface = interface
         super().__init__(self.__class__.__name__,
                          *self._defaults)
-
+        self.interface = interface
         if self.interface:
             for parameter in self.get_fit_parameters():
                 name = parameter.name
@@ -88,6 +87,7 @@ class Line(BaseObj):
 
 
 l = Line(interface=Interface())
+l.interface
 f = Fitter(l, l.fit_func)
 
 x = np.array([1, 2, 3])

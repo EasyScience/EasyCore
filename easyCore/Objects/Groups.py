@@ -31,6 +31,8 @@ class BaseCollection(MSONable, Sequence):
         :type _kwargs: dict
         """
 
+        kwargs = {key: kwargs[key] for key in kwargs.keys() if kwargs[key] is not None}
+
         for key, item in kwargs.items():
             if not issubclass(item.__class__, (Descriptor, BaseObj, BaseCollection)):
                 raise AttributeError
@@ -38,6 +40,7 @@ class BaseCollection(MSONable, Sequence):
         self._borg.map.add_vertex(self, obj_type='created')
         self.interface = None
         self.name = name
+        self.user_data = {}
 
         for arg in args:
             if issubclass(arg.__class__, (BaseObj, Descriptor, Parameter, BaseCollection)):
@@ -202,6 +205,8 @@ class BaseCollection(MSONable, Sequence):
             for idx, item in enumerate(d['data'][1:]):
                 d[str(idx)] = item
             d['data'] = d['data'][0]
+        else:
+            del d['data']
         return super(BaseCollection, cls).from_dict(d)
 
     def generate_bindings(self):

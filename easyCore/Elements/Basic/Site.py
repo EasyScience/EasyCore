@@ -4,8 +4,10 @@ __version__ = '0.0.1'
 from typing import List, Union
 
 from easyCore import np
+from easyCore.Elements.Basic.Lattice import PeriodicLattice
 from easyCore.Objects.Base import Descriptor, Parameter, BaseObj
 from easyCore.Objects.Groups import BaseCollection
+from easyCore.Elements.Basic.Specie import Specie
 from easyCore.Elements.Basic.AtomicDisplacement import AtomicDisplacement
 from easyCore.Utils.classTools import addLoggedProp
 from easyCore.Utils.io.star import StarLoop
@@ -14,10 +16,6 @@ _SITE_DETAILS = {
     'label':       {
         'description': 'A unique identifier for a particular site in the crystal',
         'url':         'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic/Iatom_site_label.html',
-    },
-    'type_symbol': {
-        'description': 'A code to identify the atom species occupying this site.',
-        'url':         'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic/Iatom_site_type_symbol.html',
     },
     'position':    {
         'description': 'Atom-site coordinate as fractions of the unit cell length.',
@@ -44,7 +42,7 @@ class Site(BaseObj):
         ['fract_z', 'atom_site_fract_z']
     ]
 
-    def __init__(self, label: Descriptor, specie: Descriptor, occupancy: Parameter,
+    def __init__(self, label: Descriptor, specie: Specie, occupancy: Parameter,
                  fract_x: Parameter, fract_y: Parameter, fract_z: Parameter,
                  interface=None, **kwargs):
         # We can attach adp etc, which would be in kwargs. Filter them out...
@@ -68,9 +66,11 @@ class Site(BaseObj):
             self.add_adp(adp)
 
     @classmethod
-    def default(cls, label: str, specie: str, interface=None):
+    def default(cls, label: str, specie: str = '', interface=None):
         label = Descriptor('label', label, **_SITE_DETAILS['label'])
-        specie = Descriptor('specie', specie, **_SITE_DETAILS['type_symbol'])
+        if not specie:
+            specie = label.raw_value
+        specie = Specie(specie)
         occupancy = Parameter('occupancy', **_SITE_DETAILS['occupancy'])
         x_position = Parameter('fract_x', **_SITE_DETAILS['position'])
         y_position = Parameter('fract_y', **_SITE_DETAILS['position'])
@@ -88,7 +88,7 @@ class Site(BaseObj):
                   interface=None):
 
         label = Descriptor('label', label, **_SITE_DETAILS['label'])
-        specie = Descriptor('specie', value=specie, **_SITE_DETAILS['type_symbol'])
+        specie = Specie(specie)
 
         pos = {k: _SITE_DETAILS['position'][k]
                for k in _SITE_DETAILS['position'].keys()
@@ -138,6 +138,22 @@ class Site(BaseObj):
         """
         return np.linalg.norm(other_site.fract_coords - self.fract_coords)
 
+    @property
+    def x(self):
+        return self.fract_x
+
+    @property
+    def y(self):
+        return self.fract_y
+
+    @property
+    def z(self):
+        return self.fract_z
+
+    @property
+    def is_magnetic(self):
+        return self.specie.spin is not None
+
     @staticmethod
     def __getter(key: str):
 
@@ -159,13 +175,40 @@ class Site(BaseObj):
 
 class PeriodicSite(Site):
 
-    def __init__(self, lattice, label: Descriptor, specie: Descriptor, occupancy: Parameter,
-                 x_position: Parameter, y_position: Parameter, z_position: Parameter,
+    def __init__(self, lattice: PeriodicLattice, label: Descriptor, specie: Descriptor, occupancy: Parameter,
+                 fract_x: Parameter, fract_y: Parameter, fract_z: Parameter,
                  interface=None, **kwargs):
         super(PeriodicSite, self).__init__(label, specie, occupancy,
-                 x_position, y_position, z_position, interface, **kwargs)
+                 fract_x, fract_y, fract_z, interface, **kwargs)
         self.lattice = lattice
 
+    @classmethod
+    def from_site(cls, lattice: PeriodicLattice, site: Site):
+        args = [lattice, site.label, site.specie, site.occupancy,
+            site.fract_x, site.fract_y, site.fract_z]
+        kwargs = {
+            'interface': site.interface
+        }
+        if hasattr(site, 'adp'):
+            kwargs['adp'] = site.adp
+        return cls(*args, **kwargs)
+
+    def get_orbit(self) -> np.ndarray:
+        """
+        Generate all orbits for a given fractional position.
+
+        """
+        sym_op = self.lattice.spacegroup._sg_data.get_orbit
+        return sym_op(self.fract_coords)
+
+    @property
+    def cart_coords(self) -> np.ndarray:
+        """
+        Get the atomic position in Cartesian form.
+        :return:
+        :rtype:
+        """
+        return self.lattice.get_cartesian_coords(self.fract_coords)
 
 class Atoms(BaseCollection):
     def __init__(self, name: str, *args, interface=None, **kwargs):
@@ -229,3 +272,44 @@ class Atoms(BaseCollection):
     def from_string(cls, in_string: str):
         s = StarLoop.from_string(in_string, [name[0] for name in Site._CIF_CONVERSIONS])
         return s.to_class(cls, Site)
+
+
+class PeriodicAtoms(Atoms):
+    def __init__(self, name: str, *args, lattice=None, interface=None, **kwargs):
+        args = list(args)
+        if lattice is None:
+            for item in args:
+                if hasattr(item, 'lattice'):
+                    lattice = item.lattice
+                    break
+        if lattice is None:
+            raise AttributeError
+        for idx, item in enumerate(args):
+            if isinstance(item, Site):
+                args[idx] = PeriodicSite.from_site(lattice, item)
+        super(PeriodicAtoms, self).__init__(name, *args, **kwargs, interface=interface)
+        self.lattice = lattice
+
+    @classmethod
+    def from_atoms(cls, lattice: PeriodicLattice, atoms):
+        return cls(atoms.name, *atoms, lattice=lattice, interface=atoms.interface)
+
+    def __repr__(self) -> str:
+        return f'Collection of {len(self)} periodic sites.'
+
+    def append(self, item: Site):
+        if not issubclass(item.__class__, Site):
+            raise TypeError('Item must be a Site or periodic site')
+        if item.label.raw_value in self.atom_labels:
+            raise AttributeError(f'An atom of name {item.label.raw_value} already exists.')
+        if isinstance(item, Site):
+            item = PeriodicSite.from_site(self.lattice, item)
+        super(PeriodicAtoms, self).append(item)
+
+    def get_orbits(self, magnetic_only=False):
+        orbit_dict = {}
+        for item in self:
+            if magnetic_only and not item.is_magnetic:
+                continue
+            orbit_dict[item.label.raw_value] = item.get_orbit()
+        return orbit_dict

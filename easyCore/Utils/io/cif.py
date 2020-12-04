@@ -12,7 +12,7 @@ from inspect import signature
 from numbers import Number
 
 from easyCore.Elements.Basic.AtomicDisplacement import AtomicDisplacement
-from easyCore.Elements.Basic.Cell import Cell
+from easyCore.Elements.Basic.Lattice import Lattice
 from easyCore.Elements.Basic.Site import Atoms, Site
 from easyCore.Symmetry.groups import SpaceGroup as SpaceGroup2
 from easyCore.Elements.Basic.SpaceGroup import SpaceGroup
@@ -348,7 +348,7 @@ class CifParser:
         :param lattice_type: Lattice system (Optional)
         :type lattice_type: str
         :return: Constructed lattice
-        :rtype: Cell
+        :rtype: Lattice
         """
 
         if cif_index > self.number_of_cifs:
@@ -368,9 +368,9 @@ class CifParser:
             for idx, key in enumerate(find_keys):
                 data_dict[dict_keys[idx]] = data[key].value
             if lattice_type is None:
-                lattice = Cell.from_pars(**data_dict)
+                lattice = Lattice.from_pars(**data_dict)
             else:
-                cls = getattr(Cell, lattice_type, None)
+                cls = getattr(Lattice, lattice_type, None)
                 if cls is None:
                     raise AttributeError
                 lattice = cls(**data_dict)
@@ -388,7 +388,7 @@ class CifParser:
                 if data.get(lattice_label):
                     lattice_type = data.get(lattice_label).value.lower()
                     try:
-                        sig = signature(getattr(Cell, lattice_type))
+                        sig = signature(getattr(Lattice, lattice_type))
                         required_args = [arg for arg in sig.parameters.keys() if arg != 'interface']
                         lengths = [l for l in length_strings if l in required_args]
                         angles = [a for a in angle_strings if a in required_args]

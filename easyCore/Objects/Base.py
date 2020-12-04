@@ -282,9 +282,9 @@ class Descriptor(MSONable):
     def __repr__(self):
         """Return printable representation of a Parameter object."""
         out_str = "<{:s} '{:s}': {:0.04f} {:~P}>".format(self.__class__.__name__,
-                                                      self.name,
-                                                      self._value.magnitude,
-                                                      self.unit)
+                                                         self.name,
+                                                         self._value.magnitude,
+                                                         self.unit)
 
         # Fix formatting for dimensionless
         if out_str[-2] == ' ':

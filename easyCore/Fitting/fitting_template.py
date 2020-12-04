@@ -64,7 +64,7 @@ class FittingTemplate(metaclass=ABCMeta):
 
     @abstractmethod
     def fit(self, x: np.ndarray, y: np.ndarray,
-            weights: Union[np.ndarray, noneType] = None, model=None, parameters=None, **kwargs):
+            weights: Union[np.ndarray, noneType] = None, model=None, parameters=None, method=None, **kwargs):
         """
         Perform a fit using the  engine.
 
@@ -76,6 +76,8 @@ class FittingTemplate(metaclass=ABCMeta):
         :type weights: np.ndarray
         :param model: Optional Model which is being fitted to
         :param parameters: Optional parameters for the fit
+        :param method: method for the minimizer to use.
+        :type method: str
         :param kwargs: Additional arguments for the fitting function.
         :return: Fit results
         """
@@ -149,6 +151,15 @@ class FittingTemplate(metaclass=ABCMeta):
         :rtype: FitResults
         """
 
+    @abstractmethod
+    def available_methods(self) -> List[str]:
+        """
+        Generate a list of available methods
+
+        :return: List of available methods for minimization
+        :rtype: List[str]
+        """
+
 
 class FitResults:
     """
@@ -167,6 +178,14 @@ class FitResults:
         self.goodness_of_fit = np.Inf
         self.residual = np.ndarray([])
         self.engine_result = None
+
+    @property
+    def n_pars(self):
+        return len(self.p)
+
+    @property
+    def reduced_chi(self):
+        return self.goodness_of_fit/(len(self.x) - self.n_pars)
 
 
 class NameConverter:
