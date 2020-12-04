@@ -58,7 +58,7 @@ class Phase(BaseObj):
     def remove_atom(self, key):
         del self.atoms[key]
 
-    def all_orbits(self, extent=None) -> Dict[str, np.ndarray]:
+    def all_orbits(self, extent=None, magnetic_only: bool = False) -> Dict[str, np.ndarray]:
         """
         Generate all atomic positions from the atom array and symmetry operations over an extent.
 
@@ -74,7 +74,7 @@ class Phase(BaseObj):
                                        range(0, extent[1] + 1),
                                        range(0, extent[2] + 1))).T.reshape(-1, 3)
 
-        orbits = self.get_orbits()
+        orbits = self.get_orbits(magnetic_only=magnetic_only)
         for orbit_key in orbits.keys():
             orbit = orbits[orbit_key]
             site_positions = np.apply_along_axis(np.add, 1, offsets, orbit).reshape((-1, 3)) - self.center
@@ -84,7 +84,7 @@ class Phase(BaseObj):
                 :] + self.center
         return orbits
 
-    def get_orbits(self, magnetic_only=False) -> Dict[str, np.ndarray]:
+    def get_orbits(self, magnetic_only: bool = False) -> Dict[str, np.ndarray]:
         """
         Generate all atomic positions from the atom array and symmetry operations over an extent.
 

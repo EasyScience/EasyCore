@@ -10,7 +10,7 @@ from fractions import Fraction
 from functools import reduce
 
 from easyCore import np
-from typing import Tuple, Union, List, Sequence
+from typing import Tuple, Union, List, Sequence, Dict
 
 from easyCore import ureg
 from easyCore.Fitting.Constraints import ObjConstraint

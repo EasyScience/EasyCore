@@ -201,6 +201,14 @@ class PeriodicSite(Site):
         sym_op = self.lattice.spacegroup._sg_data.get_orbit
         return sym_op(self.fract_coords)
 
+    @property
+    def cart_coords(self) -> np.ndarray:
+        """
+        Get the atomic position in Cartesian form.
+        :return:
+        :rtype:
+        """
+        return self.lattice.get_cartesian_coords(self.fract_coords)
 
 class Atoms(BaseCollection):
     def __init__(self, name: str, *args, interface=None, **kwargs):
