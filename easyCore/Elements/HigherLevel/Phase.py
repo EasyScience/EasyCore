@@ -301,6 +301,7 @@ class Phases(BaseCollection):
 
     def _create_cif(self):
         if len(self) == 0:
+            self._cif = CifIO(None)
             return
         self._cif = CifIO.from_objects(self[0].name, self[0].cell, self[0].spacegroup, self[0].atoms)
         for item in self[1:]:
