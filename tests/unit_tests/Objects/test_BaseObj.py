@@ -194,5 +194,62 @@ def test_baseobj_dir(setup_pars):
     for this_item, this_expect in zip(obtained, expected):
         assert this_item == this_expect
 
-        
 
+def test_baseobj_get_parameters(setup_pars):
+    name = setup_pars['name']
+    del setup_pars['name']
+    obj = BaseObj(name, **setup_pars)
+    pars = obj.get_parameters()
+    assert len(pars) == 3
+
+
+def test_baseobj_get_parameters_nested(setup_pars):
+    name = setup_pars['name']
+    del setup_pars['name']
+    obj = BaseObj(name, **setup_pars)
+
+    name2 = name + '_2'
+    obj2 = BaseObj(name2, obj=obj, **setup_pars)
+
+    pars = obj2.get_parameters()
+    assert len(pars) == 6
+
+    pars = obj.get_parameters()
+    assert len(pars) == 3
+
+
+def test_baseobj_get_fit_parameters(setup_pars):
+    name = setup_pars['name']
+    del setup_pars['name']
+    obj = BaseObj(name, **setup_pars)
+    pars = obj.get_fit_parameters()
+    assert len(pars) == 2
+
+
+def test_baseobj_get_fit_parameters_nested(setup_pars):
+    name = setup_pars['name']
+    del setup_pars['name']
+    obj = BaseObj(name, **setup_pars)
+
+    name2 = name + '_2'
+    obj2 = BaseObj(name2, obj=obj, **setup_pars)
+
+    pars = obj2.get_fit_parameters()
+    assert len(pars) == 4
+
+    pars = obj.get_fit_parameters()
+    assert len(pars) == 2
+
+
+def test_baseobj__add_component(setup_pars):
+    name = setup_pars['name']
+    del setup_pars['name']
+    obj = BaseObj(name, **setup_pars)
+
+    p = Parameter('added_par', 1)
+    new_item_name = 'Added'
+    obj._add_component(new_item_name, p)
+
+    assert hasattr(obj, new_item_name)
+    a = getattr(obj, new_item_name)
+    assert isinstance(a, Parameter)

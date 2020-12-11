@@ -443,3 +443,12 @@ def test_parameter_advanced_creation(element, expected):
             if isinstance(obtained, (ureg.Unit, Q_)):
                 obtained = str(obtained)
             assert obtained == ref
+
+
+@pytest.mark.parametrize('value', ('This is ', 'a fun ', 'test'))
+def test_parameter_display_name(value):
+    p = Parameter('test', 1, display_name=value)
+    assert p.display_name == value
+
+    p = Descriptor('test', 1, display_name=value)
+    assert p.display_name == value
