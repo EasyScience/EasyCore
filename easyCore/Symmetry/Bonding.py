@@ -300,7 +300,7 @@ def isnew(A: np.ndarray, B: np.ndarray, tol: float) -> Tuple[
 
     isnew = np.all(notequal, axis=0)
     idx = np.arange(B.shape[1])
-    symF = lambda this_idx: np.where(~notequal[:, this_idx] == True)[0][0]
+    symF = lambda this_idx: np.where(~notequal[:, this_idx])[0][0]
     symIdx = np.array([symF(this_idx) for this_idx in idx[~isnew]])
     return isnew, symIdx
 

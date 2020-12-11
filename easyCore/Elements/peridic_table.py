@@ -1581,7 +1581,6 @@ class Specie(Species):
     This maps the historical grammatically inaccurate Specie to Species
     to maintain backwards compatibility.
     """
-    pass
 
 
 class DummySpecie(DummySpecies):
@@ -1589,7 +1588,6 @@ class DummySpecie(DummySpecies):
     This maps the historical grammatically inaccurate DummySpecie to DummySpecies
     to maintain backwards compatibility.
     """
-    pass
 
 
 def get_el_sp(obj):
