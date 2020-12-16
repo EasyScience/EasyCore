@@ -10,7 +10,7 @@ from easyCore.Fitting.fitting_template import noneType, Union, Callable, \
 # Import lmfit specific objects
 from lmfit import Parameter as lmParameter, Parameters as lmParameters, Model as lmModel
 from lmfit.model import ModelResult
-from lmfit.minimizer import SCALAR_METHODS
+
 
 class lmfit(FittingTemplate):  # noqa: S101
     """
@@ -141,7 +141,6 @@ class lmfit(FittingTemplate):  # noqa: S101
         if method is not None and method in self.available_methods():
             default_method['method'] = method
 
-
         # Why do we do this? Because a fitting template has to have borg instantiated outside pre-runtime
         from easyCore import borg
         try:
@@ -232,4 +231,4 @@ class lmfit(FittingTemplate):  # noqa: S101
 
     def available_methods(self) -> List[str]:
         return ['leastsq', 'least_squares', 'differential_evolution', 'basinhopping', 'ampgo', 'nelder', 'lbfgsb',
-                     'powell', 'cg', 'newton', 'cobyla', 'bfgs']
+                'powell', 'cg', 'newton', 'cobyla', 'bfgs']

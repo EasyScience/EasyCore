@@ -35,7 +35,7 @@ class BaseCollection(MSONable, Sequence):
 
         for key, item in kwargs.items():
             if not issubclass(item.__class__, (Descriptor, BaseObj, BaseCollection)):
-                raise AttributeError
+                raise AttributeError('A collection can only be formed from easyCore objects.')
 
         self._borg.map.add_vertex(self, obj_type='created')
         self.interface = None
@@ -51,7 +51,7 @@ class BaseCollection(MSONable, Sequence):
 
         for key in kwargs.keys():
             if key in self.__dict__.keys():
-                raise AttributeError
+                raise AttributeError(f'Given kwarg: `{key}`, is an internal attribute. Please rename.')
             self._borg.map.add_edge(self, kwargs[key])
             self._borg.map.reset_type(kwargs[key], 'created_internal')
             # TODO wrap getter and setter in Logger
@@ -66,11 +66,13 @@ class BaseCollection(MSONable, Sequence):
         if issubclass(item.__class__, (BaseObj, Descriptor, BaseCollection)):
             self._kwargs[str(borg.map.convert_id_to_key(item))] = item
             self._borg.map.add_edge(self, self._kwargs[str(borg.map.convert_id_to_key(item))])
+        else:
+            raise AttributeError('A collection can only be formed from easyCore objects.')
 
     def __getitem__(self, idx: Union[int, slice]) -> Union[Parameter, Descriptor, BaseObj, 'BaseCollection']:
         """
         Get an item in the collection based on it's index.
-        
+
         :param idx: index or slice of the collection.
         :type idx: Union[int, slice]
         :return: Object at index `idx`
@@ -81,15 +83,21 @@ class BaseCollection(MSONable, Sequence):
             return self.__class__(getattr(self, 'name'), *[self[i] for i in range(start, stop, step)])
         if str(idx) in self._kwargs.keys():
             return self._kwargs[str(idx)]
-        if idx > len(self):
-            raise IndexError
+        if not isinstance(idx, int) or isinstance(idx, bool):
+            if isinstance(idx, bool):
+                raise TypeError('Boolean indexing is not supported at the moment')
+            try:
+                if idx > len(self):
+                    raise IndexError(f'Given index {idx} is out of bounds')
+            except TypeError:
+                raise IndexError('Index must be of type `int`/`slice` or an item name (`str`)')
         keys = list(self._kwargs.keys())
         return self._kwargs[keys[idx]]
 
     def __setitem__(self, key: int, value: Number):
         """
         Set an item via it's index.
-        
+
         :param key: Index in self. 
         :type key: int
         :param value: Value which index key should be set to.
@@ -99,7 +107,7 @@ class BaseCollection(MSONable, Sequence):
         if isinstance(value, Number):  # noqa: S3827
             item.value = value
         else:
-            raise NotImplementedError
+            raise NotImplementedError('At the moment only numerical values can be set.')
 
     def __delitem__(self, key: int):
         """
@@ -118,8 +126,8 @@ class BaseCollection(MSONable, Sequence):
     def __len__(self) -> int:
         """
         Get the number of items in this collection
-        
-        :return: Number of items in this collection 
+
+        :return: Number of items in this collection.
         :rtype: int
         """
         return len(self._kwargs.keys())
@@ -193,13 +201,13 @@ class BaseCollection(MSONable, Sequence):
     @classmethod
     def from_dict(cls, input_dict: dict):
         """
-        De-serialise the data and try to recreate the object. 
-        
+        De-serialise the data and try to recreate the object.
+
         :param input_dict: serialised dictionary of an object. Usually generated from `obj.as_dict()`
         :type input_dict: dict
         :return: Class constructed from the input_dict
         """
-        
+
         d = input_dict.copy()
         if len(d['data']) > 0:
             for idx, item in enumerate(d['data'][1:]):

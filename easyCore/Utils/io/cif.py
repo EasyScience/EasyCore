@@ -485,7 +485,7 @@ class CifParser:
                                 if not isinstance(temp_value, Number):
                                     temp_value = 0
                                     self.append = self.warnings.append(
-                                        f'Atom {section.data[0]._kwargs[needed_labels[0]].raw_value} has non-numeric ' \
+                                        f'Atom {section.data[0]._kwargs[needed_labels[0]].raw_value} has non-numeric '
                                         f'{key}. Setting to 0')
                                 data_dict[adp_types[adp_type][idx2]] = temp_value
                             adps = AtomicDisplacement.from_pars(adp_type, **data_dict)

@@ -191,7 +191,9 @@ class bumps(FittingTemplate):  # noqa: S101
         :return: bumps Parameter compatible object.
         :rtype: bumpsParameter
         """
-        return bumpsParameter(name='p' + str(NameConverter().get_key(obj)), value=obj.raw_value, bounds=[obj.min, obj.max], fixed=obj.fixed)
+        return bumpsParameter(name='p' + str(NameConverter().get_key(obj)),
+                              value=obj.raw_value, bounds=[obj.min, obj.max],
+                              fixed=obj.fixed)
 
     def _set_parameter_fit_result(self, fit_result):
         """
