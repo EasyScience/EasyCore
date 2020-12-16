@@ -245,7 +245,7 @@ class Lattice(BaseObj):
         :return: noneType
         :rtype: None
         """
-        self.length_a.raw_value = new_a_value
+        self.length_a.value = new_a_value
 
     @property
     def b(self) -> float:
@@ -267,7 +267,7 @@ class Lattice(BaseObj):
         :return: noneType
         :rtype: None
         """
-        self.length_b.raw_value = new_b_value
+        self.length_b.value = new_b_value
 
     @property
     def c(self) -> float:
@@ -289,7 +289,7 @@ class Lattice(BaseObj):
         :return: noneType
         :rtype: None
         """
-        self.length_c.raw_value = new_c_value
+        self.length_c.value = new_c_value
 
     @property
     def alpha(self) -> float:
@@ -311,7 +311,7 @@ class Lattice(BaseObj):
         :return: noneType
         :rtype: None
         """
-        self.angle_alpha.raw_value = new_alpha_value
+        self.angle_alpha.value = new_alpha_value
 
     @property
     def beta(self) -> float:
@@ -333,7 +333,7 @@ class Lattice(BaseObj):
         :return: noneType
         :rtype: None
         """
-        self.angle_beta.raw_value = new_beta_value
+        self.angle_beta.value = new_beta_value
 
     @property
     def gamma(self) -> float:
@@ -355,7 +355,7 @@ class Lattice(BaseObj):
         :return: noneType
         :rtype: None
         """
-        self.angle_gamma.raw_value = new_gamma_value
+        self.angle_gamma.value = new_gamma_value
 
     @property
     def lengths(self) -> Tuple[float, float, float]:
