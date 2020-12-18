@@ -61,7 +61,7 @@ d = ["aiohttp (>=3.3.2)", "aiohttp-cors"]
 
 [[package]]
 name = "bumps"
-version = "0.7.18"
+version = "0.8.0"
 description = "Data fitting with bayesian uncertainty analysis"
 category = "main"
 optional = false
@@ -460,7 +460,7 @@ testing = ["pytest (>=3.5,!=3.7.3)", "pytest-checkdocs (>=1.2.3)", "pytest-flake
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6, >=3.6.1"
-content-hash = "932f9f43ed63f5e4e7f8eb659a09e8ef7c3b396d1a7f2056915390e42c3d0248"
+content-hash = "51b372dce34ef6849a63ca614bdf6d7c53289335c5dda1331a8c634d0d98cde3"
 
 [metadata.files]
 appdirs = [
@@ -482,7 +482,7 @@ black = [
     {file = "black-20.8b1.tar.gz", hash = "sha256:1c02557aa099101b9d21496f8a914e9ed2222ef70336404eeeac8edba836fbea"},
 ]
 bumps = [
-    {file = "bumps-0.7.18.tar.gz", hash = "sha256:3217d4fd3ec767448d742f3b6ff527cc3817f2421b9a9a8456e1d8ee4a9b1087"},
+    {file = "bumps-0.8.0.tar.gz", hash = "sha256:9f92c05effd8175763799d19ca55592e89b053318f611148a6725159aea41d67"},
 ]
 certifi = [
     {file = "certifi-2020.6.20-py2.py3-none-any.whl", hash = "sha256:8fc0819f1f30ba15bdb34cceffb9ef04d99f420f68eb75d901e9560b8749fc41"},
