@@ -154,24 +154,6 @@ class Site(BaseObj):
     def is_magnetic(self):
         return self.specie.spin is not None
 
-    @staticmethod
-    def __getter(key: str):
-
-        def getter(obj):
-            return obj._kwargs[key]
-
-        return getter
-
-    @staticmethod
-    def __setter(key):
-        def setter(obj, value):
-            if issubclass(obj._kwargs[key].__class__, Descriptor):
-                obj._kwargs[key].value = value
-            else:
-                obj._kwargs[key] = value
-
-        return setter
-
 
 class PeriodicSite(Site):
 
@@ -209,6 +191,7 @@ class PeriodicSite(Site):
         :rtype:
         """
         return self.lattice.get_cartesian_coords(self.fract_coords)
+
 
 class Atoms(BaseCollection):
     def __init__(self, name: str, *args, interface=None, **kwargs):

@@ -392,3 +392,148 @@ def test_Lattice_is_hexagonal():
 def test_Lattice_repr(values, out_str):
     l = Lattice.from_pars(*values)
     assert str(l) == out_str
+
+
+def make_dict(value) -> dict:
+    return {
+        '@module': 'easyCore.Elements.Basic.Lattice',
+        '@class': 'Lattice',
+        '@version': '0.0.1',
+        'length_a': {
+            '@module': 'easyCore.Objects.Base',
+            '@class': 'Parameter',
+            '@version': '0.0.1',
+            'name': 'length_a',
+            'value': float(value[0]),
+            'error': 0.0,
+            'min': 0,
+            'max': np.inf,
+            'fixed': True,
+            'description': 'Unit-cell length of the selected structure in angstroms.',
+            'url': 'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic/Icell_length_.html',
+            'units': 'angstrom',
+            '@id': '149027786693506016496254445195239597714',
+            'enabled': True
+        },
+        'length_b': {
+            '@module': 'easyCore.Objects.Base',
+            '@class': 'Parameter',
+            '@version': '0.0.1',
+            'name': 'length_b',
+            'value': float(value[1]),
+            'error': 0.0,
+            'min': 0,
+            'max': np.inf,
+            'fixed': True,
+            'description': 'Unit-cell length of the selected structure in angstroms.',
+            'url': 'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic/Icell_length_.html',
+            'units': 'angstrom',
+            '@id': '294836968667493729920294930317191977696',
+            'enabled': True
+        },
+        'length_c': {
+            '@module': 'easyCore.Objects.Base',
+            '@class': 'Parameter',
+            '@version': '0.0.1',
+            'name': 'length_c',
+            'value': float(value[2]),
+            'error': 0.0,
+            'min': 0,
+            'max': np.inf,
+            'fixed': True,
+            'description': 'Unit-cell length of the selected structure in angstroms.',
+            'url': 'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic/Icell_length_.html',
+            'units': 'angstrom',
+            '@id': '275642519607899521714432039990092728990',
+            'enabled': True
+        },
+        'angle_alpha': {
+            '@module': 'easyCore.Objects.Base',
+            '@class': 'Parameter',
+            '@version': '0.0.1',
+            'name': 'angle_alpha',
+            'value': float(value[3]),
+            'error': 0.0,
+            'min': 0,
+            'max': np.inf,
+            'fixed': True,
+            'description': 'Unit-cell angle of the selected structure in degrees.',
+            'url': 'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic/Icell_angle_.html',
+            'units': 'degree',
+            '@id': '161899496656810433045540450883723049023',
+            'enabled': True
+        },
+        'angle_beta': {
+            '@module': 'easyCore.Objects.Base',
+            '@class': 'Parameter',
+            '@version': '0.0.1',
+            'name': 'angle_beta',
+            'value': float(value[4]),
+            'error': 0.0,
+            'min': 0,
+            'max': np.inf,
+            'fixed': True,
+            'description': 'Unit-cell angle of the selected structure in degrees.',
+            'url': 'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic/Icell_angle_.html',
+            'units': 'degree',
+            '@id': '186637124621565458307862080073460500737',
+            'enabled': True
+        },
+        'angle_gamma': {
+            '@module': 'easyCore.Objects.Base',
+            '@class': 'Parameter',
+            '@version': '0.0.1',
+            'name': 'angle_gamma',
+            'value': float(value[5]),
+            'error': 0.0,
+            'min': 0,
+            'max': np.inf,
+            'fixed': True,
+            'description': 'Unit-cell angle of the selected structure in degrees.',
+            'url': 'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic/Icell_angle_.html',
+            'units': 'degree',
+            '@id': '225244117838730303286513043607480352526',
+            'enabled': True
+        },
+        'interface': None,
+        '@id': '78109834334085432621980127205750673524'
+    }
+
+
+@pytest.mark.parametrize('value', basic_pars)
+def test_Lattice_as_dict(value: list):
+    l = Lattice.from_pars(*value)
+    obtained = l.as_dict()
+    expected = make_dict(value)
+
+    def check_dict(check, item):
+        if isinstance(check, dict) and isinstance(item, dict):
+            for this_check_key in check.keys():
+                if this_check_key == '@id':
+                    continue
+                check_dict(check[this_check_key], item[this_check_key])
+        else:
+            assert isinstance(item, type(check))
+            assert item == check
+
+    check_dict(expected, obtained)
+
+
+@pytest.mark.parametrize('value', basic_pars)
+def test_Lattice_from_dict(value: list):
+
+    expected = make_dict(value)
+    l = Lattice.from_dict(expected)
+    obtained = l.as_dict()
+
+    def check_dict(check, item):
+        if isinstance(check, dict) and isinstance(item, dict):
+            for this_check_key in check.keys():
+                if this_check_key == '@id':
+                    continue
+                check_dict(check[this_check_key], item[this_check_key])
+        else:
+            assert isinstance(item, type(check))
+            assert item == check
+
+    check_dict(expected, obtained)
