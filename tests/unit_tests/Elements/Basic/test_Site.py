@@ -15,6 +15,7 @@ site_details = [('Al', 'Al'), ('Fe', 'Fe3+'), ('TEST', 'H')]
 def instance(request):
     def class_creation(*args, **kwargs):
         return Site.from_pars(*request.param, *args, **kwargs)
+
     return class_creation
 
 
@@ -86,9 +87,9 @@ def test_Site_creation(instance, element: List, expected: dict):
         else:
             assert obtained == ref
 
+
 @pytest.mark.parametrize('label, elm', site_details)
 def test_Site_default(label, elm):
-
     site = Site.default(label, elm)
 
     assert site.name == label
@@ -148,7 +149,7 @@ def test_Site_fract_coords(instance, element: List, expected: dict):
 
 @pytest.mark.parametrize('instance', site_details, indirect=True)
 @pytest.mark.parametrize("element, expected", _generate_inputs(do_occ=False))
-@pytest.mark.parametrize('second_pt', ([0.0, 0.0, 0.0], [0.25, 0.1, 0.1], [1/8, 1/3, 1/4]))
+@pytest.mark.parametrize('second_pt', ([0.0, 0.0, 0.0], [0.25, 0.1, 0.1], [1 / 8, 1 / 3, 1 / 4]))
 def test_Site_fract_dist(instance, element: List, expected: dict, second_pt):
     d = instance(**element)
     other_site = Site.from_pars('H', 'H', 1, *second_pt)
@@ -182,20 +183,20 @@ def test_Site_as_dict(label, elm):
         '@class':    'Site',
         '@version':  '0.0.1',
         '@id':       None,
-        'label': {
-             '@module':      'easyCore.Objects.Base',
-             '@class':       'Descriptor',
-             '@version':     '0.0.1',
-             '@id':          None,
-             'name':         'label',
-             'value':        label,
-             'units':        'dimensionless',
-             'description':  'A unique identifier for a particular site in the crystal',
-             'url':          'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic/Iatom_site_label'
-                             '.html',
-             'display_name': 'label',
-             'enabled':      True
-         },
+        'label':     {
+            '@module':      'easyCore.Objects.Base',
+            '@class':       'Descriptor',
+            '@version':     '0.0.1',
+            '@id':          None,
+            'name':         'label',
+            'value':        label,
+            'units':        'dimensionless',
+            'description':  'A unique identifier for a particular site in the crystal',
+            'url':          'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic/Iatom_site_label'
+                            '.html',
+            'display_name': 'label',
+            'enabled':      True
+        },
         # Note that we are skipping specie checking as it it covered in another file...
         # 'specie': {
         #      '@module':  'easyCore.Elements.Basic.Specie', '@class': 'Specie',
@@ -212,77 +213,77 @@ def test_Site_as_dict(label, elm):
         #      'units':    'dimensionless',
         #  },
         'occupancy': {
-             '@module':     'easyCore.Objects.Base',
-             '@class':      'Parameter',
-             '@version':    '0.0.1',
-             '@id':         None,
-             'name':        'occupancy',
-             'value':       1.0,
-             'error':       0.0,
-             'min':         -np.inf,
-             'max':         np.inf,
-             'fixed':       True,
-             'description': 'The fraction of the atom type present at this site.',
-             'url':
-                            'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic'
-                            '/Iatom_site_occupancy.html',
-             'units':       'dimensionless',
-             'enabled':     True
-         },
-        'fract_x': {
-             '@module':     'easyCore.Objects.Base',
-             '@class':      'Parameter',
-             '@version':    '0.0.1',
-             '@id':         None,
-             'name':        'fract_x',
-             'value':       0.0,
-             'error':       0.0,
-             'min':         -np.inf,
-             'max':         np.inf,
-             'fixed':       True,
-             'description': 'Atom-site coordinate as fractions of the unit cell length.',
-             'url':
-                            'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic'
-                            '/Iatom_site_fract_.html',
-             'units':       'dimensionless',
-             'enabled':     True
-         },
-        'fract_y': {
-             '@module':     'easyCore.Objects.Base',
-             '@class':      'Parameter',
-             '@version':    '0.0.1',
-             '@id':         None,
-             'name':        'fract_y',
-             'value':       0.0,
-             'error':       0.0,
-             'min':         -np.inf,
-             'max':         np.inf,
-             'fixed':       True,
-             'description': 'Atom-site coordinate as fractions of the unit cell length.',
-             'url':
-                            'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic'
-                            '/Iatom_site_fract_.html',
-             'units':       'dimensionless',
-             'enabled':     True
-         },
-        'fract_z': {
-             '@module':     'easyCore.Objects.Base',
-             '@class':      'Parameter',
-             '@version':    '0.0.1',
-             '@id':         None,
-             'name':        'fract_z',
-             'value':       0.0,
-             'error':       0.0,
-             'min':         -np.inf,
-             'max':         np.inf,
-             'fixed':       True,
-             'description': 'Atom-site coordinate as fractions of the unit cell length.',
-             'url':
-                            'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic'
-                            '/Iatom_site_fract_.html',
-             'units':       'dimensionless',
-             'enabled':     True
-         },
+            '@module':     'easyCore.Objects.Base',
+            '@class':      'Parameter',
+            '@version':    '0.0.1',
+            '@id':         None,
+            'name':        'occupancy',
+            'value':       1.0,
+            'error':       0.0,
+            'min':         -np.inf,
+            'max':         np.inf,
+            'fixed':       True,
+            'description': 'The fraction of the atom type present at this site.',
+            'url':
+                           'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic'
+                           '/Iatom_site_occupancy.html',
+            'units':       'dimensionless',
+            'enabled':     True
+        },
+        'fract_x':   {
+            '@module':     'easyCore.Objects.Base',
+            '@class':      'Parameter',
+            '@version':    '0.0.1',
+            '@id':         None,
+            'name':        'fract_x',
+            'value':       0.0,
+            'error':       0.0,
+            'min':         -np.inf,
+            'max':         np.inf,
+            'fixed':       True,
+            'description': 'Atom-site coordinate as fractions of the unit cell length.',
+            'url':
+                           'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic'
+                           '/Iatom_site_fract_.html',
+            'units':       'dimensionless',
+            'enabled':     True
+        },
+        'fract_y':   {
+            '@module':     'easyCore.Objects.Base',
+            '@class':      'Parameter',
+            '@version':    '0.0.1',
+            '@id':         None,
+            'name':        'fract_y',
+            'value':       0.0,
+            'error':       0.0,
+            'min':         -np.inf,
+            'max':         np.inf,
+            'fixed':       True,
+            'description': 'Atom-site coordinate as fractions of the unit cell length.',
+            'url':
+                           'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic'
+                           '/Iatom_site_fract_.html',
+            'units':       'dimensionless',
+            'enabled':     True
+        },
+        'fract_z':   {
+            '@module':     'easyCore.Objects.Base',
+            '@class':      'Parameter',
+            '@version':    '0.0.1',
+            '@id':         None,
+            'name':        'fract_z',
+            'value':       0.0,
+            'error':       0.0,
+            'min':         -np.inf,
+            'max':         np.inf,
+            'fixed':       True,
+            'description': 'Atom-site coordinate as fractions of the unit cell length.',
+            'url':
+                           'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic'
+                           '/Iatom_site_fract_.html',
+            'units':       'dimensionless',
+            'enabled':     True
+        },
         'interface': None,
     }
 
@@ -298,6 +299,7 @@ def test_Site_as_dict(label, elm):
 
     check_dict(expected, obtained)
 
+
 @pytest.mark.parametrize('label, elm', site_details)
 def test_Site_from_dict(label, elm):
     d = {
@@ -305,100 +307,100 @@ def test_Site_from_dict(label, elm):
         '@class':    'Site',
         '@version':  '0.0.1',
         '@id':       None,
-        'label': {
-             '@module':      'easyCore.Objects.Base',
-             '@class':       'Descriptor',
-             '@version':     '0.0.1',
-             '@id':          None,
-             'name':         'label',
-             'value':        label,
-             'units':        'dimensionless',
-             'description':  'A unique identifier for a particular site in the crystal',
-             'url':          'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic/Iatom_site_label'
-                             '.html',
-             'display_name': 'label',
-             'enabled':      True
-         },
-        'specie': {
-             '@module':  'easyCore.Elements.Basic.Specie', '@class': 'Specie',
-             '@version': '0.0.1',
-             '@id':      None,
-             'specie': elm,
-             'value':    elm,
-             'units':    'dimensionless',
-         },
+        'label':     {
+            '@module':      'easyCore.Objects.Base',
+            '@class':       'Descriptor',
+            '@version':     '0.0.1',
+            '@id':          None,
+            'name':         'label',
+            'value':        label,
+            'units':        'dimensionless',
+            'description':  'A unique identifier for a particular site in the crystal',
+            'url':          'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic/Iatom_site_label'
+                            '.html',
+            'display_name': 'label',
+            'enabled':      True
+        },
+        'specie':    {
+            '@module':  'easyCore.Elements.Basic.Specie', '@class': 'Specie',
+            '@version': '0.0.1',
+            '@id':      None,
+            'specie':   elm,
+            'value':    elm,
+            'units':    'dimensionless',
+        },
         'occupancy': {
-             '@module':     'easyCore.Objects.Base',
-             '@class':      'Parameter',
-             '@version':    '0.0.1',
-             '@id':         None,
-             'name':        'occupancy',
-             'value':       1.0,
-             'error':       0.0,
-             'min':         -np.inf,
-             'max':         np.inf,
-             'fixed':       True,
-             'description': 'The fraction of the atom type present at this site.',
-             'url':
-                            'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic'
-                            '/Iatom_site_occupancy.html',
-             'units':       'dimensionless',
-             'enabled':     True
-         },
-        'fract_x': {
-             '@module':     'easyCore.Objects.Base',
-             '@class':      'Parameter',
-             '@version':    '0.0.1',
-             '@id':         None,
-             'name':        'fract_x',
-             'value':       0.0,
-             'error':       0.0,
-             'min':         -np.inf,
-             'max':         np.inf,
-             'fixed':       True,
-             'description': 'Atom-site coordinate as fractions of the unit cell length.',
-             'url':
-                            'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic'
-                            '/Iatom_site_fract_.html',
-             'units':       'dimensionless',
-             'enabled':     True
-         },
-        'fract_y': {
-             '@module':     'easyCore.Objects.Base',
-             '@class':      'Parameter',
-             '@version':    '0.0.1',
-             '@id':         None,
-             'name':        'fract_y',
-             'value':       0.0,
-             'error':       0.0,
-             'min':         -np.inf,
-             'max':         np.inf,
-             'fixed':       True,
-             'description': 'Atom-site coordinate as fractions of the unit cell length.',
-             'url':
-                            'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic'
-                            '/Iatom_site_fract_.html',
-             'units':       'dimensionless',
-             'enabled':     True
-         },
-        'fract_z': {
-             '@module':     'easyCore.Objects.Base',
-             '@class':      'Parameter',
-             '@version':    '0.0.1',
-             '@id':         None,
-             'name':        'fract_z',
-             'value':       0.0,
-             'error':       0.0,
-             'min':         -np.inf,
-             'max':         np.inf,
-             'fixed':       True,
-             'description': 'Atom-site coordinate as fractions of the unit cell length.',
-             'url':
-                            'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic'
-                            '/Iatom_site_fract_.html',
-             'units':       'dimensionless',
-             'enabled':     True
-         },
+            '@module':     'easyCore.Objects.Base',
+            '@class':      'Parameter',
+            '@version':    '0.0.1',
+            '@id':         None,
+            'name':        'occupancy',
+            'value':       1.0,
+            'error':       0.0,
+            'min':         -np.inf,
+            'max':         np.inf,
+            'fixed':       True,
+            'description': 'The fraction of the atom type present at this site.',
+            'url':
+                           'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic'
+                           '/Iatom_site_occupancy.html',
+            'units':       'dimensionless',
+            'enabled':     True
+        },
+        'fract_x':   {
+            '@module':     'easyCore.Objects.Base',
+            '@class':      'Parameter',
+            '@version':    '0.0.1',
+            '@id':         None,
+            'name':        'fract_x',
+            'value':       0.0,
+            'error':       0.0,
+            'min':         -np.inf,
+            'max':         np.inf,
+            'fixed':       True,
+            'description': 'Atom-site coordinate as fractions of the unit cell length.',
+            'url':
+                           'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic'
+                           '/Iatom_site_fract_.html',
+            'units':       'dimensionless',
+            'enabled':     True
+        },
+        'fract_y':   {
+            '@module':     'easyCore.Objects.Base',
+            '@class':      'Parameter',
+            '@version':    '0.0.1',
+            '@id':         None,
+            'name':        'fract_y',
+            'value':       0.0,
+            'error':       0.0,
+            'min':         -np.inf,
+            'max':         np.inf,
+            'fixed':       True,
+            'description': 'Atom-site coordinate as fractions of the unit cell length.',
+            'url':
+                           'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic'
+                           '/Iatom_site_fract_.html',
+            'units':       'dimensionless',
+            'enabled':     True
+        },
+        'fract_z':   {
+            '@module':     'easyCore.Objects.Base',
+            '@class':      'Parameter',
+            '@version':    '0.0.1',
+            '@id':         None,
+            'name':        'fract_z',
+            'value':       0.0,
+            'error':       0.0,
+            'min':         -np.inf,
+            'max':         np.inf,
+            'fixed':       True,
+            'description': 'Atom-site coordinate as fractions of the unit cell length.',
+            'url':
+                           'https://www.iucr.org/__data/iucr/cifdic_html/1/cif_core.dic'
+                           '/Iatom_site_fract_.html',
+            'units':       'dimensionless',
+            'enabled':     True
+        },
         'interface': None,
     }
 
