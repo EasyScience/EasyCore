@@ -32,6 +32,7 @@ lmfit = "^1.0"
 bumps = "^0.8"
 asteval = "^0.9.21"
 monty = "^4.0.2"
+DFO-LS = "^1.2.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.1"
