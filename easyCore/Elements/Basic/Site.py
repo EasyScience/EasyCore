@@ -195,6 +195,8 @@ class PeriodicSite(Site):
 
 class Atoms(BaseCollection):
     def __init__(self, name: str, *args, interface=None, **kwargs):
+        if not isinstance(name, str):
+            raise TypeError('A `name` for this collection must be given in string form')
         super(Atoms, self).__init__(name, *args, **kwargs)
         self.interface = interface
 

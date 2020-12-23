@@ -18,6 +18,25 @@ def gen_sites() -> List[Site]:
     return args
 
 
+def test_Atoms_empty():
+    name = 'test'
+    atoms = Atoms(name)
+    assert len(atoms) == 0
+    assert atoms.name == name
+
+
+def test_Atoms_wrong_name():
+    name = False
+    with pytest.raises(TypeError):
+        atoms = Atoms(name)
+
+
+# def test_Atoms_wrong_args():
+#     name = 'test'
+#     args = [False, 'testing', (), []]
+#     with pytest.raises(TypeError):
+#         atoms = Atoms(name, *args)
+
 @pytest.mark.parametrize('sites', gen_sites())
 def test_Atoms_creation_args(sites: List[Site]):
 
