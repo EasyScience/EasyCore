@@ -299,6 +299,7 @@ def test_Lattice_reciprocal_lattice(in_value: list, new_value: list):
         assert np.isclose(f.raw_value, new_value[idx])
 
 
+
 @pytest.mark.parametrize('in_value, new_value', mod_pars([(0.2, 0.2, 0.2, 90, 90, 90),
                                                           (0.1, 0.1, 0.2, 90, 90, 90),
                                                           (0.5, 1 / 3, 0.25, 90, 90, 90),
@@ -537,3 +538,89 @@ def test_Lattice_from_dict(value: list):
             assert item == check
 
     check_dict(expected, obtained)
+
+
+@pytest.mark.parametrize('value', basic_pars)
+@pytest.mark.parametrize('fmt', ['.3f'])
+@pytest.mark.parametrize('opt', ['m', 'l', 't'])
+def test_Lattice_fmt(value, fmt, opt):
+
+    l = Lattice.from_pars(*value)
+    out_fmt = '{}{}'.format(fmt, opt)
+
+    def do_test(in_str):
+        m = (l.lengths, l.angles)
+        if opt == 'm':
+            m = l.matrix.tolist()
+            fmt2 = "[[{}, {}, {}], [{}, {}, {}], [{}, {}, {}]]"
+        elif opt == 'l':
+            fmt2 = "{{{}, {}, {}, {}, {}, {}}}"
+        else:
+            fmt2 = "({} {} {}), ({} {} {})"
+        check_str = fmt2.format(*[format(c, fmt) for row in m for c in row])
+        assert in_str == check_str
+    # Ancient Python. We won't be supporting this
+    with pytest.raises(TypeError):
+        out_fmt2 = '%' + out_fmt
+        out_str = out_fmt2 % l
+        do_test(out_str)
+    # Python >2.7 "{:03fm}".format(l)
+    out_fmt2 = '{:' + f'{out_fmt}' + '}'
+    out_str = out_fmt2.format(l)
+    do_test(out_str)
+    # Python >3.6 + f"{l:03fm}"
+    # This is stupidly dangerous.
+    # Releases dragons, orks and is where darkness lies. You've been warned
+    # !!!! DO NOT USE OUT OF THIS UNIQUE CONTEXT !!!!
+
+    def effify(non_f_str: str, l: Lattice) ->str:
+        return eval(f'f"""{non_f_str}"""')
+
+    out_str = effify(f'{{l:{out_fmt}}}', l)
+    do_test(out_str)
+
+
+@pytest.mark.parametrize('value', basic_pars)
+def test_lattice_copy(value):
+    from copy import copy
+
+    l1 = Lattice.from_pars(*value)
+    l2 = copy(l1)
+
+    items = ['length_a', 'length_b', 'length_c',
+             'angle_alpha', 'angle_beta', 'angle_gamma']
+
+    for item in items:
+        f1 = getattr(l1, item)
+        f2 = getattr(l2, item)
+        assert np.isclose(f1.raw_value, f2.raw_value)
+        assert f1 != f2
+
+
+@pytest.mark.parametrize('value', basic_pars)
+def test_lattice_to_star(value):
+    l = Lattice.from_pars(*value)
+    star = l.to_star()
+
+    items = ['length_a', 'length_b', 'length_c',
+             'angle_alpha', 'angle_beta', 'angle_gamma']
+
+    for item in items:
+        assert item in star.labels
+    assert star.data[0] == l
+
+
+@pytest.mark.parametrize('value', basic_pars)
+def test_lattice_from_star(value):
+    l1 = Lattice.from_pars(*value)
+    star_string = str(l1.to_star())
+    l2 = Lattice.from_star(star_string)
+
+    items = ['length_a', 'length_b', 'length_c',
+             'angle_alpha', 'angle_beta', 'angle_gamma']
+
+    for item in items:
+        f1 = getattr(l1, item)
+        f2 = getattr(l2, item)
+        assert np.isclose(f1.raw_value, f2.raw_value)
+        assert f1 != f2

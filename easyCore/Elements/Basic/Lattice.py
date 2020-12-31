@@ -653,7 +653,7 @@ class Lattice(BaseObj):
 
     @classmethod
     def from_star(cls, in_string):
-        return StarSection.from_string(cls, in_string)
+        return StarSection.from_string(in_string).to_class(cls)
 
     def get_points_in_sphere(
             self,
