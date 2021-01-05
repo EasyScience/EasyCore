@@ -619,6 +619,8 @@ def test_lattice_from_star(value):
     items = ['length_a', 'length_b', 'length_c',
              'angle_alpha', 'angle_beta', 'angle_gamma']
 
+    assert l1 != l2
+
     for item in items:
         f1 = getattr(l1, item)
         f2 = getattr(l2, item)
