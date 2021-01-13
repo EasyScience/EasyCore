@@ -186,6 +186,14 @@ class DFO(FittingTemplate):  # noqa: S101
             par.value = fit_result.x[idx]
             par.error = error_matrix[idx, idx]
 
+        JtJi = np.linalg.inv(np.dot(fit_result.jacobian.T, fit_result.jacobian))
+        # 1.96 is a 95% confidence value
+        E_m = 1.96 * np.dot(JtJi, np.dot(fit_result.jacobian.T,
+                                   np.dot(np.diag(fit_result.resid ** 2), np.dot(fit_result.jacobian, JtJi))))
+        for idx, par in enumerate(pars.values()):
+            par.value = fit_result.x[idx]
+            par.error = E_m[idx, idx]
+
     def _gen_fit_results(self, fit_results, **kwargs) -> FitResults:
         """
         Convert fit results into the unified `FitResults` format
