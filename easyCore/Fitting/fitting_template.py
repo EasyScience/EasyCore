@@ -172,7 +172,6 @@ class FittingTemplate(metaclass=ABCMeta):
         z = 1 - ((1 - confidence) / 2)
         z = stats.norm.pdf(z)
         E_m = z * np.sqrt(E_m)
-        return E_m
 
 
 class FitResults:

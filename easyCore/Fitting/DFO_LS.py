@@ -181,20 +181,10 @@ class DFO(FittingTemplate):  # noqa: S101
         :rtype: noneType
         """
         pars = self._cached_pars
-        error_matrix = self._error_from_jacobian(fit_result.jacobian, fit_result.resid, ci)
+        error_matrix = self._error_from_jacobian(fit_result.jacobian, fit_result.reshape, ci)
         for idx, par in enumerate(pars.values()):
             par.value = fit_result.x[idx]
             par.error = error_matrix[idx, idx]
-
-        JtJi = np.linalg.inv(np.dot(fit_result.jacobian.T, fit_result.jacobian))
-        # 1.96 is a 95% confidence value
-        E_m = np.dot(JtJi, np.dot(fit_result.jacobian.T,
-                                   np.dot(np.diag(fit_result.resid ** 2), np.dot(fit_result.jacobian, JtJi))))
-
-        E_m = 1.96 * np.sqrt(E_m)
-        for idx, par in enumerate(pars.values()):
-            par.value = fit_result.x[idx]
-            par.error = E_m[idx, idx]
 
     def _gen_fit_results(self, fit_results, **kwargs) -> FitResults:
         """
