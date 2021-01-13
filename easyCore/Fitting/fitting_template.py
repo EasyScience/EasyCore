@@ -8,6 +8,8 @@ from typing import Union, Callable, List
 from easyCore import np
 from easyCore.Utils.typing import noneType
 
+from scipy import stats
+
 
 class FittingTemplate(metaclass=ABCMeta):
     """
@@ -159,6 +161,17 @@ class FittingTemplate(metaclass=ABCMeta):
         :return: List of available methods for minimization
         :rtype: List[str]
         """
+
+    @staticmethod
+    def _error_from_jacobian(jacobian: np.ndarray, residuals: np.ndarray, confidence: float = 0.95) -> np.ndarray:
+        JtJi = np.linalg.inv(np.dot(jacobian.T, jacobian))
+        # 1.96 is a 95% confidence value
+        E_m = np.dot(JtJi, np.dot(jacobian.T,
+                                  np.dot(np.diag(residuals ** 2), np.dot(jacobian, JtJi))))
+
+        z = 1 - ((1 - confidence) / 2)
+        z = stats.norm.pdf(z)
+        E_m = z * np.sqrt(E_m)
 
 
 class FitResults:

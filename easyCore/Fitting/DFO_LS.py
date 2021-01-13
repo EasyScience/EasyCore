@@ -32,12 +32,12 @@ class DFO(FittingTemplate):  # noqa: S101
         """
         super().__init__(obj, fit_function)
 
-    def make_model(self, pars: Union[noneType, List[float]] = None) -> Callable:
+    def make_model(self, pars: Union[noneType, list] = None) -> Callable:
         """
-        Generate a bumps model from the supplied `fit_function` and parameters in the base object.
+        Generate a model from the supplied `fit_function` and parameters in the base object.
         Note that this makes a callable as it needs to be initialized with *x*, *y*, *weights*
 
-        :return: Callable to make a bumps Curve model
+        :return: Callable model which returns residuals
         :rtype: Callable
         """
         fit_func = self._generate_fit_function()
@@ -83,7 +83,7 @@ class DFO(FittingTemplate):  # noqa: S101
         # Make a new fit function
         def fit_function(x: np.ndarray, **kwargs):
             """
-            Wrapped fit function which now has a bumps compatible form
+            Wrapped fit function which now has an easyCore compatible form
 
             :param x: array of data points to be calculated
             :type x: np.ndarray
@@ -113,7 +113,7 @@ class DFO(FittingTemplate):  # noqa: S101
             model=None, parameters=None, method: str = None, xtol: float = 1e-6, ftol: float = 1e-8,
             **kwargs) -> FitResults:
         """
-        Perform a fit using the lmfit engine.
+        Perform a fit using the DFO-ls engine.
 
         :param x: points to be calculated at
         :type x: np.ndarray
@@ -157,38 +157,34 @@ class DFO(FittingTemplate):  # noqa: S101
         return self._gen_fit_results(model_results)
 
     def convert_to_pars_obj(self, par_list: Union[list, noneType] = None):
+        """
+        NOTE THAT THIS IS NOT NEEDED FOR DFO-LS
+        """
+
         pass
 
-    # For some reason I have to double staticmethod :-/
     @staticmethod
     def convert_to_par_object(obj) -> None:
         """
-        Convert an `easyCore.Objects.Base.Parameter` object to a bumps Parameter object
-
-        :return: bumps Parameter compatible object.
-        :rtype: bumpsParameter
+        Convert an `easyCore.Objects.Base.Parameter` object to a new Parameter object
+        NOTE THAT THIS IS NOT NEEDED FOR DFO-LS
         """
         pass
 
-    def _set_parameter_fit_result(self, fit_result):
+    def _set_parameter_fit_result(self, fit_result, ci: float = 0.95) -> None:
         """
         Update parameters to their final values and assign a std error to them.
 
         :param fit_result: Fit object which contains info on the fit
+        :param ci: Confidence interval for calculating errors. Default 95%
         :return: None
         :rtype: noneType
         """
         pars = self._cached_pars
-
-        JtJi = np.linalg.inv(np.dot(fit_result.jacobian.T, fit_result.jacobian))
-        # 1.96 is a 95% confidence value
-        E_m = np.dot(JtJi, np.dot(fit_result.jacobian.T,
-                                   np.dot(np.diag(fit_result.resid ** 2), np.dot(fit_result.jacobian, JtJi))))
-
-        E_m = 1.96 * np.sqrt(E_m)
+        error_matrix = self._error_from_jacobian(fit_result.jacobian, fit_result.reshape, ci)
         for idx, par in enumerate(pars.values()):
             par.value = fit_result.x[idx]
-            par.error = E_m[idx, idx]
+            par.error = error_matrix[idx, idx]
 
     def _gen_fit_results(self, fit_results, **kwargs) -> FitResults:
         """
@@ -223,7 +219,16 @@ class DFO(FittingTemplate):  # noqa: S101
     def available_methods(self) -> List[str]:
         return ['leastsq']
 
-    def dfols_fit(self, model, **kwargs):
+    def dfols_fit(self, model: Callable, **kwargs):
+        """
+        Method to convert easyCore styling to DFO-LS styling (yes, again)
+
+        :param model: Model which accepts f(x[0])
+        :type model: Callable
+        :param kwargs: Any additional arguments for dfols.solver
+        :type kwargs: dict
+        :return: dfols fit results container
+=        """
         x0 = np.array([par.raw_value for par in iter(self._cached_pars.values())])
         bounds = (np.array([par.min for par in iter(self._cached_pars.values())]),
                   np.array([par.max for par in iter(self._cached_pars.values())]))
