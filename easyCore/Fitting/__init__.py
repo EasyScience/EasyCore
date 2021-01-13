@@ -15,6 +15,12 @@ try:
 except ImportError:
     # TODO make this a proper message (use logging?)
     warnings.warn('bumps has not been installed.', ImportWarning, stacklevel=2)
+try:
+    from easyCore.Fitting.DFO_LS import DFO  # noqa: F401, E402
+    imported += 1
+except ImportError:
+    # TODO make this a proper message (use logging?)
+    warnings.warn('dfo-ls has not been installed.', ImportWarning, stacklevel=2)
 
 from easyCore.Fitting.fitting_template import FittingTemplate  # noqa: E402
 

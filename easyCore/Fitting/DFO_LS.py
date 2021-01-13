@@ -1,7 +1,6 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
-import inspect
 from typing import List
 from numbers import Number
 
@@ -12,7 +11,7 @@ from easyCore.Fitting.fitting_template import noneType, Union, Callable, \
 import dfols
 
 
-class DFO_LS(FittingTemplate):  # noqa: S101
+class DFO(FittingTemplate):  # noqa: S101
     """
     This is a wrapper to Derivative free optimisation: https://numericalalgorithmsgroup.github.io/dfols/
     """
@@ -43,13 +42,28 @@ class DFO_LS(FittingTemplate):  # noqa: S101
         """
         fit_func = self._generate_fit_function()
 
-        def residuals(x0):
-            return (fit_func(x, x0) - y)/weights
-        
-        residuals.x = x
-        residuals.y = y
-        residuals.weights = weights
-        return residuals
+        def outer(obj):
+            def make_func(x, y, weights):
+                par = {}
+                if not pars:
+                    for name, item in obj._cached_pars.items():
+                        par['p' + str(name)] = item.raw_value
+                else:
+                    for item in pars:
+                        par['p' + str(NameConverter().get_key(item))] = item.raw_value
+
+                def residuals(x0) -> np.ndarray:
+                    for idx, par_name in enumerate(par.keys()):
+                        par[par_name] = x0[idx]
+                    return (y - fit_func(x, **par)) / weights
+
+                setattr(residuals, 'x', x)
+                setattr(residuals, 'y', y)
+                return residuals
+
+            return make_func
+
+        return outer(self)
 
     def _generate_fit_function(self) -> Callable:
         """
@@ -96,7 +110,8 @@ class DFO_LS(FittingTemplate):  # noqa: S101
         return fit_function
 
     def fit(self, x: np.ndarray, y: np.ndarray, weights: Union[np.ndarray, noneType] = None,
-            model=None, parameters=None, method: str = None, xtol: float = 1e-6, ftol: float = 1e-8, **kwargs) -> FitResults:
+            model=None, parameters=None, method: str = None, xtol: float = 1e-6, ftol: float = 1e-8,
+            **kwargs) -> FitResults:
         """
         Perform a fit using the lmfit engine.
 
@@ -125,7 +140,8 @@ class DFO_LS(FittingTemplate):  # noqa: S101
             weights = np.sqrt(y)
 
         if model is None:
-            model = self.make_model(x, y, weights)
+            model = self.make_model(pars=parameters)
+            model = model(x, y, weights)
         self._cached_model = model
 
         # Why do we do this? Because a fitting template has to have borg instantiated outside pre-runtime
@@ -140,20 +156,8 @@ class DFO_LS(FittingTemplate):  # noqa: S101
             borg.stack.endMacro()
         return self._gen_fit_results(model_results)
 
-    def convert_to_pars_obj(self, par_list: Union[list, noneType] = None) -> List[bumpsParameter]:
-        """
-        Create a container with the `Parameters` converted from the base object.
-
-        :param par_list: If only a single/selection of parameter is required. Specify as a list
-        :type par_list: List[str]
-        :return: bumps Parameters list
-        :rtype: List[bumpsParameter]
-        """
-        if par_list is None:
-            # Assume that we have a BaseObj for which we can obtain a list
-            par_list = self._object.get_fit_parameters()
-        pars_obj = ([self.__class__.convert_to_par_object(obj) for obj in par_list])
-        return pars_obj
+    def convert_to_pars_obj(self, par_list: Union[list, noneType] = None):
+        pass
 
     # For some reason I have to double staticmethod :-/
     @staticmethod
@@ -175,9 +179,14 @@ class DFO_LS(FittingTemplate):  # noqa: S101
         :rtype: noneType
         """
         pars = self._cached_pars
-        for index, parameter in enumerate(self._cached_model):
-            pars[index].value = fit_result.x[index]
-            pars[index].error = fit_result.resid[index]
+
+        JtJi = np.linalg.inv(np.dot(fit_result.jacobian.T, fit_result.jacobian))
+        # 1.96 is a 95% confidence value
+        E_m = 1.96 * np.dot(JtJi, np.dot(fit_result.jacobian.T,
+                                   np.dot(np.diag(fit_result.resid ** 2), np.dot(fit_result.jacobian, JtJi))))
+        for idx, par in enumerate(pars.values()):
+            par.value = fit_result.x[idx]
+            par.error = E_m[idx, idx]
 
     def _gen_fit_results(self, fit_results, **kwargs) -> FitResults:
         """
@@ -195,14 +204,14 @@ class DFO_LS(FittingTemplate):  # noqa: S101
         results.success = fit_results.flag
         pars = self._cached_pars
         item = {}
-        for par in pars:
-            item[f'p{NameConverter().get_key(par)}'] = par.raw_value
+        for p_name, par in pars.items():
+            item[f'p{p_name}'] = par.raw_value
         results.p = item
         results.x = self._cached_model.x
         results.y_obs = self._cached_model.y
         results.y_calc = self.evaluate(results.x, parameters=results.p)
         results.residual = results.y_obs - results.y_calc
-        results.goodness_of_fit = fit_results.fun
+        results.goodness_of_fit = fit_results.f
 
         results.fitting_engine = self.__class__
         results.fit_args = None
@@ -213,7 +222,8 @@ class DFO_LS(FittingTemplate):  # noqa: S101
         return ['leastsq']
 
     def dfols_fit(self, model, **kwargs):
-        x0 = [par.raw_value for par in self._cached_pars]
-        bounds = ([par.min for par in self._cached_pars], [par.max for par in self._cached_pars])
+        x0 = np.array([par.raw_value for par in iter(self._cached_pars.values())])
+        bounds = (np.array([par.min for par in iter(self._cached_pars.values())]),
+                  np.array([par.max for par in iter(self._cached_pars.values())]))
         results = dfols.solve(model, x0, bounds=bounds, **kwargs)
         return results

@@ -16,7 +16,7 @@ class FittingTemplate(metaclass=ABCMeta):
 
     _engines = []
     property_type = None
-    name: str = None
+    name: str = ''
 
     def __init_subclass__(cls, is_abstract: bool = False, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -35,10 +35,10 @@ class FittingTemplate(metaclass=ABCMeta):
         self._constraints = []
 
     @property
-    def all_constraints(self):
+    def all_constraints(self) -> list:
         return [*self._constraints, *self._object.constraints]
 
-    def fit_constraints(self):
+    def fit_constraints(self) -> list:
         return self._constraints
 
     def add_fit_constraint(self, constraint):
