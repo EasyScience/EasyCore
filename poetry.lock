@@ -102,6 +102,9 @@ version = "7.1.2"
 category = "dev"
 description = "Hosted coverage reports for GitHub, Bitbucket and Gitlab"
 name = "codecov"
+version = "2.1.11"
+description = "Hosted coverage reports for GitHub, Bitbucket and Gitlab"
+category = "dev"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 version = "2.1.11"
@@ -254,6 +257,9 @@ version = "0.4.3"
 category = "main"
 description = "NumPy is the fundamental package for array computing with Python."
 name = "numpy"
+version = "1.19.5"
+description = "NumPy is the fundamental package for array computing with Python."
+category = "main"
 optional = false
 python-versions = ">=3.6"
 version = "1.19.5"
@@ -393,6 +399,9 @@ testing = ["fields", "hunter", "process-tests (2.0.2)", "six", "pytest-xdist", "
 category = "dev"
 description = "Thin-wrapper around the mock package for easier use with pytest"
 name = "pytest-mock"
+version = "3.5.0"
+description = "Thin-wrapper around the mock package for easier use with pytest"
+category = "dev"
 optional = false
 python-versions = ">=3.5"
 version = "3.5.0"
@@ -535,8 +544,9 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["pytest (>=3.5,<3.7.3 || >3.7.3)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pytest-cov", "jaraco.test (>=3.2.0)", "jaraco.itertools", "func-timeout", "pytest-black (>=0.3.7)", "pytest-mypy"]
 
 [metadata]
-content-hash = "4574734191fdd5631b6cdca4fa0313f44de8e91891b1eeb99e47b3726001eb52"
-python-versions = "^3.6, >=3.6.1" # "^3.8" generates error when installing PySide2 in easyAppGui
+lock-version = "1.1"
+python-versions = "^3.6, >=3.6.1"
+content-hash = "c6ac1514462802f4669be51e513038470a507d5861b909f2ce68bd594cb1eb9e"
 
 [metadata.files]
 appdirs = [
