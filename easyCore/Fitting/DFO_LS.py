@@ -188,8 +188,10 @@ class DFO(FittingTemplate):  # noqa: S101
 
         JtJi = np.linalg.inv(np.dot(fit_result.jacobian.T, fit_result.jacobian))
         # 1.96 is a 95% confidence value
-        E_m = 1.96 * np.dot(JtJi, np.dot(fit_result.jacobian.T,
+        E_m = np.dot(JtJi, np.dot(fit_result.jacobian.T,
                                    np.dot(np.diag(fit_result.resid ** 2), np.dot(fit_result.jacobian, JtJi))))
+
+        E_m = 1.96 * np.sqrt(E_m)
         for idx, par in enumerate(pars.values()):
             par.value = fit_result.x[idx]
             par.error = E_m[idx, idx]
