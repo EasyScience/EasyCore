@@ -148,7 +148,7 @@ class bumps(FittingTemplate):  # noqa: S101
             default_method['method'] = method
 
         if weights is None:
-            weights = np.sqrt(y)
+            weights = np.sqrt(np.abs(y))
 
         if model is None:
             model = self.make_model(pars=parameters)

@@ -141,9 +141,8 @@ class lmfit(FittingTemplate):  # noqa: S101
         if method is not None and method in self.available_methods():
             default_method['method'] = method
 
-
         if weights is None:
-            weights = np.sqrt(y)
+            weights = np.sqrt(np.abs(y))
 
         # Why do we do this? Because a fitting template has to have borg instantiated outside pre-runtime
         from easyCore import borg
