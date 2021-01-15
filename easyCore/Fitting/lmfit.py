@@ -144,9 +144,6 @@ class lmfit(FittingTemplate):  # noqa: S101
         if weights is None:
             weights = np.sqrt(np.abs(y))
 
-        if weights is None:
-            weights = np.sqrt(y)
-
         # Why do we do this? Because a fitting template has to have borg instantiated outside pre-runtime
         from easyCore import borg
         try:

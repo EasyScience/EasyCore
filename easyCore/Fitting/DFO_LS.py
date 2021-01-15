@@ -181,7 +181,7 @@ class DFO(FittingTemplate):  # noqa: S101
         :rtype: noneType
         """
         pars = self._cached_pars
-        error_matrix = self._error_from_jacobian(fit_result.jacobian, fit_result.reshape, ci)
+        error_matrix = self._error_from_jacobian(fit_result.jacobian, fit_result.resid, ci)
         for idx, par in enumerate(pars.values()):
             par.value = fit_result.x[idx]
             par.error = error_matrix[idx, idx]
