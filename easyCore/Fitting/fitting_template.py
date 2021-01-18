@@ -166,13 +166,13 @@ class FittingTemplate(metaclass=ABCMeta):
     def _error_from_jacobian(jacobian: np.ndarray, residuals: np.ndarray, confidence: float = 0.95) -> np.ndarray:
         JtJi = np.linalg.inv(np.dot(jacobian.T, jacobian))
         # 1.96 is a 95% confidence value
-        E_m = np.dot(JtJi, np.dot(jacobian.T,
+        error_matrix = np.dot(JtJi, np.dot(jacobian.T,
                                   np.dot(np.diag(residuals ** 2), np.dot(jacobian, JtJi))))
 
         z = 1 - ((1 - confidence) / 2)
         z = stats.norm.pdf(z)
-        E_m = z * np.sqrt(E_m)
-        return E_m
+        error_matrix = z * np.sqrt(error_matrix)
+        return error_matrix
 
 
 class FitResults:
