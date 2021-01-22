@@ -1,16 +1,14 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
+from typing import List, Union, TypeVar, Callable
 
-import weakref
 
 from xarray.core.utils import FrozenDict
 import matplotlib.pyplot as plt
 
 from easyCore import np, ureg
 from .xarray import xr #This xarray has the easyCore accessor
-
-from typing import List, Union, TypeVar, Tuple, Callable
 
 T_ = TypeVar('T_')
 
@@ -24,7 +22,7 @@ class Dataset:
         self._data.attrs['url'] = url
 
         if core_obj is not None:
-            self._data.easyCore.core_object = weakref.ref(core_obj)
+            self._data.easyCore.core_object = core_obj
 
     @property
     def dataset(self) -> xr.Dataset:
@@ -84,10 +82,6 @@ class Dataset:
         return FrozenDict(**self._data.attrs['units'])
 
     @property
-    def dimensions(self) -> List[int]:
-        return list(self._data.dims.values())
-
-    @property
     def tools(self):
         return self._data.easyCore
 
@@ -95,9 +89,15 @@ class Dataset:
         self._data.coords[axis_name] = axis_values
         self._data.attrs['units'][axis_name] = ureg.Unit(unit)
 
+    def remove_dimension(self, axis_name: str):
+        # TODO This should check coords and fail if coord is in use
+        self._data.re
+        del self._data.coords[axis_name]
+        del self._data.attrs['units'][axis_name]
+
     def add_variable(self, variable_name, variable_dimension: Union[str, List[str]],
                      variable_values: Union[List[T_], np.ndarray], variable_sigma: Union[List[T_], np.ndarray] = None,
-                     unit: str = ''):
+                     unit: str = '', auto_sigma: bool = False):
         if isinstance(variable_dimension, str):
             variable_dimension = [variable_dimension]
 
@@ -112,22 +112,26 @@ class Dataset:
         self._data[variable_name] = (variable_dimension, variable_values)
 
         if variable_sigma is not None:
-            if isinstance(variable_sigma, Callable):
+            if isinstance(variable_sigma, (Callable, np.ndarray)):
                 self.tools.sigma_generator(variable_name, variable_sigma)
             elif isinstance(variable_sigma, list):
                 self.tools.sigma_generator(variable_name, np.array(variable_sigma))
-            elif isinstance(variable_sigma, np.ndarray):
-                self.tools.sigma_generator(variable_name, variable_sigma)
         else:
-            self.tools.sigma_generator(variable_name)
+            if auto_sigma:
+                self.tools.sigma_generator(variable_name)
 
         self._data.attrs['units'][variable_name] = ureg.Unit(unit)
-        if unit and variable_sigma is None:
+        if unit and variable_sigma is None and auto_sigma:
             self._data.attrs['units'][self.tools.sigma_label_prefix + variable_name] = ureg.Unit(unit + ' ** 0.5')
         else:
-            self._data.attrs['units'][self.tools.sigma_label_prefix + variable_name] = ureg.Unit('')
+            if auto_sigma:
+                self._data.attrs['units'][self.tools.sigma_label_prefix + variable_name] = ureg.Unit('')
+
+    def remove_variable(self, variable_name: str):
+        del self._data[variable_name]
 
     def set_unit(self, axis_name: str, unit: str):
         if axis_name not in self._data.keys():
             raise ValueError
         self._data.attrs['units'][axis_name] = ureg.Unit(unit)
+

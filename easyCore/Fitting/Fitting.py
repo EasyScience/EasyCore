@@ -120,6 +120,7 @@ class Fitter:
     @fit_function.setter
     def fit_function(self, fit_function: Callable):
         self._fit_function = fit_function
+        self.__initialize()
 
     @property
     def fit_object(self) -> object:
