@@ -1,21 +1,59 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
-from typing import Callable
+from typing import Callable, Union, TypeVar, List, Tuple
+from dask.diagnostics import ProgressBar
 
 import weakref
 import xarray as xr
 
-from easyCore import np
+from easyCore import np, ureg
 
+T_ = TypeVar('T_')
 
 @xr.register_dataset_accessor("easyCore")
-class easyCoreAccessor:
-    def __init__(self, xarray_obj):
+class easyCoreDatasetAccessor:
+    """
+    Accessor to extend an xarray dataset to easyCore. These functions can be accessed by `obj.easyCore.func`.
+    """
+    def __init__(self, xarray_obj: xr.Dataset):
         self._obj = xarray_obj
         self._core_object = None
         self.__error_mapper = {}
         self.sigma_label_prefix = 's_'
+        self._obj.attrs['units'] = {}
+        self._obj.attrs['name'] = ''
+        self._obj.attrs['description'] = ''
+        self._obj.attrs['url'] = ''
+        self._obj.attrs['computation'] = {
+            'precompute_func': None,
+            'compute_func': None,
+            'postcompute_func': None
+        }
+
+    @property
+    def name(self) -> str:
+        return self._obj.attrs['name']
+
+    @name.setter
+    def name(self, value: str):
+        self._obj.attrs['name'] = value
+
+    @property
+    def description(self) -> str:
+        return self._obj.attrs['description']
+
+    @description.setter
+    def description(self, value: str):
+        self._obj.attrs['description'] = value
+
+    @property
+    def url(self) -> str:
+        return self._obj.attrs['url']
+
+    @url.setter
+    def url(self, value: str):
+        self._obj.attrs['url'] = value
 
     @property
     def core_object(self):
@@ -26,6 +64,67 @@ class easyCoreAccessor:
     @core_object.setter
     def core_object(self, new_core_object):
         self._core_object = weakref.ref(new_core_object)
+
+    @property
+    def compute_func(self):
+        return self._obj.attrs['computation']['compute_func']
+
+    @compute_func.setter
+    def compute_func(self, value: Callable):
+        self._obj.attrs['computation']['compute_func'] = value
+
+    @property
+    def precompute_func(self):
+        return self._obj.attrs['computation']['precompute_func']
+
+    @precompute_func.setter
+    def precompute_func(self, value: Callable):
+        self._obj.attrs['computation']['precompute_func'] = value
+
+    def add_dimension(self, axis_name: str, axis_values: Union[List[T_], np.ndarray], unit=''):
+        self._obj.coords[axis_name] = axis_values
+        self._obj.attrs['units'][axis_name] = ureg.Unit(unit)
+
+    def remove_dimension(self, axis_name: str):
+        # TODO This should check coords and fail if coord is in use
+        del self._obj.coords[axis_name]
+        del self._obj.attrs['units'][axis_name]
+
+    def add_variable(self, variable_name, variable_dimension: Union[str, List[str]],
+                     variable_values: Union[List[T_], np.ndarray], variable_sigma: Union[List[T_], np.ndarray] = None,
+                     unit: str = '', auto_sigma: bool = False):
+
+        if isinstance(variable_dimension, str):
+            variable_dimension = [variable_dimension]
+
+        if not isinstance(variable_dimension, (list, tuple)):
+            raise ValueError
+
+        known_keys = self._obj.coords.keys()
+        for dimension in variable_dimension:
+            if dimension not in known_keys:
+                raise ValueError
+
+        self._obj[variable_name] = (variable_dimension, variable_values)
+
+        if variable_sigma is not None:
+            if isinstance(variable_sigma, (Callable, np.ndarray)):
+                self.sigma_generator(variable_name, variable_sigma)
+            elif isinstance(variable_sigma, list):
+                self.sigma_generator(variable_name, np.array(variable_sigma))
+        else:
+            if auto_sigma:
+                self.sigma_generator(variable_name)
+
+        self._obj.attrs['units'][variable_name] = ureg.Unit(unit)
+        if unit and variable_sigma is None and auto_sigma:
+            self._obj.attrs['units'][self.sigma_label_prefix + variable_name] = ureg.Unit(unit + ' ** 0.5')
+        else:
+            if auto_sigma:
+                self._obj.attrs['units'][self.sigma_label_prefix + variable_name] = ureg.Unit('')
+
+    def remove_variable(self, variable_name: str):
+        del self._obj[variable_name]
 
     def sigma_generator(self, variable_label: str, sigma_func: Callable = np.sqrt, label_prefix: str = 's_'):
         sigma_label = label_prefix + variable_label
@@ -38,3 +137,100 @@ class easyCoreAccessor:
         sigma_label = label_prefix + variable_label
         self.__error_mapper[variable_label] = sigma_label
         self._obj[sigma_label] = sigma_values
+
+
+@xr.register_dataarray_accessor("easyCore")
+class easyCoreDataarrayAccessor:
+    """
+    Accessor to extend an xarray dataset to easyCore. These functions can be accessed by `obj.easyCore.func`.
+    """
+    def __init__(self, xarray_obj: xr.DataArray):
+        self._obj = xarray_obj
+        self._core_object = None
+        self.__error_mapper = {}
+        self.sigma_label_prefix = 's_'
+        self._obj.attrs['computation'] = {
+            'precompute_func': None,
+            'compute_func': None,
+            'postcompute_func': None
+        }
+
+    @property
+    def core_object(self):
+        if self._core_object is None:
+            return None
+        return self._core_object()
+
+    @core_object.setter
+    def core_object(self, new_core_object):
+        self._core_object = weakref.ref(new_core_object)
+
+    @property
+    def compute_func(self):
+        return self._obj.attrs['computation']['compute_func']
+
+    @compute_func.setter
+    def compute_func(self, value: Callable):
+        self._obj.attrs['computation']['compute_func'] = value
+
+    @property
+    def precompute_func(self):
+        return self._obj.attrs['computation']['precompute_func']
+
+    @compute_func.setter
+    def precompute_func(self, value: Callable):
+        self._obj.attrs['computation']['precompute_func'] = value
+
+    @property
+    def postcompute_func(self):
+        return self._obj.attrs['computation']['postcompute_func']
+
+    @postcompute_func.setter
+    def postcompute_func(self, value: Callable):
+        self._obj.attrs['computation']['postcompute_func'] = value
+
+    def fit_prep(self, func_in, dask_chunks=None):
+
+        coords = [self._obj.coords[da] for da in self._obj.dims]
+        bdims = xr.broadcast(*coords)
+
+        def func(x, *args, **kwargs):
+            old_shape = x.shape
+            xs = [x_new.reshape((1, -1)) for x_new in [x, *args] if isinstance(x_new, np.ndarray)]
+            x_new = np.concatenate(xs, axis=0)
+            result = func_in(x_new, **kwargs)
+            return result.reshape(old_shape)
+        return bdims, func
+
+    def generate_points(self):
+        coords = [self._obj.coords[da] for da in self._obj.dims]
+        c_array = []
+        n_array = []
+        for da in xr.broadcast(*coords):
+            c_array.append(da)
+            n_array.append(da.name)
+
+        f = xr.concat(c_array, dim='fit_dim')
+        f = f.stack(all_x=n_array)
+        return f
+
+    def fit(self, fitter, *args, dask: str = 'forbidden', **kwargs):
+        bdims, f = self.fit_prep(fitter.fit_function)
+        dims = self._obj.dims
+        if isinstance(dims, dict):
+            dims = list(dims.keys())
+
+        def fit_func(x, *args, **kwargs):
+            res = xr.apply_ufunc(f, *bdims, *args, dask=dask, **kwargs)
+            # res.stack(all_x=dims)
+            if dask != 'forbidden':
+                with ProgressBar():
+                    res.compute()
+            return res
+
+        fitter.fit_function = fit_func
+        x_for_fit = xr.concat(bdims, dim='fit_dim')
+        x_for_fit = x_for_fit.stack(all_x=[d.name for d in bdims])
+
+        f_res = fitter.fit(x_for_fit, self._obj.stack(all_x=dims))
+        return f_res
