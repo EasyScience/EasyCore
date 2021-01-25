@@ -22,7 +22,7 @@ def fit_fun(x, *args, **kwargs):
 f = Fitter()
 f.initialize(b, fit_fun)
 
-nx = 5E2
+nx = 1E3
 x_min = 0
 x_max = 100
 
@@ -31,7 +31,9 @@ y = 2*x - 1 + 5*(np.random.random(size=x.shape) - 0.5)
 
 d.easyCore.add_dimension('x', x)
 d.easyCore.add_variable('y', ['x'], y, auto_sigma=False)
-# d['y'] = d['y'].chunk({'x': 100})
+
+
+# d['y'] = d['y'].chunk({'x': 1000})
 # f_res = d['y'].easyCore.fit(f, dask='parallelized')
 f_res = d['y'].easyCore.fit(f)
 print(f_res.goodness_of_fit)

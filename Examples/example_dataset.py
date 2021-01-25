@@ -3,6 +3,9 @@ __version__ = '0.0.1'
 
 from easyCore import np
 from easyCore.Datasets.Dataset import Dataset, xr
+# import dask
+# from dask.distributed import Client
+# client = Client(dashboard_address=':8787')
 from dask.diagnostics import ProgressBar
 import time
 import matplotlib.pyplot as plt
@@ -46,8 +49,8 @@ to_chunk = ['x_broadcast', 'y_broadcast', 'z']
 for name in to_chunk:
     d[name] = d[name].chunk({'x': 4000, 'y': 4000})
 d['computed_dask'] = xr.apply_ufunc(f, d['x_broadcast'], d['y_broadcast'], dask='parallelized')
+temp = d['z'] - d['computed_dask']
 with ProgressBar():
-    temp = d['z'] - d['computed_dask']
     temp.compute()
 print(f'Time taken: {time.time() - t}')
 temp.plot()
