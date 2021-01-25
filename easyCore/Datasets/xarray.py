@@ -2,7 +2,6 @@ __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
 from typing import Callable, Union, TypeVar, List, Tuple
-from dask.diagnostics import ProgressBar
 
 import weakref
 import xarray as xr
@@ -191,18 +190,20 @@ class easyCoreDataarrayAccessor:
 
     def fit_prep(self, func_in, dask_chunks=None):
 
-        coords = [self._obj.coords[da] for da in self._obj.dims]
+        coords = [self._obj.coords[da].transpose() for da in self._obj.dims]
         bdims = xr.broadcast(*coords)
 
         def func(x, *args, **kwargs):
             old_shape = x.shape
-            xs = [x_new.reshape((1, -1)) for x_new in [x, *args] if isinstance(x_new, np.ndarray)]
-            x_new = np.concatenate(xs, axis=0)
+            xs = [x_new.flatten() for x_new in [x, *args] if isinstance(x_new, np.ndarray)]
+            x_new = np.column_stack(xs)
             result = func_in(x_new, **kwargs)
-            return result.reshape(old_shape)
+            if isinstance(result, np.ndarray):
+                result = result.reshape(old_shape)
+            return result
         return bdims, func
 
-    def generate_points(self):
+    def generate_points(self) -> xr.DataArray:
         coords = [self._obj.coords[da] for da in self._obj.dims]
         c_array = []
         n_array = []
@@ -215,6 +216,7 @@ class easyCoreDataarrayAccessor:
         return f
 
     def fit(self, fitter, *args, dask: str = 'forbidden', **kwargs):
+        old_fitter_func = fitter.fit_function
         bdims, f = self.fit_prep(fitter.fit_function)
         dims = self._obj.dims
         if isinstance(dims, dict):
@@ -224,9 +226,8 @@ class easyCoreDataarrayAccessor:
             res = xr.apply_ufunc(f, *bdims, *args, dask=dask, **kwargs)
             # res.stack(all_x=dims)
             if dask != 'forbidden':
-                with ProgressBar():
-                    res.compute()
-            return res
+                res.compute()
+            return res.stack(all_x=dims)
 
         fitter.fit_function = fit_func
         x_for_fit = xr.concat(bdims, dim='fit_dim')
