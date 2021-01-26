@@ -11,27 +11,30 @@ from easyCore.Fitting.Fitting import Fitter
 from easyCore.Objects.Base import BaseObj, Parameter
 d = xr.Dataset()
 
-nx = 5E4
+nx = 5E2
 x_min = 0
-x_max = 3*np.pi
+x_max = 3
 
-sin_offest = - 1.25
-cos_offset = 0.4
+sin_offest = - 0.35
+cos_offset = 0.14
 
 x = np.linspace(x_min, x_max, num=int(nx))
 
 d.easyCore.add_dimension('x', x)
-d.easyCore.add_dimension('y', x + np.pi)
-d.easyCore.add_variable('z', ['x', 'y'], np.sin(x + sin_offest).reshape((-1, 1))*np.cos(x + cos_offset).reshape((1, -1)) + 5*(0.5 - np.random.random(size=(int(nx), int(nx)))))
+d.easyCore.add_dimension('y', x + 1)
+d.easyCore.add_variable('z', ['x', 'y'], np.sin(2*np.pi*(x + sin_offest)).reshape((-1, 1))*np.cos(2*np.pi*(x + cos_offset)).reshape((1, -1)) + 2*(0.5 - np.random.random(size=(int(nx), int(nx)))))
+
+s_off_start_point = 0
+c_off_start_point = 0
 
 b = BaseObj('line',
-            s_off=Parameter('s_off', 0),
-            c_off=Parameter('c_off', 0))
+            s_off=Parameter('s_off', s_off_start_point),
+            c_off=Parameter('c_off', c_off_start_point))
 
 
 def fit_fun(x, *args, **kwargs):
     # In the real case we would gust call the evaluation fn without reference to the BaseObj
-    return np.sin(x[:, 0] + b.s_off.raw_value) * np.cos(x[:, 1] + b.c_off.raw_value)
+    return np.sin(2*np.pi*(x[:, 0] + b.s_off.raw_value)) * np.cos(2*np.pi*(x[:, 1] + b.c_off.raw_value))
 
 
 f = Fitter()
@@ -44,6 +47,9 @@ d['computed_no_dask'] = f_res.y_calc.unstack()
 temp = d['z'] - d['computed_no_dask']
 print(f'Time taken: {time.time() - t}')
 
+print(f_res.p0)
+print(f_res.p)
+
 fig, axes = plt.subplots(ncols=2, nrows=2)
 d['z'].plot(ax=axes[0, 0])
 d['computed_no_dask'].plot(ax=axes[0, 1])
@@ -51,15 +57,28 @@ temp.plot(ax=axes[1, 0])
 plt.tight_layout()
 plt.show()
 
+
+
+b.s_off.value = s_off_start_point
+b.c_off.value = c_off_start_point
+
+f = Fitter()
+f.initialize(b, fit_fun)
+
 print('Performing fit - Dask')
 t = time.time()
-to_chunk = ['x_broadcast', 'y_broadcast', 'z']
+to_chunk = ['z']
+print('Chunking -->')
 for name in to_chunk:
-    d[name] = d[name].chunk({'x': 4000, 'y': 4000})
+    d[name] = d[name].chunk({'x': 100, 'y': 100})
+print('Fitting -->')
 f_res = d['z'].easyCore.fit(f, dask='parallelized')
 d['computed_dask'] = f_res.y_calc.unstack()
 temp = d['z'] - d['computed_dask']
 print(f'Time taken: {time.time() - t}')
+
+print(f_res.p0)
+print(f_res.p)
 
 fig, axes = plt.subplots(ncols=2, nrows=2)
 d['z'].plot(ax=axes[0, 0])
