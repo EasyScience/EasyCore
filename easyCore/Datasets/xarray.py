@@ -130,14 +130,14 @@ class easyCoreDatasetAccessor:
     def sigma_generator(self, variable_label: str, sigma_func: Callable = np.sqrt, label_prefix: str = 's_'):
         sigma_label = label_prefix + variable_label
         self.__error_mapper[variable_label] = sigma_label
-        self._obj[sigma_label] = sigma_func(self._obj[variable_label])
+        self._obj[sigma_label] = (list(self._obj[variable_label].coords.keys()), sigma_func(self._obj[variable_label]))
 
     def sigma_attach(self, variable_label: str, sigma_values, label_prefix: str = None):
         if label_prefix is None:
             label_prefix = self.sigma_label_prefix
         sigma_label = label_prefix + variable_label
         self.__error_mapper[variable_label] = sigma_label
-        self._obj[sigma_label] = sigma_values
+        self._obj[sigma_label] = (list(self._obj[variable_label].coords.keys()), sigma_values)
 
     def generate_points(self, dimensions) -> xr.DataArray:
         coords = [self._obj.coords[da] for da in dimensions]
@@ -234,13 +234,15 @@ class easyCoreDataarrayAccessor:
 
         coords = [self._obj.coords[da].transpose() for da in self._obj.dims]
         bdims = xr.broadcast(*coords)
-        self.compute_func.fn = func_in
+        self._obj.attrs['computation']['compute_func'] = func_in
 
         def func(x, *args, vectorize: bool = False, **kwargs):
             old_shape = x.shape
             if not vectorize:
                 xs = [x_new.flatten() for x_new in [x, *args] if isinstance(x_new, np.ndarray)]
                 x_new = np.column_stack(xs)
+                if len(x_new.shape) > 1 and x_new.shape[1] == 1:
+                    x_new = x_new.reshape((-1))
                 result = self.compute_func(x_new, **kwargs)
             else:
                 result = self.compute_func(*[d for d in [x, args] if isinstance(d, np.ndarray)],
@@ -265,7 +267,7 @@ class easyCoreDataarrayAccessor:
         f = f.stack(all_x=n_array)
         return f
 
-    def fit(self, fitter, *args, dask: str = 'forbidden', vectorize: bool = False, **kwargs):
+    def fit(self, fitter, *args, dask: str = 'forbidden', fit_kwargs={}, fn_kwargs={}, vectorize: bool = False, **kwargs):
 
         old_fit_func = fitter.fit_function
 
@@ -276,7 +278,7 @@ class easyCoreDataarrayAccessor:
 
         def fit_func(x, *args, **kwargs):
             kwargs['vectorize'] = vectorize
-            res = xr.apply_ufunc(f, *bdims, *args, dask=dask, kwargs=kwargs)
+            res = xr.apply_ufunc(f, *bdims, *args, dask=dask, kwargs=fn_kwargs, **kwargs)
             if dask != 'forbidden':
                 res.compute()
             return res.stack(all_x=dims)
@@ -285,7 +287,7 @@ class easyCoreDataarrayAccessor:
         x_for_fit = xr.concat(bdims, dim='fit_dim')
         x_for_fit = x_for_fit.stack(all_x=[d.name for d in bdims])
         try:
-            f_res = fitter.fit(x_for_fit, self._obj.stack(all_x=dims))
+            f_res = fitter.fit(x_for_fit, self._obj.stack(all_x=dims), **fit_kwargs)
         finally:
             fitter.fit_function = old_fit_func
         return f_res
