@@ -230,6 +230,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         results.fit_args = None
 
         results.engine_result = fit_results
+        results.check_sanity()
         return results
 
     def available_methods(self) -> List[str]:

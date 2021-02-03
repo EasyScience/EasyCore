@@ -43,7 +43,7 @@ f.initialize(b, fit_fun)
 print('Performing fit - No dask')
 t = time.time()
 f_res = d['z'].easyCore.fit(f)
-d['computed_no_dask'] = f_res.y_calc.unstack()
+d['computed_no_dask'] = f_res.y_calc
 temp = d['z'] - d['computed_no_dask']
 print(f'Time taken: {time.time() - t}')
 
@@ -73,7 +73,7 @@ for name in to_chunk:
     d[name] = d[name].chunk({'x': 100, 'y': 100})
 print('Fitting -->')
 f_res = d['z'].easyCore.fit(f, dask='parallelized')
-d['computed_dask'] = f_res.y_calc.unstack()
+d['computed_dask'] = f_res.y_calc
 temp = d['z'] - d['computed_dask']
 print(f'Time taken: {time.time() - t}')
 

@@ -6,6 +6,7 @@ from abc import ABCMeta, abstractmethod
 from typing import Union, Callable, List
 
 from easyCore import np
+from easyCore.Datasets.xarray import xr
 from easyCore.Utils.typing import noneType
 
 from scipy import stats
@@ -35,6 +36,7 @@ class FittingTemplate(metaclass=ABCMeta):
         self._cached_model = None
         self._fit_function = None
         self._constraints = []
+        self._dataset = None
 
     @property
     def all_constraints(self) -> list:
@@ -180,6 +182,11 @@ class FitResults:
     At the moment this is just a dummy way of unifying the returned fit parameters.
     """
 
+    __slots__ = ['success', 'fitting_engine', 'fit_args',
+                 'p', 'p0',
+                 'x', 'x_matrices', 'y_obs', 'y_calc', 'residual',
+                 'goodness_of_fit', 'engine_result']
+
     def __init__(self):
         self.success = False
         self.fitting_engine = None
@@ -187,6 +194,7 @@ class FitResults:
         self.p = {}
         self.p0 = {}
         self.x = np.ndarray([])
+        self.x_matrices = np.ndarray([])
         self.y_obs = np.ndarray([])
         self.y_calc = np.ndarray([])
         self.goodness_of_fit = np.Inf
@@ -200,6 +208,32 @@ class FitResults:
     @property
     def reduced_chi(self):
         return self.goodness_of_fit/(len(self.x) - self.n_pars)
+
+    def check_sanity(self):
+
+        items = ['y_obs', 'y_calc', 'residual']
+
+        for item in items:
+            array = getattr(self, item)
+            if isinstance(array, xr.DataArray):
+                array = array.unstack()
+                array.name = item
+                setattr(self, item, array)
+
+        x_array = self.x
+        if isinstance(x_array, xr.DataArray):
+            self.x.name = 'axes_broadcast'
+            x_array = x_array.unstack()
+            x_dataset = xr.Dataset()
+            dims = [dims for dims in x_array.dims if dims != 'fit_dim']
+            for idx, dim in enumerate(dims):
+                x_dataset[dim + '_broadcast'] = x_array[idx]
+                x_dataset[dim + '_broadcast'].name = dim + '_broadcast'
+            self.x_matrices = x_dataset
+        else:
+            self.x_matrices = x_array
+
+    # def plot(self):
 
 
 class NameConverter:

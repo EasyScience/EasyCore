@@ -10,11 +10,13 @@ from easyCore import np, ureg
 
 T_ = TypeVar('T_')
 
+
 @xr.register_dataset_accessor("easyCore")
 class easyCoreDatasetAccessor:
     """
     Accessor to extend an xarray dataset to easyCore. These functions can be accessed by `obj.easyCore.func`.
     """
+
     def __init__(self, xarray_obj: xr.Dataset):
         self._obj = xarray_obj
         self._core_object = None
@@ -25,8 +27,8 @@ class easyCoreDatasetAccessor:
         self._obj.attrs['description'] = ''
         self._obj.attrs['url'] = ''
         self._obj.attrs['computation'] = {
-            'precompute_func': None,
-            'compute_func': None,
+            'precompute_func':  None,
+            'compute_func':     None,
             'postcompute_func': None
         }
 
@@ -137,22 +139,53 @@ class easyCoreDatasetAccessor:
         self.__error_mapper[variable_label] = sigma_label
         self._obj[sigma_label] = sigma_values
 
+    def generate_points(self, dimensions) -> xr.DataArray:
+        coords = [self._obj.coords[da] for da in dimensions]
+        c_array = []
+        n_array = []
+        for da in xr.broadcast(*coords):
+            c_array.append(da)
+            n_array.append(da.name)
+
+        f = xr.concat(c_array, dim='fit_dim')
+        f = f.stack(all_x=n_array)
+        return f
+
 
 @xr.register_dataarray_accessor("easyCore")
 class easyCoreDataarrayAccessor:
     """
     Accessor to extend an xarray dataset to easyCore. These functions can be accessed by `obj.easyCore.func`.
     """
+
     def __init__(self, xarray_obj: xr.DataArray):
         self._obj = xarray_obj
         self._core_object = None
-        self.__error_mapper = {}
         self.sigma_label_prefix = 's_'
-        self._obj.attrs['computation'] = {
-            'precompute_func': None,
-            'compute_func': None,
-            'postcompute_func': None
-        }
+        if self._obj.attrs.get('computation', None) is None:
+            self._obj.attrs['computation'] = {
+                'precompute_func':  None,
+                'compute_func': None,
+                'postcompute_func': None
+            }
+
+    def __empty_functional(self) -> Callable:
+
+        def outer():
+            def empty_fn(input, *args, **kwargs):
+                return input
+            return empty_fn
+
+        class wrapper:
+            def __init__(obj):
+                obj.obj = self
+                obj.data = {}
+                obj.fn = outer()
+
+            def __call__(self, *args, **kwargs):
+                return self.fn(*args, **kwargs)
+
+        return wrapper()
 
     @property
     def core_object(self):
@@ -166,7 +199,10 @@ class easyCoreDataarrayAccessor:
 
     @property
     def compute_func(self):
-        return self._obj.attrs['computation']['compute_func']
+        result = self._obj.attrs['computation']['compute_func']
+        if result is None:
+            result = self.__empty_functional()
+        return result
 
     @compute_func.setter
     def compute_func(self, value: Callable):
@@ -174,15 +210,21 @@ class easyCoreDataarrayAccessor:
 
     @property
     def precompute_func(self):
-        return self._obj.attrs['computation']['precompute_func']
+        result = self._obj.attrs['computation']['precompute_func']
+        if result is None:
+            result = self.__empty_functional()
+        return result
 
-    @compute_func.setter
+    @precompute_func.setter
     def precompute_func(self, value: Callable):
         self._obj.attrs['computation']['precompute_func'] = value
 
     @property
     def postcompute_func(self):
-        return self._obj.attrs['computation']['postcompute_func']
+        result = self._obj.attrs['computation']['postcompute_func']
+        if result is None:
+            result = self.__empty_functional()
+        return result
 
     @postcompute_func.setter
     def postcompute_func(self, value: Callable):
@@ -192,15 +234,23 @@ class easyCoreDataarrayAccessor:
 
         coords = [self._obj.coords[da].transpose() for da in self._obj.dims]
         bdims = xr.broadcast(*coords)
+        self.compute_func.fn = func_in
 
-        def func(x, *args, **kwargs):
+        def func(x, *args, vectorize: bool = False, **kwargs):
             old_shape = x.shape
-            xs = [x_new.flatten() for x_new in [x, *args] if isinstance(x_new, np.ndarray)]
-            x_new = np.column_stack(xs)
-            result = func_in(x_new, **kwargs)
+            if not vectorize:
+                xs = [x_new.flatten() for x_new in [x, *args] if isinstance(x_new, np.ndarray)]
+                x_new = np.column_stack(xs)
+                result = self.compute_func(x_new, **kwargs)
+            else:
+                result = self.compute_func(*[d for d in [x, args] if isinstance(d, np.ndarray)],
+                                 *[d for d in args if not isinstance(d, np.ndarray)],
+                                 **kwargs)
             if isinstance(result, np.ndarray):
                 result = result.reshape(old_shape)
+            result = self.postcompute_func(result)
             return result
+
         return bdims, func
 
     def generate_points(self) -> xr.DataArray:
@@ -215,23 +265,27 @@ class easyCoreDataarrayAccessor:
         f = f.stack(all_x=n_array)
         return f
 
-    def fit(self, fitter, *args, dask: str = 'forbidden', **kwargs):
-        old_fitter_func = fitter.fit_function
+    def fit(self, fitter, *args, dask: str = 'forbidden', vectorize: bool = False, **kwargs):
+
+        old_fit_func = fitter.fit_function
+
         bdims, f = self.fit_prep(fitter.fit_function)
         dims = self._obj.dims
         if isinstance(dims, dict):
             dims = list(dims.keys())
 
         def fit_func(x, *args, **kwargs):
-            res = xr.apply_ufunc(f, *bdims, *args, dask=dask, **kwargs)
-            # res.stack(all_x=dims)
+            kwargs['vectorize'] = vectorize
+            res = xr.apply_ufunc(f, *bdims, *args, dask=dask, kwargs=kwargs)
             if dask != 'forbidden':
                 res.compute()
             return res.stack(all_x=dims)
 
-        fitter.fit_function = fit_func
+        fitter.initialize(fitter.fit_object, fit_func)
         x_for_fit = xr.concat(bdims, dim='fit_dim')
         x_for_fit = x_for_fit.stack(all_x=[d.name for d in bdims])
-
-        f_res = fitter.fit(x_for_fit, self._obj.stack(all_x=dims))
+        try:
+            f_res = fitter.fit(x_for_fit, self._obj.stack(all_x=dims))
+        finally:
+            fitter.fit_function = old_fit_func
         return f_res

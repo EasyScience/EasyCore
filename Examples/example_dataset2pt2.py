@@ -9,9 +9,13 @@ from easyCore.Fitting.Fitting import Fitter
 
 d = xr.Dataset()
 
+m_starting_point = 1
+c_starting_point = 1
+
+
 b = BaseObj('line',
-            m=Parameter('m', 1),
-            c=Parameter('c', 1))
+            m=Parameter('m', m_starting_point),
+            c=Parameter('c', c_starting_point))
 
 
 def fit_fun(x, *args, **kwargs):
@@ -26,24 +30,26 @@ x_max = 100
 x = np.linspace(x_min, x_max, num=int(nx))
 y = 2*x - 1 + 5*(np.random.random(size=x.shape) - 0.5)
 
+d.easyCore.add_dimension('x', x)
+d.easyCore.add_variable('y', ['x'], y, auto_sigma=False)
+
+f = Fitter()
+f.initialize(b, fit_fun)
+
 fig, ax = plt.subplots(2, 3, sharey='row')
 for idx, minimizer in enumerate(['lmfit', 'bumps', 'DFO_LS']):
 
-    f = Fitter()
-    f.initialize(b, fit_fun)
+    b.m = m_starting_point
+    b.c = c_starting_point
     f.switch_engine(minimizer)
 
-    d.easyCore.add_dimension('x', x)
-    d.easyCore.add_variable('y', ['x'], y, auto_sigma=False)
-
-    f_res = d['y'].easyCore.fit(f)
-    print(f_res.goodness_of_fit)
+    f_res = d['y'].easyCore.fit(f, vectorize=True)
+    print(f_res.p)
 
     d['y'].plot(ax=ax[0, idx])
     f_res.y_calc.unstack().plot(ax=ax[0, idx])
-    temp = d['y'] - f_res.y_calc.unstack()
+    temp = d['y'] - f_res.y_calc
     temp.plot(ax=ax[1, idx])
     ax[0, idx].set_title(f'Minimizer - {minimizer}')
-ax[0, 0].set_ylabel('y')
 ax[1, 0].set_ylabel('Difference')
 plt.show()

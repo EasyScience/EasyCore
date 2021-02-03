@@ -30,8 +30,12 @@ x = np.linspace(x_min, x_max, num=int(nx))
 y = 2*x - 1 + 5*(np.random.random(size=x.shape) - 0.5)
 
 d.easyCore.add_dimension('x', x)
-d.easyCore.add_variable('y', ['x'], y, auto_sigma=False)
+d.easyCore.add_variable('y', ['x'], y, auto_sigma=True)
 
+def post(result, addition=10):
+    return result + addition
+
+d['y'].easyCore.postcompute_func = post
 
 # d['y'] = d['y'].chunk({'x': 1000})
 # f_res = d['y'].easyCore.fit(f, dask='parallelized')
@@ -39,5 +43,6 @@ f_res = d['y'].easyCore.fit(f)
 print(f_res.goodness_of_fit)
 
 d['y'].plot()
-f_res.y_calc.unstack().plot()
+d['computed'] = f_res.y_calc
+d['computed'].plot()
 plt.show()
