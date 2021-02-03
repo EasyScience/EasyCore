@@ -41,16 +41,20 @@ cbar_ax1 = fig.add_axes([0.85, 0.15, 0.05, 0.3])
 cbar_ax2 = fig.add_axes([0.85, 0.60, 0.05, 0.3])
 
 for idx, minimizer in enumerate(['lmfit', 'bumps', 'DFO_LS']):
+    b.s_off = s_off_start_point
+    b.c_off = c_off_start_point
+
     f = Fitter()
     f.initialize(b, fit_fun)
 
     f_res = d['z'].easyCore.fit(f)
-    d[f'computed_{minimizer}'] = f_res.y_calc.unstack()
+    d[f'computed_{minimizer}'] = f_res.y_calc
     d[f'dz_{minimizer}'] = d['z'] - d[f'computed_{minimizer}']
 
     p1 = d[f'computed_{minimizer}'].plot(ax=ax[0, idx], cbar_kwargs={'cax': cbar_ax1})
     p2 = d[f'dz_{minimizer}'].plot(ax=ax[1, idx], cbar_kwargs={'cax': cbar_ax2})
-    ax[0, idx].set_title(f'Minimizer - {minimizer}')
+    ax[0, idx].set_title(f'{minimizer}')
+    ax[1, idx].set_title('s_off - {:0.03f}\nc_off - {:0.03f}'.format(b.s_off.raw_value, b.c_off.raw_value))
     ax[0, idx].set_aspect('equal', 'box')
     ax[1, idx].set_aspect('equal', 'box')
 fig.subplots_adjust(right=0.8)

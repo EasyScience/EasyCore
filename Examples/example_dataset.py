@@ -2,17 +2,14 @@ __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
 from easyCore import np
-from easyCore.Datasets.Dataset import Dataset, xr
-# import dask
-# from dask.distributed import Client
-# client = Client(dashboard_address=':8787')
+from easyCore.Datasets.Dataset import xr
 from dask.diagnostics import ProgressBar
 import time
 import matplotlib.pyplot as plt
 
 d = xr.Dataset()
 
-nx = 5E4
+nx = 5E3
 x_min = 0
 x_max = 3*np.pi
 
