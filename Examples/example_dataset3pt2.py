@@ -3,7 +3,7 @@ __version__ = '0.0.1'
 
 from easyCore import np
 
-from easyCore.Datasets.Dataset import xr
+from easyCore.Datasets.xarray import xr
 import matplotlib.pyplot as plt
 
 from easyCore.Fitting.Fitting import Fitter

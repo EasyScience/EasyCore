@@ -2,8 +2,7 @@ __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
 from easyCore import np
-from easyCore.Datasets.Dataset import xr
-from dask.diagnostics import ProgressBar
+from easyCore.Datasets.xarray import xr
 import time
 import matplotlib.pyplot as plt
 
@@ -47,8 +46,7 @@ for name in to_chunk:
     d[name] = d[name].chunk({'x': 4000, 'y': 4000})
 d['computed_dask'] = xr.apply_ufunc(f, d['x_broadcast'], d['y_broadcast'], dask='parallelized')
 temp = d['z'] - d['computed_dask']
-with ProgressBar():
-    temp.compute()
+temp.compute()
 print(f'Time taken: {time.time() - t}')
 temp.plot()
 plt.show()
