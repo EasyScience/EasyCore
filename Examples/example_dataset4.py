@@ -3,9 +3,10 @@ __version__ = '0.0.1'
 
 from easyCore import np
 from easyCore.Datasets.xarray import xr
-import matplotlib.pyplot as plt
 from easyCore.Objects.Base import Parameter, BaseObj
 from easyCore.Fitting.Fitting import Fitter
+
+import matplotlib.pyplot as plt
 
 d = xr.Dataset()
 
@@ -27,22 +28,21 @@ x_min = 0
 x_max = 100
 
 x = np.linspace(x_min, x_max, num=int(nx))
-y = 2*x - 1 + 5*(np.random.random(size=x.shape) - 0.5)
+y1 = 2*x - 1 + 5*(np.random.random(size=x.shape) - 0.5)
+x2 = x + 20
+y2 = 2*x2 - 1 + 5*(np.random.random(size=x2.shape) - 0.5)
 
-d.easyCore.add_dimension('x', x)
-d.easyCore.add_variable('y', ['x'], y, auto_sigma=True)
+d.easyCore.add_dimension('x1', x)
+d.easyCore.add_variable('y1', ['x1'], y1, auto_sigma=True)
+d.easyCore.add_dimension('x2', x2)
+d.easyCore.add_variable('y2', ['x2'], y2, auto_sigma=True)
 
-def post(result, addition=10):
-    return result + addition
+res = d.easyCore.fit(f, ['y1', 'y2'])
 
-d['y'].easyCore.postcompute_func = post
-
-# d['y'] = d['y'].chunk({'x': 1000})
-f_res = d['y'].easyCore.fit(f, dask='parallelized')
-
-print(f_res.goodness_of_fit)
-
-d['y'].plot()
-d['computed'] = f_res.y_calc
-d['computed'].plot()
+fig, axs = plt.subplots(1, len(res), sharey=True)
+for idx, r in enumerate(res):
+    r.y_obs.plot(ax=axs[idx])
+    r.y_calc.plot(ax=axs[idx])
+    axs[idx].set_title(f'Dataset {idx}')
 plt.show()
+

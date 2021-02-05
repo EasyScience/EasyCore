@@ -209,30 +209,6 @@ class FitResults:
     def reduced_chi(self):
         return self.goodness_of_fit/(len(self.x) - self.n_pars)
 
-    def check_sanity(self):
-
-        items = ['y_obs', 'y_calc', 'residual']
-
-        for item in items:
-            array = getattr(self, item)
-            if isinstance(array, xr.DataArray):
-                array = array.unstack()
-                array.name = item
-                setattr(self, item, array)
-
-        x_array = self.x
-        if isinstance(x_array, xr.DataArray):
-            self.x.name = 'axes_broadcast'
-            x_array = x_array.unstack()
-            x_dataset = xr.Dataset()
-            dims = [dims for dims in x_array.dims if dims != 'fit_dim']
-            for idx, dim in enumerate(dims):
-                x_dataset[dim + '_broadcast'] = x_array[idx]
-                x_dataset[dim + '_broadcast'].name = dim + '_broadcast'
-            self.x_matrices = x_dataset
-        else:
-            self.x_matrices = x_array
-
     # def plot(self):
 
 
@@ -262,3 +238,22 @@ class FitError(Exception):
         if self.e is not None:
             s = f'{self.e}\n'
         return s + 'Something has gone wrong with the fit'
+
+
+class CompoundFit:
+    def __init__(self, initial_fit_function: Callable):
+        self.initial = initial_fit_function
+        self._current_store = None
+
+    @property
+    def fit_function(self) -> Callable:
+        return self.initial
+
+    @property
+    def outer(self):
+        current = self._current_store
+        return
+
+    @outer.setter
+    def outer(self, value):
+        pass

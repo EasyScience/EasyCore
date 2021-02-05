@@ -43,3 +43,5 @@ build
 .idea/
 *.pytest_cache/
 .tox
+
+dask-worker-space/dask-worker-space/

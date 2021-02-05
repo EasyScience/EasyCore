@@ -7,6 +7,7 @@ import weakref
 import xarray as xr
 
 from easyCore import np, ureg
+from easyCore.Fitting.fitting_template import FitResults
 
 T_ = TypeVar('T_')
 
@@ -22,15 +23,14 @@ class easyCoreDatasetAccessor:
         self._core_object = None
         self.__error_mapper = {}
         self.sigma_label_prefix = 's_'
-        self._obj.attrs['units'] = {}
-        self._obj.attrs['name'] = ''
-        self._obj.attrs['description'] = ''
-        self._obj.attrs['url'] = ''
-        self._obj.attrs['computation'] = {
-            'precompute_func':  None,
-            'compute_func':     None,
-            'postcompute_func': None
-        }
+        if self._obj.attrs.get('name', None) is None:
+            self._obj.attrs['name'] = ''
+        if self._obj.attrs.get('description', None) is None:
+            self._obj.attrs['description'] = ''
+        if self._obj.attrs.get('url', None) is None:
+            self._obj.attrs['url'] = ''
+        if self._obj.attrs.get('units', None) is None:
+            self._obj.attrs['units'] = {}
 
     @property
     def name(self) -> str:
@@ -65,22 +65,6 @@ class easyCoreDatasetAccessor:
     @core_object.setter
     def core_object(self, new_core_object):
         self._core_object = weakref.ref(new_core_object)
-
-    @property
-    def compute_func(self):
-        return self._obj.attrs['computation']['compute_func']
-
-    @compute_func.setter
-    def compute_func(self, value: Callable):
-        self._obj.attrs['computation']['compute_func'] = value
-
-    @property
-    def precompute_func(self):
-        return self._obj.attrs['computation']['precompute_func']
-
-    @precompute_func.setter
-    def precompute_func(self, value: Callable):
-        self._obj.attrs['computation']['precompute_func'] = value
 
     def add_dimension(self, axis_name: str, axis_values: Union[List[T_], np.ndarray], unit=''):
         self._obj.coords[axis_name] = axis_values
@@ -127,7 +111,7 @@ class easyCoreDatasetAccessor:
     def remove_variable(self, variable_name: str):
         del self._obj[variable_name]
 
-    def sigma_generator(self, variable_label: str, sigma_func: Callable = np.sqrt, label_prefix: str = 's_'):
+    def sigma_generator(self, variable_label: str, sigma_func: Callable = lambda x: np.sqrt(np.abs(x)), label_prefix: str = 's_'):
         sigma_label = label_prefix + variable_label
         self.__error_mapper[variable_label] = sigma_label
         self._obj[sigma_label] = (list(self._obj[variable_label].coords.keys()), sigma_func(self._obj[variable_label]))
@@ -150,6 +134,72 @@ class easyCoreDatasetAccessor:
         f = xr.concat(c_array, dim='fit_dim')
         f = f.stack(all_x=n_array)
         return f
+
+    def fit(self, fitter, data_arrays: list, *args, dask: str = 'forbidden', fit_kwargs=None, fn_kwargs=None, vectorize: bool = False, **kwargs):
+        if fn_kwargs is None:
+            fn_kwargs = {}
+        if fit_kwargs is None:
+            fit_kwargs = {}
+        if not isinstance(data_arrays, (list, tuple)):
+            data_arrays = [data_arrays]
+
+        # In this case we are only fitting 1 dataset
+        if len(data_arrays) == 1:
+            variable_label = data_arrays[0]
+            dataset = self._obj[variable_label]
+            if self.__error_mapper.get(variable_label, False):
+                # Pull out any sigmas and send them to the fitter.
+                temp = self._obj[self.__error_mapper[variable_label]]
+                temp[xr.ufuncs.isnan(temp)] = 1e5
+                fit_kwargs['weights'] = temp
+            # Perform a standard DataArray fit.
+            return dataset.easyCore.fit(fitter, *args,
+                                        fit_kwargs=fit_kwargs,
+                                        fn_kwargs=fn_kwargs,
+                                        dask=dask,
+                                        vectorize=vectorize,
+                                        **kwargs)
+        else:
+            # In this case we are fitting multiple datasets to the same fn!
+            bdim_f = [self._obj[p].easyCore.fit_prep(fitter.fit_function) for p in data_arrays]
+            dim_names = [list(self._obj[p].dims.keys()) if isinstance(self._obj[p].dims, dict) else self._obj[p].dims for p in data_arrays]
+            bdims = [bdim[0] for bdim in bdim_f]
+            fs = [bdim[1] for bdim in bdim_f]
+            old_fit_func = fitter.fit_function
+
+            fn_array = []
+            y_list = []
+            for _idx, d in enumerate(bdims):
+                dims = self._obj[data_arrays[_idx]].dims
+                if isinstance(dims, dict):
+                    dims = list(dims.keys())
+
+                def fit_func(x, *args, idx=None, **kwargs):
+                    kwargs['vectorize'] = vectorize
+                    res = xr.apply_ufunc(fs[idx], *bdims[idx], *args, dask=dask, kwargs=fn_kwargs, **kwargs)
+                    if dask != 'forbidden':
+                        res.compute()
+                    return res.stack(all_x=dim_names[idx])
+                y_list.append(self._obj[data_arrays[_idx]].stack(all_x=dims))
+                fn_array.append(fit_func)
+
+            def fit_func(x, *args, **kwargs):
+                res = []
+                for idx in range(len(fn_array)):
+                    res.append(fn_array[idx](x, *args, idx=idx, **kwargs))
+                return xr.DataArray(np.concatenate(res, axis=0), coords={'all_x': x}, dims='all_x')
+
+            fitter.initialize(fitter.fit_object, fit_func)
+            try:
+                if fit_kwargs.get('weights', None) is not None:
+                    del fit_kwargs['weights']
+                x = xr.DataArray(np.arange(np.sum([y.size for y in y_list])), dims='all_x')
+                y = xr.DataArray(np.concatenate(y_list, axis=0), coords={'all_x': x}, dims='all_x')
+                f_res = fitter.fit(x, y, **fit_kwargs)
+                f_res = check_sanity_multiple(f_res, [self._obj[p] for p in data_arrays])
+            finally:
+                fitter.fit_function = old_fit_func
+            return f_res
 
 
 @xr.register_dataarray_accessor("easyCore")
@@ -230,10 +280,11 @@ class easyCoreDataarrayAccessor:
     def postcompute_func(self, value: Callable):
         self._obj.attrs['computation']['postcompute_func'] = value
 
-    def fit_prep(self, func_in, dask_chunks=None):
+    def fit_prep(self, func_in, bdims=None, dask_chunks=None):
 
-        coords = [self._obj.coords[da].transpose() for da in self._obj.dims]
-        bdims = xr.broadcast(*coords)
+        if bdims is None:
+            coords = [self._obj.coords[da].transpose() for da in self._obj.dims]
+            bdims = xr.broadcast(*coords)
         self._obj.attrs['computation']['compute_func'] = func_in
 
         def func(x, *args, vectorize: bool = False, **kwargs):
@@ -287,7 +338,69 @@ class easyCoreDataarrayAccessor:
         x_for_fit = xr.concat(bdims, dim='fit_dim')
         x_for_fit = x_for_fit.stack(all_x=[d.name for d in bdims])
         try:
+            if fit_kwargs.get('weights', None) is not None:
+                fit_kwargs['weights'] = xr.DataArray(
+                    np.array(fit_kwargs['weights']),
+                    dims=['all_x'],
+                    coords={'all_x': x_for_fit.all_x}
+                )
             f_res = fitter.fit(x_for_fit, self._obj.stack(all_x=dims), **fit_kwargs)
+            f_res = check_sanity_single(f_res)
         finally:
             fitter.fit_function = old_fit_func
         return f_res
+
+
+def check_sanity_single(fit_results: FitResults):
+
+    items = ['y_obs', 'y_calc', 'residual']
+
+    for item in items:
+        array = getattr(fit_results, item)
+        if isinstance(array, xr.DataArray):
+            array = array.unstack()
+            array.name = item
+            setattr(fit_results, item, array)
+
+    x_array = fit_results.x
+    if isinstance(x_array, xr.DataArray):
+        fit_results.x.name = 'axes_broadcast'
+        x_array = x_array.unstack()
+        x_dataset = xr.Dataset()
+        dims = [dims for dims in x_array.dims if dims != 'fit_dim']
+        for idx, dim in enumerate(dims):
+            x_dataset[dim + '_broadcast'] = x_array[idx]
+            x_dataset[dim + '_broadcast'].name = dim + '_broadcast'
+        fit_results.x_matrices = x_dataset
+    else:
+        fit_results.x_matrices = x_array
+    return fit_results
+
+
+def check_sanity_multiple(fit_results: FitResults, originals: List[xr.DataArray]) -> List[FitResults]:
+
+    return_results = []
+    offset = 0
+    for item in originals:
+        current_results = fit_results.__class__()
+        # Fill out the basic stuff....
+        current_results.engine_result = fit_results.engine_result
+        current_results.fitting_engine = fit_results.fitting_engine
+        current_results.success = fit_results.success
+        current_results.p = fit_results.p
+        current_results.p0 = fit_results.p0
+        # now the tricky stuff
+        current_results.x = item.easyCore.generate_points()
+        current_results.y_obs = item.copy()
+        current_results.y_obs.name = f'{item.name}_obs'
+        current_results.y_calc = xr.DataArray(
+            fit_results.y_calc[offset:offset+item.size].data,
+            dims=item.dims,
+            coords=item.coords,
+            name=f'{item.name}_calc'
+        )
+        offset += item.size
+        current_results.residual = current_results.y_calc - current_results.y_obs
+        current_results.residual.name = f'{item.name}_residual'
+        return_results.append(current_results)
+    return return_results

@@ -235,7 +235,7 @@ class bumps(FittingTemplate):  # noqa: S101
 
         results.fitting_engine = self.__class__
         results.fit_args = None
-        results.check_sanity()
+        # results.check_sanity()
         return results
 
     def available_methods(self) -> List[str]:
