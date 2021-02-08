@@ -6,7 +6,6 @@ from abc import ABCMeta, abstractmethod
 from typing import Union, Callable, List
 
 from easyCore import np
-from easyCore.Datasets.xarray import xr
 from easyCore.Utils.typing import noneType
 
 from scipy import stats
@@ -238,22 +237,3 @@ class FitError(Exception):
         if self.e is not None:
             s = f'{self.e}\n'
         return s + 'Something has gone wrong with the fit'
-
-
-class CompoundFit:
-    def __init__(self, initial_fit_function: Callable):
-        self.initial = initial_fit_function
-        self._current_store = None
-
-    @property
-    def fit_function(self) -> Callable:
-        return self.initial
-
-    @property
-    def outer(self):
-        current = self._current_store
-        return
-
-    @outer.setter
-    def outer(self, value):
-        pass
