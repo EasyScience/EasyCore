@@ -30,7 +30,7 @@ x_max = 100
 x = np.linspace(x_min, x_max, num=int(nx))
 y = 2*x - 1 + 5*(np.random.random(size=x.shape) - 0.5)
 
-d.easyCore.add_dimension('x', x)
+d.easyCore.add_coordinate('x', x)
 d.easyCore.add_variable('y', ['x'], y, auto_sigma=False)
 
 f = Fitter()

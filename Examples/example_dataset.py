@@ -14,7 +14,7 @@ x_max = 3*np.pi
 
 x = np.linspace(x_min, x_max, num=int(nx))
 
-d.easyCore.add_dimension('x', x)
+d.easyCore.add_coordinate('x', x)
 d.easyCore.add_variable('y', ['x'], np.sin(x), auto_sigma=False)
 
 d['y'].plot()
@@ -22,7 +22,7 @@ plt.show()
 
 
 d.easyCore.remove_variable('y')
-d.easyCore.add_dimension('y', x + np.pi)
+d.easyCore.add_coordinate('y', x + np.pi)
 d.easyCore.add_variable('z', ['x', 'y'], np.sin(x).reshape((-1, 1))*np.cos(x).reshape((1, -1)) + (0.5 - np.random.random(size=(int(nx), int(nx)))))
 
 def func(x, *args, **kwargs):

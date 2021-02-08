@@ -19,8 +19,8 @@ cos_offset = 0.14
 
 x = np.linspace(x_min, x_max, num=int(nx))
 
-d.easyCore.add_dimension('x', x)
-d.easyCore.add_dimension('y', x + 1)
+d.easyCore.add_coordinate('x', x)
+d.easyCore.add_coordinate('y', x + 1)
 d.easyCore.add_variable('z', ['x', 'y'], np.sin(2*np.pi*(x + sin_offest)).reshape((-1, 1))*np.cos(2*np.pi*(x + cos_offset)).reshape((1, -1)) + 2*(0.5 - np.random.random(size=(int(nx), int(nx)))))
 
 s_off_start_point = 0

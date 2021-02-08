@@ -32,9 +32,9 @@ y1 = 2*x - 1 + 5*(np.random.random(size=x.shape) - 0.5)
 x2 = x + 20
 y2 = 2*x2 - 1 + 5*(np.random.random(size=x2.shape) - 0.5)
 
-d.easyCore.add_dimension('x1', x)
+d.easyCore.add_coordinate('x1', x)
 d.easyCore.add_variable('y1', ['x1'], y1, auto_sigma=True)
-d.easyCore.add_dimension('x2', x2)
+d.easyCore.add_coordinate('x2', x2)
 d.easyCore.add_variable('y2', ['x2'], y2, auto_sigma=True)
 
 res = d.easyCore.fit(f, ['y1', 'y2'])
