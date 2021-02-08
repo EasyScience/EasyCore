@@ -188,11 +188,11 @@ python-versions = "*"
 
 [[package]]
 name = "lmfit"
-version = "1.0.1"
+version = "1.0.2"
 description = "Least-Squares Minimization with Bounds and Constraints"
 category = "main"
 optional = false
-python-versions = ">=3.5"
+python-versions = ">=3.6"
 
 [package.dependencies]
 asteval = ">=0.9.16"
@@ -565,7 +565,7 @@ iniconfig = [
     {file = "iniconfig-1.0.1.tar.gz", hash = "sha256:e5f92f89355a67de0595932a6c6c02ab4afddc6fcdc0bfc5becd0d60884d3f69"},
 ]
 lmfit = [
-    {file = "lmfit-1.0.1.tar.gz", hash = "sha256:d249eb756899360f4d2a544c9458f47fc8f765ac22c09e099530585fd64e286e"},
+    {file = "lmfit-1.0.2.tar.gz", hash = "sha256:67090ce56685cf7f92bd7358a1e7d4ad862b3758988109ec440e9825e5184b45"},
 ]
 monty = [
     {file = "monty-4.0.2-py3-none-any.whl", hash = "sha256:e529d9fd270880fbb64fe3baaaee5bdeaad32d6f246255a51044ca7c27f14886"},
