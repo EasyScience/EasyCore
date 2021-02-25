@@ -153,11 +153,12 @@ class lmfit(FittingTemplate):  # noqa: S101
 
             model_results = model.fit(y, x=x, weights=weights, **default_method, **kwargs)
             self._set_parameter_fit_result(model_results)
+            results = self._gen_fit_results(model_results)
         except Exception as e:
             raise FitError(e)
         finally:
             borg.stack.endMacro()
-        return self._gen_fit_results(model_results)
+        return results
 
     def convert_to_pars_obj(self, par_list: Union[list, noneType] = None) -> lmParameters:
         """

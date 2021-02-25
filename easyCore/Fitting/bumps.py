@@ -161,11 +161,12 @@ class bumps(FittingTemplate):  # noqa: S101
         try:
             model_results = bumps_fit(problem, **kwargs)
             self._set_parameter_fit_result(model_results)
+            results = self._gen_fit_results(model_results)
         except Exception as e:
             raise FitError(e)
         finally:
             borg.stack.endMacro()
-        return self._gen_fit_results(model_results)
+        return results
 
     def convert_to_pars_obj(self, par_list: Union[list, noneType] = None) -> List[bumpsParameter]:
         """
