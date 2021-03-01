@@ -8,7 +8,7 @@ python-versions = "*"
 
 [[package]]
 name = "asteval"
-version = "0.9.22"
+version = "0.9.23"
 description = "Safe, minimalistic evaluator of python expression using ast module"
 category = "main"
 optional = false
@@ -460,7 +460,7 @@ testing = ["pytest (>=3.5,!=3.7.3)", "pytest-checkdocs (>=1.2.3)", "pytest-flake
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6, >=3.6.1"
-content-hash = "d1158c134d88d36afb638c35898b13382da4adaf39512624ec016ab6d3144aba"
+content-hash = "9359ce0fc821044ec8b1a242663e24394dc272dbcc7771e17e43c36b00ea78f2"
 
 [metadata.files]
 appdirs = [
@@ -468,7 +468,7 @@ appdirs = [
     {file = "appdirs-1.4.4.tar.gz", hash = "sha256:7d5d0167b2b1ba821647616af46a749d1c653740dd0d2415100fe26e27afdf41"},
 ]
 asteval = [
-    {file = "asteval-0.9.22.tar.gz", hash = "sha256:74a0939765fc6b1421e6672ccf74c52edc3c7af7d6a8298b057b0d50ac51aea8"},
+    {file = "asteval-0.9.23.tar.gz", hash = "sha256:f5096a924b1d2f147e70327245d95fc8f534dbe94277b6828ce2a8c049d3a438"},
 ]
 atomicwrites = [
     {file = "atomicwrites-1.4.0-py2.py3-none-any.whl", hash = "sha256:6d1784dea7c0c8d4a5172b6c620f40b6e4cbfdf96d783691f2e1302a7b88e197"},
