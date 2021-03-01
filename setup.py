@@ -31,9 +31,9 @@ setup(
     author='Simon Ward',
     license='GPL-3.0',
     classifiers=['Development Status :: 3 - Alpha', 'Intended Audience :: Developers', 'Topic :: Scientific/Engineering :: Physics', 'License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)', 'Programming Language :: Python :: 3.6, 3.7, 3.8'],
-    packages=['easyCore', 'easyCore.Elements', 'easyCore.Elements.Basic', 'easyCore.Elements.HigherLevel', 'easyCore.Fitting', 'easyCore.Objects', 'easyCore.Symmetry', 'easyCore.Utils', 'easyCore.Utils.Hugger', 'easyCore.Utils.io'],
+    packages=['easyCore', 'easyCore.Datasets', 'easyCore.Elements', 'easyCore.Elements.Basic', 'easyCore.Elements.HigherLevel', 'easyCore.Fitting', 'easyCore.Objects', 'easyCore.Symmetry', 'easyCore.Utils', 'easyCore.Utils.Hugger', 'easyCore.Utils.io'],
     package_dir={"": "."},
-    package_data={"easyCore.Symmetry": ["*.json"]},
-    install_requires=['asteval==0.*,>=0.9.19', 'bumps==0.*,>=0.7.0', 'lmfit==1.*,>=1.0.0', 'monty==4.*,>=4.0.2', 'numpy==1.*,>=1.19.0', 'pint==0.*,>=0.16.0', 'uncertainties==3.*,>=3.1.0'],
-    extras_require={"dev": ["black==20.*,>=20.8.0.b1", "codecov==2.*,>=2.1.4", "pytest==6.*,>=6.1.0", "pytest-cov==2.*,>=2.9.0", "pytest-mock==3.*,>=3.1.1"]},
+    package_data={"easyCore.Elements": ["*.json"], "easyCore.Symmetry": ["*.json"]},
+    install_requires=['asteval==0.*,>=0.9.21', 'bumps==0.*,>=0.8.0', 'dfo-ls==1.*,>=1.2.1', 'lmfit==1.*,>=1.0.0', 'matplotlib==3.*,>=3.2.2', 'monty==4.*,>=4.0.2', 'numpy==1.*,>=1.19.0', 'pint==0.*,>=0.16.0', 'uncertainties==3.*,>=3.1.0', 'xarray==0.*,>=0.16.2'],
+    extras_require={"dev": ["black==20.*,>=20.8.0.b1", "codecov==2.*,>=2.1.11", "pytest==6.*,>=6.2.2", "pytest-cov==2.*,>=2.11.1", "pytest-mock==3.*,>=3.5.1"]},
 )

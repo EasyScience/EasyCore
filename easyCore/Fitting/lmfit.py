@@ -10,7 +10,7 @@ from easyCore.Fitting.fitting_template import noneType, Union, Callable, \
 # Import lmfit specific objects
 from lmfit import Parameter as lmParameter, Parameters as lmParameters, Model as lmModel
 from lmfit.model import ModelResult
-from lmfit.minimizer import SCALAR_METHODS
+
 
 class lmfit(FittingTemplate):  # noqa: S101
     """
@@ -141,6 +141,8 @@ class lmfit(FittingTemplate):  # noqa: S101
         if method is not None and method in self.available_methods():
             default_method['method'] = method
 
+        if weights is None:
+            weights = np.sqrt(np.abs(y))
 
         # Why do we do this? Because a fitting template has to have borg instantiated outside pre-runtime
         from easyCore import borg
@@ -151,11 +153,12 @@ class lmfit(FittingTemplate):  # noqa: S101
 
             model_results = model.fit(y, x=x, weights=weights, **default_method, **kwargs)
             self._set_parameter_fit_result(model_results)
+            results = self._gen_fit_results(model_results)
         except Exception as e:
             raise FitError(e)
         finally:
             borg.stack.endMacro()
-        return self._gen_fit_results(model_results)
+        return results
 
     def convert_to_pars_obj(self, par_list: Union[list, noneType] = None) -> lmParameters:
         """
@@ -228,6 +231,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         results.fit_args = None
 
         results.engine_result = fit_results
+        # results.check_sanity()
         return results
 
     def available_methods(self) -> List[str]:

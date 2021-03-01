@@ -8,6 +8,8 @@ from typing import Union, Callable, List
 from easyCore import np
 from easyCore.Utils.typing import noneType
 
+from scipy import stats
+
 
 class FittingTemplate(metaclass=ABCMeta):
     """
@@ -16,7 +18,7 @@ class FittingTemplate(metaclass=ABCMeta):
 
     _engines = []
     property_type = None
-    name: str = None
+    name: str = ''
 
     def __init_subclass__(cls, is_abstract: bool = False, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -33,12 +35,13 @@ class FittingTemplate(metaclass=ABCMeta):
         self._cached_model = None
         self._fit_function = None
         self._constraints = []
+        self._dataset = None
 
     @property
-    def all_constraints(self):
+    def all_constraints(self) -> list:
         return [*self._constraints, *self._object.constraints]
 
-    def fit_constraints(self):
+    def fit_constraints(self) -> list:
         return self._constraints
 
     def add_fit_constraint(self, constraint):
@@ -160,11 +163,28 @@ class FittingTemplate(metaclass=ABCMeta):
         :rtype: List[str]
         """
 
+    @staticmethod
+    def _error_from_jacobian(jacobian: np.ndarray, residuals: np.ndarray, confidence: float = 0.95) -> np.ndarray:
+        JtJi = np.linalg.inv(np.dot(jacobian.T, jacobian))
+        # 1.96 is a 95% confidence value
+        error_matrix = np.dot(JtJi, np.dot(jacobian.T,
+                                  np.dot(np.diag(residuals ** 2), np.dot(jacobian, JtJi))))
+
+        z = 1 - ((1 - confidence) / 2)
+        z = stats.norm.pdf(z)
+        error_matrix = z * np.sqrt(error_matrix)
+        return error_matrix
+
 
 class FitResults:
     """
     At the moment this is just a dummy way of unifying the returned fit parameters.
     """
+
+    __slots__ = ['success', 'fitting_engine', 'fit_args',
+                 'p', 'p0',
+                 'x', 'x_matrices', 'y_obs', 'y_calc', 'residual',
+                 'goodness_of_fit', 'engine_result']
 
     def __init__(self):
         self.success = False
@@ -173,6 +193,7 @@ class FitResults:
         self.p = {}
         self.p0 = {}
         self.x = np.ndarray([])
+        self.x_matrices = np.ndarray([])
         self.y_obs = np.ndarray([])
         self.y_calc = np.ndarray([])
         self.goodness_of_fit = np.Inf
@@ -186,6 +207,8 @@ class FitResults:
     @property
     def reduced_chi(self):
         return self.goodness_of_fit/(len(self.x) - self.n_pars)
+
+    # def plot(self):
 
 
 class NameConverter:

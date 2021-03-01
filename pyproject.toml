@@ -32,6 +32,9 @@ lmfit = "^1.0"
 bumps = "^0.8"
 asteval = "^0.9.22"
 monty = "^4.0.2"
+DFO-LS = "^1.2.1"
+xarray = "^0.16.2"
+matplotlib = "^3.2.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.2"
@@ -42,6 +45,14 @@ black = "^20.8b1"
 
 [tool.coverage.run]
 source = ['easyCore']
+
+[tool.dephell.main]
+from = {format = "poetry", path = "pyproject.toml"}
+to = {format = "setuppy", path = "setup.py"}
+
+[tool.dephell.requirements]
+from = {format = "poetry", path = "pyproject.toml"}
+to = {format = "pip", path = "requirements.txt"}
 
 [tool.tox]
 legacy_tox_ini = """
