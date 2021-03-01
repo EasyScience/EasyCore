@@ -34,6 +34,6 @@ setup(
     packages=['easyCore', 'easyCore.Datasets', 'easyCore.Elements', 'easyCore.Elements.Basic', 'easyCore.Elements.HigherLevel', 'easyCore.Fitting', 'easyCore.Objects', 'easyCore.Symmetry', 'easyCore.Utils', 'easyCore.Utils.Hugger', 'easyCore.Utils.io'],
     package_dir={"": "."},
     package_data={"easyCore.Elements": ["*.json"], "easyCore.Symmetry": ["*.json"]},
-    install_requires=['asteval==0.*,>=0.9.21', 'bumps==0.*,>=0.8.0', 'dfo-ls==1.*,>=1.2.1', 'lmfit==1.*,>=1.0.0', 'matplotlib==3.*,>=3.3.3', 'monty==4.*,>=4.0.2', 'numpy==1.*,>=1.19.0', 'pint==0.*,>=0.16.0', 'uncertainties==3.*,>=3.1.0', 'xarray==0.*,>=0.16.2'],
+    install_requires=['asteval==0.*,>=0.9.21', 'bumps==0.*,>=0.8.0', 'dfo-ls==1.*,>=1.2.1', 'lmfit==1.*,>=1.0.0', 'matplotlib==3.*,>=3.2.2', 'monty==4.*,>=4.0.2', 'numpy==1.*,>=1.19.0', 'pint==0.*,>=0.16.0', 'uncertainties==3.*,>=3.1.0', 'xarray==0.*,>=0.16.2'],
     extras_require={"dev": ["black==20.*,>=20.8.0.b1", "codecov==2.*,>=2.1.11", "pytest==6.*,>=6.2.2", "pytest-cov==2.*,>=2.11.1", "pytest-mock==3.*,>=3.5.1"]},
 )

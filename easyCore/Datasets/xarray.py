@@ -393,14 +393,14 @@ class easyCoreDatasetAccessor:
                 if isinstance(dims, dict):
                     dims = list(dims.keys())
 
-                def fit_func(x, *args, idx=None, **kwargs):
+                def local_fit_func(x, *args, idx=None, **kwargs):
                     kwargs['vectorize'] = vectorized
                     res = xr.apply_ufunc(fs[idx], *bdims[idx], *args, dask=dask, kwargs=fn_kwargs, **kwargs)
                     if dask != 'forbidden':
                         res.compute()
                     return res.stack(all_x=dim_names[idx])
                 y_list.append(self._obj[data_arrays[_idx]].stack(all_x=dims))
-                fn_array.append(fit_func)
+                fn_array.append(local_fit_func)
 
             def fit_func(x, *args, **kwargs):
                 res = []
@@ -661,7 +661,7 @@ class easyCoreDataarrayAccessor:
             dims = list(dims.keys())
 
         # Wrap the wrap in a callable
-        def fit_func(x, *args, **kwargs):
+        def local_fit_func(x, *args, **kwargs):
             """
             Function which will be called by the fitter. This will deal with sending the function the correct data.
             """
@@ -672,7 +672,7 @@ class easyCoreDataarrayAccessor:
             return res.stack(all_x=dims)
 
         # Set the new callable to the fitter and initialize
-        fitter.initialize(fitter.fit_object, fit_func)
+        fitter.initialize(fitter.fit_object, local_fit_func)
         # Make easyCore.Fitting.Fitter compatible `x`
         x_for_fit = xr.concat(bdims, dim='fit_dim')
         x_for_fit = x_for_fit.stack(all_x=[d.name for d in bdims])
