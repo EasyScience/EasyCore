@@ -35,6 +35,19 @@ class UndoStack:
         command.redo()
         self._future = deque(maxlen=self._max_history)
 
+    def pop(self):
+        """
+        Sometimes you really don't want the last command. Remove it from the stack
+        !! WARNING: TO BE USED WITH UTTER CAUTION !!
+
+        :return: None
+        :rtype: None
+        """
+        if self._macro_running:
+            self._macro['commands'].pop(-1)
+        else:
+            self._history.popleft()
+
     def clear(self) -> NoReturn:
         """
         Remove any commands on the stack and reset the state
@@ -234,6 +247,7 @@ class PropertyStack(UndoCommand):
         self._old_value = old_value
         self._new_value = new_value
         self._set_func = func
+        self.setText(f'{parent} value changed from {old_value} to {new_value}')
 
     def undo(self) -> NoReturn:
         self._set_func(self._parent, self._old_value)
@@ -255,6 +269,8 @@ def stack_deco(func):
     def inner(obj, *args, **kwargs):
         old_value = getattr(obj, name)
         new_value = args[0]
+        if borg.debug:
+            print(f"I'm {obj} and have been set from {old_value} to {new_value}!")
         borg.stack.push(PropertyStack(obj, func, old_value, new_value))
 
     return inner
