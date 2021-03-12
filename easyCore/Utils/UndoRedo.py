@@ -2,10 +2,55 @@ __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
 from collections import deque
-from typing import Union, Any, NoReturn, Tuple, List
+from typing import Union, Any, NoReturn, Tuple, List, Callable
 import abc
 
 from easyCore import borg
+
+
+class CommandHolder:
+
+    def __init__(self, text: str = None):
+        self._commands = deque()
+        self._text = text
+        self.__index = 0
+
+    def append(self, command):
+        self._commands.appendleft(command)
+
+    def pop(self):
+        return self._commands.popleft()
+
+    def __iter__(self):
+        while self.__index < len(self):
+            index = self.__index
+            self.__index += 1
+            yield self._commands[index]
+        self.__index = 0
+
+    def __len__(self) -> int:
+        return len(self._commands)
+
+    @property
+    def is_macro(self) -> bool:
+        return len(self) > 1
+
+    @property
+    def current(self):
+        return self._commands[0]
+
+    @property
+    def text(self) -> str:
+        text = ''
+        if self._commands:
+            text = self._commands[-1].text
+        if self._text is not None:
+            text = self._text
+        return text
+
+    @text.setter
+    def text(self, text: str):
+        self._text = text
 
 
 class UndoStack:
@@ -17,36 +62,67 @@ class UndoStack:
         self._history = deque(maxlen=max_history)
         self._future = deque(maxlen=max_history)
         self._macro_running = False
-        self._macro = dict(text="", commands=[])
+        self._command_running = False
         self._max_history = max_history
+        self._enabled = False
+
+    @property
+    def enabled(self) -> bool:
+        return self._enabled
+
+    @enabled.setter
+    def enabled(self, state: bool):
+        if self.enabled and self._macro_running:
+            self.endMacro()
+        self._enabled = state
+
+    def force_state(self, state: bool):
+        self._enabled = state
 
     @property
     def history(self) -> deque:
         return self._history
 
+    @property
+    def future(self) -> deque:
+        return self._future
+
     def push(self, command) -> NoReturn:
         """
         Add a command to the history stack
         """
+        # If we're not enabled, then what are we doing!
+        if not self.enabled or self._command_running:
+            # Do the command and leave.
+            command.redo()
+            return
+        # If there's a macro add the command to the command holder
         if self._macro_running:
-            self._macro['commands'].append(command)
+            self.history[0].append(command)
         else:
-            self._history.appendleft(command)
+            # Else create the command holder and add it to the stack
+            com = CommandHolder()
+            com.append(command)
+            self.history.appendleft(com)
+        # Actually do the command
         command.redo()
+        # Reset the future
         self._future = deque(maxlen=self._max_history)
 
     def pop(self):
         """
+        !! WARNING - TO BE USED WITH EMINENCE CAUTION !!
+        !! THIS IS PROBABLY NOT THE FN YOU'RE LOOKING FOR, IT CAN BREAK A LOT OF STUFF !!
         Sometimes you really don't want the last command. Remove it from the stack
-        !! WARNING: TO BE USED WITH UTTER CAUTION !!
 
         :return: None
         :rtype: None
         """
-        if self._macro_running:
-            self._macro['commands'].pop(-1)
-        else:
-            self._history.popleft()
+        pop_it = self._history.popleft()
+        popped = pop_it.pop()
+        if len(pop_it) > 0:
+            self.history.appendleft(pop_it)
+        return popped
 
     def clear(self) -> NoReturn:
         """
@@ -55,36 +131,45 @@ class UndoStack:
         self._history = deque(maxlen=self._max_history)
         self._future = deque(maxlen=self._max_history)
         self._macro_running = False
-        self._macro = dict(text="", commands=[])
 
     def undo(self) -> NoReturn:
         """
         Undo the last change to the stack
         """
         if self.canUndo():
-            command = self._history[0]
-            self._future.appendleft(command)
-            self._history.popleft()
-            if isinstance(command, dict):
-                for item in command['commands'][::-1]:
-                    item.undo()
-            else:
-                command.undo()
+            # Move the command from the past to the future
+            this_command_stack = self._history.popleft()
+            self._future.appendleft(this_command_stack)
+
+
+            # Execute all undo commands
+            for command in this_command_stack:
+                try:
+                    self._command_running = True
+                    command.undo()
+                except Exception as e:
+                    print(e)
+                finally:
+                    self._command_running = False
 
     def redo(self) -> NoReturn:
         """
         Redo the last `undo` command on the stack
         """
-        if len(self._future) > 0:
-            command = self._future[0]
-            if not self._macro_running:
-                self._history.appendleft(command)
-            self._future.popleft()
-            if isinstance(command, dict):
-                for item in command['commands']:
-                    item.redo()
-            else:
-                command.redo()
+        if self.canRedo():
+
+            # Move from the future to the past
+            this_command_stack = self._future.popleft()
+            self._history.appendleft(this_command_stack)
+
+            for command in this_command_stack:
+                try:
+                    self._command_running = True
+                    command.redo()
+                except Exception as e:
+                    print(e)
+                finally:
+                    self._command_running = False
 
     def beginMacro(self, text: str) -> NoReturn:
         """
@@ -92,8 +177,9 @@ class UndoStack:
         """
         if self._macro_running:
             raise AssertionError
+        com = CommandHolder(text)
+        self.history.appendleft(com)
         self._macro_running = True
-        self._macro = dict(text=text, commands=[])
 
     def endMacro(self) -> NoReturn:
         """
@@ -102,7 +188,6 @@ class UndoStack:
         if not self._macro_running:
             raise AssertionError
         self._macro_running = False
-        self._history.appendleft(self._macro)
 
     def canUndo(self) -> bool:
         """
@@ -122,10 +207,7 @@ class UndoStack:
         """
         text = ''
         if self.canRedo():
-            if isinstance(self._future[0], dict):
-                text = self._future[0]['text']
-            else:
-                text = self._future[0]._text
+            text = self.future[0].text
         return text
 
     def undoText(self) -> str:
@@ -134,10 +216,7 @@ class UndoStack:
         """
         text = ''
         if self.canUndo():
-            if isinstance(self._history[0], dict):
-                text = self._history[0]['text']
-            else:
-                text = self._history[0]._text
+            text = self.history[0].text
         return text
 
 
@@ -162,92 +241,30 @@ class UndoCommand(metaclass=abc.ABCMeta):
         Redo implementation which should be overwritten
         """
 
-    def setText(self, text: str) -> NoReturn:
+    @property
+    def text(self) -> str:
+        return self._text
+
+    @text.setter
+    def text(self, text: str) -> NoReturn:
         self._text = text
-
-
-# class _EmptyCommand(UndoCommand):
-#     """
-#     The _EmptyCommand class is the custom base class of all undoable commands
-#     stored on a UndoStack.
-#     """
-#
-#     def __init__(self, dictionary: 'UndoableDict', key: Union[str, list], value: Any):
-#         super().__init__(self)
-#         self._dictionary = dictionary
-#         self._key = key
-#         self._new_value = value
-#         self._old_value = dictionary.getItem(key)
-#
-#
-# class _AddItemCommand(_EmptyCommand):
-#     """
-#     The _AddItemCommand class implements a command to add a key-value pair to
-#     the UndoableDict-base_dict dictionary.
-#     """
-#
-#     def __init__(self, dictionary: 'UndoableDict', key: Union[str, list], value: Any):
-#         super().__init__(dictionary, key, value)
-#         self.setText("Adding: {} = {}".format(self._key, self._new_value))
-#
-#     def undo(self) -> NoReturn:
-#         self._dictionary._realDelItem(self._key)
-#
-#     def redo(self) -> NoReturn:
-#         self._dictionary._realAddItem(self._key, self._new_value)
-#
-#
-# class _SetItemCommand(_EmptyCommand):
-#     """
-#     The _SetItemCommand class implements a command to modify the value of
-#     the existing key in the UndoableDict-base_dict dictionary.
-#     """
-#
-#     def __init__(self, dictionary: 'UndoableDict', key: Union[str, list], value: Any):
-#         super().__init__(dictionary, key, value)
-#         self.setText("Setting: {} = {}".format(self._key, self._new_value))
-#
-#     def undo(self) -> NoReturn:
-#         if self._new_value is not self._old_value:
-#             if self._old_value is None:
-#                 self._dictionary._realDelItem(self._key)
-#             else:
-#                 self._dictionary._realSetItem(self._key, self._old_value)
-#
-#     def redo(self) -> NoReturn:
-#         if self._new_value is not self._old_value:
-#             self._dictionary._realSetItem(self._key, self._new_value)
-#
-#
-# class _RemoveItemCommand(_EmptyCommand):
-#     """
-#     The _SetItemCommand class implements a command to modify the value of
-#     the existing key in the UndoableDict-base_dict dictionary.
-#     """
-#
-#     def __init__(self, dictionary: 'UndoableDict', key: Union[str, list]):
-#         super().__init__(dictionary, key, None)
-#         self.setText("Removing: {}".format(self._key))
-#
-#     def undo(self) -> NoReturn:
-#         self._dictionary._realAddItemByPath(self._key, self._old_value)
-#
-#     def redo(self) -> NoReturn:
-#         self._dictionary._realDelItem(self._key)
 
 
 class PropertyStack(UndoCommand):
     """
     Stack operator for when a property setter is wrapped.
     """
-    def __init__(self, parent, func, old_value, new_value):
-        self.setText("Setting {} to {}".format(func.__name__, new_value))
+
+    def __init__(self, parent, func, old_value, new_value, text=None):
+        # self.setText("Setting {} to {}".format(func.__name__, new_value))
         super().__init__(self)
         self._parent = parent
         self._old_value = old_value
         self._new_value = new_value
         self._set_func = func
-        self.setText(f'{parent} value changed from {old_value} to {new_value}')
+        self.text = f'{parent} value changed from {old_value} to {new_value}'
+        if text is not None:
+            self.text = text
 
     def undo(self) -> NoReturn:
         self._set_func(self._parent, self._old_value)
@@ -256,28 +273,146 @@ class PropertyStack(UndoCommand):
         self._set_func(self._parent, self._new_value)
 
 
-def stack_deco(func):
-    """
-    Decorate a `property` setter with undo/redo functionality
-    :param func: function to be wrapped
-    :type func: Callable
-    :return: wrapped function
-    :rtype: Callable
-    """
-    name = func.__name__
+class FunctionStack(UndoCommand):
+    def __init__(self, parent, set_func, unset_func, text=None):
+        super().__init__(self)
+        self._parent = parent
+        self._old_fn = set_func
+        self._new_fn = unset_func
+        self.text = f'{parent} called {set_func}'
+        if text is not None:
+            self.text = text
 
-    def inner(obj, *args, **kwargs):
-        old_value = getattr(obj, name)
-        new_value = args[0]
-        if borg.debug:
-            print(f"I'm {obj} and have been set from {old_value} to {new_value}!")
-        borg.stack.push(PropertyStack(obj, func, old_value, new_value))
+    def undo(self):
+        self._new_fn()
+
+    def redo(self):
+        self._old_fn()
+
+
+class DictStack(UndoCommand):
+
+    def __init__(self, in_dict, *args):
+        super().__init__(self)
+        self._parent = in_dict
+
+        self._deletion = False
+        self._creation = False
+
+        self._key = None
+        self._old_value = None
+        self._new_value = None
+        self.text = ''
+
+        if len(args) == 1:
+            # We are deleting
+            self._deletion = True
+            self._old_value = self._parent[args[0]]
+            self._key = args[0]
+            self.text = f'Deleting {args[0]} from {self._parent}'
+        elif len(args) == 2:
+            # We are either creating or setting
+            self._key = args[0]
+            self._new_value = args[1]
+            if self._key in self._parent.keys():
+                # We are modifying
+                self._old_value = self._parent[self._key]
+                self.text = f'Setting {self._parent}[{self._key}] from {self._old_value} to {self._new_value}'
+            else:
+                self._creation = True
+                self.text = f'Creating {self._parent}[{self._key}] with value {self._new_value}'
+        else:
+            raise ValueError
+
+    def undo(self) -> NoReturn:
+        if self._creation:
+            # Now we delete
+            self._parent.kwargs.__delitem__(self._key)
+        else:
+            # Now we create/change value
+            self._parent.kwargs.__setitem__(self._key, self._old_value)
+
+    def redo(self) -> NoReturn:
+        if self._deletion:
+            # Now we delete
+            self._parent.kwargs.__delitem__(self._key)
+        else:
+            self._parent.kwargs.__setitem__(self._key, self._new_value)
+
+
+def dict_stack_deco(func):
+    def inner(obj, *args):
+        # Only do the work to a NotarizedDict.
+        if hasattr(obj, '_stack_enabled') and obj._stack_enabled:
+            borg.stack.push(DictStack(obj, *args))
+        else:
+            func(obj, *args)
 
     return inner
 
-# def stack_macro(func):
-#     def inner(obj, *args, **kwargs):
-#         old_value = getattr(obj, name)
-#         new_value = args[0]
-#         borg.stack.push(PropertyStack(obj, func, old_value, new_value))
-#     return inner
+
+def property_stack_deco(arg: Union[str, Callable], begin_macro=False) -> Callable:
+    """
+    Decorate a `property` setter with undo/redo functionality
+    This decorator can be used as:
+
+    @property_stack_deco
+    def func()
+    ....
+
+    or
+
+    @property_stack_deco("This is the undo/redo text)
+    def func()
+    ....
+
+    In the latter case the argument is a string which might be evaluated.
+    The possible markups for this string are;
+
+    `obj` - The thing being operated on
+    `func` - The function being called
+    `name` - The name of the function being called.
+    `old_value` - The pre-set value
+    `new_value` - The post-set value
+
+    An example would be `Function {name}: Set from {old_value} to {new_value}`
+
+    """
+    if isinstance(arg, Callable):
+        func = arg
+        name = func.__name__
+
+        def wrapper(obj, *args):
+            old_value = getattr(obj, name)
+            new_value = args[0]
+
+            if new_value == old_value:
+                return
+
+            if borg.debug:
+                print(f"I'm {obj} and have been set from {old_value} to {new_value}!")
+
+            borg.stack.push(PropertyStack(obj, func, old_value, new_value))
+    else:
+        txt = arg
+
+        def wrapper(func: Callable) -> Callable:
+
+            name = func.__name__
+
+            def inner_wrapper(obj, *args):
+
+                if begin_macro:
+                    borg.stack.beginMacro(txt)
+
+                old_value = getattr(obj, name)
+                new_value = args[0]
+
+                if new_value == old_value:
+                    return
+
+                if borg.debug:
+                    print(f"I'm {obj} and have been set from {old_value} to {new_value}!")
+                borg.stack.push(PropertyStack(obj, func, old_value, new_value, text=txt.format(**locals())))
+            return inner_wrapper
+    return wrapper

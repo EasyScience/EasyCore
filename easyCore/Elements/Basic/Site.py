@@ -210,10 +210,12 @@ class PeriodicSite(Site):
         """
         return self.lattice.get_cartesian_coords(self.fract_coords)
 
+
 class Atoms(BaseCollection):
     def __init__(self, name: str, *args, interface=None, **kwargs):
         super(Atoms, self).__init__(name, *args, **kwargs)
         self.interface = interface
+        self._kwargs._stack_enabled = True
 
     def __repr__(self) -> str:
         return f'Collection of {len(self)} sites.'

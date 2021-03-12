@@ -7,7 +7,41 @@ from typing import Union, List, Iterable
 from easyCore import borg
 from easyCore.Objects.Base import BaseObj, Descriptor, Parameter
 from easyCore.Utils.json import MSONable
-from collections.abc import Sequence
+from collections.abc import Sequence, MutableMapping
+from easyCore.Utils.UndoRedo import dict_stack_deco
+
+
+class NotarizedDict(MutableMapping):
+
+    def __init__(self, **kwargs):
+        self._borg = borg
+        self.kwargs = kwargs
+        self._stack_enabled = False
+
+    @classmethod
+    def _classname(cls):
+        # This method just returns the name of the class
+        return cls.__name__
+
+    def __getitem__(self, key):
+        return self.kwargs[key]
+
+    @dict_stack_deco
+    def __setitem__(self, key, value):
+        self.kwargs[key] = value
+
+    @dict_stack_deco
+    def __delitem__(self, key):
+        del self.kwargs[key]
+
+    def __iter__(self):
+        return iter(self.kwargs)
+
+    def __len__(self):
+        return len(self.kwargs)
+
+    def __repr__(self):
+        return f"{self._classname()}({self.kwargs})"
 
 
 class BaseCollection(MSONable, Sequence):
@@ -47,7 +81,7 @@ class BaseCollection(MSONable, Sequence):
                 kwargs[str(borg.map.convert_id_to_key(arg))] = arg
 
         # Set kwargs, also useful for serialization
-        self._kwargs = kwargs
+        self._kwargs = NotarizedDict(**kwargs)
 
         for key in kwargs.keys():
             if key in self.__dict__.keys():

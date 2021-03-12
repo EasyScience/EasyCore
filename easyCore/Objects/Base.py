@@ -11,7 +11,7 @@ from easyCore import borg, ureg, np
 from easyCore.Utils.classTools import addLoggedProp, addProp
 from easyCore.Utils.Exceptions import CoreSetException
 from easyCore.Utils.typing import noneType
-from easyCore.Utils.UndoRedo import stack_deco
+from easyCore.Utils.UndoRedo import property_stack_deco
 from easyCore.Utils.json import MSONable
 from easyCore.Fitting.Constraints import SelfConstraint
 
@@ -117,7 +117,7 @@ class Descriptor(MSONable):
         return display_name
 
     @display_name.setter
-    @stack_deco
+    @property_stack_deco
     def display_name(self, name_str: str):
         """
         Set the pretty display name.
@@ -140,7 +140,7 @@ class Descriptor(MSONable):
         return self._units.units
 
     @unit.setter
-    @stack_deco
+    @property_stack_deco
     def unit(self, unit_str: str):
         """
         Set the unit to a new one.
@@ -195,7 +195,7 @@ class Descriptor(MSONable):
         self._value = self.__class__._constructor(**self._args)
 
     @value.setter
-    @stack_deco
+    @property_stack_deco
     def value(self, value: Any):
         """
         Set the value of self. This creates a pint with a unit.
@@ -206,8 +206,9 @@ class Descriptor(MSONable):
         :rtype: noneType
         """
         if not self.enabled:
-            if self._borg.stack.enabled:
-                self._borg.stack.history.popleft()
+            # if self._borg.stack.enabled and self._borg.stack.history:
+            #     if not self._borg.stack.history[0].is_macro:
+            #         self._borg.stack.pop()
             if borg.debug:
                 raise CoreSetException(f'{str(self)} is not enabled.')
             return
@@ -244,7 +245,7 @@ class Descriptor(MSONable):
         return self._enabled
 
     @enabled.setter
-    @stack_deco
+    @property_stack_deco
     def enabled(self, value: bool):
         """
         Enable and disable the direct setting of an objects value field.
@@ -428,7 +429,7 @@ class Parameter(Descriptor):
         return self._min
 
     @min.setter
-    @stack_deco
+    @property_stack_deco
     def min(self, value: numbers.Number):
         """
         Set the minimum value for fitting.
@@ -455,7 +456,7 @@ class Parameter(Descriptor):
         return self._max
 
     @max.setter
-    @stack_deco
+    @property_stack_deco
     def max(self, value: numbers.Number):
         """
         Get the maximum value for fitting.
@@ -482,7 +483,7 @@ class Parameter(Descriptor):
         return self._fixed
 
     @fixed.setter
-    @stack_deco
+    @property_stack_deco
     def fixed(self, value: bool):
         """
         Change the parameter vary while fitting state.
@@ -493,6 +494,12 @@ class Parameter(Descriptor):
         :return: None
         :rtype: noneType
         """
+        if not self.enabled:
+            if self._borg.stack.enabled:
+                self._borg.stack.pop()
+            if borg.debug:
+                raise CoreSetException(f'{str(self)} is not enabled.')
+            return
         # TODO Should we try and cast value to bool rather than throw ValueError?
         if not isinstance(value, bool):
             raise ValueError
@@ -509,7 +516,7 @@ class Parameter(Descriptor):
         return self._value.error.magnitude
 
     @error.setter
-    @stack_deco
+    @property_stack_deco
     def error(self, value: float):
         """
         Set the error associated with the parameter.
@@ -557,7 +564,14 @@ class Parameter(Descriptor):
         new_value = constraint_runner(constraint_type, value)
         # Then run any user constraints.
         constraint_type: dict = self.constraints['user']
-        new_value = constraint_runner(constraint_type, new_value)
+
+        state = self._borg.stack.enabled
+        if state:
+            self._borg.stack.force_state(False)
+        try:
+            new_value = constraint_runner(constraint_type, new_value)
+        finally:
+            self._borg.stack.force_state(state)
 
         # Restore to the old state
         self._value = old_value
