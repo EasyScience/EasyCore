@@ -393,6 +393,8 @@ def property_stack_deco(arg: Union[str, Callable], begin_macro=False) -> Callabl
                 print(f"I'm {obj} and have been set from {old_value} to {new_value}!")
 
             borg.stack.push(PropertyStack(obj, func, old_value, new_value))
+
+        setattr(wrapper, 'func', func)
     else:
         txt = arg
 
@@ -414,5 +416,7 @@ def property_stack_deco(arg: Union[str, Callable], begin_macro=False) -> Callabl
                 if borg.debug:
                     print(f"I'm {obj} and have been set from {old_value} to {new_value}!")
                 borg.stack.push(PropertyStack(obj, func, old_value, new_value, text=txt.format(**locals())))
+
+            setattr(inner_wrapper, 'func', func)
             return inner_wrapper
     return wrapper

@@ -392,13 +392,72 @@ class Parameter(Descriptor):
         }
         # This is for the serialization. Otherwise we wouldn't catch the values given to `super()`
         self._kwargs = kwargs
-        # Monkey patch the unit and the value to take into account the new max/min situation
-        self.__previous_set = self.__class__.value.fset
 
+        # We have initialized from the Descriptor class where value has it's own undo/redo decorator
+        # This needs to be bypassed to use the Parameter undo/redo stack
+        fun = self.__class__.value.fset
+        if hasattr(fun, 'func'):
+            fun = getattr(fun, 'func')
+        self.__previous_set = fun
+
+        # Monkey patch the unit and the value to take into account the new max/min situation
         addProp(self, 'value',
                 fget=self.__class__.value.fget,
-                fset=lambda obj, val: self.__previous_set(obj, obj._validate(val)),
+                fset=self.__class__._property_value.fset,
                 fdel=self.__class__.value.fdel)
+
+    @property
+    def _property_value(self):
+        return self.value
+
+    @_property_value.setter
+    @property_stack_deco
+    def _property_value(self, set_value):
+        """
+        Verify value against constraints. This hasn't really been implemented as fitting is tricky.
+
+        :param value: value to be verified
+        :type value: Any
+        :return: new value from constraint
+        :rtype: Any
+        """
+        if isinstance(set_value, M_):
+            set_value = set_value.magnitude.nominal_value
+        # Save the old state and create the new state
+        old_value = self._value
+        self._value = self.__class__._constructor(value=set_value, units=self._args['units'], error=self._args['error'])
+
+        def constraint_runner(this_constraint_type: dict, newer_value: numbers.Number):
+            for constraint in this_constraint_type.values():
+                if constraint.external:
+                    constraint()
+                    return newer_value
+                this_new_value = constraint(no_set=True)
+                if this_new_value != newer_value:
+                    if borg.debug:
+                        print(f'Constraint `{constraint}` has been applied')
+                    self._value = self.__class__._constructor(value=this_new_value, units=self._args['units'],
+                                                              error=self._args['error'])
+                newer_value = this_new_value
+            return newer_value
+
+        # First run the built in constraints. i.e. min/max
+        constraint_type: dict = self.constraints['builtin']
+        new_value = constraint_runner(constraint_type, set_value)
+        # Then run any user constraints.
+        constraint_type: dict = self.constraints['user']
+
+        state = self._borg.stack.enabled
+        if state:
+            self._borg.stack.force_state(False)
+        try:
+            new_value = constraint_runner(constraint_type, new_value)
+        finally:
+            self._borg.stack.force_state(state)
+
+        # Restore to the old state
+        self._value = old_value
+        self.__previous_set(self, new_value)
 
     def convert_unit(self, new_unit: str):  # noqa: S1144
         """
@@ -531,52 +590,6 @@ class Parameter(Descriptor):
             raise ValueError
         self._args['error'] = value
         self._value = self.__class__._constructor(**self._args)
-
-    def _validate(self, value: numbers.Number):
-        """
-        Verify value against constraints. This hasn't really been implemented as fitting is tricky.
-
-        :param value: value to be verified
-        :type value: Any
-        :return: new value from constraint
-        :rtype: Any
-        """
-        # Save the old state and create the new state
-        old_value = self._value
-        self._value = self.__class__._constructor(value=value, units=self._args['units'], error=self._args['error'])
-
-        def constraint_runner(this_constraint_type: dict, newer_value: numbers.Number):
-            for constraint in this_constraint_type.values():
-                if constraint.external:
-                    constraint()
-                    return newer_value
-                this_new_value = constraint(no_set=True)
-                if this_new_value != newer_value:
-                    if borg.debug:
-                        print(f'Constraint `{constraint}` has been applied')
-                    self._value = self.__class__._constructor(value=this_new_value, units=self._args['units'],
-                                                              error=self._args['error'])
-                newer_value = this_new_value
-            return newer_value
-
-        # First run the built in constraints. i.e. min/max
-        constraint_type: dict = self.constraints['builtin']
-        new_value = constraint_runner(constraint_type, value)
-        # Then run any user constraints.
-        constraint_type: dict = self.constraints['user']
-
-        state = self._borg.stack.enabled
-        if state:
-            self._borg.stack.force_state(False)
-        try:
-            new_value = constraint_runner(constraint_type, new_value)
-        finally:
-            self._borg.stack.force_state(state)
-
-        # Restore to the old state
-        self._value = old_value
-        # Return the new value to be set
-        return new_value
 
     def __repr__(self):
         """Return printable representation of a Parameter object."""
