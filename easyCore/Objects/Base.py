@@ -281,15 +281,16 @@ class Descriptor(MSONable):
         return [str(u) for u in self.unit.compatible_units()]
 
     def __repr__(self):
-        """Return printable representation of a Parameter object."""
-        out_str = "<{:s} '{:s}': {:0.04f} {:~P}>".format(self.__class__.__name__,
-                                                         self.name,
-                                                         self._value.magnitude,
-                                                         self.unit)
-
-        # Fix formatting for dimensionless
-        if out_str[-2] == ' ':
-            out_str = out_str[:-2] + '>'
+        """Return printable representation of a Descriptor/Parameter object."""
+        class_name = self.__class__.__name__
+        obj_name = self.name
+        obj_value = self._value.magnitude
+        if isinstance(obj_value, float):
+            obj_value = '{:0.04f}'.format(obj_value)
+        obj_units = ''
+        if not self.unit.dimensionless:
+            obj_units = ' {:~P}'.format(self.unit)
+        out_str = f"<{class_name} '{obj_name}': {obj_value}{obj_units}>"
         return out_str
 
     def as_dict(self, skip: list = None) -> dict:
