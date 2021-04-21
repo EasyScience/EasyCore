@@ -1,27 +1,110 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
-from collections import deque
-from typing import Union, Any, NoReturn, Tuple, List, Callable
 import abc
+from collections import deque
+from typing import Union, Any, NoReturn, Callable, TypeVar, MutableMapping
 
 from easyCore import borg
 
 
+class UndoCommand(metaclass=abc.ABCMeta):
+    """
+    The Command interface pattern
+    """
+
+    def __init__(self, obj) -> None:
+        self._obj = obj
+        self._text = None
+
+    @abc.abstractmethod
+    def undo(self) -> NoReturn:
+        """
+        Undo implementation which should be overwritten
+        """
+
+    @abc.abstractmethod
+    def redo(self) -> NoReturn:
+        """
+        Redo implementation which should be overwritten
+        """
+
+    @property
+    def text(self) -> str:
+        return self._text
+
+    @text.setter
+    def text(self, text: str) -> NoReturn:
+        self._text = text
+
+
+T_ = TypeVar('T_', bound=UndoCommand)
+
+
+def dict_stack_deco(func: Callable) -> Callable:
+    def inner(obj, *args):
+        # Only do the work to a NotarizedDict.
+        if hasattr(obj, '_stack_enabled') and obj._stack_enabled:
+            borg.stack.push(DictStack(obj, *args))
+        else:
+            func(obj, *args)
+    return inner
+
+
+class NotarizedDict(MutableMapping):
+    """
+    A simple dict drop in for easyCore group classes. This is used as it wraps the get/set methods
+    """
+
+    def __init__(self, **kwargs):
+        self._borg = borg
+        self.kwargs = kwargs
+        self._stack_enabled = False
+
+    @classmethod
+    def _classname(cls):
+        # This method just returns the name of the class
+        return cls.__name__
+
+    def __getitem__(self, key):
+        return self.kwargs[key]
+
+    @dict_stack_deco
+    def __setitem__(self, key, value):
+        self.kwargs[key] = value
+
+    @dict_stack_deco
+    def __delitem__(self, key):
+        del self.kwargs[key]
+
+    def __iter__(self):
+        return iter(self.kwargs)
+
+    def __len__(self):
+        return len(self.kwargs)
+
+    def __repr__(self):
+        return f"{self._classname()}({self.kwargs})"
+
+
 class CommandHolder:
+    """
+    A holder for one or more commands which are added to the stack
+    """
 
     def __init__(self, text: str = None):
         self._commands = deque()
         self._text = text
         self.__index = 0
 
-    def append(self, command):
+    def append(self, command: T_):
+
         self._commands.appendleft(command)
 
     def pop(self):
         return self._commands.popleft()
 
-    def __iter__(self):
+    def __iter__(self) -> T_:
         while self.__index < len(self):
             index = self.__index
             self.__index += 1
@@ -36,7 +119,7 @@ class CommandHolder:
         return len(self) > 1
 
     @property
-    def current(self):
+    def current(self) -> T_:
         return self._commands[0]
 
     @property
@@ -87,7 +170,7 @@ class UndoStack:
     def future(self) -> deque:
         return self._future
 
-    def push(self, command) -> NoReturn:
+    def push(self, command: T_) -> NoReturn:
         """
         Add a command to the history stack
         """
@@ -109,7 +192,7 @@ class UndoStack:
         # Reset the future
         self._future = deque(maxlen=self._max_history)
 
-    def pop(self):
+    def pop(self) -> T_:
         """
         !! WARNING - TO BE USED WITH EMINENCE CAUTION !!
         !! THIS IS PROBABLY NOT THE FN YOU'RE LOOKING FOR, IT CAN BREAK A LOT OF STUFF !!
@@ -140,7 +223,6 @@ class UndoStack:
             # Move the command from the past to the future
             this_command_stack = self._history.popleft()
             self._future.appendleft(this_command_stack)
-
 
             # Execute all undo commands
             for command in this_command_stack:
@@ -220,42 +302,12 @@ class UndoStack:
         return text
 
 
-class UndoCommand(metaclass=abc.ABCMeta):
-    """
-    The Command interface pattern
-    """
-
-    def __init__(self, obj) -> None:
-        self._obj = obj
-        self._text = None
-
-    @abc.abstractmethod
-    def undo(self) -> NoReturn:
-        """
-        Undo implementation which should be overwritten
-        """
-
-    @abc.abstractmethod
-    def redo(self) -> NoReturn:
-        """
-        Redo implementation which should be overwritten
-        """
-
-    @property
-    def text(self) -> str:
-        return self._text
-
-    @text.setter
-    def text(self, text: str) -> NoReturn:
-        self._text = text
-
-
 class PropertyStack(UndoCommand):
     """
     Stack operator for when a property setter is wrapped.
     """
 
-    def __init__(self, parent, func, old_value, new_value, text=None):
+    def __init__(self, parent, func: Callable, old_value: Any, new_value: Any, text: str = None):
         # self.setText("Setting {} to {}".format(func.__name__, new_value))
         super().__init__(self)
         self._parent = parent
@@ -274,7 +326,7 @@ class PropertyStack(UndoCommand):
 
 
 class FunctionStack(UndoCommand):
-    def __init__(self, parent, set_func, unset_func, text=None):
+    def __init__(self, parent, set_func: Callable, unset_func: Callable, text: str = None):
         super().__init__(self)
         self._parent = parent
         self._old_fn = set_func
@@ -292,7 +344,7 @@ class FunctionStack(UndoCommand):
 
 class DictStack(UndoCommand):
 
-    def __init__(self, in_dict, *args):
+    def __init__(self, in_dict: NotarizedDict, *args):
         super().__init__(self)
         self._parent = in_dict
 
@@ -340,17 +392,6 @@ class DictStack(UndoCommand):
             self._parent.kwargs.__setitem__(self._key, self._new_value)
 
 
-def dict_stack_deco(func):
-    def inner(obj, *args):
-        # Only do the work to a NotarizedDict.
-        if hasattr(obj, '_stack_enabled') and obj._stack_enabled:
-            borg.stack.push(DictStack(obj, *args))
-        else:
-            func(obj, *args)
-
-    return inner
-
-
 def property_stack_deco(arg: Union[str, Callable], begin_macro=False) -> Callable:
     """
     Decorate a `property` setter with undo/redo functionality
@@ -382,7 +423,7 @@ def property_stack_deco(arg: Union[str, Callable], begin_macro=False) -> Callabl
         func = arg
         name = func.__name__
 
-        def wrapper(obj, *args):
+        def wrapper(obj, *args) -> NoReturn:
             old_value = getattr(obj, name)
             new_value = args[0]
 
@@ -402,7 +443,7 @@ def property_stack_deco(arg: Union[str, Callable], begin_macro=False) -> Callabl
 
             name = func.__name__
 
-            def inner_wrapper(obj, *args):
+            def inner_wrapper(obj, *args) -> NoReturn:
 
                 if begin_macro:
                     borg.stack.beginMacro(txt)
