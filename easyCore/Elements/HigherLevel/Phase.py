@@ -314,13 +314,13 @@ class Phases(BaseCollection):
 
     @classmethod
     def from_cif_str(cls, in_string: str):
-        name, crystals = cls._from_external(CifIO.from_cif_str, in_string)
-        return cls(name, *crystals)
+        _, crystals = cls._from_external(CifIO.from_cif_str, in_string)
+        return cls('Phases', *crystals)
 
     @classmethod
     def from_cif_file(cls, file_path: Path):
-        name, crystals = cls._from_external(CifIO.from_file, file_path)
-        return cls(name, *crystals)
+        _, crystals = cls._from_external(CifIO.from_file, file_path)
+        return cls('Phases', *crystals)
 
     @staticmethod
     def _from_external(constructor, *args):
