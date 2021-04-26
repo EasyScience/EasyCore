@@ -129,6 +129,7 @@ class Fitter:
     @fit_object.setter
     def fit_object(self, fit_object: object):
         self._fit_object = fit_object
+        self.__initialize()
 
     def __pass_through_generator(self, name: str):
         obj = self
