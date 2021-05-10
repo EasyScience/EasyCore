@@ -5,8 +5,7 @@ from numbers import Number
 from typing import Union, List, Iterable
 
 from easyCore import borg
-from easyCore.Objects.Base import BasedBase, Descriptor, Parameter
-from easyCore.Utils.json import MSONable
+from easyCore.Objects.Base import BasedBase, Descriptor
 from collections.abc import Sequence
 from easyCore.Utils.UndoRedo import NotarizedDict
 
@@ -121,46 +120,6 @@ class BaseCollection(BasedBase, Sequence):
         """
         return len(self._kwargs.keys())
 
-    def get_parameters(self) -> List[Parameter]:
-        """
-        Get all parameter objects as a list.
-
-        :return: List of `Parameter` objects.
-        :rtype: List[Parameter]
-        """
-        fit_list = []
-        for key, item in self._kwargs.items():
-            if hasattr(item, 'get_parameters'):
-                fit_list = [*fit_list, *item.get_parameters()]
-            elif isinstance(item, Parameter):
-                fit_list.append(item)
-        return fit_list
-
-    def get_fit_parameters(self) -> List[Parameter]:
-        """
-        Get all objects which can be fitted (and are not fixed) as a list.
-
-        :return: List of `Parameter` objects which can be used in fitting.
-        :rtype: List[Parameter]
-        """
-        fit_list = []
-        for key, item in self._kwargs.items():
-            if hasattr(item, 'get_fit_parameters'):
-                fit_list = [*fit_list, *item.get_fit_parameters()]
-            elif isinstance(item, Parameter) and not item.fixed:
-                fit_list.append(item)
-        return fit_list
-
-    def __dir__(self) -> Iterable[str]:
-        """
-        This creates auto-completion and helps out in iPython notebooks.
-
-        :return: list of function and parameter names for auto-completion
-        :rtype: List[str]
-        """
-        new_class_objs = list(k for k in dir(self.__class__) if not k.startswith('_'))
-        return sorted(new_class_objs)
-
     def as_dict(self, skip: list = None) -> dict:
         """
         Convert ones self into a serialized form.
@@ -168,12 +127,7 @@ class BaseCollection(BasedBase, Sequence):
         :return: dictionary of ones self
         :rtype: dict
         """
-        if skip is None:
-            skip = []
-        d = MSONable.as_dict(self, skip=skip)
-        for key in d.keys():
-            if hasattr(d[key], 'as_dict'):
-                d[key] = d[key].as_dict(skip=skip)
+        d = super(BaseCollection, self).as_dict(skip=skip)
         data = []
         dd = {}
         for key in d.keys():
@@ -184,7 +138,7 @@ class BaseCollection(BasedBase, Sequence):
         dd['data'] = data
         # Attach the id. This might be useful in connected applications.
         # Note that it is converted to int and then str because javascript....
-        dd['@id'] = str(self._borg.map.convert_id(self).int)
+        dd['@id'] = d['@id']
         return dd
 
     @classmethod
@@ -205,35 +159,6 @@ class BaseCollection(BasedBase, Sequence):
         else:
             del d['data']
         return super(BaseCollection, cls).from_dict(d)
-
-    def generate_bindings(self):
-        """
-        Generate or re-generate bindings to an interface (if exists)
-
-        :raises: AttributeError
-        """
-        if self.interface is None:
-            raise AttributeError
-        self.interface.generate_bindings(self)
-
-    def switch_interface(self, new_interface_name: str):
-        """
-        Switch or create a new interface.
-        """
-        if self.interface is None:
-            raise AttributeError
-        self.interface.switch(new_interface_name)
-        self.interface.generate_bindings(self)
-
-    @property
-    def constraints(self) -> list:
-        pars = self.get_parameters()
-        constraints = []
-        for par in pars:
-            con = par.constraints['user']
-            for key in con.keys():
-                constraints.append(con[key])
-        return constraints
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__} `{getattr(self, 'name')}` of length {len(self)}"

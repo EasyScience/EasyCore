@@ -185,8 +185,9 @@ class SpaceGroup(SymmetryGroup):
 
         Order of Space Group
     """
-    SYMM_OPS = loadfn(os.path.join(os.path.dirname(__file__),
-                                   "symm_ops.json"))
+    with open(os.path.join(os.path.dirname(__file__),
+                                   "symm_ops.json"), 'r') as fid:
+        SYMM_OPS = json.load(fid)
     SG_SYMBOLS = set(_get_symm_data("space_group_encoding").keys())
     for op in SYMM_OPS:
         op["hermann_mauguin_fmt"] = op["hermann_mauguin"]
