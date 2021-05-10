@@ -18,7 +18,7 @@ classifiers=[
     "Intended Audience :: Developers",  # Define that your audience are developers
     "Topic :: Scientific/Engineering :: Physics",
     "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",  # Again, pick a license
-    "Programming Language :: Python :: 3.6, 3.7, 3.8",
+    "Programming Language :: Python :: 3.6, 3.7, 3.8, 3.9",
 ]
 include = ["CHANGELOG.md"]
 packages = [ { include = "easyCore" } ]
@@ -48,19 +48,19 @@ source = ['easyCore']
 [tool.dephell.main]
 from = {format = "poetry", path = "pyproject.toml"}
 to = {format = "setuppy", path = "setup.py"}
-envs = ["main", "requirements"]
-
+envs = ["main"]
 
 [tool.tox]
 legacy_tox_ini = """
 [tox]
 isolated_build = True
-envlist = py{36,37,38}
+envlist = py{36,37,38,39}
 [gh-actions]
 python =
     3.6: py36
     3.7: py37
     3.8: py38
+    3.9: py39
 [gh-actions:env]
 PLATFORM =
     ubuntu-latest: linux
@@ -83,5 +83,3 @@ commands =
     poetry install -vvv
     poetry run pytest --cov --cov-report=xml
 """
-
-# CUSTOM CONFIG

@@ -21,6 +21,11 @@ SG_DETAILS = {
 class SpaceGroup(BaseObj):
 
     def __init__(self, _space_group_HM_name: Descriptor, interface=None, setting=''):
+
+        # Note that you can't use isinstance here as Parameter is derived and we ONLY WANT a Parameter
+        if not type(_space_group_HM_name) == Descriptor:
+            raise AttributeError("`space_group_HM_name` must be of `Descriptor` class")
+
         if setting and setting[0] != ':':
             setting = ':' + setting
             in_value = self._space_group_HM_name.raw_value

@@ -278,7 +278,7 @@ class MSONable:
         ordered_keys = sorted(flatten(jsanitize(self.as_dict())).items(),
                               key=lambda x: x[0])
         ordered_keys = [item for item in ordered_keys if "@" not in item[0]]
-        return sha1(json.dumps(OrderedDict(ordered_keys)).encode("utf-8"))
+        return sha1(json.dumps(OrderedDict(ordered_keys)).encode("utf-8"))  # nosec
 
 
 class MontyEncoder(json.JSONEncoder):
