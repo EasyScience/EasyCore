@@ -617,16 +617,25 @@ class Parameter(Descriptor):
         return new_dict
 
 
-class BaseObj(MSONable):
+class BasedBase(MSONable):
+
+    __slots__ = ['name', '_borg', 'interface', 'user_data', '_kwargs']
+
+    def __init__(self, name: str):
+        self._borg = borg
+        self._borg.map.add_vertex(self, obj_type='created')
+        self.interface = None
+        self.user_data: dict = {}
+        self.name: str = name
+
+
+class BaseObj(BasedBase):
     """
     This is the base class for which all higher level classes are built off of.
     NOTE: This object is serializable only if parameters are supplied as:
     `BaseObj(a=value, b=value)`. For `Parameter` or `Descriptor` objects we can
     cheat with `BaseObj(*[Descriptor(...), Parameter(...), ...])`.
     """
-
-    _borg = borg
-
     def __init__(self, name: str, *args, **kwargs):
         """
         Set up the base class.
@@ -639,11 +648,7 @@ class BaseObj(MSONable):
         :type parent: Any
         :param kwargs: Fields which this class should contain
         """
-
-        self._borg.map.add_vertex(self, obj_type='created')
-        self.interface = None
-        self.user_data: dict = {}
-        self.__dict__['name'] = name
+        super(BaseObj, self).__init__(name)
         # If Parameter or Descriptor is given as arguments...
         for arg in args:
             if issubclass(arg.__class__, (BaseObj, Descriptor)):
@@ -654,12 +659,11 @@ class BaseObj(MSONable):
         for key in kwargs.keys():
             if key in known_keys:
                 raise AttributeError
-            if issubclass(kwargs[key].__class__, (BaseObj, Descriptor)) or \
+            if issubclass(type(kwargs[key]), (BasedBase, Descriptor)) or \
                     'BaseCollection' in [c.__name__ for c in type(kwargs[key]).__bases__]:
                 self._borg.map.add_edge(self, kwargs[key])
                 self._borg.map.reset_type(kwargs[key], 'created_internal')
-            addLoggedProp(self, key, self.__getter(key), self.__setter(key), get_id=key, my_self=self,
-                          test_class=BaseObj)
+            addLoggedProp(self, key, self.__getter(key), self.__setter(key), get_id=key, my_self=self, test_class=BaseObj)
 
     def get_parameters(self) -> List[Parameter]:
         """
@@ -746,6 +750,13 @@ class BaseObj(MSONable):
         self._borg.map.reset_type(component, 'created_internal')
         addLoggedProp(self, key, self.__getter(key), self.__setter(key), get_id=key, my_self=self,
                       test_class=BaseObj)
+        
+    def __setattr__(self, key, value):
+        if hasattr(self, key) and issubclass(type(value), (BasedBase, Descriptor)):
+            old_obj = self.__getattribute__(key)
+            self._borg.map.prune_vertex_from_edge(self, old_obj)
+            self._borg.map.add_edge(self, value)
+        super(BaseObj, self).__setattr__(key, value)
 
     @property
     def constraints(self) -> list:

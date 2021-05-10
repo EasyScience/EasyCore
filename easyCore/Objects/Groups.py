@@ -5,22 +5,19 @@ from numbers import Number
 from typing import Union, List, Iterable
 
 from easyCore import borg
-from easyCore.Objects.Base import BaseObj, Descriptor, Parameter
+from easyCore.Objects.Base import BasedBase, Descriptor, Parameter
 from easyCore.Utils.json import MSONable
 from collections.abc import Sequence
 from easyCore.Utils.UndoRedo import NotarizedDict
 
 
-class BaseCollection(MSONable, Sequence):
+class BaseCollection(BasedBase, Sequence):
     """
     This is the base class for which all higher level classes are built off of.
     NOTE: This object is serializable only if parameters are supplied as:
     `BaseObj(a=value, b=value)`. For `Parameter` or `Descriptor` objects we can
     cheat with `BaseObj(*[Descriptor(...), Parameter(...), ...])`.
     """
-
-    _borg = borg
-
     def __init__(self, name: str, *args, **kwargs):
         """
         Set up the base collection class.
@@ -31,24 +28,19 @@ class BaseCollection(MSONable, Sequence):
         :param _kwargs: Fields which this class should contain
         :type _kwargs: dict
         """
-
+        BasedBase.__init__(self, name)
         kwargs = {key: kwargs[key] for key in kwargs.keys() if kwargs[key] is not None}
 
         for key, item in kwargs.items():
-            if not issubclass(item.__class__, (Descriptor, BaseObj, BaseCollection)):
+            if not issubclass(item.__class__, (Descriptor, BasedBase)):
                 raise AttributeError
-
-        self._borg.map.add_vertex(self, obj_type='created')
-        self.interface = None
-        self.name = name
-        self.user_data = {}
 
         _kwargs = {}
         for item in kwargs.values():
             _kwargs[str(borg.map.convert_id_to_key(item))] = item
 
         for arg in args:
-            if issubclass(arg.__class__, (BaseObj, Descriptor, Parameter, BaseCollection)):
+            if issubclass(arg.__class__, (Descriptor, BasedBase)):
                 _kwargs[str(borg.map.convert_id_to_key(arg))] = arg
 
         # Set kwargs, also useful for serialization
@@ -61,18 +53,18 @@ class BaseCollection(MSONable, Sequence):
             self._borg.map.reset_type(_kwargs[key], 'created_internal')
             # TODO wrap getter and setter in Logger
 
-    def append(self, item: Union[Parameter, Descriptor, BaseObj, 'BaseCollection']):
+    def append(self, item: Union[Descriptor, BasedBase]):
         """
         Add an idem to the end of the collection
 
         :param item: New item to be added
         :type item: Union[Parameter, Descriptor, BaseObj, 'BaseCollection']
         """
-        if issubclass(item.__class__, (BaseObj, Descriptor, BaseCollection)):
+        if issubclass(item.__class__, (BasedBase, Descriptor)):
             self._kwargs[str(borg.map.convert_id_to_key(item))] = item
             self._borg.map.add_edge(self, self._kwargs[str(borg.map.convert_id_to_key(item))])
 
-    def __getitem__(self, idx: Union[int, slice]) -> Union[Parameter, Descriptor, BaseObj, 'BaseCollection']:
+    def __getitem__(self, idx: Union[int, slice]) -> Union[Descriptor, BasedBase]:
         """
         Get an item in the collection based on it's index.
         

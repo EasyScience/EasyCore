@@ -45,3 +45,5 @@ build
 .tox
 
 dask-worker-space/dask-worker-space/
+
+poetry.lock
