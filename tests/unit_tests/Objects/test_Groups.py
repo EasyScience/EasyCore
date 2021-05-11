@@ -5,8 +5,8 @@ from typing import List
 
 import pytest
 
-from easyCore.Objects.Groups import BaseCollection, BaseObj
-from easyCore.Objects.Base import Descriptor, Parameter
+from easyCore.Objects.Groups import BaseCollection
+from easyCore.Objects.Base import Descriptor, Parameter, BaseObj
 from easyCore.Utils.json import MontyDecoder
 
 test_dict = {
@@ -91,7 +91,6 @@ def test_baseCollection_create_fail(setup_pars, value):
 
     with pytest.raises(AttributeError):
         coll = BaseCollection(name, **setup_pars)
-
 
 @pytest.mark.parametrize('key', ('user_data', '_kwargs', 'interface'))
 def test_baseCollection_create_fail2(setup_pars, key):
@@ -277,7 +276,8 @@ def test_baseCollection_dir():
     expected = {'constraints', 'as_dict', 'from_dict',
                 'to_json', 'generate_bindings', 'count', 'REDIRECT',
                 'get_fit_parameters', 'unsafe_hash', 'to_data_dict',
-                'switch_interface', 'get_parameters', 'index', 'append'}
+                'switch_interface', 'get_parameters', 'index', 'append',
+                'user_data', 'name', 'interface'}
     assert not d.difference(expected)
 
 

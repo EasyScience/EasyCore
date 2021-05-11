@@ -62,10 +62,13 @@ class SpaceGroup(BaseObj):
 
     @classmethod
     def from_int_number(cls, int_number, hexagonal=True, interface=None):
-        sg = SpaceGroupOpts.from_int_number(int_number, hexagonal)
-        this_str = sg.hm_for_cif
-        if not hexagonal and sg.int_number in [146, 148, 155, 160, 161, 166, 167]:
-            this_str += ':R'
+        sgs = [op for op in SpaceGroupOpts.SYMM_OPS if op['number'] == int_number]
+        this_str = sgs[0]['hermann_mauguin']
+        if int_number in [146, 148, 155, 160, 161, 166, 167]:
+            if hexagonal:
+                this_str += ':H'
+            else:
+                this_str += ':R'
         return cls.from_pars(this_str, interface=interface)
 
     def __on_change(self, value):

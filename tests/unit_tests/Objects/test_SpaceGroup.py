@@ -2,6 +2,7 @@ __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
 import pytest
+import itertools
 
 from easyCore.Objects.Base import Descriptor, Parameter
 from easyCore.Elements.Basic.SpaceGroup import SpaceGroup, SG_DETAILS
@@ -99,4 +100,22 @@ def test_SpaceGroup_fromIntNumber(sg_int):
                     if opt['number'] == sg_int:
                         f_value = opt['hermann_mauguin_fmt']
                         break
+            assert getattr(f, g_item) == f_value
+
+@pytest.mark.parametrize('sg_int,setting', itertools.product([146, 148, 155, 160, 161, 166, 167], [True, False]))
+def test_SpaceGroup_fromIntNumber_HexTest(sg_int, setting):
+    sg_p = SpaceGroup.from_int_number(sg_int, setting)
+
+    for selector in SG_DETAILS.keys():
+        f = getattr(sg_p, selector)
+        for item in SG_DETAILS[selector].keys():
+            g_item = item
+            f_value = SG_DETAILS[selector][item]
+            if item == 'value':
+                g_item = 'raw_value'
+                for opt in SG.SYMM_OPS:
+                    if opt['number'] == sg_int:
+                        f_value: str = opt['hermann_mauguin_fmt']
+                        if f_value.endswith(':H') and setting or f_value.endswith(':R') and not setting:
+                            break
             assert getattr(f, g_item) == f_value

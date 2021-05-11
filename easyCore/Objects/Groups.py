@@ -30,23 +30,21 @@ class BaseCollection(BasedBase, Sequence):
         BasedBase.__init__(self, name)
         kwargs = {key: kwargs[key] for key in kwargs.keys() if kwargs[key] is not None}
 
-        for key, item in kwargs.items():
-            if not issubclass(item.__class__, (Descriptor, BaseObj, BaseCollection)):
+        for item in [*kwargs.values(), *args]:
+            if not issubclass(type(item), (Descriptor, BasedBase)):
                 raise AttributeError('A collection can only be formed from easyCore objects.')
 
         _kwargs = {}
-        for item in kwargs.values():
-            _kwargs[str(borg.map.convert_id_to_key(item))] = item
-
+        for key, item in kwargs.items():
+                _kwargs[key] = item
         for arg in args:
-            if issubclass(arg.__class__, (Descriptor, BasedBase)):
                 _kwargs[str(borg.map.convert_id_to_key(arg))] = arg
 
         # Set kwargs, also useful for serialization
         self._kwargs = NotarizedDict(**_kwargs)
 
-        for key in _kwargs.keys():
-            if key in self.__dict__.keys():
+        for key in kwargs.keys():
+            if key in self.__dict__.keys() or key in self.__slots__:
                 raise AttributeError(f'Given kwarg: `{key}`, is an internal attribute. Please rename.')
             self._borg.map.add_edge(self, kwargs[key])
             self._borg.map.reset_type(kwargs[key], 'created_internal')
@@ -79,7 +77,11 @@ class BaseCollection(BasedBase, Sequence):
             return self.__class__(getattr(self, 'name'), *[self[i] for i in range(start, stop, step)])
         if str(idx) in self._kwargs.keys():
             return self._kwargs[str(idx)]
-        if not isinstance(idx, int) or isinstance(idx, bool):
+        if isinstance(idx, str):
+            names = [item.name for item in self]
+            if idx in names:
+                idx = names.index(idx)
+        elif not isinstance(idx, int) or isinstance(idx, bool):
             if isinstance(idx, bool):
                 raise TypeError('Boolean indexing is not supported at the moment')
             try:
@@ -139,6 +141,8 @@ class BaseCollection(BasedBase, Sequence):
         data = []
         dd = {}
         for key in d.keys():
+            if key == '@id':
+                continue
             if isinstance(d[key], dict):
                 data.append(d[key])
             else:
