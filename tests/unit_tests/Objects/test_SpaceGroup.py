@@ -102,6 +102,7 @@ def test_SpaceGroup_fromIntNumber(sg_int):
                         break
             assert getattr(f, g_item) == f_value
 
+
 @pytest.mark.parametrize('sg_int,setting', itertools.product([146, 148, 155, 160, 161, 166, 167], [True, False]))
 def test_SpaceGroup_fromIntNumber_HexTest(sg_int, setting):
     sg_p = SpaceGroup.from_int_number(sg_int, setting)

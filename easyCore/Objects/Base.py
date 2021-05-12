@@ -621,10 +621,10 @@ class BasedBase(MSONable):
 
     __slots__ = ['_name', '_borg', 'interface', 'user_data', '_kwargs']
 
-    def __init__(self, name: str):
+    def __init__(self, name: str, interface=None):
         self._borg = borg
         self._borg.map.add_vertex(self, obj_type='created')
-        self.interface = None
+        self.interface = interface
         self.user_data: dict = {}
         self._name: str = name
 
