@@ -122,21 +122,16 @@ class InterfaceFactoryTemplate:
         :rtype: property
         """
         class_links = self.__interface_obj.create(model)
-        if ifun is None:
-            ifun = self.generate_binding
-        props = model.get_parameters()
-        if not class_links:
-            for prop in props:
-                prop._callback = ifun(prop.name, *args, **kwargs)
+        props = model._get_linkable_attributes()
+        props_names = [prop.name for prop in props]
+        for item in class_links:
+            for item_key in item.name_conversion.keys():
+                if item_key not in props_names:
+                    continue
+                idx = props_names.index(item_key)
+                prop = props[idx]
+                prop._callback = item.make_prop(item_key)
                 prop._callback.fset(prop.raw_value)
-        else:
-            props_names = [prop.name for prop in props]
-            for item in class_links:
-                for item_key in item.name_conversion.keys():
-                    idx = props_names.index(item_key)
-                    prop = props[idx]
-                    prop._callback = item.make_prop(item_key)
-                    prop._callback.fset(prop.raw_value)
 
     @abstractmethod
     def generate_binding(self, name, *args, **kwargs) -> property:

@@ -145,6 +145,13 @@ class Graph:
         else:
             raise AttributeError
 
+    def get_edges(self, start_obj) -> List[str]:
+        vertex1 = self.convert_id(start_obj).int
+        if vertex1 in self.__graph_dict.keys():
+            return list(self.__graph_dict[vertex1])
+        else:
+            raise AttributeError
+
     def __generate_edges(self) -> list:
         """ A static method generating the edges of the
             graph "graph". Edges are represented as sets

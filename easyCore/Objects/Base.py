@@ -619,7 +619,7 @@ class Parameter(Descriptor):
 
 class BasedBase(MSONable):
 
-    __slots__ = ['_name', '_borg', 'interface', 'user_data', '_kwargs']
+    __slots__ = ['_name', '_borg', 'user_data', '_kwargs']
 
     def __init__(self, name: str, interface=None):
         self._borg = borg
@@ -666,6 +666,12 @@ class BasedBase(MSONable):
         """
         if self.interface is None:
             raise AttributeError('Interface error for generating bindings. `interface` has to be set.')
+        interfaceable_children = [key
+                                  for key in self._borg.map.get_edges(self)
+                                  if issubclass(type(self._borg.map.get_item_by_key(key)), BasedBase)]
+        for child_key in interfaceable_children:
+            child = self._borg.map.get_item_by_key(child_key)
+            child.interface = self.interface
         self.interface.generate_bindings(self)
 
     def switch_interface(self, new_interface_name: str):
@@ -675,7 +681,7 @@ class BasedBase(MSONable):
         if self.interface is None:
             raise AttributeError('Interface error for generating bindings. `interface` has to be set.')
         self.interface.switch(new_interface_name)
-        self.interface.generate_bindings(self)
+        self.generate_bindings()
 
     @property
     def constraints(self) -> list:
@@ -719,6 +725,21 @@ class BasedBase(MSONable):
             elif isinstance(item, Parameter):
                 fit_list.append(item)
         return fit_list
+
+    def _get_linkable_attributes(self) -> List[Union[Descriptor, Parameter]]:
+        """
+        Get all objects which can be linked against as a list.
+
+        :return: List of `Descriptor`/`Parameter` objects.
+        :rtype: List[Parameter]
+        """
+        item_list = []
+        for key, item in self._kwargs.items():
+            if hasattr(item, '_get_linkable_attributes'):
+                item_list = [*item_list, *item._get_linkable_attributes()]
+            elif issubclass(type(item), Descriptor):
+                item_list.append(item)
+        return item_list
 
     def get_fit_parameters(self) -> List[Parameter]:
         """

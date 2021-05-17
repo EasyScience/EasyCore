@@ -17,7 +17,7 @@ class BaseCollection(BasedBase, Sequence):
     `BaseObj(a=value, b=value)`. For `Parameter` or `Descriptor` objects we can
     cheat with `BaseObj(*[Descriptor(...), Parameter(...), ...])`.
     """
-    def __init__(self, name: str, *args, **kwargs):
+    def __init__(self, name: str, *args, interface=None, **kwargs):
         """
         Set up the base collection class.
 
@@ -38,7 +38,8 @@ class BaseCollection(BasedBase, Sequence):
         for key, item in kwargs.items():
                 _kwargs[key] = item
         for arg in args:
-                _kwargs[str(borg.map.convert_id_to_key(arg))] = arg
+            kwargs[str(borg.map.convert_id_to_key(arg))] = arg
+            _kwargs[str(borg.map.convert_id_to_key(arg))] = arg
 
         # Set kwargs, also useful for serialization
         self._kwargs = NotarizedDict(**_kwargs)
@@ -48,7 +49,9 @@ class BaseCollection(BasedBase, Sequence):
                 raise AttributeError(f'Given kwarg: `{key}`, is an internal attribute. Please rename.')
             self._borg.map.add_edge(self, kwargs[key])
             self._borg.map.reset_type(kwargs[key], 'created_internal')
+            kwargs[key].interface = interface
             # TODO wrap getter and setter in Logger
+        self.interface = interface
 
     def append(self, item: Union[Descriptor, BasedBase]):
         """
@@ -60,6 +63,7 @@ class BaseCollection(BasedBase, Sequence):
         if issubclass(item.__class__, (BasedBase, Descriptor)):
             self._kwargs[str(borg.map.convert_id_to_key(item))] = item
             self._borg.map.add_edge(self, self._kwargs[str(borg.map.convert_id_to_key(item))])
+            item.interface = self.interface
         else:
             raise AttributeError('A collection can only be formed from easyCore objects.')
 

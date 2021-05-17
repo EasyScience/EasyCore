@@ -107,6 +107,8 @@ class Site(BaseObj):
         if isinstance(adp_type, str):
             adp_type = AtomicDisplacement.from_pars(adp_type, interface=self.interface, **kwargs)
         self._add_component('adp', adp_type)
+        if self.interface is not None:
+            self.interface.generate_bindings()
 
     def __repr__(self) -> str:
         return f'Atom {self.name} ({self.specie.raw_value}) @' \
