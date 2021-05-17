@@ -636,6 +636,28 @@ class BasedBase(MSONable):
     def name(self, value):
         self._name = value
 
+    @property
+    def interface(self):
+        """
+        Get the current interface of the object
+        """
+        return self._interface
+
+    @interface.setter
+    def interface(self, value):
+        """
+        Set the current interface to the object and generate bindings if possible. I.e.
+        ```
+        def __init__(self, bar, interface=None, **kwargs):
+            super().__init__(self, **kwargs)
+            self.foo = bar
+            self.interface = interface # As final step after initialization to set correct bindings.
+        ```
+        """
+        self._interface = value
+        if value is not None:
+            self.generate_bindings()
+
     def generate_bindings(self):
         """
         Generate or re-generate bindings to an interface (if exists)
@@ -643,7 +665,7 @@ class BasedBase(MSONable):
         :raises: AttributeError
         """
         if self.interface is None:
-            raise AttributeError
+            raise AttributeError('Interface error for generating bindings. `interface` has to be set.')
         self.interface.generate_bindings(self)
 
     def switch_interface(self, new_interface_name: str):
@@ -651,7 +673,7 @@ class BasedBase(MSONable):
         Switch or create a new interface.
         """
         if self.interface is None:
-            raise AttributeError
+            raise AttributeError('Interface error for generating bindings. `interface` has to be set.')
         self.interface.switch(new_interface_name)
         self.interface.generate_bindings(self)
 
