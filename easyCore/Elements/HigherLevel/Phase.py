@@ -61,9 +61,10 @@ class Phase(BaseObj):
                 self.interface().link_atom(self.name, atom)
 
     def remove_atom(self, key):
-        del self.atoms[key]
         if self.interface is not None:
-            self.interface().remove_atom(self.name, key)
+            self.interface().remove_atom(self.name, self.atoms[key])
+        del self.atoms[key]
+
 
     def all_orbits(self, extent=None, magnetic_only: bool = False) -> Dict[str, np.ndarray]:
         """
