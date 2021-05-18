@@ -893,7 +893,7 @@ class PeriodicLattice(Lattice):
         :return: Lattice with spacegroup information dropped.
         :rtype: Lattice
         """
-        return Lattice.from_pars(*self.lengths, *self.angles, interface=self.interface)
+        return Lattice.from_pars(*self.lengths, *self.angles, interface=None)
 
     def __copy__(self):
         """

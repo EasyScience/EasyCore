@@ -164,7 +164,7 @@ class MSONable:
             if isinstance(obj, dict):
                 return {kk: recursive_as_dict(vv) for kk, vv in obj.items()}
             if hasattr(obj, "as_dict"):
-                return obj.as_dict()
+                return obj.as_dict(skip=skip)
             return obj
 
         for c in args:

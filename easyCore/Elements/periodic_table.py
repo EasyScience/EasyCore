@@ -1021,7 +1021,7 @@ class Element(Enum):
         """
         return Element(d["element"])
 
-    def as_dict(self):
+    def as_dict(self, skip=None):
         """
         Makes Element obey the general json interface used in pymatgen for
         easier serialization.
@@ -1358,7 +1358,7 @@ class Species(MSONable):
     def __deepcopy__(self, memo):
         return Species(self.symbol, self.oxi_state, self._properties)
 
-    def as_dict(self):
+    def as_dict(self, skip=None):
         """
         :return: Json-able dictionary representation.
         """
@@ -1553,7 +1553,7 @@ class DummySpecies(Species):
         return d
 
     @classmethod
-    def from_dict(cls, d):
+    def from_dict(cls, d, skip=None):
         """
         :param d: Dict representation
         :return: DummySpecies

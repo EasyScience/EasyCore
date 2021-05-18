@@ -169,11 +169,9 @@ class BaseCollection(BasedBase, Sequence):
 
         d = input_dict.copy()
         if len(d['data']) > 0:
-            for idx, item in enumerate(d['data'][1:]):
-                d[str(idx)] = item
-            d['data'] = d['data'][0]
-        else:
-            del d['data']
+            for idx, item in enumerate(d['data']):
+                d[item['@id']] = item
+        del d['data']
         return super(BaseCollection, cls).from_dict(d)
 
     def __repr__(self) -> str:
