@@ -51,18 +51,12 @@ class Phase(BaseObj):
         for arg in args:
             if issubclass(arg.__class__, Site):
                 self.atoms.append(arg)
-                if self.interface is not None:
-                    self.interface().link_atom(self.name, arg)
                 supplied_atom = True
         if not supplied_atom:
             atom = Site.from_pars(*args, **kwargs)
             self.atoms.append(atom)
-            if self.interface is not None:
-                self.interface().link_atom(self.name, atom)
 
     def remove_atom(self, key):
-        if self.interface is not None:
-            self.interface().remove_atom(self.name, self.atoms[key])
         del self.atoms[key]
 
 
