@@ -133,18 +133,6 @@ class InterfaceFactoryTemplate:
                 prop._callback = item.make_prop(item_key)
                 prop._callback.fset(prop.raw_value)
 
-    @abstractmethod
-    def generate_binding(self, name, *args, **kwargs) -> property:
-        """
-        Automatically bind a `Parameter` to the corresponding interface.
-
-        :param name: parameter name
-        :type name: str
-        :return: binding property
-        :rtype: property
-        """
-        pass
-
     def __call__(self, *args, **kwargs) -> _M:
         return self.__interface_obj
 
