@@ -129,9 +129,9 @@ class SpaceGroup(BaseObj):
             item = FakeItem(s_list[0])
             item.name = '_space_group_HM_name'
             s._kwargs['space_group_HM_name'] = item
-            item = FakeItem(s_list[1])
-            item.name = 'space_group.IT_coordinate_system_code'
-            s._kwargs['space_group.IT_coordinate_system_code'] = item
+            # item = FakeItem(s_list[1])
+            # item.name = 'space_group.IT_coordinate_system_code'
+            # s._kwargs['space_group.IT_coordinate_system_code'] = item
             return StarSection(s)
         return StarEntry(self.space_group_HM_name)
 
