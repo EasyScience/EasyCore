@@ -187,21 +187,21 @@ def test_item_compatible_units(instance):
 
 def test_descriptor_repr():
     d = Descriptor('test', 1)
-    assert repr(d) == f'<{d.__class__.__name__} \'test\': 1.0000>'
+    assert repr(d) == f'<{d.__class__.__name__} \'test\': 1>'
     d = Descriptor('test', 1, units='cm')
-    assert repr(d) == f'<{d.__class__.__name__} \'test\': 1.0000 cm>'
+    assert repr(d) == f'<{d.__class__.__name__} \'test\': 1 cm>'
 
 
 def test_parameter_repr():
     d = Parameter('test', 1)
-    assert repr(d) == f'<{d.__class__.__name__} \'test\': 1.0000+/-0, bounds=[-inf:inf]>'
+    assert repr(d) == f'<{d.__class__.__name__} \'test\': 1.0+/-0, bounds=[-inf:inf]>'
     d = Parameter('test', 1, units='cm')
-    assert repr(d) == f'<{d.__class__.__name__} \'test\': 1.0000+/-0 cm, bounds=[-inf:inf]>'
+    assert repr(d) == f'<{d.__class__.__name__} \'test\': 1.0+/-0 cm, bounds=[-inf:inf]>'
 
     d = Parameter('test', 1, fixed=True)
-    assert repr(d) == f'<{d.__class__.__name__} \'test\': 1.0000+/-0 (fixed), bounds=[-inf:inf]>'
+    assert repr(d) == f'<{d.__class__.__name__} \'test\': 1.0+/-0 (fixed), bounds=[-inf:inf]>'
     d = Parameter('test', 1, units='cm', fixed=True)
-    assert repr(d) == f'<{d.__class__.__name__} \'test\': 1.0000+/-0 cm (fixed), bounds=[-inf:inf]>'
+    assert repr(d) == f'<{d.__class__.__name__} \'test\': 1.0+/-0 cm (fixed), bounds=[-inf:inf]>'
 
 
 def test_descriptor_as_dict():
@@ -443,3 +443,12 @@ def test_parameter_advanced_creation(element, expected):
             if isinstance(obtained, (ureg.Unit, Q_)):
                 obtained = str(obtained)
             assert obtained == ref
+
+
+@pytest.mark.parametrize('value', ('This is ', 'a fun ', 'test'))
+def test_parameter_display_name(value):
+    p = Parameter('test', 1, display_name=value)
+    assert p.display_name == value
+
+    p = Descriptor('test', 1, display_name=value)
+    assert p.display_name == value

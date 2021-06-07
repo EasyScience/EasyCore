@@ -186,13 +186,70 @@ def test_baseobj_dir(setup_pars):
     del setup_pars['name']
     obj = BaseObj(name, **setup_pars)
     expected = ['REDIRECT', 'as_dict', 'constraints', 'des1', 'des2', 'from_dict',
-                'generate_bindings', 'get_fit_parameters', 'get_parameters', 'par1',
-                'par2', 'par3', 'switch_interface', 'to_data_dict', 'to_json', 'unsafe_hash']
+                'generate_bindings', 'get_fit_parameters', 'get_parameters', 'interface', 'name', 'par1',
+                'par2', 'par3', 'switch_interface', 'to_data_dict', 'to_json', 'unsafe_hash', 'user_data']
     obtained = dir(obj)
     assert len(obtained) == len(expected)
     assert obtained == sorted(obtained)
     for this_item, this_expect in zip(obtained, expected):
         assert this_item == this_expect
 
-        
 
+def test_baseobj_get_parameters(setup_pars):
+    name = setup_pars['name']
+    del setup_pars['name']
+    obj = BaseObj(name, **setup_pars)
+    pars = obj.get_parameters()
+    assert len(pars) == 3
+
+
+def test_baseobj_get_parameters_nested(setup_pars):
+    name = setup_pars['name']
+    del setup_pars['name']
+    obj = BaseObj(name, **setup_pars)
+
+    name2 = name + '_2'
+    obj2 = BaseObj(name2, obj=obj, **setup_pars)
+
+    pars = obj2.get_parameters()
+    assert len(pars) == 6
+
+    pars = obj.get_parameters()
+    assert len(pars) == 3
+
+
+def test_baseobj_get_fit_parameters(setup_pars):
+    name = setup_pars['name']
+    del setup_pars['name']
+    obj = BaseObj(name, **setup_pars)
+    pars = obj.get_fit_parameters()
+    assert len(pars) == 2
+
+
+def test_baseobj_get_fit_parameters_nested(setup_pars):
+    name = setup_pars['name']
+    del setup_pars['name']
+    obj = BaseObj(name, **setup_pars)
+
+    name2 = name + '_2'
+    obj2 = BaseObj(name2, obj=obj, **setup_pars)
+
+    pars = obj2.get_fit_parameters()
+    assert len(pars) == 4
+
+    pars = obj.get_fit_parameters()
+    assert len(pars) == 2
+
+
+def test_baseobj__add_component(setup_pars):
+    name = setup_pars['name']
+    del setup_pars['name']
+    obj = BaseObj(name, **setup_pars)
+
+    p = Parameter('added_par', 1)
+    new_item_name = 'Added'
+    obj._add_component(new_item_name, p)
+
+    assert hasattr(obj, new_item_name)
+    a = getattr(obj, new_item_name)
+    assert isinstance(a, Parameter)

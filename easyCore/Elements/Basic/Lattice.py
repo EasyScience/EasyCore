@@ -245,7 +245,7 @@ class Lattice(BaseObj):
         :return: noneType
         :rtype: None
         """
-        self.length_a.raw_value = new_a_value
+        self.length_a.value = new_a_value
 
     @property
     def b(self) -> float:
@@ -267,7 +267,7 @@ class Lattice(BaseObj):
         :return: noneType
         :rtype: None
         """
-        self.length_b.raw_value = new_b_value
+        self.length_b.value = new_b_value
 
     @property
     def c(self) -> float:
@@ -289,7 +289,7 @@ class Lattice(BaseObj):
         :return: noneType
         :rtype: None
         """
-        self.length_c.raw_value = new_c_value
+        self.length_c.value = new_c_value
 
     @property
     def alpha(self) -> float:
@@ -311,7 +311,7 @@ class Lattice(BaseObj):
         :return: noneType
         :rtype: None
         """
-        self.angle_alpha.raw_value = new_alpha_value
+        self.angle_alpha.value = new_alpha_value
 
     @property
     def beta(self) -> float:
@@ -333,7 +333,7 @@ class Lattice(BaseObj):
         :return: noneType
         :rtype: None
         """
-        self.angle_beta.raw_value = new_beta_value
+        self.angle_beta.value = new_beta_value
 
     @property
     def gamma(self) -> float:
@@ -355,7 +355,7 @@ class Lattice(BaseObj):
         :return: noneType
         :rtype: None
         """
-        self.angle_gamma.raw_value = new_gamma_value
+        self.angle_gamma.value = new_gamma_value
 
     @property
     def lengths(self) -> Tuple[float, float, float]:
@@ -602,19 +602,58 @@ class Lattice(BaseObj):
 
     def __repr__(self) -> str:
         return '<Lattice: (a: {:.2f} {:~P}, b: {:.2f} {:~P}, c: {:.2f}{:~P}, alpha: {:.2f} {:~P}, beta: {:.2f} {:~P}, ' \
+               '' \
                'gamma: {:.2f} {:~P}>'.format(self.length_a.raw_value, self.length_a.unit,
-                                              self.length_b.raw_value, self.length_b.unit,
-                                              self.length_c.raw_value, self.length_c.unit,
-                                              self.angle_alpha.raw_value, self.angle_alpha.unit,
-                                              self.angle_beta.raw_value, self.angle_beta.unit,
-                                              self.angle_gamma.raw_value, self.angle_gamma.unit)
+                                             self.length_b.raw_value, self.length_b.unit,
+                                             self.length_c.raw_value, self.length_c.unit,
+                                             self.angle_alpha.raw_value, self.angle_alpha.unit,
+                                             self.angle_beta.raw_value, self.angle_beta.unit,
+                                             self.angle_gamma.raw_value, self.angle_gamma.unit)
+
+    def __format__(self, fmt_spec=""):
+        """
+        Support format printing. Supported formats are:
+
+        1. "l" for a list format that can be easily copied and pasted, e.g.,
+           ".3fl" prints something like
+           "[[10.000, 0.000, 0.000], [0.000, 10.000, 0.000], [0.000, 0.000, 10.000]]"
+        2. "p" for lattice parameters ".1fp" prints something like
+           "{10.0, 10.0, 10.0, 90.0, 90.0, 90.0}"
+        3. Default will simply print a 3x3 matrix form. E.g.,
+           10.000 0.000 0.000
+           0.000 10.000 0.000
+           0.000 0.000 10.000
+        """
+        m = (self.lengths, self.angles)
+
+        if fmt_spec.endswith("m"):
+            fmt = "[[{}, {}, {}], [{}, {}, {}], [{}, {}, {}]]"
+            m = self.matrix.tolist()
+            fmt_spec = fmt_spec[:-1]
+        elif fmt_spec.endswith("l"):
+            fmt = "{{{}, {}, {}, {}, {}, {}}}"
+            fmt_spec = fmt_spec[:-1]
+        else:
+            fmt = "({} {} {}), ({} {} {})"
+            fmt_spec = fmt_spec[:-1]
+        return fmt.format(*[format(c, fmt_spec) for row in m for c in row])
+
+    def __copy__(self):
+        """
+        Returns a deep copy of the Lattice
+
+
+        :return: Deep copy of self
+        :rtype:
+        """
+        return self.__class__.from_pars(*self.lengths, *self.angles, interface=self.interface)
 
     def to_star(self):
         return StarSection(self)
 
     @classmethod
     def from_star(cls, in_string):
-        return StarSection.from_string(cls, in_string)
+        return StarSection.from_string(in_string).to_class(cls)
 
     def get_points_in_sphere(
             self,
@@ -663,7 +702,8 @@ class Lattice(BaseObj):
 
 class PeriodicLattice(Lattice):
     def __init__(self, length_a: Parameter, length_b: Parameter, length_c: Parameter,
-                 angle_alpha: Parameter, angle_beta: Parameter, angle_gamma: Parameter, spacegroup: SpaceGroup, interface=None):
+                 angle_alpha: Parameter, angle_beta: Parameter, angle_gamma: Parameter, spacegroup: SpaceGroup,
+                 interface=None):
         super().__init__(length_a=length_a, length_b=length_b, length_c=length_c,
                          angle_alpha=angle_alpha, angle_beta=angle_beta, angle_gamma=angle_gamma)
         self._add_component('spacegroup', spacegroup)
@@ -672,9 +712,9 @@ class PeriodicLattice(Lattice):
         # as _space_group_HM_name and used a simple property.
         self.__previous_SG_setter = spacegroup.__class__.space_group_HM_name.fset
         spacegroup.__class__.space_group_HM_name = property(
-                fget=spacegroup.__class__.space_group_HM_name.fget,
-                fset=lambda obj, val: self.__new_SG_setter(obj, val),
-                fdel=spacegroup.__class__.space_group_HM_name.fdel)
+            fget=spacegroup.__class__.space_group_HM_name.fget,
+            fset=lambda obj, val: self.__new_SG_setter(obj, val),
+            fdel=spacegroup.__class__.space_group_HM_name.fdel)
 
         self.interface = interface
         self.enforce_sym()
@@ -781,12 +821,16 @@ class PeriodicLattice(Lattice):
 
     def enforce_sym(self):
         """
-        Enforce symmetry constraints on to a cell
-        :param cell: Lattice for which the symmetry applies
-        :return: None
+        Enforce symmetry constraints on to a Lattice
         """
         # SG system
         crys_system = self.spacegroup.crystal_system
+        self.clear_sym()
+        trig_test = crys_system == "trigonal" and (
+                self.spacegroup.setting.endswith("H") or
+                self.spacegroup.int_number in [143, 144, 145, 147, 149, 150, 151, 152,
+                                               153, 154, 156, 157, 158, 159, 162, 163,
+                                               164, 165])
 
         # Go through the cell systems
         if crys_system == "cubic":
@@ -800,13 +844,7 @@ class PeriodicLattice(Lattice):
             self.angle_beta.enabled = False
             self.angle_gamma = 90
             self.angle_gamma.enabled = False
-            return
-        if crys_system == "hexagonal" or (
-                crys_system == "trigonal" and (
-                self.spacegroup.setting.endswith("H") or
-                self.spacegroup.int_number in [143, 144, 145, 147, 149, 150, 151, 152,
-                                    153, 154, 156, 157, 158, 159, 162, 163,
-                                    164, 165])):
+        elif crys_system == "hexagonal" or trig_test:
             self.length_a.constraints['user']['sg_1'] = ObjConstraint(self.length_b, '', self.length_a)
             self.length_a.constraints['user']['sg_1']()
             self.angle_alpha = 90
@@ -815,8 +853,7 @@ class PeriodicLattice(Lattice):
             self.angle_beta.enabled = False
             self.angle_gamma = 120
             self.angle_gamma.enabled = False
-            return
-        if crys_system == "trigonal":
+        elif crys_system == "trigonal" and not trig_test:
             self.length_a.constraints['user']['sg_1'] = ObjConstraint(self.length_b, '', self.length_a)
             self.length_a.constraints['user']['sg_1']()
             self.length_a.constraints['user']['sg_2'] = ObjConstraint(self.length_c, '', self.length_a)
@@ -825,8 +862,7 @@ class PeriodicLattice(Lattice):
             self.angle_alpha.constraints['user']['sg_1']()
             self.angle_alpha.constraints['user']['sg_2'] = ObjConstraint(self.angle_gamma, '', self.angle_alpha)
             self.angle_alpha.constraints['user']['sg_2']()
-            return
-        if crys_system == "tetragonal":
+        elif crys_system == "tetragonal":
             self.length_a.constraints['user']['sg_1'] = ObjConstraint(self.length_b, '', self.length_a)
             self.length_a.constraints['user']['sg_1']()
             self.angle_alpha = 90
@@ -835,27 +871,47 @@ class PeriodicLattice(Lattice):
             self.angle_beta.enabled = False
             self.angle_gamma = 90
             self.angle_gamma.enabled = False
-            return
-        if crys_system == "orthorhombic":
+        elif crys_system == "orthorhombic":
             self.angle_alpha = 90
             self.angle_alpha.enabled = False
             self.angle_beta = 90
             self.angle_beta.enabled = False
             self.angle_gamma = 90
             self.angle_gamma.enabled = False
-            return
-        if crys_system == "monoclinic":
+        elif crys_system == "monoclinic":
             self.angle_alpha = 90
             self.angle_alpha.enabled = False
             self.angle_gamma = 90
             self.angle_gamma.enabled = False
-        return
+        else:
+            raise TypeError('The current crystal system is unknown so symmetry cannot be enforced')
 
-    def to_cell(self):
-        return Lattice(self.length_a, self.length_b, self.length_c, self.angle_alpha,
-                       self.angle_beta,  self.angle_gamma, interface=self.interface)
+    def to_cell(self) -> Lattice:
+        """
+        Convert the PeriodicLattice to a standard Lattice. i.e. drop spacegroup. The return is a copy
+
+        :return: Lattice with spacegroup information dropped.
+        :rtype: Lattice
+        """
+        return Lattice.from_pars(*self.lengths, *self.angles, interface=None)
+
+    def __copy__(self):
+        """
+        Returns a deep copy of the Periodic-Lattice. Note that the spacegroup parameter is also a copy!!
+
+        :return: Deep copy of self
+        :rtype: PeriodicLattice
+        """
+        return self.__class__.from_pars(*self.lengths, *self.angles, self.spacegroup.hermann_mauguin,
+                                        interface=self.interface)
 
     def to_star(self):
+        """
+        Provide a star object of the current lattice. Note that the spacegroup is omitted!
+
+        :return:
+        :rtype:
+        """
         return StarSection(self.to_cell())
 
     @classmethod
@@ -970,9 +1026,9 @@ def get_points_in_spheres(all_coords: np.ndarray, center_coords: np.ndarray, r: 
         # only wrap periodic boundary
         for k in range(3):
             if pbc[k]:  # type: ignore
-                all_fcoords.append(np.mod(image_offsets[:, k:k+1], 1))
+                all_fcoords.append(np.mod(image_offsets[:, k:k + 1], 1))
             else:
-                all_fcoords.append(image_offsets[:, k:k+1])
+                all_fcoords.append(image_offsets[:, k:k + 1])
         all_fcoords = np.concatenate(all_fcoords, axis=1)
         image_offsets = image_offsets - all_fcoords
         coords_in_cell = np.dot(all_fcoords, matrix)

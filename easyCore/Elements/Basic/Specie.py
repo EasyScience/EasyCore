@@ -1,7 +1,7 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
-from easyCore.Elements.peridic_table import Species, Specie as pSpecie
+from easyCore.Elements.periodic_table import Species, Specie as pSpecie
 from easyCore.Objects.Base import Descriptor
 from easyCore.Utils.classTools import addProp
 

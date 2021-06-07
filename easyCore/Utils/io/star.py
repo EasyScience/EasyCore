@@ -4,10 +4,9 @@ __version__ = '0.0.1'
 import textwrap
 import warnings
 from collections import deque, OrderedDict
-from typing import List, Tuple, Dict
+from typing import List
 import re
-import operator
-from functools import reduce
+
 
 _MAX_LEN = 70
 _MAX_LABEL_LEN = 65

@@ -10,6 +10,7 @@ SpaceGroup data as published in his textbook "Structure of Materials".
 
 import os
 import re
+import json
 import warnings
 from abc import ABCMeta, abstractmethod
 from collections.abc import Sequence
@@ -17,9 +18,7 @@ from fractions import Fraction
 from itertools import product
 
 import numpy as np
-from monty.design_patterns import cached_class
-from monty.serialization import loadfn
-
+from easyCore.Utils.classUtils import cached_class
 from easyCore.Symmetry.SymOp import SymmOp
 
 SYMM_DATA = None
@@ -28,8 +27,9 @@ SYMM_DATA = None
 def _get_symm_data(name):
     global SYMM_DATA
     if SYMM_DATA is None:
-        SYMM_DATA = loadfn(os.path.join(os.path.dirname(__file__),
-                                        "symm_data.json"))
+        with open(os.path.join(os.path.dirname(__file__),
+                               "symm_data.json"), 'r') as fid:
+            SYMM_DATA = json.load(fid)
     return SYMM_DATA[name]
 
 
@@ -185,8 +185,9 @@ class SpaceGroup(SymmetryGroup):
 
         Order of Space Group
     """
-    SYMM_OPS = loadfn(os.path.join(os.path.dirname(__file__),
-                                   "symm_ops.json"))
+    with open(os.path.join(os.path.dirname(__file__),
+                                   "symm_ops.json"), 'r') as fid:
+        SYMM_OPS = json.load(fid)
     SG_SYMBOLS = set(_get_symm_data("space_group_encoding").keys())
     for op in SYMM_OPS:
         op["hermann_mauguin_fmt"] = op["hermann_mauguin"]

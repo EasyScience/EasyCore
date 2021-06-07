@@ -216,11 +216,11 @@ class CifParser:
         :return: data CifBlock
         """
 
-        """
-        This part of the code deals with handling formats of data as found in
-        CIF files extracted from the Springer Materials/Pauling File
-        databases, and that are different from standard ICSD formats.
-        """
+        # """
+        # This part of the code deals with handling formats of data as found in
+        # CIF files extracted from the Springer Materials/Pauling File
+        # databases, and that are different from standard ICSD formats.
+        # """
 
         # check for implicit hydrogens, warn if any present
         if "atom_site_attached_hydrogens" in data.labels:
@@ -302,11 +302,11 @@ class CifParser:
                 this_data._kwargs['atom_site_occupancy'] = FakeItem(1)
             data.labels.append('atom_site_occupancy')
 
-        """
-        This fixes inconsistencies in naming of several magCIF tags
-        as a result of magCIF being in widespread use prior to
-        specification being finalized (on advice of Branton Campbell).
-        """
+        # """
+        # This fixes inconsistencies in naming of several magCIF tags
+        # as a result of magCIF being in widespread use prior to
+        # specification being finalized (on advice of Branton Campbell).
+        # """
 
         # check for finite precision frac co-ordinates (e.g. 0.6667 instead of 0.6666666...7)
         # this can sometimes cause serious issues when applying symmetry operations
@@ -485,7 +485,7 @@ class CifParser:
                                 if not isinstance(temp_value, Number):
                                     temp_value = 0
                                     self.append = self.warnings.append(
-                                        f'Atom {section.data[0]._kwargs[needed_labels[0]].raw_value} has non-numeric ' \
+                                        f'Atom {section.data[0]._kwargs[needed_labels[0]].raw_value} has non-numeric '
                                         f'{key}. Setting to 0')
                                 data_dict[adp_types[adp_type][idx2]] = temp_value
                             adps = AtomicDisplacement.from_pars(adp_type, **data_dict)

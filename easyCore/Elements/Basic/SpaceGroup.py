@@ -21,6 +21,11 @@ SG_DETAILS = {
 class SpaceGroup(BaseObj):
 
     def __init__(self, _space_group_HM_name: Descriptor, interface=None, setting=''):
+
+        # Note that you can't use isinstance here as Parameter is derived and we ONLY WANT a Parameter
+        if not type(_space_group_HM_name) == Descriptor:
+            raise AttributeError("`space_group_HM_name` must be of `Descriptor` class")
+
         if setting and setting[0] != ':':
             setting = ':' + setting
             in_value = self._space_group_HM_name.raw_value
@@ -57,10 +62,13 @@ class SpaceGroup(BaseObj):
 
     @classmethod
     def from_int_number(cls, int_number, hexagonal=True, interface=None):
-        sg = SpaceGroupOpts.from_int_number(int_number, hexagonal)
-        this_str = sg.hm_for_cif
-        if not hexagonal and sg.int_number in [146, 148, 155, 160, 161, 166, 167]:
-            this_str += ':R'
+        sgs = [op for op in SpaceGroupOpts.SYMM_OPS if op['number'] == int_number]
+        this_str = sgs[0]['hermann_mauguin']
+        if int_number in [146, 148, 155, 160, 161, 166, 167]:
+            if hexagonal:
+                this_str += ':H'
+            else:
+                this_str += ':R'
         return cls.from_pars(this_str, interface=interface)
 
     def __on_change(self, value):
@@ -121,9 +129,9 @@ class SpaceGroup(BaseObj):
             item = FakeItem(s_list[0])
             item.name = '_space_group_HM_name'
             s._kwargs['space_group_HM_name'] = item
-            item = FakeItem(s_list[1])
-            item.name = 'space_group.IT_coordinate_system_code'
-            s._kwargs['space_group.IT_coordinate_system_code'] = item
+            # item = FakeItem(s_list[1])
+            # item.name = 'space_group.IT_coordinate_system_code'
+            # s._kwargs['space_group.IT_coordinate_system_code'] = item
             return StarSection(s)
         return StarEntry(self.space_group_HM_name)
 

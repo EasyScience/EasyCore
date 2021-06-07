@@ -53,10 +53,12 @@ class Phase(BaseObj):
                 self.atoms.append(arg)
                 supplied_atom = True
         if not supplied_atom:
-            self.atoms.append(Site.from_pars(*args, **kwargs))
+            atom = Site.from_pars(*args, **kwargs)
+            self.atoms.append(atom)
 
     def remove_atom(self, key):
         del self.atoms[key]
+
 
     def all_orbits(self, extent=None, magnetic_only: bool = False) -> Dict[str, np.ndarray]:
         """
@@ -254,6 +256,7 @@ class Phase(BaseObj):
         d = super(Phase, self).as_dict(skip=skip)
         del d['_spacegroup']
         return d
+
 
 class Phases(BaseCollection):
 

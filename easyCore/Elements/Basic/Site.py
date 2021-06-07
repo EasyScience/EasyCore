@@ -107,6 +107,8 @@ class Site(BaseObj):
         if isinstance(adp_type, str):
             adp_type = AtomicDisplacement.from_pars(adp_type, interface=self.interface, **kwargs)
         self._add_component('adp', adp_type)
+        if self.interface is not None:
+            self.interface.generate_bindings()
 
     def __repr__(self) -> str:
         return f'Atom {self.name} ({self.specie.raw_value}) @' \
@@ -154,24 +156,6 @@ class Site(BaseObj):
     def is_magnetic(self):
         return self.specie.spin is not None
 
-    @staticmethod
-    def __getter(key: str):
-
-        def getter(obj):
-            return obj._kwargs[key]
-
-        return getter
-
-    @staticmethod
-    def __setter(key):
-        def setter(obj, value):
-            if issubclass(obj._kwargs[key].__class__, Descriptor):
-                obj._kwargs[key].value = value
-            else:
-                obj._kwargs[key] = value
-
-        return setter
-
 
 class PeriodicSite(Site):
 
@@ -213,6 +197,8 @@ class PeriodicSite(Site):
 
 class Atoms(BaseCollection):
     def __init__(self, name: str, *args, interface=None, **kwargs):
+        if not isinstance(name, str):
+            raise TypeError('A `name` for this collection must be given in string form')
         super(Atoms, self).__init__(name, *args, **kwargs)
         self.interface = interface
         self._kwargs._stack_enabled = True

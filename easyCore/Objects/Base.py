@@ -432,7 +432,7 @@ class Parameter(Descriptor):
             for constraint in this_constraint_type.values():
                 if constraint.external:
                     constraint()
-                    return newer_value
+                    continue
                 this_new_value = constraint(no_set=True)
                 if this_new_value != newer_value:
                     if borg.debug:
@@ -617,49 +617,99 @@ class Parameter(Descriptor):
         return new_dict
 
 
-class BaseObj(MSONable):
-    """
-    This is the base class for which all higher level classes are built off of.
-    NOTE: This object is serializable only if parameters are supplied as:
-    `BaseObj(a=value, b=value)`. For `Parameter` or `Descriptor` objects we can
-    cheat with `BaseObj(*[Descriptor(...), Parameter(...), ...])`.
-    """
+class BasedBase(MSONable):
 
-    _borg = borg
+    __slots__ = ['_name', '_borg', 'user_data', '_kwargs']
 
-    def __init__(self, name: str, *args, **kwargs):
-        """
-        Set up the base class.
-
-        :param name: Name of this object
-        :type name: str
-        :param args: Any arguments?
-        :type args: Union[Parameter, Descriptor]
-        :param parent: Parent object which is used for linking
-        :type parent: Any
-        :param kwargs: Fields which this class should contain
-        """
-
+    def __init__(self, name: str, interface=None):
+        self._borg = borg
         self._borg.map.add_vertex(self, obj_type='created')
-        self.interface = None
+        self.interface = interface
         self.user_data: dict = {}
-        self.__dict__['name'] = name
-        # If Parameter or Descriptor is given as arguments...
-        for arg in args:
-            if issubclass(arg.__class__, (BaseObj, Descriptor)):
-                kwargs[getattr(arg, 'name')] = arg
-        # Set kwargs, also useful for serialization
-        known_keys = self.__dict__.keys()
-        self._kwargs = kwargs
-        for key in kwargs.keys():
-            if key in known_keys:
-                raise AttributeError
-            if issubclass(kwargs[key].__class__, (BaseObj, Descriptor)) or \
-                    'BaseCollection' in [c.__name__ for c in type(kwargs[key]).__bases__]:
-                self._borg.map.add_edge(self, kwargs[key])
-                self._borg.map.reset_type(kwargs[key], 'created_internal')
-            addLoggedProp(self, key, self.__getter(key), self.__setter(key), get_id=key, my_self=self,
-                          test_class=BaseObj)
+        self._name: str = name
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        self._name = value
+
+    @property
+    def interface(self):
+        """
+        Get the current interface of the object
+        """
+        return self._interface
+
+    @interface.setter
+    def interface(self, value):
+        """
+        Set the current interface to the object and generate bindings if possible. I.e.
+        ```
+        def __init__(self, bar, interface=None, **kwargs):
+            super().__init__(self, **kwargs)
+            self.foo = bar
+            self.interface = interface # As final step after initialization to set correct bindings.
+        ```
+        """
+        self._interface = value
+        if value is not None:
+            self.generate_bindings()
+
+    def generate_bindings(self):
+        """
+        Generate or re-generate bindings to an interface (if exists)
+
+        :raises: AttributeError
+        """
+        if self.interface is None:
+            raise AttributeError('Interface error for generating bindings. `interface` has to be set.')
+        interfaceable_children = [key
+                                  for key in self._borg.map.get_edges(self)
+                                  if issubclass(type(self._borg.map.get_item_by_key(key)), BasedBase)]
+        for child_key in interfaceable_children:
+            child = self._borg.map.get_item_by_key(child_key)
+            child.interface = self.interface
+        self.interface.generate_bindings(self)
+
+    def switch_interface(self, new_interface_name: str):
+        """
+        Switch or create a new interface.
+        """
+        if self.interface is None:
+            raise AttributeError('Interface error for generating bindings. `interface` has to be set.')
+        self.interface.switch(new_interface_name)
+        self.generate_bindings()
+
+    @property
+    def constraints(self) -> list:
+        pars = self.get_parameters()
+        constraints = []
+        for par in pars:
+            con = par.constraints['user']
+            for key in con.keys():
+                constraints.append(con[key])
+        return constraints
+
+    def as_dict(self, skip: list = None) -> dict:
+        """
+        Convert ones self into a serialized form.
+
+        :return: dictionary of ones self
+        :rtype: dict
+        """
+        if skip is None:
+            skip = []
+        d = MSONable.as_dict(self, skip=skip)
+        for key, item in d.items():
+            if hasattr(item, 'as_dict'):
+                d[key] = item.as_dict(skip=skip)
+        # Attach the id. This might be useful in connected applications.
+        # Note that it is converted to int and then str because javascript....
+        d['@id'] = str(self._borg.map.convert_id(self).int)
+        return d
 
     def get_parameters(self) -> List[Parameter]:
         """
@@ -675,6 +725,21 @@ class BaseObj(MSONable):
             elif isinstance(item, Parameter):
                 fit_list.append(item)
         return fit_list
+
+    def _get_linkable_attributes(self) -> List[Union[Descriptor, Parameter]]:
+        """
+        Get all objects which can be linked against as a list.
+
+        :return: List of `Descriptor`/`Parameter` objects.
+        :rtype: List[Parameter]
+        """
+        item_list = []
+        for key, item in self._kwargs.items():
+            if hasattr(item, '_get_linkable_attributes'):
+                item_list = [*item_list, *item._get_linkable_attributes()]
+            elif issubclass(type(item), Descriptor):
+                item_list.append(item)
+        return item_list
 
     def get_fit_parameters(self) -> List[Parameter]:
         """
@@ -698,47 +763,45 @@ class BaseObj(MSONable):
         :return: list of function and parameter names for auto-completion
         :rtype: List[str]
         """
-        # new_objs = list(k for k in self.__dict__ if not k.startswith('_'))
-        # class_objs = list(k for k in self.__class__.__dict__ if not k.startswith('_'))
         new_class_objs = list(k for k in dir(self.__class__) if not k.startswith('_'))
         return sorted(new_class_objs)
 
-    def as_dict(self, skip: list = None) -> dict:
-        """
-        Convert ones self into a serialized form.
 
-        :return: dictionary of ones self
-        :rtype: dict
+class BaseObj(BasedBase):
+    """
+    This is the base class for which all higher level classes are built off of.
+    NOTE: This object is serializable only if parameters are supplied as:
+    `BaseObj(a=value, b=value)`. For `Parameter` or `Descriptor` objects we can
+    cheat with `BaseObj(*[Descriptor(...), Parameter(...), ...])`.
+    """
+    def __init__(self, name: str, *args, **kwargs):
         """
-        if skip is None:
-            skip = []
-        d = MSONable.as_dict(self, skip=skip)
-        for key, item in d.items():
-            if hasattr(item, 'as_dict'):
-                d[key] = item.as_dict(skip=skip)
-        # Attach the id. This might be useful in connected applications.
-        # Note that it is converted to int and then str because javascript....
-        d['@id'] = str(self._borg.map.convert_id(self).int)
-        return d
+        Set up the base class.
 
-    def generate_bindings(self):
+        :param name: Name of this object
+        :type name: str
+        :param args: Any arguments?
+        :type args: Union[Parameter, Descriptor]
+        :param parent: Parent object which is used for linking
+        :type parent: Any
+        :param kwargs: Fields which this class should contain
         """
-        Generate or re-generate bindings to an interface (if exists)
-
-        :raises: AttributeError
-        """
-        if self.interface is None:
-            raise AttributeError
-        self.interface.generate_bindings(self)
-
-    def switch_interface(self, new_interface_name: str):
-        """
-        Switch or create a new interface.
-        """
-        if self.interface is None:
-            raise AttributeError
-        self.interface.switch(new_interface_name)
-        self.interface.generate_bindings(self)
+        super(BaseObj, self).__init__(name)
+        # If Parameter or Descriptor is given as arguments...
+        for arg in args:
+            if issubclass(arg.__class__, (BaseObj, Descriptor)):
+                kwargs[getattr(arg, 'name')] = arg
+        # Set kwargs, also useful for serialization
+        known_keys = self.__dict__.keys()
+        self._kwargs = kwargs
+        for key in kwargs.keys():
+            if key in known_keys:
+                raise AttributeError
+            if issubclass(type(kwargs[key]), (BasedBase, Descriptor)) or \
+                    'BaseCollection' in [c.__name__ for c in type(kwargs[key]).__bases__]:
+                self._borg.map.add_edge(self, kwargs[key])
+                self._borg.map.reset_type(kwargs[key], 'created_internal')
+            addLoggedProp(self, key, self.__getter(key), self.__setter(key), get_id=key, my_self=self, test_class=BaseObj)
 
     def _add_component(self, key: str, component):
         self._kwargs[key] = component
@@ -746,16 +809,16 @@ class BaseObj(MSONable):
         self._borg.map.reset_type(component, 'created_internal')
         addLoggedProp(self, key, self.__getter(key), self.__setter(key), get_id=key, my_self=self,
                       test_class=BaseObj)
+        
+    def __setattr__(self, key, value):
+        if hasattr(self, key) and issubclass(type(value), (BasedBase, Descriptor)):
+            old_obj = self.__getattribute__(key)
+            self._borg.map.prune_vertex_from_edge(self, old_obj)
+            self._borg.map.add_edge(self, value)
+        super(BaseObj, self).__setattr__(key, value)
 
-    @property
-    def constraints(self) -> list:
-        pars = self.get_parameters()
-        constraints = []
-        for par in pars:
-            con = par.constraints['user']
-            for key in con.keys():
-                constraints.append(con[key])
-        return constraints
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__} `{getattr(self, 'name')}`"
 
     @staticmethod
     def __getter(key: str):
