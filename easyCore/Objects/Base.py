@@ -432,7 +432,7 @@ class Parameter(Descriptor):
             for constraint in this_constraint_type.values():
                 if constraint.external:
                     constraint()
-                    return newer_value
+                    continue
                 this_new_value = constraint(no_set=True)
                 if this_new_value != newer_value:
                     if borg.debug:

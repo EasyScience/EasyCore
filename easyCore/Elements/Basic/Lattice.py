@@ -825,7 +825,7 @@ class PeriodicLattice(Lattice):
         """
         # SG system
         crys_system = self.spacegroup.crystal_system
-
+        self.clear_sym()
         trig_test = crys_system == "trigonal" and (
                 self.spacegroup.setting.endswith("H") or
                 self.spacegroup.int_number in [143, 144, 145, 147, 149, 150, 151, 152,
