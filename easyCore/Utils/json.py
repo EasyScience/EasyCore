@@ -30,6 +30,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 JSON serialization and deserialization utilities.
 """
 
+#  SPDX-FileCopyrightText: 2021 European Spallation Source <info@ess.eu>
+#  SPDX-License-Identifier: BSD-3-Clause
+
 import os
 import json
 import datetime
