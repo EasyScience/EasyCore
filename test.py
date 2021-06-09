@@ -1,5 +1,5 @@
 __author__ = 'github.com/wardsimon'
-__version__ = '0.0.1'
+__version__ = '0.1.0'
 
 from easyCore.Elements.HigherLevel.Phase import Phase
 from easyCore.Symmetry.Bonding import generate_bonds

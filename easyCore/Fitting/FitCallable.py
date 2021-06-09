@@ -2,7 +2,7 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 
 __author__ = 'github.com/wardsimon'
-__version__ = '0.0.1'
+__version__ = '0.1.0'
 
 from typing import TypeVar, List, Callable
 from collections import namedtuple

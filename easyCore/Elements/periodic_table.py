@@ -1,5 +1,5 @@
 __author__ = 'github.com/wardsimon'
-__version__ = '0.0.1'
+__version__ = '0.1.0'
 
 # coding: utf-8
 # Copyright (c) Pymatgen Development Team.
