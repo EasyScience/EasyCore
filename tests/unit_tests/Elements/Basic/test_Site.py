@@ -181,12 +181,12 @@ def test_Site_as_dict(label, elm):
     expected = {
         '@module':   'easyCore.Elements.Basic.Site',
         '@class':    'Site',
-        '@version':  '0.0.1',
+        '@version':  '0.1.0',
         '@id':       None,
         'label':     {
             '@module':      'easyCore.Objects.Base',
             '@class':       'Descriptor',
-            '@version':     '0.0.1',
+            '@version':     '0.1.0',
             '@id':          None,
             'name':         'label',
             'value':        label,
@@ -200,7 +200,7 @@ def test_Site_as_dict(label, elm):
         # Note that we are skipping specie checking as it it covered in another file...
         # 'specie': {
         #      '@module':  'easyCore.Elements.Basic.Specie', '@class': 'Specie',
-        #      '@version': '0.0.1',
+        #      '@version': '0.1.0',
         #      '@id':      None,
         #      'specie':
         #                  {
@@ -215,7 +215,7 @@ def test_Site_as_dict(label, elm):
         'occupancy': {
             '@module':     'easyCore.Objects.Base',
             '@class':      'Parameter',
-            '@version':    '0.0.1',
+            '@version':    '0.1.0',
             '@id':         None,
             'name':        'occupancy',
             'value':       1.0,
@@ -233,7 +233,7 @@ def test_Site_as_dict(label, elm):
         'fract_x':   {
             '@module':     'easyCore.Objects.Base',
             '@class':      'Parameter',
-            '@version':    '0.0.1',
+            '@version':    '0.1.0',
             '@id':         None,
             'name':        'fract_x',
             'value':       0.0,
@@ -251,7 +251,7 @@ def test_Site_as_dict(label, elm):
         'fract_y':   {
             '@module':     'easyCore.Objects.Base',
             '@class':      'Parameter',
-            '@version':    '0.0.1',
+            '@version':    '0.1.0',
             '@id':         None,
             'name':        'fract_y',
             'value':       0.0,
@@ -269,7 +269,7 @@ def test_Site_as_dict(label, elm):
         'fract_z':   {
             '@module':     'easyCore.Objects.Base',
             '@class':      'Parameter',
-            '@version':    '0.0.1',
+            '@version':    '0.1.0',
             '@id':         None,
             'name':        'fract_z',
             'value':       0.0,
@@ -305,12 +305,12 @@ def test_Site_from_dict(label, elm):
     d = {
         '@module':   'easyCore.Elements.Basic.Site',
         '@class':    'Site',
-        '@version':  '0.0.1',
+        '@version':  '0.1.0',
         '@id':       None,
         'label':     {
             '@module':      'easyCore.Objects.Base',
             '@class':       'Descriptor',
-            '@version':     '0.0.1',
+            '@version':     '0.1.0',
             '@id':          None,
             'name':         'label',
             'value':        label,
@@ -323,7 +323,7 @@ def test_Site_from_dict(label, elm):
         },
         'specie':    {
             '@module':  'easyCore.Elements.Basic.Specie', '@class': 'Specie',
-            '@version': '0.0.1',
+            '@version': '0.1.0',
             '@id':      None,
             'specie':   elm,
             'value':    elm,
@@ -332,7 +332,7 @@ def test_Site_from_dict(label, elm):
         'occupancy': {
             '@module':     'easyCore.Objects.Base',
             '@class':      'Parameter',
-            '@version':    '0.0.1',
+            '@version':    '0.1.0',
             '@id':         None,
             'name':        'occupancy',
             'value':       1.0,
@@ -350,7 +350,7 @@ def test_Site_from_dict(label, elm):
         'fract_x':   {
             '@module':     'easyCore.Objects.Base',
             '@class':      'Parameter',
-            '@version':    '0.0.1',
+            '@version':    '0.1.0',
             '@id':         None,
             'name':        'fract_x',
             'value':       0.0,
@@ -368,7 +368,7 @@ def test_Site_from_dict(label, elm):
         'fract_y':   {
             '@module':     'easyCore.Objects.Base',
             '@class':      'Parameter',
-            '@version':    '0.0.1',
+            '@version':    '0.1.0',
             '@id':         None,
             'name':        'fract_y',
             'value':       0.0,
@@ -386,7 +386,7 @@ def test_Site_from_dict(label, elm):
         'fract_z':   {
             '@module':     'easyCore.Objects.Base',
             '@class':      'Parameter',
-            '@version':    '0.0.1',
+            '@version':    '0.1.0',
             '@id':         None,
             'name':        'fract_z',
             'value':       0.0,

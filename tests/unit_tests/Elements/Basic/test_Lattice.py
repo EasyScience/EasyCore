@@ -399,11 +399,11 @@ def make_dict(value) -> dict:
     return {
         '@module': 'easyCore.Elements.Basic.Lattice',
         '@class': 'Lattice',
-        '@version': '0.0.1',
+        '@version': '0.1.0',
         'length_a': {
             '@module': 'easyCore.Objects.Base',
             '@class': 'Parameter',
-            '@version': '0.0.1',
+            '@version': '0.1.0',
             'name': 'length_a',
             'value': float(value[0]),
             'error': 0.0,
@@ -419,7 +419,7 @@ def make_dict(value) -> dict:
         'length_b': {
             '@module': 'easyCore.Objects.Base',
             '@class': 'Parameter',
-            '@version': '0.0.1',
+            '@version': '0.1.0',
             'name': 'length_b',
             'value': float(value[1]),
             'error': 0.0,
@@ -435,7 +435,7 @@ def make_dict(value) -> dict:
         'length_c': {
             '@module': 'easyCore.Objects.Base',
             '@class': 'Parameter',
-            '@version': '0.0.1',
+            '@version': '0.1.0',
             'name': 'length_c',
             'value': float(value[2]),
             'error': 0.0,
@@ -451,7 +451,7 @@ def make_dict(value) -> dict:
         'angle_alpha': {
             '@module': 'easyCore.Objects.Base',
             '@class': 'Parameter',
-            '@version': '0.0.1',
+            '@version': '0.1.0',
             'name': 'angle_alpha',
             'value': float(value[3]),
             'error': 0.0,
@@ -467,7 +467,7 @@ def make_dict(value) -> dict:
         'angle_beta': {
             '@module': 'easyCore.Objects.Base',
             '@class': 'Parameter',
-            '@version': '0.0.1',
+            '@version': '0.1.0',
             'name': 'angle_beta',
             'value': float(value[4]),
             'error': 0.0,
@@ -483,7 +483,7 @@ def make_dict(value) -> dict:
         'angle_gamma': {
             '@module': 'easyCore.Objects.Base',
             '@class': 'Parameter',
-            '@version': '0.0.1',
+            '@version': '0.1.0',
             'name': 'angle_gamma',
             'value': float(value[5]),
             'error': 0.0,

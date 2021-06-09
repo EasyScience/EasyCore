@@ -12,13 +12,13 @@ from easyCore.Utils.json import MontyDecoder
 test_dict = {
     '@module':  'easyCore.Objects.Groups',
     '@class':   'BaseCollection',
-    '@version': '0.0.1',
+    '@version': '0.1.0',
     'name':     'testing',
     'data':     [
         {
             '@module': 'easyCore.Objects.Base',
             '@class': 'Descriptor',
-            '@version': '0.0.1',
+            '@version': '0.1.0',
             'name': 'par1',
             'value': 1,
             'units': 'dimensionless',
