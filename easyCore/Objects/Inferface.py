@@ -111,11 +111,7 @@ class InterfaceFactoryTemplate:
         :return: points calculated at positional values `x`
         :rtype: np.ndarray
         # """
-        # def outer_fit_func(obj):
-        #     def inner_fit_func(x_array, *args, **kwargs):
-        #         return obj.__interface_obj.fit_func(x_array, *args, **kwargs)
-        #     return inner_fit_func
-        return self.__interface_obj.fit_func # outer_fit_func(self)(x_array, *args, **kwargs)
+        return self.__interface_obj.fit_func
 
     def generate_bindings(self, model, *args, ifun=None, **kwargs):
         """

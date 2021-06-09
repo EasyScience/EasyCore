@@ -251,9 +251,6 @@ class Graph:
         """
         end_vertex = self.convert_id(end_obj).int
 
-        # if end_vertex in self.find_isolated_vertices():
-        #     return []
-
         path_length = sys.maxsize
         optimum_path = []
         if start_obj is None:

@@ -209,9 +209,6 @@ class Descriptor(MSONable):
         :rtype: noneType
         """
         if not self.enabled:
-            # if self._borg.stack.enabled and self._borg.stack.history:
-            #     if not self._borg.stack.history[0].is_macro:
-            #         self._borg.stack.pop()
             if borg.debug:
                 raise CoreSetException(f'{str(self)} is not enabled.')
             return

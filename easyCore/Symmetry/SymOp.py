@@ -353,7 +353,7 @@ class SymmOp(MSONable):
         m = np.dot(rot.affine_matrix, refl.affine_matrix)
         return SymmOp(m)
 
-    def as_dict(self):
+    def as_dict(self, skip=None):
         """
         :return: MSONAble dict.
         """
