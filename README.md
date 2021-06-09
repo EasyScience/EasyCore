@@ -1,7 +1,7 @@
 # [![License][50]][51] [![Release][30]][31] [![Downloads][70]][71] [![CI Build][20]][21] [![CodeFactor][83]][84] [![Lines of code][81]](<>) [![Total lines][80]](<>) [![Files][82]](<>)
 
 
-<img height="80"><img src="./resources/images/ec_logo.svg" height="65">
+<img height="80"><img src="https://raw.githubusercontent.com/easyScience/easyCore/master/resources/images/ec_logo.svg" height="65">
 
 **easyCore** is the foundation of the *easyScience* universe, providing the building blocks for libraries and applications which aim to make scientific data simulation and analysis easier.
 
