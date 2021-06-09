@@ -1,13 +1,9 @@
-# easyCore
+# [![License][50]][51] [![Release][30]][31] [![Downloads][70]][71] [![CI Build][20]][21] [![CodeFactor][83]][84] [![Lines of code][81]](<>) [![Total lines][80]](<>) [![Files][82]](<>)
 
-The building blocks for Neutron science libraries in the _easy_ universe.
 
-[![License][50]][51] [![Release][30]][31] [![Downloads][70]][71]
+<img height="80"><img src="./resources/images/ec_logo.svg" height="65">
 
-[![CI Build][20]][21] 
-
-[![CodeFactor][83]][84] [![Lines of code][81]](<>) [![Total lines][80]](<>) [![Files][82]](<>)
-
+**easyCore** is the foundation of the *easyScience* universe, providing the building blocks for libraries and applications which aim to make scientific data simulation and analysis easier.
 
 <!---CI Build Status--->
 
