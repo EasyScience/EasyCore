@@ -139,6 +139,16 @@ class SpaceGroup(BaseObj):
     def from_star(cls, in_string: str):
         return StarEntry.from_string(cls, in_string)
 
+    @classmethod
+    def from_dict(cls, d):
+        obj = None
+        try:
+            obj = super(SpaceGroup, cls).from_dict(d)
+        except ValueError:
+            d['_space_group_HM_name']['value'] = d['_space_group_HM_name']['value'].split(':')[0]
+            obj = super(SpaceGroup, cls).from_dict(d)
+        return obj
+
     def __repr__(self) -> str:
         out_str = "<Spacegroup: system: '{:s}', number: {}, H-M: '{:s}'".format(self.crystal_system, self.int_number,
                                                                                 self.hermann_mauguin)

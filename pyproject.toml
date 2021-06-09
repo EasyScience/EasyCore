@@ -5,8 +5,8 @@ requires = ["poetry>=1.0"]
 build-backend = "poetry.masonry.api"
 
 [tool.poetry]
-name = "easyCore"
-version = "0.0.1"
+name = "easyScienceCore"
+version = "0.1.0"
 description = "Generic logic for easyScience libraries"
 license = "GPL-3.0"
 authors = ["Simon Ward"]

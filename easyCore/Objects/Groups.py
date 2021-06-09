@@ -82,9 +82,14 @@ class BaseCollection(BasedBase, Sequence):
         if str(idx) in self._kwargs.keys():
             return self._kwargs[str(idx)]
         if isinstance(idx, str):
-            names = [item.name for item in self]
-            if idx in names:
-                idx = names.index(idx)
+            idx = [index for index, item in enumerate(self) if item.name == idx]
+            l = len(idx)
+            if l == 0:
+                raise IndexError(f'Given index does not exist')
+            elif l == 1:
+                idx = idx[0]
+            else:
+                return self.__class__(getattr(self, 'name'), *[self[i] for i in idx])
         elif not isinstance(idx, int) or isinstance(idx, bool):
             if isinstance(idx, bool):
                 raise TypeError('Boolean indexing is not supported at the moment')

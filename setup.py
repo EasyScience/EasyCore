@@ -23,8 +23,8 @@ if os.path.exists(readme_path):
 
 setup(
     long_description=readme,
-    name='easyCore',
-    version='0.0.1',
+    name='easyScienceCore',
+    version='0.1.0',
     description='Generic logic for easyScience libraries',
     python_requires='==3.*,>=3.6.0,>=3.6.1',
     project_urls={"documentation": "https://github.com/easyScience/easyCore", "homepage": "https://github.com/easyScience/easyCore"},

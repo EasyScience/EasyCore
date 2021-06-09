@@ -628,6 +628,13 @@ class BasedBase(MSONable):
         self.user_data: dict = {}
         self._name: str = name
 
+    def __getstate__(self):
+        return self.as_dict(skip=['interface'])
+
+    def __setstate__(self, state):
+        obj = self.from_dict(state)
+        self.__init__(**obj._kwargs)
+
     @property
     def name(self):
         return self._name

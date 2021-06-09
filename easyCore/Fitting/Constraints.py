@@ -128,7 +128,7 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
 class NumericConstraint(ConstraintBase):
     """
     A `NumericConstraint` is a constraint whereby a dependent parameters value is something of an independent parameters
-    value
+    value. I.e. a < 1, a > 5
     """
 
     def __init__(self, dependent_obj: Union[Descriptor, Parameter], operator: str, value: Number):
@@ -196,6 +196,10 @@ class SelfConstraint(ConstraintBase):
 
 
 class ObjConstraint(ConstraintBase):
+    """
+    A `ObjConstraint` is a constraint whereby a dependent parameter is something of an independent parameter
+    value. I.e. a < b, a > b
+    """
 
     def __init__(self, dependent_obj: Parameter, operator: str, independent_obj: Parameter):
         super(ObjConstraint, self).__init__(dependent_obj, independent_obj=independent_obj, operator=operator)
@@ -262,5 +266,9 @@ class FunctionalConstraint(ConstraintBase):
 
 
 def cleanup_constraint(obj_id, enabled):
-    obj = borg.map.get_item_by_key(obj_id)
-    obj.enabled = enabled
+    try:
+        obj = borg.map.get_item_by_key(obj_id)
+        obj.enabled = enabled
+    except ValueError as V:
+        if borg.debug.enabled:
+            print(f'Object with ID {obj_id} has already been deleted')

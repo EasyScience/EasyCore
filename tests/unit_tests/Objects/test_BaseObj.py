@@ -253,3 +253,10 @@ def test_baseobj__add_component(setup_pars):
     assert hasattr(obj, new_item_name)
     a = getattr(obj, new_item_name)
     assert isinstance(a, Parameter)
+
+
+def test_baseObj_name(setup_pars):
+    name = setup_pars['name']
+    del setup_pars['name']
+    obj = BaseObj(name, **setup_pars)
+    assert obj.name == name

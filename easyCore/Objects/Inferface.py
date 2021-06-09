@@ -94,7 +94,8 @@ class InterfaceFactoryTemplate:
         """
         return self.return_name(self._current_interface)
 
-    def fit_func(self, x_array: np.ndarray, *args, **kwargs) -> np.ndarray:
+    @property
+    def fit_func(self) -> Callable: # , x_array: np.ndarray, *args, **kwargs) -> np.ndarray:
         """
         Pass through to the underlying interfaces fitting function.
 
@@ -106,12 +107,12 @@ class InterfaceFactoryTemplate:
         :type kwargs: Any
         :return: points calculated at positional values `x`
         :rtype: np.ndarray
-        """
-        def outer_fit_func(obj):
-            def inner_fit_func(x_array, *args, **kwargs):
-                return obj.__interface_obj.fit_func(x_array, *args, **kwargs)
-            return inner_fit_func
-        return outer_fit_func(self)(x_array, *args, **kwargs)
+        # """
+        # def outer_fit_func(obj):
+        #     def inner_fit_func(x_array, *args, **kwargs):
+        #         return obj.__interface_obj.fit_func(x_array, *args, **kwargs)
+        #     return inner_fit_func
+        return self.__interface_obj.fit_func # outer_fit_func(self)(x_array, *args, **kwargs)
 
     def generate_bindings(self, model, *args, ifun=None, **kwargs):
         """

@@ -9,7 +9,6 @@ from easyCore.Objects.Base import Descriptor, Parameter, BaseObj
 from easyCore.Objects.Groups import BaseCollection
 from easyCore.Elements.Basic.Specie import Specie
 from easyCore.Elements.Basic.AtomicDisplacement import AtomicDisplacement
-from easyCore.Utils.classTools import addLoggedProp
 from easyCore.Utils.io.star import StarLoop
 
 _SITE_DETAILS = {
