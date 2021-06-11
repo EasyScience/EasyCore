@@ -1,5 +1,5 @@
 __author__ = 'https://github.com/materialsproject/pymatgen/blob/d45fdc1d9930d7952a26de51aab0d5b92fd27236/pymatgen/util/coord.py'
-__version__ = '0.0.1'
+__version__ = '0.1.0'
 
 
 # coding: utf-8

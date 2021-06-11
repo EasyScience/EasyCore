@@ -1,5 +1,8 @@
+#  SPDX-FileCopyrightText: 2021 European Spallation Source <info@ess.eu>
+#  SPDX-License-Identifier: BSD-3-Clause
+
 __author__ = 'github.com/wardsimon'
-__version__ = '0.0.1'
+__version__ = '0.1.0'
 
 import weakref
 import sys
@@ -247,9 +250,6 @@ class Graph:
         :rtype:
         """
         end_vertex = self.convert_id(end_obj).int
-
-        # if end_vertex in self.find_isolated_vertices():
-        #     return []
 
         path_length = sys.maxsize
         optimum_path = []

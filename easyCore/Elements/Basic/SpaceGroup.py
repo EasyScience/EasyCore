@@ -1,5 +1,8 @@
+#  SPDX-FileCopyrightText: 2021 European Spallation Source <info@ess.eu>
+#  SPDX-License-Identifier: BSD-3-Clause
+
 __author__ = 'github.com/wardsimon'
-__version__ = '0.0.1'
+__version__ = '0.1.0'
 
 from copy import deepcopy
 from easyCore.Objects.Base import BaseObj, Descriptor
@@ -138,6 +141,16 @@ class SpaceGroup(BaseObj):
     @classmethod
     def from_star(cls, in_string: str):
         return StarEntry.from_string(cls, in_string)
+
+    @classmethod
+    def from_dict(cls, d):
+        obj = None
+        try:
+            obj = super(SpaceGroup, cls).from_dict(d)
+        except ValueError:
+            d['_space_group_HM_name']['value'] = d['_space_group_HM_name']['value'].split(':')[0]
+            obj = super(SpaceGroup, cls).from_dict(d)
+        return obj
 
     def __repr__(self) -> str:
         out_str = "<Spacegroup: system: '{:s}', number: {}, H-M: '{:s}'".format(self.crystal_system, self.int_number,

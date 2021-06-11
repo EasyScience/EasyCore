@@ -1,10 +1,10 @@
 __author__ = 'github.com/wardsimon'
-__version__ = '0.0.1'
+__version__ = '0.1.0'
 
 import pytest
 
 from typing import List, Tuple
-from easyCore.Fitting.Constraints import NumericConstraint, ObjConstraint
+from easyCore.Fitting.Constraints import NumericConstraint, ObjConstraint, SelfConstraint
 from easyCore.Objects.Base import Parameter
 
 
@@ -14,8 +14,8 @@ def twoPars() -> Tuple[List[Parameter], List[int]]:
 
 
 @pytest.fixture
-def threePars() -> Tuple[List[Parameter], List[int]]:
-    ps, vs = twoPars()
+def threePars(twoPars) -> Tuple[List[Parameter], List[int]]:
+    ps, vs = twoPars
     ps.append(Parameter('c', 3))
     vs.append(3)
     return ps, vs
@@ -70,3 +70,20 @@ def test_ObjConstraintDivide(twoPars, operator):
     c = ObjConstraint(twoPars[0][0], operator_str, twoPars[0][1])
     c()
     assert twoPars[0][0].raw_value == operator/twoPars[1][1]
+
+
+def test_ObjConstraint_Multiple(threePars):
+
+    p0 = threePars[0][0]
+    p1 = threePars[0][1]
+    p2 = threePars[0][2]
+
+    value = 1.5
+
+    p0.constraints['user']['num_1'] = ObjConstraint(p1, '', p0)
+    p0.constraints['user']['num_2'] = ObjConstraint(p2, '', p0)
+
+    p0.value = value
+    assert p0.raw_value == value
+    assert p1.raw_value == value
+    assert p2.raw_value == value

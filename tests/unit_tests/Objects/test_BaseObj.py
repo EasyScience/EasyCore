@@ -1,5 +1,5 @@
 __author__ = 'github.com/wardsimon'
-__version__ = '0.0.1'
+__version__ = '0.1.0'
 
 import pytest
 import numpy as np
@@ -105,12 +105,12 @@ def test_baseobj_as_dict(setup_pars: dict):
     assert isinstance(obtained, dict)
     expected = {'@module': 'easyCore.Objects.Base',
                 '@class': 'BaseObj',
-                '@version': '0.0.1',
+                '@version': '0.1.0',
                 'name': 'test',
                 'par1':
                     {'@module': 'easyCore.Objects.Base',
                      '@class': 'Parameter',
-                     '@version': '0.0.1',
+                     '@version': '0.1.0',
                      'name': 'p1',
                      'value': 0.1,
                      'error': 0.0,
@@ -122,7 +122,7 @@ def test_baseobj_as_dict(setup_pars: dict):
                 'des1':
                     {'@module': 'easyCore.Objects.Base',
                      '@class': 'Descriptor',
-                     '@version': '0.0.1',
+                     '@version': '0.1.0',
                      'name': 'd1',
                      'value': 0.1,
                      'units': 'dimensionless',
@@ -133,7 +133,7 @@ def test_baseobj_as_dict(setup_pars: dict):
                 'par2':
                     {'@module': 'easyCore.Objects.Base',
                      '@class': 'Parameter',
-                     '@version': '0.0.1',
+                     '@version': '0.1.0',
                      'name': 'p2',
                      'value': 0.1,
                      'error': 0.0,
@@ -145,7 +145,7 @@ def test_baseobj_as_dict(setup_pars: dict):
                 'des2':
                     {'@module': 'easyCore.Objects.Base',
                      '@class': 'Descriptor',
-                     '@version': '0.0.1',
+                     '@version': '0.1.0',
                      'name': 'd2',
                      'value': 0.1,
                      'units': 'dimensionless',
@@ -156,7 +156,7 @@ def test_baseobj_as_dict(setup_pars: dict):
                 'par3':
                     {'@module': 'easyCore.Objects.Base',
                      '@class': 'Parameter',
-                     '@version': '0.0.1',
+                     '@version': '0.1.0',
                      'name': 'p3',
                      'value': 0.1,
                      'error': 0.0,
@@ -253,3 +253,10 @@ def test_baseobj__add_component(setup_pars):
     assert hasattr(obj, new_item_name)
     a = getattr(obj, new_item_name)
     assert isinstance(a, Parameter)
+
+
+def test_baseObj_name(setup_pars):
+    name = setup_pars['name']
+    del setup_pars['name']
+    obj = BaseObj(name, **setup_pars)
+    assert obj.name == name

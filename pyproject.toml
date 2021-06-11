@@ -5,8 +5,8 @@ requires = ["poetry>=1.0"]
 build-backend = "poetry.masonry.api"
 
 [tool.poetry]
-name = "easyCore"
-version = "0.0.1"
+name = "easyScienceCore"
+version = "0.1.0"
 description = "Generic logic for easyScience libraries"
 license = "GPL-3.0"
 authors = ["Simon Ward"]
@@ -18,7 +18,7 @@ classifiers=[
     "Intended Audience :: Developers",  # Define that your audience are developers
     "Topic :: Scientific/Engineering :: Physics",
     "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",  # Again, pick a license
-    "Programming Language :: Python :: 3.6, 3.7, 3.8, 3.9",
+    "Programming Language :: Python :: 3 :: Only",
 ]
 include = ["CHANGELOG.md"]
 packages = [ { include = "easyCore" } ]

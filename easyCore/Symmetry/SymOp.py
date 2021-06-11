@@ -6,9 +6,8 @@ __email__ = "shyuep@gmail.com"
 __status__ = "Production"
 __date__ = "Sep 23, 2011"
 
-# coding: utf-8
-# Copyright (c) Pymatgen Development Team.
-# Distributed under the terms of the MIT License.
+#  SPDX-FileCopyrightText: 2021 European Spallation Source <info@ess.eu>
+#  SPDX-License-Identifier: BSD-3-Clause
 
 """
 This module provides classes that operate on points or vectors in 3D space.
@@ -354,7 +353,7 @@ class SymmOp(MSONable):
         m = np.dot(rot.affine_matrix, refl.affine_matrix)
         return SymmOp(m)
 
-    def as_dict(self):
+    def as_dict(self, skip=None):
         """
         :return: MSONAble dict.
         """

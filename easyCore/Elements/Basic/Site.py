@@ -1,5 +1,8 @@
+#  SPDX-FileCopyrightText: 2021 European Spallation Source <info@ess.eu>
+#  SPDX-License-Identifier: BSD-3-Clause
+
 __author__ = 'github.com/wardsimon'
-__version__ = '0.0.1'
+__version__ = '0.1.0'
 
 from typing import List, Union
 
@@ -9,7 +12,6 @@ from easyCore.Objects.Base import Descriptor, Parameter, BaseObj
 from easyCore.Objects.Groups import BaseCollection
 from easyCore.Elements.Basic.Specie import Specie
 from easyCore.Elements.Basic.AtomicDisplacement import AtomicDisplacement
-from easyCore.Utils.classTools import addLoggedProp
 from easyCore.Utils.io.star import StarLoop
 
 _SITE_DETAILS = {

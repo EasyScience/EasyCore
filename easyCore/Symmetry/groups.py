@@ -1,6 +1,6 @@
 # coding: utf-8
-# Copyright (c) Pymatgen Development Team.
-# Distributed under the terms of the MIT License.
+#  SPDX-FileCopyrightText: 2021 European Spallation Source <info@ess.eu>
+#  SPDX-License-Identifier: BSD-3-Clause
 
 """
 Defines SymmetryGroup parent class and PointGroup and SpaceGroup classes.

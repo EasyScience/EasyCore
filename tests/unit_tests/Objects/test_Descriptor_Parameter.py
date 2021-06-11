@@ -1,5 +1,5 @@
 __author__ = 'github.com/wardsimon'
-__version__ = '0.0.1'
+__version__ = '0.1.0'
 
 from copy import deepcopy
 from typing import List
@@ -209,7 +209,7 @@ def test_descriptor_as_dict():
     result = d.as_dict()
     expected = {'@module':      'easyCore.Objects.Base',
                 '@class':       'Descriptor',
-                '@version':     '0.0.1',
+                '@version':     '0.1.0',
                 'name':         'test',
                 'value':        1,
                 'units':        'dimensionless',
@@ -228,7 +228,7 @@ def test_parameter_as_dict():
     result = d.as_dict()
     expected = {'@module':  'easyCore.Objects.Base',
                 '@class':   'Parameter',
-                '@version': '0.0.1',
+                '@version': '0.1.0',
                 'name':     'test',
                 'value':    1.0,
                 'error':    0.0,
@@ -246,7 +246,7 @@ def test_parameter_as_dict():
     result = d.as_dict()
     expected = {'@module':  'easyCore.Objects.Base',
                 '@class':   'Parameter',
-                '@version': '0.0.1',
+                '@version': '0.1.0',
                 'name':     'test',
                 'units':    'kilometer',
                 'value':    1.0,
@@ -263,7 +263,7 @@ def test_parameter_as_dict():
 
 @pytest.mark.parametrize('reference, constructor', ([{'@module':      'easyCore.Objects.Base',
                                                       '@class':       'Descriptor',
-                                                      '@version':     '0.0.1',
+                                                      '@version':     '0.1.0',
                                                       'name':         'test',
                                                       'value':        1,
                                                       'units':        'dimensionless',
@@ -273,7 +273,7 @@ def test_parameter_as_dict():
                                                       'callback':     None}, Descriptor],
                                                     [{'@module':  'easyCore.Objects.Base',
                                                       '@class':   'Parameter',
-                                                      '@version': '0.0.1',
+                                                      '@version': '0.1.0',
                                                       'name':     'test',
                                                       'units':    'kilometer',
                                                       'value':    1.0,
@@ -300,7 +300,7 @@ def test_item_from_dict(reference, constructor):
 
 @pytest.mark.parametrize('construct', ({'@module':      'easyCore.Objects.Base',
                                         '@class':       'Descriptor',
-                                        '@version':     '0.0.1',
+                                        '@version':     '0.1.0',
                                         'name':         'test',
                                         'value':        1,
                                         'units':        'dimensionless',
@@ -310,7 +310,7 @@ def test_item_from_dict(reference, constructor):
                                         'callback':     None},
                                        {'@module':  'easyCore.Objects.Base',
                                         '@class':   'Parameter',
-                                        '@version': '0.0.1',
+                                        '@version': '0.1.0',
                                         'name':     'test',
                                         'units':    'kilometer',
                                         'value':    1.0,

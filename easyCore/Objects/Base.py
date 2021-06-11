@@ -1,5 +1,8 @@
+#  SPDX-FileCopyrightText: 2021 European Spallation Source <info@ess.eu>
+#  SPDX-License-Identifier: BSD-3-Clause
+
 __author__ = 'github.com/wardsimon'
-__version__ = '0.0.1'
+__version__ = '0.1.0'
 
 import numbers
 import weakref
@@ -206,9 +209,6 @@ class Descriptor(MSONable):
         :rtype: noneType
         """
         if not self.enabled:
-            # if self._borg.stack.enabled and self._borg.stack.history:
-            #     if not self._borg.stack.history[0].is_macro:
-            #         self._borg.stack.pop()
             if borg.debug:
                 raise CoreSetException(f'{str(self)} is not enabled.')
             return
@@ -627,6 +627,13 @@ class BasedBase(MSONable):
         self.interface = interface
         self.user_data: dict = {}
         self._name: str = name
+
+    def __getstate__(self):
+        return self.as_dict(skip=['interface'])
+
+    def __setstate__(self, state):
+        obj = self.from_dict(state)
+        self.__init__(**obj._kwargs)
 
     @property
     def name(self):
