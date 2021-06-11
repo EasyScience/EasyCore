@@ -13,7 +13,7 @@
  <>`_
 =========================================================================================================================================================================================================================================================================================================================================================
 
-:raw-html-m2r:`<img height="80">`\ :raw-html-m2r:`<img src="./resources/images/ec_logo.svg" height="65">`
+:raw-html-m2r:`<img height="80">`\ :raw-html-m2r:`<img src="https://raw.githubusercontent.com/easyScience/easyCore/master/resources/images/ec_logo.svg" height="65">`
 
 **easyCore** is the foundation of the *easyScience* universe, providing the building blocks for libraries and applications which aim to make scientific data simulation and analysis easier.
 
