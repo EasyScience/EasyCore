@@ -42,3 +42,25 @@
 [83]: https://www.codefactor.io/repository/github/easyscience/easycore/badge
 
 [84]: https://www.codefactor.io/repository/github/easyscience/easycore
+
+## Install
+
+**easyCore** can be downloaded using pip:
+
+```pip install easysciencecore```
+
+Or direct from the repository:
+
+```pip install https://github.com/easyScience/easyCore```
+
+## Test
+
+After installation, launch the test suite:
+
+```python -m pytest```
+
+## Contributing
+We absolutely welcome contributions. **easyCore** is maintained by the ESS and on a volunteer basis and thus we need to foster a community that can support user questions and develop new features to make this software a useful tool for all users while encouraging every member of the community to share their ideas.
+
+## License
+While **easyCore** is under the BSD-3 license, DFO_LS is subject to the GPL license and is an optional install.
