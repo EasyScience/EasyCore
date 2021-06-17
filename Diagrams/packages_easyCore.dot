@@ -1,7 +1,0 @@
-digraph "packages_easyCore" {
-charset="utf-8"
-rankdir=BT
-"0" [label="Base", shape="box"];
-"1" [label="Base.Objects", shape="box"];
-"2" [label="Base.Objects.Base", shape="box"];
-}
