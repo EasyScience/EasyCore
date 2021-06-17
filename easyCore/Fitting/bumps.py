@@ -38,6 +38,7 @@ class bumps(FittingTemplate):  # noqa: S101
         """
         super().__init__(obj, fit_function)
         self._cached_pars_order = ()
+        self.p_0 = {}
 
     def make_model(self, pars: Union[noneType, List[bumpsParameter]] = None) -> Callable:
         """
@@ -157,6 +158,7 @@ class bumps(FittingTemplate):  # noqa: S101
             model = self.make_model(pars=parameters)
             model = model(x, y, weights)
         self._cached_model = model
+        self.p_0 = {f'p{key}': self._cached_pars[key].raw_value for key in self._cached_pars.keys()}
         problem = FitProblem(model)
         # Why do we do this? Because a fitting template has to have borg instantiated outside pre-runtime
         from easyCore import borg
@@ -232,6 +234,7 @@ class bumps(FittingTemplate):  # noqa: S101
         for index, name in enumerate(self._cached_model._pnames):
             dict_name = int(name[1:])
             item[name] = pars[dict_name].raw_value
+        results.p0 = self.p_0
         results.p = item
         results.x = self._cached_model.x
         results.y_obs = self._cached_model.y

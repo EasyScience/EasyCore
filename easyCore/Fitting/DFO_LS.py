@@ -34,6 +34,7 @@ class DFO(FittingTemplate):  # noqa: S101
         :type fit_function: Callable
         """
         super().__init__(obj, fit_function)
+        self.p_0 = {}
 
     def make_model(self, pars: Union[noneType, list] = None) -> Callable:
         """
@@ -146,6 +147,7 @@ class DFO(FittingTemplate):  # noqa: S101
             model = self.make_model(pars=parameters)
             model = model(x, y, weights)
         self._cached_model = model
+        self.p_0 = {f'p{key}': self._cached_pars[key].raw_value for key in self._cached_pars.keys()}
 
         # Why do we do this? Because a fitting template has to have borg instantiated outside pre-runtime
         from easyCore import borg
@@ -203,11 +205,12 @@ class DFO(FittingTemplate):  # noqa: S101
         for name, value in kwargs.items():
             if getattr(results, name, False):
                 setattr(results, name, value)
-        results.success = fit_results.flag
+        results.success = not bool(fit_results.flag)
         pars = self._cached_pars
         item = {}
         for p_name, par in pars.items():
             item[f'p{p_name}'] = par.raw_value
+        results.p0 = self.p_0
         results.p = item
         results.x = self._cached_model.x
         results.y_obs = self._cached_model.y
