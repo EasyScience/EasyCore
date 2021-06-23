@@ -104,7 +104,7 @@ class BaseCollection(BasedBase, Sequence):
         keys = list(self._kwargs.keys())
         return self._kwargs[keys[idx]]
 
-    def __setitem__(self, key: int, value: Number):
+    def __setitem__(self, key: int, value: Union[Number, BasedBase, Descriptor]):
         """
         Set an item via it's index.
 
@@ -113,11 +113,24 @@ class BaseCollection(BasedBase, Sequence):
         :param value: Value which index key should be set to.
         :type value: Any
         """
-        item = self.__getitem__(key)
         if isinstance(value, Number):  # noqa: S3827
+            item = self.__getitem__(key)
             item.value = value
+        elif issubclass(type(value), BasedBase) or issubclass(type(value), Descriptor):
+            update_key = list(self._kwargs.keys())
+            values = list(self._kwargs.values())
+            old_item = values[key]
+            # Update the internal dict
+            update_dict = {update_key[key]: value}
+            self._kwargs.update(update_dict)
+            # ADD EDGE
+            self._borg.map.add_edge(self, value)
+            self._borg.map.reset_type(value, 'created_internal')
+            value.interface = self.interface
+            # REMOVE EDGE
+            self._borg.map.prune_vertex_from_edge(self, old_item)
         else:
-            raise NotImplementedError('At the moment only numerical values can be set.')
+            raise NotImplementedError('At the moment only numerical values or easyCore objects can be set.')
 
     def __delitem__(self, key: int):
         """

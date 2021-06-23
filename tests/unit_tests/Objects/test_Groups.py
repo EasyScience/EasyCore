@@ -430,3 +430,26 @@ def test_baseCollection_sameName(cls):
     assert len(obj12) == 2
     for index, item in enumerate(obj12):
         assert item == l_object[index]
+
+
+@pytest.mark.parametrize('cls', class_constructors)
+def test_baseCollection_set_index(cls):
+    name = 'test'
+    p1 = Parameter('p1', 1)
+    p2 = Parameter('p1', 2)
+    p3 = Parameter('p3', 3)
+    p4 = Parameter('p4', 4)
+
+    l_object = [p1, p2, p3]
+    obj = cls(name, *l_object)
+
+    idx = 1
+    assert obj[idx] == p2
+    obj[idx] = p4
+    assert obj[idx] == p4
+    edges = obj._borg.map.get_edges(obj)
+    assert len(edges) == len(obj)
+    for item in obj:
+        assert obj._borg.map.convert_id_to_key(item) in edges
+    assert obj._borg.map.convert_id_to_key(p2) not in edges
+
