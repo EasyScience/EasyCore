@@ -7,6 +7,7 @@ __version__ = '0.1.0'
 from typing import Callable, Union, TypeVar, List, Tuple, Any, Iterable
 
 import weakref
+# import pint_xarray
 import xarray as xr
 
 from easyCore import np, ureg

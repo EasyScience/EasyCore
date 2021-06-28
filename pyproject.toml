@@ -24,23 +24,31 @@ include = ["CHANGELOG.md"]
 packages = [ { include = "easyCore" } ]
 
 [tool.poetry.dependencies]
-python = "^3.6, >=3.6.1" # "^3.8" generates error when installing PySide2 in easyAppGui
+python = "^3.7" # "^3.8" generates error when installing PySide2 in easyAppGui
 numpy = "^1.19"
 pint = "^0.16"
 uncertainties = "^3.1"
 lmfit = "^1.0"
 bumps = "^0.8"
 asteval = "^0.9.23"
-DFO-LS = {version = "^1.2.1", optional = true}
-xarray = "^0.16.2"
+DFO-LS = {version = "^1.2", optional = true}
+xarray = "^0.16"
+#pint-xarray = "^0.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.2"
 pytest-cov = "^2.11.1"
-pytest-mock = "^3.5.1"
 codecov = "^2.1.11"
-black = "^20.8b1"
 matplotlib = "^3.2.2"
+doc8 = "^0.8.0"
+readme-renderer = "^17.4"
+Sphinx = "^4.0.2"
+sphinx-rtd-theme = "^0.5.2"
+sphinx-autodoc-typehints = "^1.12.0"
+
+[tool.github.info]
+organization = 'easyScience'
+repo = 'easyCore'
 
 [tool.coverage.run]
 source = ['easyCore']
@@ -54,10 +62,9 @@ envs = ["main"]
 legacy_tox_ini = """
 [tox]
 isolated_build = True
-envlist = py{36,37,38,39}
+envlist = py{37,38,39}
 [gh-actions]
 python =
-    3.6: py36
     3.7: py37
     3.8: py38
     3.9: py39
