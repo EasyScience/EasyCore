@@ -22,10 +22,10 @@ class easyCoreDatasetAccessor:
     Accessor to extend an xarray DataSet to easyCore. These functions can be accessed by `obj.easyCore.func`.
     The objective for this class accessor is to facilitate:
 
-    - Creation of nd datasets by making and assigning axes and data more accessible
-    - To add and keep track of errors in the form of sigma for datasets.py
-    - To perform fitting on one or more data arrays in the dataset simultaneously.
-    - To facilitate dask computation if required.
+- Creation of nd datasets by making and assigning axes and data more accessible
+- To add and keep track of errors in the form of sigma for datasets.py
+- To perform fitting on one or more data arrays in the dataset simultaneously.
+- To facilitate dask computation if required.
     """
 
     def __init__(self, xarray_obj: xr.Dataset):
@@ -148,7 +148,7 @@ class easyCoreDatasetAccessor:
         :param coordinate_name: Name of the coordinate e.g. `x`
         :type coordinate_name: str
         :param coordinate_values: Points for the coordinates
-        :type coordinate_values: Union[List[T_], np.ndarray]
+        :type coordinate_values: Union[List[T_], numpy.ndarray]
         :param unit: Unit associated with the coordinate
         :type unit: str
         :return: None
@@ -182,9 +182,9 @@ class easyCoreDatasetAccessor:
         :param variable_coordinates: List of coordinates used in the supplied data array. 
         :type variable_coordinates: str, List[str]
         :param variable_values: Numpy or list of data which will be assigned to the DataArray
-        :type variable_values: Union[np.ndarray, list]
+        :type variable_values: Union[numpy.ndarray, list]
         :param variable_sigma: If the sigmas of the dataset are known, they can be supplied here.
-        :type variable_sigma: Union[np.ndarray, list]
+        :type variable_sigma: Union[numpy.ndarray, list]
         :param unit: Unit associated with the DataArray
         :type unit: str
         :param auto_sigma: Should the sigma DataArray be automatically calculated assuming gaussian probability? 
@@ -278,7 +278,7 @@ class easyCoreDatasetAccessor:
         :param variable_label: Name of the DataArray to perform the calculation on
         :type variable_label: str
         :param sigma_values: Array of sigmas in list, numpy or DataArray form
-        :type sigma_values: Union[List[T_], np.ndarray, xr.DataArray]
+        :type sigma_values: Union[List[T_], numpy.ndarray, xarray.DataArray]
         :param label_prefix: What prefix should be used to designate a sigma DataArray from a data DataArray
         :type label_prefix: str
         :return: None
@@ -307,17 +307,18 @@ class easyCoreDatasetAccessor:
         :param coordinates: List of coordinate names to broadcast and concatenate along
         :type coordinates: List[str]
         :return: Broadcasted and concatenated coordinates
-        :rtype: xr.DataArray
+        :rtype: xarray.DataArray
 
-        .. code-block:: python
+.. code-block:: python
 
-        x = [1, 2], y = [3, 4]
-        d = xr.DataArray()
-        d.easyCore.add_coordinate('x', x)
-        d.easyCore.add_coordinate('y', y)
-        points = d.easyCore.generate_points(['x', 'y'])
-        print(points)
+     x = [1, 2], y = [3, 4]
+     d = xr.DataArray()
+     d.easyCore.add_coordinate('x', x)
+     d.easyCore.add_coordinate('y', y)
+     points = d.easyCore.generate_points(['x', 'y'])
+     print(points)
         """
+
         coords = [self._obj.coords[da] for da in coordinates]
         c_array = []
         n_array = []
@@ -568,11 +569,11 @@ class easyCoreDataarrayAccessor:
         :param func_in: Function to be wrapped and made xarray fitting compatable.
         :type func_in: Callable
         :param bdims: Optional precomputed broadcasted dimensions.
-        :type bdims: xr.DataArray
+        :type bdims: xarray.DataArray
         :param dask_chunks: How to split to broadcasted dimensions for dask.
         :type dask_chunks: Tuple[int..]
         :return: Tuple of broadcasted fit arrays and wrapped fit function.
-        :rtype: xr.DataArray, Callable
+        :rtype: xarray.DataArray, Callable
         """
 
         if bdims is None:
@@ -605,7 +606,7 @@ class easyCoreDataarrayAccessor:
         concatenated along the second axis (`fit_dim`).
 
         :return: Broadcasted and concatenated coordinates
-        :rtype: xr.DataArray
+        :rtype: xarray.DataArray
         """
 
         coords = [self._obj.coords[da] for da in self._obj.dims]

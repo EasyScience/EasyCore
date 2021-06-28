@@ -7,11 +7,10 @@ __version__ = '0.1.0'
 import numpy as np
 
 from easyCore.Objects.Borg import Borg
-from pint import UnitRegistry
-
+import pint
 default_fitting_engine = 'lmfit'
 
-ureg = UnitRegistry()
+ureg = pint.UnitRegistry()
 borg = Borg()
 borg.instantiate_stack()
 borg.stack.enabled = False

@@ -37,6 +37,12 @@ version = ''
 # The full version, including alpha/beta/rc tags
 release = project_info['tool']['poetry']['version']
 
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3', None),
+    'numpy': ('https://numpy.org/doc/stable/', None),
+    'pint': ('https://pint.readthedocs.io/en/stable/', None),
+    'xarray': ('https://xarray.pydata.org/en/stable/', None)
+}
 
 # -- General configuration ---------------------------------------------------
 
@@ -92,7 +98,8 @@ highlight_language = 'python3'
 # a list of builtin themes.
 #
 html_theme = 'sphinx_rtd_theme'
-html_logo = os.path.join('ec_logo_single.png')
+html_logo = os.path.join('_static', 'ec_logo_single.png')
+html_theme_options = {'logo_only': True}
 # html_theme_options = {
 #     'logo': os.path.join('ec_logo_single.png'),
 #     'github_user': project_info['tool']['github']['info']['organization'],

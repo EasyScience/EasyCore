@@ -73,12 +73,22 @@ class BaseCollection(BasedBase, MutableSequence):
         self._kwargs._stack_enabled = True
 
     def insert(self, index: int, value: Union[BasedBase, Descriptor]) -> None:
+        """
+        Insert an object into the collection at an index.
+
+        :param index: Index for easyCore object to be inserted.
+        :type index: int
+        :param value: Object to be inserted.
+        :type value: Union[BasedBase, Descriptor]
+        :return: None
+        :rtype: None
+        """
         t_ = type(value)
         if issubclass(t_, (BasedBase, Descriptor)):
             update_key = list(self._kwargs.keys())
             values = list(self._kwargs.values())
             # Update the internal dict
-            new_key = value.name
+            new_key = str(borg.map.convert_id_to_key(value))
             update_key.insert(index, new_key)
             values.insert(index, value)
             self._kwargs.reorder(**{k: v for k, v in zip(update_key, values)})

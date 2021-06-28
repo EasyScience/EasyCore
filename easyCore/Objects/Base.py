@@ -10,7 +10,7 @@ import weakref
 from copy import deepcopy
 from typing import List, Union, Any, Iterable
 
-from easyCore import borg, ureg, np
+from easyCore import borg, ureg, np, pint
 from easyCore.Utils.classTools import addLoggedProp, addProp
 from easyCore.Utils.Exceptions import CoreSetException
 from easyCore.Utils.typing import noneType
@@ -24,11 +24,25 @@ M_ = ureg.Measurement
 
 class Descriptor(MSONable):
     """
-    Class which is the base of all models. It contains all information to describe an objects unique property. This
-    includes a value, unit, description and url (for reference material). All so implemented is a callback so that the
-    value can be read from a linked library object.
+    This is the base of all variable descriptions for models. It contains all information to describe a single
+    unique property of an object. This description includes a name and value as well as optionally a unit, description
+    and url (for reference material). Also implemented is a callback so that the value can be read/set from a linked
+    library object.
 
-    Undo/Redo functionality is implemented for value, unit, display name.
+    A `Descriptor` is typically something which describes part of a model and is non-fittable and generally changes the
+    state of an object.
+
+.. highlight:: python
+.. code-block:: python
+
+     from easyCore.Objects.Base import Descriptor
+     # Describe a color by text
+     color_text = Descriptor('fav_colour', 'red')
+     # Describe a color by RGB
+     color_num = Descriptor('fav_colour', [1, 0, 0])
+
+.. note::
+    Undo/Redo functionality is implemented for the attributes `value`, `unit` and `display name`.
     """
 
     _constructor = Q_
@@ -133,7 +147,7 @@ class Descriptor(MSONable):
         self._display_name = name_str
 
     @property
-    def unit(self) -> ureg.Unit:
+    def unit(self) -> pint.UnitRegistry:
         """
         Get the unit associated with the value.
 
@@ -161,7 +175,7 @@ class Descriptor(MSONable):
         self._value = self.__class__._constructor(**self._args)
 
     @property
-    def value(self):
+    def value(self) -> Any:
         """
         Get the value of self as a pint. This is should be usable for most cases. If a pint
         is not acceptable then the raw value can be obtained through `obj.raw_value`.
@@ -293,7 +307,7 @@ class Descriptor(MSONable):
         out_str = f"<{class_name} '{obj_name}': {obj_value}{obj_units}>"
         return out_str
 
-    def as_dict(self, skip: list = None) -> dict:
+    def as_dict(self, skip: List[str] = None) -> dict:
         """
         Convert ones self into a serialized form.
 
@@ -329,9 +343,21 @@ class Descriptor(MSONable):
 
 class Parameter(Descriptor):
     """
-    This class is an extension of a `Descriptor`. Where the descriptor was for static objects,
+    This class is an extension of a ``easyCore.Object.Base.Descriptor``. Where the descriptor was for static objects,
     a `Parameter` is for dynamic objects. A parameter has the ability to be used in fitting and
     has additional fields to facilitate this.
+
+.. highlight:: python
+.. code-block:: python
+
+     from easyCore.Objects.Base import Parameter
+     # Describe a phase
+     phase_basic = Parameter('phase', 3)
+     # Describe a phase with a unit
+     phase_unit = Parameter('phase', 3, units,='rad/s')
+
+.. note::
+    Undo/Redo functionality is implemented for the attributes `value`, `error`, `min`, `max`, `fixed`
     """
 
     _constructor = M_
@@ -636,12 +662,12 @@ class BasedBase(MSONable):
         self.__init__(**obj._kwargs)
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     @name.setter
     @property_stack_deco
-    def name(self, value):
+    def name(self, value: str):
         self._name = value
 
     @property
@@ -692,7 +718,7 @@ class BasedBase(MSONable):
         self.generate_bindings()
 
     @property
-    def constraints(self) -> list:
+    def constraints(self) -> List[Parameter]:
         pars = self.get_parameters()
         constraints = []
         for par in pars:
@@ -701,7 +727,7 @@ class BasedBase(MSONable):
                 constraints.append(con[key])
         return constraints
 
-    def as_dict(self, skip: list = None) -> dict:
+    def as_dict(self, skip: List[str] = None) -> dict:
         """
         Convert ones self into a serialized form.
 
@@ -811,7 +837,17 @@ class BaseObj(BasedBase):
                 self._borg.map.reset_type(kwargs[key], 'created_internal')
             addLoggedProp(self, key, self.__getter(key), self.__setter(key), get_id=key, my_self=self, test_class=BaseObj)
 
-    def _add_component(self, key: str, component):
+    def _add_component(self, key: str, component: Union[BasedBase, Descriptor]):
+        """
+        Add a component to the class. This is used to 
+
+        :param key:
+        :type key:
+        :param component:
+        :type component:
+        :return:
+        :rtype:
+        """
         self._kwargs[key] = component
         self._borg.map.add_edge(self, component)
         self._borg.map.reset_type(component, 'created_internal')

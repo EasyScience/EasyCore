@@ -15,14 +15,11 @@ Features of easyCore
 Free and open-source
 Anyone is free to use easyCore and the source code is openly shared on GitHub.
 
-* Cross-platform
-easyCore is written in Python and available for all platforms.
+* *Cross-platform* - easyCore is written in Python and available for all platforms.
 
-* Various techniques
-easyCore has been used to build various libraries such as easyDiffraction and easyReflectometry.
+* *Various techniques* - easyCore has been used to build various libraries such as easyDiffraction and easyReflectometry.
 
-* Advanced built-in features
-easyCore provides features such as model minimization, automatic script generation, undo/redo, and more.
+* *Advanced built-in features* - easyCore provides features such as model minimization, automatic script generation, undo/redo, and more.
 
 
 Projects using easyCore
@@ -30,10 +27,9 @@ Projects using easyCore
 
 easyCore is currently being used in the following projects:
 
-* `easyDiffraction <https://easydiffraction.org>`_ - Scientific software for modelling and analysis of neutron diffraction data
+* `easyDiffraction <https://easydiffraction.org>`_ - Scientific software for modelling and analysis of neutron diffraction data.
 
-
-*`easyReflectometry <https://easyreflectometry.org>`_ - Scientific software for modelling and analysis of neutron reflectometry data
+* `easyReflectometry <https://easyreflectometry.org>`_ - Scientific software for modelling and analysis of neutron reflectometry data.
 
 
 Installation
@@ -76,23 +72,24 @@ Or Poetry
 
 .. installation-end-content
 
-Main Contents
+Documentation
 ------------------------------------------
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Example galleries
+   :caption: Getting Started
+   :maxdepth: 3
 
-   auto_examples/index
+   getting-started/overview
+   getting-started/installation
+   getting-started/quick-start
+   getting-started/faq
+
 
 .. toctree::
-   :maxdepth: 1
-   :caption: API and developer reference
+   :caption: Base Classes
+   :maxdepth: 3
 
-   developer
-
-
-   Fork easyCore on Github <https://github.com/easyScience/easyCore>
+   reference/index
 
 Indices and tables
 ==================
