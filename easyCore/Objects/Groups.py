@@ -5,21 +5,36 @@ __author__ = 'github.com/wardsimon'
 __version__ = '0.1.0'
 
 from numbers import Number
-from typing import Union, List, Iterable
+from typing import Union
 
 from easyCore import borg
 from easyCore.Objects.Base import BasedBase, Descriptor
-from collections.abc import Sequence
+from collections.abc import MutableSequence
+from collections import UserList
 from easyCore.Utils.UndoRedo import NotarizedDict
 
 
-class BaseCollection(BasedBase, Sequence):
+class BaseList(BasedBase, UserList):
+    def __init__(self, name: str, *args, interface=None, **kwargs):
+        self.data = []
+        BasedBase.__init__(self, name)
+        for item in args:
+            self.data.append(item)
+        self.interface = interface
+
+    @property
+    def _kwargs(self):
+        return {item.name: item for item in self.data}
+
+
+class BaseCollection(BasedBase, MutableSequence):
     """
     This is the base class for which all higher level classes are built off of.
     NOTE: This object is serializable only if parameters are supplied as:
     `BaseObj(a=value, b=value)`. For `Parameter` or `Descriptor` objects we can
     cheat with `BaseObj(*[Descriptor(...), Parameter(...), ...])`.
     """
+
     def __init__(self, name: str, *args, interface=None, **kwargs):
         """
         Set up the base collection class.
@@ -55,20 +70,24 @@ class BaseCollection(BasedBase, Sequence):
             kwargs[key].interface = interface
             # TODO wrap getter and setter in Logger
         self.interface = interface
+        self._kwargs._stack_enabled = True
 
-    def append(self, item: Union[Descriptor, BasedBase]):
-        """
-        Add an idem to the end of the collection
-
-        :param item: New item to be added
-        :type item: Union[Parameter, Descriptor, BaseObj, 'BaseCollection']
-        """
-        if issubclass(item.__class__, (BasedBase, Descriptor)):
-            self._kwargs[str(borg.map.convert_id_to_key(item))] = item
-            self._borg.map.add_edge(self, self._kwargs[str(borg.map.convert_id_to_key(item))])
-            item.interface = self.interface
+    def insert(self, index: int, value: Union[BasedBase, Descriptor]) -> None:
+        t_ = type(value)
+        if issubclass(t_, (BasedBase, Descriptor)):
+            update_key = list(self._kwargs.keys())
+            values = list(self._kwargs.values())
+            # Update the internal dict
+            new_key = value.name
+            update_key.insert(index, new_key)
+            values.insert(index, value)
+            self._kwargs.reorder(**{k: v for k, v in zip(update_key, values)})
+            # ADD EDGE
+            self._borg.map.add_edge(self, value)
+            self._borg.map.reset_type(value, 'created_internal')
+            value.interface = self.interface
         else:
-            raise AttributeError('A collection can only be formed from easyCore objects.')
+            raise AttributeError('Only easyCore objects can be put into an easyCore group')
 
     def __getitem__(self, idx: Union[int, slice]) -> Union[Descriptor, BasedBase]:
         """

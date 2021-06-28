@@ -640,6 +640,7 @@ class BasedBase(MSONable):
         return self._name
 
     @name.setter
+    @property_stack_deco
     def name(self, value):
         self._name = value
 

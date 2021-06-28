@@ -7,7 +7,6 @@ import pytest
 
 from easyCore.Objects.Groups import BaseCollection
 from easyCore.Objects.Base import Descriptor, Parameter, BaseObj
-from easyCore.Utils.json import MontyDecoder
 
 test_dict = {
     '@module':  'easyCore.Objects.Groups',
@@ -295,11 +294,10 @@ def test_baseCollection_dir(cls):
     obj = cls(name, **kwargs)
     d = set(dir(obj))
 
-    expected = {'constraints', 'as_dict', 'from_dict',
-                'to_json', 'generate_bindings', 'count', 'REDIRECT',
-                'get_fit_parameters', 'unsafe_hash', 'to_data_dict',
-                'switch_interface', 'get_parameters', 'index', 'append',
-                'user_data', 'name', 'interface'}
+    expected = {'generate_bindings', 'insert', 'name', 'reverse', 'append', 'to_data_dict', 'as_dict',
+                'REDIRECT', 'interface', 'clear', 'extend', 'pop', 'count', 'remove', 'user_data', 'index',
+                'constraints', 'to_json', 'from_dict', 'get_parameters', 'unsafe_hash', 'get_fit_parameters',
+                'switch_interface'}
     assert not d.difference(expected)
 
 
@@ -453,3 +451,25 @@ def test_baseCollection_set_index(cls):
         assert obj._borg.map.convert_id_to_key(item) in edges
     assert obj._borg.map.convert_id_to_key(p2) not in edges
 
+@pytest.mark.parametrize('cls', class_constructors)
+def test_baseCollection_set_index_based(cls):
+    name = 'test'
+    p1 = Parameter('p1', 1)
+    p2 = Parameter('p1', 2)
+    p3 = Parameter('p3', 3)
+    p4 = Parameter('p4', 4)
+    p5 = Parameter('p5', 5)
+    d = cls('testing', p1, p2)
+
+    l_object = [p3, p4, p5]
+    obj = cls(name, *l_object)
+
+    idx = 1
+    assert obj[idx] == p4
+    obj[idx] = d
+    assert obj[idx] == d
+    edges = obj._borg.map.get_edges(obj)
+    assert len(edges) == len(obj)
+    for item in obj:
+        assert obj._borg.map.convert_id_to_key(item) in edges
+    assert obj._borg.map.convert_id_to_key(p4) not in edges
