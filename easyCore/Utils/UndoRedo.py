@@ -5,7 +5,7 @@ __author__ = 'github.com/wardsimon'
 __version__ = '0.1.0'
 
 import abc
-from collections import deque
+from collections import deque, UserDict
 from typing import Union, Any, NoReturn, Callable, TypeVar, MutableMapping
 
 from easyCore import borg
@@ -45,23 +45,26 @@ T_ = TypeVar('T_', bound=UndoCommand)
 
 
 def dict_stack_deco(func: Callable) -> Callable:
-    def inner(obj, *args):
+    def inner(obj, *args, **kwargs):
         # Only do the work to a NotarizedDict.
         if hasattr(obj, '_stack_enabled') and obj._stack_enabled:
-            borg.stack.push(DictStack(obj, *args))
+            if not kwargs:
+                borg.stack.push(DictStack(obj, *args))
+            else:
+                borg.stack.push(DictStackReCreate(obj, **kwargs))
         else:
-            func(obj, *args)
+            func(obj, *args, **kwargs)
     return inner
 
 
-class NotarizedDict(MutableMapping):
+class NotarizedDict(UserDict):
     """
     A simple dict drop in for easyCore group classes. This is used as it wraps the get/set methods
     """
 
     def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self._borg = borg
-        self.kwargs = kwargs
         self._stack_enabled = False
 
     @classmethod
@@ -69,25 +72,20 @@ class NotarizedDict(MutableMapping):
         # This method just returns the name of the class
         return cls.__name__
 
-    def __getitem__(self, key):
-        return self.kwargs[key]
-
     @dict_stack_deco
     def __setitem__(self, key, value):
-        self.kwargs[key] = value
+        super(NotarizedDict, self).__setitem__(key, value)
 
     @dict_stack_deco
     def __delitem__(self, key):
-        del self.kwargs[key]
-
-    def __iter__(self):
-        return iter(self.kwargs)
-
-    def __len__(self):
-        return len(self.kwargs)
+        super(NotarizedDict, self).__delitem__(key)
 
     def __repr__(self):
-        return f"{self._classname()}({self.kwargs})"
+        return f"{self._classname()}({self.data})"
+
+    @dict_stack_deco
+    def reorder(self, **kwargs):
+        self.data = kwargs.copy()
 
 
 class CommandHolder:
@@ -246,7 +244,9 @@ class UndoStack:
             # Move from the future to the past
             this_command_stack = self._future.popleft()
             self._history.appendleft(this_command_stack)
-
+            # Need to go from right to left
+            this_command_stack = list(this_command_stack)
+            this_command_stack.reverse()
             for command in this_command_stack:
                 try:
                     self._command_running = True
@@ -355,6 +355,7 @@ class DictStack(UndoCommand):
         self._creation = False
 
         self._key = None
+        self._index = None
         self._old_value = None
         self._new_value = None
         self.text = ''
@@ -362,6 +363,7 @@ class DictStack(UndoCommand):
         if len(args) == 1:
             # We are deleting
             self._deletion = True
+            self._index = list(self._parent.keys()).index(args[0])
             self._old_value = self._parent[args[0]]
             self._key = args[0]
             self.text = f'Deleting {args[0]} from {self._parent}'
@@ -382,17 +384,41 @@ class DictStack(UndoCommand):
     def undo(self) -> NoReturn:
         if self._creation:
             # Now we delete
-            self._parent.kwargs.__delitem__(self._key)
+            self._parent.data.__delitem__(self._key)
         else:
             # Now we create/change value
-            self._parent.kwargs.__setitem__(self._key, self._old_value)
+            if self._index is None:
+                self._parent.data.__setitem__(self._key, self._old_value)
+            else:
+                # This deals with placing an item in a place
+                keys = list(self._parent.keys())
+                values = list(self._parent.values())
+                keys.insert(self._index, self._key)
+                values.insert(self._index, self._old_value)
+                self._parent.reorder(**{k: v for k, v in zip(keys, values)})
 
     def redo(self) -> NoReturn:
         if self._deletion:
             # Now we delete
-            self._parent.kwargs.__delitem__(self._key)
+            self._parent.data.__delitem__(self._key)
         else:
-            self._parent.kwargs.__setitem__(self._key, self._new_value)
+            self._parent.data.__setitem__(self._key, self._new_value)
+
+
+class DictStackReCreate(UndoCommand):
+
+    def __init__(self, in_dict: NotarizedDict, **kwargs):
+        super().__init__(self)
+        self._parent = in_dict
+        self._old_value = in_dict.data.copy()
+        self._new_value = kwargs
+        self.text = 'Updating dictionary'
+
+    def undo(self) -> NoReturn:
+        self._parent.data = self._old_value
+
+    def redo(self) -> NoReturn:
+        self._parent.data = self._new_value
 
 
 def property_stack_deco(arg: Union[str, Callable], begin_macro=False) -> Callable:
