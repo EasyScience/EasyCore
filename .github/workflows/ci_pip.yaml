@@ -1,0 +1,88 @@
+name: CI using pip
+
+on: [push, pull_request]
+
+jobs:
+  CI_Testing:
+
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    runs-on: ${{ matrix.os }}
+    if: "!contains(github.event.head_commit.message, '[ci skip]')"
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - uses: Gr1N/setup-poetry@v4
+
+    - name: Install dependencies
+      run: |
+        poetry update
+        
+    - name: Lint with flake8
+      run: |
+        poetry add flake8
+        # stop the build if there are Python syntax errors or undefined names
+        poetry run flake8 ./easyCore --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        poetry run flake8 ./easyCore --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        
+    - name: Test with tox
+      run: |
+        poetry add -D tox tox-gh-actions coverage
+        poetry run tox
+        
+    - name: Upload coverage
+      uses: codecov/codecov-action@v1.0.7
+      with:
+        name: Pytest coverage
+        env_vars: OS,PYTHON,GITHUB_ACTIONS,GITHUB_ACTION,GITHUB_REF,GITHUB_REPOSITORY,GITHUB_HEAD_REF,GITHUB_RUN_ID,GITHUB_SHA,COVERAGE_FILE
+      env:
+        OS: ${{ matrix.os }}
+        PYTHON: ${{ matrix.python-version }}
+
+  test_Packaging:
+
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[ci skip]')"
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+
+      - uses: Gr1N/setup-poetry@v4
+        
+      - name: Check Build
+        run: |
+          pip install twine
+          poetry build
+          python -m twine check dist/*
+
+  build_documentation:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@master
+      with:
+        fetch-depth: 0 # otherwise, you will failed to push refs to dest repo
+    - name: Build and Commit
+      uses: sphinx-notes/pages@master
+      with:
+        install_requirements: true
+        documentation_path: docs/src
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.CORE_TOKEN }}
+        branch: gh-pages
