@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
-#  SPDX-FileCopyrightText: 2021 European Spallation Source <info@ess.eu>
+#  SPDX-FileCopyrightText: 2021 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
+#  © 2021 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
 #
 # Configuration file for the Sphinx documentation builder.
@@ -209,10 +210,11 @@ epub_exclude_files = ['search.html']
 
 
 sphinx_gallery_conf = {
-     'examples_dirs': os.path.join(main_root, 'Examples'),   # path to your example scripts
-     'gallery_dirs': 'auto_examples',  # path to where to save gallery generated output
+     'examples_dirs': [os.path.join(main_root, 'Examples', 'base'),
+                       os.path.join(main_root, 'Examples', 'fitting')],   # path to your example scripts
+     'gallery_dirs': ['base_examples', 'fitting_examples'],  # path to where to save gallery generated output
     'backreferences_dir': 'gen_modules/backreferences',     # directory where function/class granular galleries are stored
     # Modules for which function/class level galleries are created. In
     # this case sphinx_gallery and numpy in a tuple of strings.
-    'doc_module':         ('sphinx_gallery', 'easyCore')
+    'doc_module':         ('sphinx_gallery', 'numpy', 'easyCore'),
 }

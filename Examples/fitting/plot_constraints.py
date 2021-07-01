@@ -20,5 +20,3 @@ for value in range(4, 7):
 # rST and your code. This separates your example
 # into distinct text and code blocks. You can continue writing code below the
 # embedded rST text block:
-
-print('This example shows a sin plot!')

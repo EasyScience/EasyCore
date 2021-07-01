@@ -23,11 +23,17 @@ After installation, launch the test suite:
 
 ```python -m pytest```
 
+## Documentation
+
+Documentation can be found at:
+
+[https://easyScience.github.io/easyCore](https://easyScience.github.io/easyCore)
+
 ## Contributing
 We absolutely welcome contributions. **easyCore** is maintained by the ESS and on a volunteer basis and thus we need to foster a community that can support user questions and develop new features to make this software a useful tool for all users while encouraging every member of the community to share their ideas.
 
 ## License
-While **easyCore** is under the BSD-3 license, DFO_LS is subject to the GPL license and is an optional install.
+While **easyCore** is under the BSD-3 license, DFO_LS is subject to the GPL license.
 
 <!---CI Build Status--->
 
