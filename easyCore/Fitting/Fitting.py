@@ -1,13 +1,15 @@
 __author__ = "github.com/wardsimon"
 __version__ = "0.0.1"
 
-#  SPDX-FileCopyrightText: 2021 European Spallation Source <info@ess.eu>
+#  SPDX-FileCopyrightText: 2021 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
+#  © 2021 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
+from abc import ABCMeta
 from types import FunctionType
 from typing import List, Callable, TypeVar
 
-from abc import ABCMeta
+
 from easyCore import borg, default_fitting_engine
 import easyCore.Fitting as Fitting
 

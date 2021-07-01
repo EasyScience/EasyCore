@@ -55,14 +55,16 @@ intersphinx_mapping = {
 # ones.
 extensions = [
     'sphinx.ext.githubpages',
+    'sphinx.ext.napoleon',
     'sphinx.ext.autodoc',
     'sphinx_autodoc_typehints',
     'sphinx.ext.viewcode',
     'sphinx.ext.mathjax',
-    'sphinx.ext.napoleon',
     'sphinx.ext.intersphinx',
     'sphinx_rtd_theme',
+    'sphinx_gallery.gen_gallery',
 ]
+autodoc_typehints = "description"
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -98,7 +100,8 @@ highlight_language = 'python3'
 # a list of builtin themes.
 #
 html_theme = 'sphinx_rtd_theme'
-html_logo = os.path.join('_static', 'ec_logo_single.png')
+html_logo = os.path.join('_static', 'ec_sidebar_w.png')
+html_favicon = os.path.join('_static', 'favicon.ico')
 html_theme_options = {'logo_only': True}
 # html_theme_options = {
 #     'logo': os.path.join('ec_logo_single.png'),
@@ -203,3 +206,13 @@ epub_title = project
 
 # A list of files that should not be packed into the epub file.
 epub_exclude_files = ['search.html']
+
+
+sphinx_gallery_conf = {
+     'examples_dirs': os.path.join(main_root, 'Examples'),   # path to your example scripts
+     'gallery_dirs': 'auto_examples',  # path to where to save gallery generated output
+    'backreferences_dir': 'gen_modules/backreferences',     # directory where function/class granular galleries are stored
+    # Modules for which function/class level galleries are created. In
+    # this case sphinx_gallery and numpy in a tuple of strings.
+    'doc_module':         ('sphinx_gallery', 'easyCore')
+}

@@ -1,5 +1,6 @@
-#  SPDX-FileCopyrightText: 2021 European Spallation Source <info@ess.eu>
+#  SPDX-FileCopyrightText: 2021 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
+#  © 2021 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
 __author__ = 'github.com/wardsimon'
 __version__ = '0.1.0'
@@ -816,9 +817,9 @@ class PeriodicLattice(Lattice):
         pars = [self.length_a, self.length_b, self.length_c,
                 self.angle_alpha, self.angle_beta, self.angle_gamma]
         for par in pars:
-            new_con = {con: par.constraints['user'][con] for con in par.constraints['user'].keys() if
+            new_con = {con: par.user_constraints[con] for con in par.user_constraints.keys() if
                        not con.startswith('sg_')}
-            par.constraints['user'] = new_con
+            par.user_constraints = new_con
             if not par.enabled:
                 par.enabled = True
 
@@ -837,10 +838,10 @@ class PeriodicLattice(Lattice):
 
         # Go through the cell systems
         if crys_system == "cubic":
-            self.length_a.constraints['user']['sg_1'] = ObjConstraint(self.length_b, '', self.length_a)
-            self.length_a.constraints['user']['sg_1']()
-            self.length_a.constraints['user']['sg_2'] = ObjConstraint(self.length_c, '', self.length_a)
-            self.length_a.constraints['user']['sg_2']()
+            self.length_a.user_constraints['sg_1'] = ObjConstraint(self.length_b, '', self.length_a)
+            self.length_a.user_constraints['sg_1']()
+            self.length_a.user_constraints['sg_2'] = ObjConstraint(self.length_c, '', self.length_a)
+            self.length_a.user_constraints['sg_2']()
             self.angle_alpha = 90
             self.angle_alpha.enabled = False
             self.angle_beta = 90
@@ -848,8 +849,8 @@ class PeriodicLattice(Lattice):
             self.angle_gamma = 90
             self.angle_gamma.enabled = False
         elif crys_system == "hexagonal" or trig_test:
-            self.length_a.constraints['user']['sg_1'] = ObjConstraint(self.length_b, '', self.length_a)
-            self.length_a.constraints['user']['sg_1']()
+            self.length_a.user_constraints['sg_1'] = ObjConstraint(self.length_b, '', self.length_a)
+            self.length_a.user_constraints['sg_1']()
             self.angle_alpha = 90
             self.angle_alpha.enabled = False
             self.angle_beta = 90
@@ -857,17 +858,17 @@ class PeriodicLattice(Lattice):
             self.angle_gamma = 120
             self.angle_gamma.enabled = False
         elif crys_system == "trigonal" and not trig_test:
-            self.length_a.constraints['user']['sg_1'] = ObjConstraint(self.length_b, '', self.length_a)
-            self.length_a.constraints['user']['sg_1']()
-            self.length_a.constraints['user']['sg_2'] = ObjConstraint(self.length_c, '', self.length_a)
-            self.length_a.constraints['user']['sg_2']()
-            self.angle_alpha.constraints['user']['sg_1'] = ObjConstraint(self.angle_beta, '', self.angle_alpha)
-            self.angle_alpha.constraints['user']['sg_1']()
-            self.angle_alpha.constraints['user']['sg_2'] = ObjConstraint(self.angle_gamma, '', self.angle_alpha)
-            self.angle_alpha.constraints['user']['sg_2']()
+            self.length_a.user_constraints['sg_1'] = ObjConstraint(self.length_b, '', self.length_a)
+            self.length_a.user_constraints['sg_1']()
+            self.length_a.user_constraints['sg_2'] = ObjConstraint(self.length_c, '', self.length_a)
+            self.length_a.user_constraints['sg_2']()
+            self.angle_alpha.user_constraints['sg_1'] = ObjConstraint(self.angle_beta, '', self.angle_alpha)
+            self.angle_alpha.user_constraints['sg_1']()
+            self.angle_alpha.user_constraints['sg_2'] = ObjConstraint(self.angle_gamma, '', self.angle_alpha)
+            self.angle_alpha.user_constraints['sg_2']()
         elif crys_system == "tetragonal":
-            self.length_a.constraints['user']['sg_1'] = ObjConstraint(self.length_b, '', self.length_a)
-            self.length_a.constraints['user']['sg_1']()
+            self.length_a.user_constraints['sg_1'] = ObjConstraint(self.length_b, '', self.length_a)
+            self.length_a.user_constraints['sg_1']()
             self.angle_alpha = 90
             self.angle_alpha.enabled = False
             self.angle_beta = 90

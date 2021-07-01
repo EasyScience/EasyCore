@@ -2,8 +2,9 @@ __author__ = 'github.com/wardsimon'
 __version__ = '0.1.0'
 
 
-#  SPDX-FileCopyrightText: 2021 European Spallation Source <info@ess.eu>
+#  SPDX-FileCopyrightText: 2021 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
+#  © 2021 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
 from abc import ABCMeta, abstractmethod
 from typing import Union, Callable, List
@@ -42,7 +43,7 @@ class FittingTemplate(metaclass=ABCMeta):
 
     @property
     def all_constraints(self) -> list:
-        return [*self._constraints, *self._object.constraints]
+        return [*self._constraints, *self._object._constraints]
 
     def fit_constraints(self) -> list:
         return self._constraints

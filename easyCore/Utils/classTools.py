@@ -1,13 +1,14 @@
-#  SPDX-FileCopyrightText: 2021 European Spallation Source <info@ess.eu>
+#  SPDX-FileCopyrightText: 2021 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
+#  © 2021 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
 __author__ = 'github.com/wardsimon'
 __version__ = '0.1.0'
 
 from typing import List, Tuple
 
-from easyCore.Utils.Hugger.Property import LoggedProperty
 from easyCore import borg
+from easyCore.Utils.Hugger.Property import LoggedProperty
 
 
 def addLoggedProp(inst, name, *args, **kwargs):

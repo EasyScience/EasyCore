@@ -52,3 +52,6 @@ dask-worker-space/dask-worker-space/
 poetry.lock
 
 .coveragerc
+
+docs/src/auto_examples/
+docs/src/gen_modules/

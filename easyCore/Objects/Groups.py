@@ -1,5 +1,6 @@
-#  SPDX-FileCopyrightText: 2021 European Spallation Source <info@ess.eu>
+#  SPDX-FileCopyrightText: 2021 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
+#  © 2021 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
 __author__ = 'github.com/wardsimon'
 __version__ = '0.1.0'
@@ -10,21 +11,7 @@ from typing import Union
 from easyCore import borg
 from easyCore.Objects.Base import BasedBase, Descriptor
 from collections.abc import MutableSequence
-from collections import UserList
 from easyCore.Utils.UndoRedo import NotarizedDict
-
-
-class BaseList(BasedBase, UserList):
-    def __init__(self, name: str, *args, interface=None, **kwargs):
-        self.data = []
-        BasedBase.__init__(self, name)
-        for item in args:
-            self.data.append(item)
-        self.interface = interface
-
-    @property
-    def _kwargs(self):
-        return {item.name: item for item in self.data}
 
 
 class BaseCollection(BasedBase, MutableSequence):

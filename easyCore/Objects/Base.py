@@ -1,5 +1,6 @@
-#  SPDX-FileCopyrightText: 2021 European Spallation Source <info@ess.eu>
+#  SPDX-FileCopyrightText: 2021 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
+#  © 2021 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
 __author__ = 'github.com/wardsimon'
 __version__ = '0.1.0'
@@ -8,7 +9,7 @@ import numbers
 import weakref
 
 from copy import deepcopy
-from typing import List, Union, Any, Iterable
+from typing import List, Union, Any, Iterable, TypeVar, Dict
 
 from easyCore import borg, ureg, np, pint
 from easyCore.Utils.classTools import addLoggedProp, addProp
@@ -20,6 +21,7 @@ from easyCore.Fitting.Constraints import SelfConstraint
 
 Q_ = ureg.Quantity
 M_ = ureg.Measurement
+Constraint = TypeVar('Constraint')
 
 
 class Descriptor(MSONable):
@@ -124,7 +126,7 @@ class Descriptor(MSONable):
         """
         Get a pretty display name.
 
-        :return: the pretty display name
+        :return: The pretty display name.
         :rtype: str
         """
         # TODO This might be better implementing fancy f-strings where we can return html,latex, markdown etc
@@ -139,7 +141,7 @@ class Descriptor(MSONable):
         """
         Set the pretty display name.
 
-        :param name_str: pretty display name
+        :param name_str: Pretty display name of the object.
         :type name_str: str
         :return: None
         :rtype: noneType
@@ -149,10 +151,10 @@ class Descriptor(MSONable):
     @property
     def unit(self) -> pint.UnitRegistry:
         """
-        Get the unit associated with the value.
+        Get the unit associated with the object.
 
-        :return: Unit associated with self
-        :rtype: ureg.Unit
+        :return: Unit associated with self in `pint` form.
+        :rtype: pint.UnitRegistry
         """
         return self._units.units
 
@@ -162,7 +164,7 @@ class Descriptor(MSONable):
         """
         Set the unit to a new one.
 
-        :param unit_str:
+        :param unit_str: String representation of the unit required. i.e `m/s`
         :type unit_str: str
         :return: None
         :rtype: noneType
@@ -180,7 +182,7 @@ class Descriptor(MSONable):
         Get the value of self as a pint. This is should be usable for most cases. If a pint
         is not acceptable then the raw value can be obtained through `obj.raw_value`.
 
-        :return: Value of self
+        :return: Value of self with unit.
         :rtype: Any
         """
         # Cached property? Should reference callback.
@@ -198,7 +200,7 @@ class Descriptor(MSONable):
         """
         Set the value of self. This creates a pint with a unit.
 
-        :param value: new value of self
+        :param value: New value of self
         :type value: Any
         :return: None
         :rtype: noneType
@@ -217,7 +219,7 @@ class Descriptor(MSONable):
         """
         Set the value of self. This creates a pint with a unit.
 
-        :param value: new value of self
+        :param value: New value of self
         :type value: Any
         :return: None
         :rtype: noneType
@@ -234,11 +236,11 @@ class Descriptor(MSONable):
                 raise CoreSetException(e)
 
     @property
-    def raw_value(self):
+    def raw_value(self) -> Any:
         """
         Return the raw value of self without a unit.
 
-        :return: raw value of self
+        :return: The raw value of self
         :rtype: Any
         """
         value = self._value
@@ -412,7 +414,7 @@ class Parameter(Descriptor):
         self._max: numbers.Number = max
         self._fixed: bool = fixed
         self.initial_value = self.value
-        self.constraints: dict = {
+        self._constraints: dict = {
             'user':    {},
             'builtin': {'min': SelfConstraint(self, '>=', '_min'),
                         'max': SelfConstraint(self, '<=', '_max')}
@@ -469,10 +471,10 @@ class Parameter(Descriptor):
             return newer_value
 
         # First run the built in constraints. i.e. min/max
-        constraint_type: dict = self.constraints['builtin']
+        constraint_type: dict = self.builtin_constraints
         new_value = constraint_runner(constraint_type, set_value)
         # Then run any user constraints.
-        constraint_type: dict = self.constraints['user']
+        constraint_type: dict = self.user_constraints
 
         state = self._borg.stack.enabled
         if state:
@@ -642,6 +644,30 @@ class Parameter(Descriptor):
         new_dict['enabled'] = self.enabled
         return new_dict
 
+    @property
+    def builtin_constraints(self) -> Dict[str, Constraint]:
+        """
+        Get the built in constrains of the object. Typically these are the min/max
+
+        :return: Dictionary of constraints which are built into the system
+        :rtype: dict
+        """
+        return self._constraints['builtin']
+
+    @property
+    def user_constraints(self) -> Dict[str, Constraint]:
+        """
+        Get the user specified constrains of the object.
+
+        :return: Dictionary of constraints which are user supplied
+        :rtype: dict
+        """
+        return self._constraints['user']
+
+    @user_constraints.setter
+    def user_constraints(self, constraints_dict: Dict[str, Constraint]):
+        self._constraints['user'] = constraints_dict
+
 
 class BasedBase(MSONable):
 
@@ -654,21 +680,34 @@ class BasedBase(MSONable):
         self.user_data: dict = {}
         self._name: str = name
 
-    def __getstate__(self):
+    def __getstate__(self) -> dict:
         return self.as_dict(skip=['interface'])
 
-    def __setstate__(self, state):
+    def __setstate__(self, state: dict):
         obj = self.from_dict(state)
         self.__init__(**obj._kwargs)
 
     @property
     def name(self) -> str:
+        """
+        Get the common name of the object.
+        
+        :return: Common name of the object
+        :rtype: str
+        """
         return self._name
 
     @name.setter
-    @property_stack_deco
-    def name(self, value: str):
-        self._name = value
+    def name(self, new_name: str):
+        """
+        Set a new common name for the object.
+
+        :param new_name: New name for the object
+        :type new_name: str
+        :return: None
+        :rtype: None
+        """
+        self._name = new_name
 
     @property
     def interface(self):
@@ -718,11 +757,11 @@ class BasedBase(MSONable):
         self.generate_bindings()
 
     @property
-    def constraints(self) -> List[Parameter]:
+    def constraints(self) -> List[Constraint]:
         pars = self.get_parameters()
         constraints = []
         for par in pars:
-            con = par.constraints['user']
+            con = par.user_constraints
             for key in con.keys():
                 constraints.append(con[key])
         return constraints
@@ -752,13 +791,13 @@ class BasedBase(MSONable):
         :return: List of `Parameter` objects.
         :rtype: List[Parameter]
         """
-        fit_list = []
+        par_list = []
         for key, item in self._kwargs.items():
             if hasattr(item, 'get_parameters'):
-                fit_list = [*fit_list, *item.get_parameters()]
+                par_list = [*par_list, *item.get_parameters()]
             elif isinstance(item, Parameter):
-                fit_list.append(item)
-        return fit_list
+                par_list.append(item)
+        return par_list
 
     def _get_linkable_attributes(self) -> List[Union[Descriptor, Parameter]]:
         """

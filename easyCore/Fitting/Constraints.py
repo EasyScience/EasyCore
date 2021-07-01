@@ -1,23 +1,25 @@
-#  SPDX-FileCopyrightText: 2021 European Spallation Source <info@ess.eu>
+#  SPDX-FileCopyrightText: 2021 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
+#  © 2021 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+
+from __future__ import annotations
 
 __author__ = 'github.com/wardsimon'
 __version__ = '0.1.0'
 
-import weakref
-
 from abc import abstractmethod, ABCMeta
 
+import weakref
 from asteval import Interpreter
 from numbers import Number
-from typing import List, Union, Callable, TypeVar
+from typing import List, Union, Callable, TYPE_CHECKING
 
 from easyCore import borg, np
-from easyCore.Utils.typing import noneType
 from easyCore.Utils.json import MSONable
+from easyCore.Utils.typing import noneType
 
-Descriptor = TypeVar("Descriptor")
-Parameter = TypeVar("Parameter")
+if TYPE_CHECKING:
+    from easyCore.Objects.Base import Descriptor, Parameter
 
 
 class ConstraintBase(MSONable, metaclass=ABCMeta):
@@ -38,11 +40,17 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
         if independent_obj is not None:
             if isinstance(independent_obj, list):
                 self.independent_obj_ids = [self.get_key(obj) for obj in independent_obj]
+                if self.dependent_obj_ids in self.independent_obj_ids:
+                    raise AttributeError('A dependent object can not be an independent object')
             else:
                 self.independent_obj_ids = self.get_key(independent_obj)
+                if self.dependent_obj_ids == self.independent_obj_ids:
+                    raise AttributeError('A dependent object can not be an independent object')
             # Test if dependent is a parameter or a descriptor.
             # We can not import `Parameter`, so......
             if dependent_obj.__class__.__name__ == 'Parameter':
+                if not dependent_obj.enabled:
+                    raise AssertionError('A dependent object needs to be initially enabled.')
                 if borg.debug:
                     print(f'Dependent variable {dependent_obj}. It should be a `Descriptor`.'
                           f'Setting to fixed')
@@ -54,15 +62,38 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
 
     @property
     def enabled(self) -> bool:
+        """
+        Is the current constraint enabled.
+
+        :return: Logical answer to if the constraint is enabled.
+        :rtype: bool
+        """
         return self._enabled
 
     @enabled.setter
-    def enabled(self, value: bool):
-        self._enabled = value
-        if value:
-            self()
+    def enabled(self, enabled_value: bool):
+        """
+        Set the enabled state of the constraint. If the new value is the same as the current value only the state is
+        changed.
 
-    def __call__(self, *args, no_set=False, **kwargs):
+... note:: If the new value is ``True`` the constraint is also applied after enabling.
+
+        :param enabled_value: New state of the constraint.
+        :type enabled_value: bool
+        :return: None
+        :rtype: None
+        """
+
+        if self._enabled == enabled_value:
+            return
+        elif enabled_value:
+            self.get_obj(self.dependent_obj_ids).enabled = True
+            self()
+        else:
+            self.get_obj(self.dependent_obj_ids).enabled = False
+        self._enabled = enabled_value
+
+    def __call__(self, *args, no_set: bool = False, **kwargs):
         """
         Method which applies the constraint
 
@@ -132,18 +163,25 @@ class NumericConstraint(ConstraintBase):
     """
     A `NumericConstraint` is a constraint whereby a dependent parameters value is something of an independent parameters
     value. I.e. a < 1, a > 5
+
+.. highlight:: python
+.. code-block:: python
+
+     from easyCore.Fitting.Constraints import NumericConstraint
+     from easyCore.Objects.Base import Parameter
+     # Create an `a < 1` constraint
+     a = Parameter('a', 0.2)
+     constraint = NumericConstraint(a, '<=', 1)
+     a.user_constraints['LEQ_1'] = constraint
+     # This works
+     a.value = 0.85
+     # This triggers the constraint
+     a.value = 2.0
+     # `a` is set to the maximum of the constraint (`a = 1`)
     """
 
     def __init__(self, dependent_obj: Union[Descriptor, Parameter], operator: str, value: Number):
         """
-
-
-        :param dependent_obj:
-        :type dependent_obj:
-        :param operator:
-        :type operator:
-        :param value:
-        :type value:
         """
         super(NumericConstraint, self).__init__(dependent_obj, operator=operator, value=value)
 
@@ -172,6 +210,25 @@ class NumericConstraint(ConstraintBase):
 
 
 class SelfConstraint(ConstraintBase):
+    """
+    A `SelfConstraint` is a constraint which tests a logical constraint on a property of itself, similar to a
+    `NumericConstraint`. i.e. a < a.min.
+
+.. highlight:: python
+.. code-block:: python
+
+     from easyCore.Fitting.Constraints import SelfConstraint
+     from easyCore.Objects.Base import Parameter
+     # Create an `a < 1` constraint
+     a = Parameter('a', 0.2)
+     constraint = NumericConstraint(a, '<=', 1)
+     a.user_constraints['LEQ_1'] = constraint
+     # This works
+     a.value = 0.85
+     # This triggers the constraint
+     a.value = 2.0
+     # `a` is set to the maximum of the constraint (`a = 1`)
+    """
 
     def __init__(self, dependent_obj: Union[Descriptor, Parameter], operator: str, value: str):
         super(SelfConstraint, self).__init__(dependent_obj, operator=operator, value=value)
