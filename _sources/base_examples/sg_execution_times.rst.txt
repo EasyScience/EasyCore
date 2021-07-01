@@ -1,0 +1,12 @@
+
+:orphan:
+
+.. _sphx_glr_base_examples_sg_execution_times:
+
+Computation times
+=================
+**00:01.038** total execution time for **base_examples** files:
+
++---------------------------------------------------------------------------+-----------+--------+
+| :ref:`sphx_glr_base_examples_plot_baseclass1.py` (``plot_baseclass1.py``) | 00:01.038 | 0.0 MB |
++---------------------------------------------------------------------------+-----------+--------+

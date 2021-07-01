@@ -62,7 +62,8 @@ Documentation
    :maxdepth: 2
    :caption: Example galleries
 
-   auto_examples/index
+   base_examples/index
+   fitting_examples/index
 
 Indices and tables
 ==================
