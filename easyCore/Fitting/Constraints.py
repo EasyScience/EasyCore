@@ -163,25 +163,31 @@ class NumericConstraint(ConstraintBase):
     """
     A `NumericConstraint` is a constraint whereby a dependent parameters value is something of an independent parameters
     value. I.e. a < 1, a > 5
-
-.. highlight:: python
-.. code-block:: python
-
-     from easyCore.Fitting.Constraints import NumericConstraint
-     from easyCore.Objects.Base import Parameter
-     # Create an `a < 1` constraint
-     a = Parameter('a', 0.2)
-     constraint = NumericConstraint(a, '<=', 1)
-     a.user_constraints['LEQ_1'] = constraint
-     # This works
-     a.value = 0.85
-     # This triggers the constraint
-     a.value = 2.0
-     # `a` is set to the maximum of the constraint (`a = 1`)
     """
 
     def __init__(self, dependent_obj: Union[Descriptor, Parameter], operator: str, value: Number):
         """
+        A `NumericConstraint` is a constraint whereby a dependent parameters value is something of an independent
+        parameters value. I.e. a < 1, a > 5
+
+        :param dependent_obj: Dependent Parameter
+        :param operator: Relation to between the parameter and the values. e.g. ``=``, ``<``, ``>``
+        :param value: What the parameters value should be compared against.
+
+        :example:
+        .. code-block:: python
+
+             from easyCore.Fitting.Constraints import NumericConstraint
+             from easyCore.Objects.Base import Parameter
+             # Create an `a < 1` constraint
+             a = Parameter('a', 0.2)
+             constraint = NumericConstraint(a, '<=', 1)
+             a.user_constraints['LEQ_1'] = constraint
+             # This works
+             a.value = 0.85
+             # This triggers the constraint
+             a.value = 2.0
+             # `a` is set to the maximum of the constraint (`a = 1`)
         """
         super(NumericConstraint, self).__init__(dependent_obj, operator=operator, value=value)
 
@@ -212,25 +218,33 @@ class NumericConstraint(ConstraintBase):
 class SelfConstraint(ConstraintBase):
     """
     A `SelfConstraint` is a constraint which tests a logical constraint on a property of itself, similar to a
-    `NumericConstraint`. i.e. a < a.min.
-
-.. highlight:: python
-.. code-block:: python
-
-     from easyCore.Fitting.Constraints import SelfConstraint
-     from easyCore.Objects.Base import Parameter
-     # Create an `a < 1` constraint
-     a = Parameter('a', 0.2)
-     constraint = NumericConstraint(a, '<=', 1)
-     a.user_constraints['LEQ_1'] = constraint
-     # This works
-     a.value = 0.85
-     # This triggers the constraint
-     a.value = 2.0
-     # `a` is set to the maximum of the constraint (`a = 1`)
+    `NumericConstraint`. i.e. a > a.min. These constraints are usually used in the internal easyCore logic.
     """
 
     def __init__(self, dependent_obj: Union[Descriptor, Parameter], operator: str, value: str):
+        """
+        A `SelfConstraint` is a constraint which tests a logical constraint on a property of itself, similar to
+        a `NumericConstraint`. i.e. a > a.min.
+
+        :param dependent_obj: Dependent Parameter
+        :param operator: Relation to between the parameter and the values. e.g. ``=``, ``<``, ``>``
+        :param value: Name of attribute to be compared against
+
+        :example:
+        .. code-block:: python
+
+             from easyCore.Fitting.Constraints import SelfConstraint
+             from easyCore.Objects.Base import Parameter
+             # Create an `a < a.max` constraint
+             a = Parameter('a', 0.2, max=1)
+             constraint = SelfConstraint(a, '<=', 'max')
+             a.user_constraints['MAX'] = constraint
+             # This works
+             a.value = 0.85
+             # This triggers the constraint
+             a.value = 2.0
+             # `a` is set to the maximum of the constraint (`a = 1`)
+        """
         super(SelfConstraint, self).__init__(dependent_obj, operator=operator, value=value)
 
     def _parse_operator(self, obj: Union[Descriptor, Parameter], *args, **kwargs) -> Number:
@@ -258,10 +272,34 @@ class SelfConstraint(ConstraintBase):
 class ObjConstraint(ConstraintBase):
     """
     A `ObjConstraint` is a constraint whereby a dependent parameter is something of an independent parameter
-    value. I.e. a < b, a > b
+    value. E.g. a (Dependent Parameter) = 2* b (Independent Parameter)
     """
 
     def __init__(self, dependent_obj: Parameter, operator: str, independent_obj: Parameter):
+        """
+        A `ObjConstraint` is a constraint whereby a dependent parameter is something of an independent parameter
+        value. E.g. a (Dependent Parameter) < b (Independent Parameter)
+
+        :param dependent_obj: Dependent Parameter
+        :param operator: Relation to between the independent parameter and dependent parameter. e.g. ``2 *``, ``1 +``
+        :param independent_obj: Independent Parameter
+
+        :example:
+        .. code-block:: python
+
+             from easyCore.Fitting.Constraints import ObjConstraint
+             from easyCore.Objects.Base import Parameter
+             # Create an `a = 2 * b` constraint
+             a = Parameter('a', 0.2)
+             b = Parameter('b', 1)
+
+             constraint = ObjConstraint(a, '2*', b)
+             b.user_constraints['SET_A'] = constraint
+             b.value = 1
+             # This triggers the constraint
+             a.value # Should equal 2
+
+        """
         super(ObjConstraint, self).__init__(dependent_obj, independent_obj=independent_obj, operator=operator)
         self.external = True
 
@@ -282,10 +320,63 @@ class ObjConstraint(ConstraintBase):
 
 
 class MultiObjConstraint(ConstraintBase):
-
+    """
+    A `MultiObjConstraint` is similar to :class:`easyCore.Fitting.Constraints.ObjConstraint` except that it relates to
+    multiple independent objects.
+    """
     def __init__(self, independent_objs: List[Union[Descriptor, Parameter]],
                  operator: List[str], dependent_obj: Union[Descriptor, Parameter],
                  value: Number):
+        """
+        A `MultiObjConstraint` is similar to :class:`easyCore.Fitting.Constraints.ObjConstraint` except that it relates
+        to one or more independent objects.
+
+        E.g.
+        * a (Dependent Parameter) + b (Independent Parameter) = 1
+        * a (Dependent Parameter) + b (Independent Parameter) - 2*c (Independent Parameter) = 0
+
+        :param independent_objs: List of Independent Parameters
+        :param operator: List of operators operating on the Independent Parameters
+        :param dependent_obj: Dependent Parameter
+        :param value: Value of the expression
+
+        :example:
+        **a + b = 1**
+
+        .. code-block:: python
+
+             from easyCore.Fitting.Constraints import MultiObjConstraint
+             from easyCore.Objects.Base import Parameter
+             # Create an `a + b = 1` constraint
+             a = Parameter('a', 0.2)
+             b = Parameter('b', 0.3)
+
+             constraint = MultiObjConstraint([b], ['+'], a, 1)
+             b.user_constraints['SET_A'] = constraint
+             b.value = 0.4
+             # This triggers the constraint
+             a.value # Should equal 0.6
+
+        **a + b - 2c = 0**
+
+        .. code-block:: python
+
+             from easyCore.Fitting.Constraints import MultiObjConstraint
+             from easyCore.Objects.Base import Parameter
+             # Create an `a + b - 2c = 0` constraint
+             a = Parameter('a', 0.5)
+             b = Parameter('b', 0.3)
+             c = Parameter('c', 0.1)
+
+             constraint = MultiObjConstraint([b, c], ['+', '-2*'], a, 0)
+             b.user_constraints['SET_A'] = constraint
+             c.user_constraints['SET_A'] = constraint
+             b.value = 0.4
+             # This triggers the constraint. Or it could be triggered by changing the value of c
+             a.value # Should equal 0.2
+
+        .. note:: This constraint is evaluated as ``dependent`` = ``value`` - SUM(``operator_i`` ``independent_i``)
+        """
         super(MultiObjConstraint, self).__init__(dependent_obj, independent_obj=independent_objs,
                                                  operator=operator, value=value)
         self.external = True
@@ -312,10 +403,34 @@ class MultiObjConstraint(ConstraintBase):
 
 
 class FunctionalConstraint(ConstraintBase):
+    """
+    Functional constraints do not depend on other parameters and as such can be more complex.
+    """
+    def __init__(self, dependent_obj: Union[Descriptor, Parameter], func: Callable):
+        """
+        Functional constraints do not depend on other parameters and as such can be more complex.
 
-    def __init__(self, dependent_obj: Union[Descriptor, Parameter], func: Callable,
-                 independent_objs=None):
-        super(FunctionalConstraint, self).__init__(dependent_obj, independent_obj=independent_objs)
+        :param dependent_obj: Dependent Parameter
+        :param func: Function to be evaluated in the form ``f(value, *args, **kwargs)``
+
+        :example:
+        .. code-block:: python
+
+            import numpy as np
+            from easyCore.Fitting.Constraints import FunctionalConstraint
+            from easyCore.Objects.Base import Parameter
+
+            a = Parameter('a', 0.2, max=1)
+            constraint = FunctionalConstraint(a, np.abs)
+
+            a.user_constraints['abs'] = constraint
+
+            # This triggers the constraint
+            a.value = 0.85 # `a` is set to 0.85
+            # This triggers the constraint
+            a.value = -0.5 # `a` is set to 0.5
+        """
+        super(FunctionalConstraint, self).__init__(dependent_obj, independent_obj=None)
         self.function = func
 
     def _parse_operator(self, obj: Union[Descriptor, Parameter], *args, **kwargs) -> Number:

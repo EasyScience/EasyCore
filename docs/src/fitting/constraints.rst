@@ -2,12 +2,12 @@
 Constraints
 ======================
 
-Constraints can be applied to :class:`easyCore.Objects.Base.Parameter` directly or to the :class:`easyCore.Fitting.Fitting.Fitter` class. Constraints are evaluated at creation and on value change.
+Constraints are a fundamental component in non-trivial fitting operations. They can also be used to affirm the minimum/maximum of a parameter or tie parameters together in a model.
 
 Anatomy of a constraint
 -----------------------
 
-A constraint is a rule which is applied to a **dependent** variable. This rule can consist of a logical operation or a relation to one or more **independent** variables.
+A constraint is a rule which is applied to a **dependent** variable. This rule can consist of a logical operation, relation to one or more **independent** variables or an arbitrary function.
 
 
 Constraints on Parameters
@@ -19,7 +19,24 @@ Constraints on Parameters
 Constraints on Fitting
 ^^^^^^^^^^^^^^^^^^^^^^
 
-:class:`easyCore.Fitting.Fitting.Fitter` has the ability to evaluate user supplied constraints which effect the
+:class:`easyCore.Fitting.Fitting.Fitter` has the ability to evaluate user supplied constraints which effect the value of both fixed and non-fixed parameters. A good example of one such use case would be the ratio between two parameters, where you would create a :class:`easyCore.Fitting.Constraints.ObjConstraint`.
+
+Using constraints
+-----------------
+
+A constraint can be used in one of three ways; Assignment to a parameter, assignment to fitting or on demand. The first two are covered and on demand is shown below.
+
+.. code-block:: python
+
+     from easyCore.Fitting.Constraints import NumericConstraint
+     from easyCore.Objects.Base import Parameter
+     # Create an `a < 1` constraint
+     a = Parameter('a', 0.5)
+     constraint = NumericConstraint(a, '<=', 1)
+     # Evaluate the constraint on demand
+     a.value = 5.0
+     constraint()
+     # A will now equal 1
 
 Constraint Reference
 --------------------
@@ -33,20 +50,19 @@ Built-in constraints
 These are the built in constraints which you can use
 
 .. autoclass:: easyCore.Fitting.Constraints.SelfConstraint
-   :members:
-   :inherited-members:
+   :members: +enabled
 
 .. autoclass:: easyCore.Fitting.Constraints.NumericConstraint
-  :members:
+  :members: +enabled
 
 .. autoclass:: easyCore.Fitting.Constraints.ObjConstraint
-  :members:
+  :members: +enabled
 
 .. autoclass:: easyCore.Fitting.Constraints.FunctionalConstraint
-  :members:
+  :members: +enabled
 
 .. autoclass:: easyCore.Fitting.Constraints.MultiObjConstraint
-  :members:
+  :members: +enabled
 
 User created constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^
