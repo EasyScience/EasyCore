@@ -116,6 +116,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#constraints-on-fitting">Constraints on Fitting</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#using-constraints">Using constraints</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#constraint-reference">Constraint Reference</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#examples-using-constraints">Examples using <cite>Constraints</cite></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#built-in-constraints">Built-in constraints</a></li>
@@ -197,17 +198,32 @@
             
   <div class="section" id="constraints">
 <h1>Constraints<a class="headerlink" href="#constraints" title="Permalink to this headline">¶</a></h1>
-<p>Constraints can be applied to <a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">easyCore.Objects.Base.Parameter</span></code></a> directly or to the <code class="xref py py-class docutils literal notranslate"><span class="pre">easyCore.Fitting.Fitting.Fitter</span></code> class. Constraints are evaluated at creation and on value change.</p>
+<p>Constraints are a fundamental component in non-trivial fitting operations. They can also be used to affirm the minimum/maximum of a parameter or tie parameters together in a model.</p>
 <div class="section" id="anatomy-of-a-constraint">
 <h2>Anatomy of a constraint<a class="headerlink" href="#anatomy-of-a-constraint" title="Permalink to this headline">¶</a></h2>
-<p>A constraint is a rule which is applied to a <strong>dependent</strong> variable. This rule can consist of a logical operation or a relation to one or more <strong>independent</strong> variables.</p>
+<p>A constraint is a rule which is applied to a <strong>dependent</strong> variable. This rule can consist of a logical operation, relation to one or more <strong>independent</strong> variables or an arbitrary function.</p>
 <div class="section" id="constraints-on-parameters">
 <h3>Constraints on Parameters<a class="headerlink" href="#constraints-on-parameters" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">easyCore.Objects.Base.Parameter</span></code></a> has the properties <cite>builtin_constraints</cite> and <cite>user_constraints</cite>. These are dictionaries which correspond to constraints which are intrinsic and extrinsic to the Parameter. This means that on the value change of the Parameter firstly the <cite>builtin_constraints</cite> are evaluated, followed by the <cite>user_constraints</cite>.</p>
 </div>
 <div class="section" id="constraints-on-fitting">
 <h3>Constraints on Fitting<a class="headerlink" href="#constraints-on-fitting" title="Permalink to this headline">¶</a></h3>
-<p><code class="xref py py-class docutils literal notranslate"><span class="pre">easyCore.Fitting.Fitting.Fitter</span></code> has the ability to evaluate user supplied constraints which effect the</p>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">easyCore.Fitting.Fitting.Fitter</span></code> has the ability to evaluate user supplied constraints which effect the value of both fixed and non-fixed parameters. A good example of one such use case would be the ratio between two parameters, where you would create a <a class="reference internal" href="#easyCore.Fitting.Constraints.ObjConstraint" title="easyCore.Fitting.Constraints.ObjConstraint"><code class="xref py py-class docutils literal notranslate"><span class="pre">easyCore.Fitting.Constraints.ObjConstraint</span></code></a>.</p>
+</div>
+</div>
+<div class="section" id="using-constraints">
+<h2>Using constraints<a class="headerlink" href="#using-constraints" title="Permalink to this headline">¶</a></h2>
+<p>A constraint can be used in one of three ways; Assignment to a parameter, assignment to fitting or on demand. The first two are covered and on demand is shown below.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">easyCore.Fitting.Constraints</span> <span class="kn">import</span> <span class="n">NumericConstraint</span>
+<span class="kn">from</span> <span class="nn">easyCore.Objects.Base</span> <span class="kn">import</span> <span class="n">Parameter</span>
+<span class="c1"># Create an `a &lt; 1` constraint</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+<span class="n">constraint</span> <span class="o">=</span> <span class="n">NumericConstraint</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="s1">&#39;&lt;=&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="c1"># Evaluate the constraint on demand</span>
+<span class="n">a</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="mf">5.0</span>
+<span class="n">constraint</span><span class="p">()</span>
+<span class="c1"># A will now equal 1</span>
+</pre></div>
 </div>
 </div>
 <div class="section" id="constraint-reference">
@@ -225,16 +241,25 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="easyCore.Fitting.Constraints.SelfConstraint">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">easyCore.Fitting.Constraints.</span></span><span class="sig-name descname"><span class="pre">SelfConstraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Fitting/Constraints.html#SelfConstraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Fitting.Constraints.SelfConstraint" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div><p>A <cite>SelfConstraint</cite> is a constraint which tests a logical constraint on a property of itself, similar to a
-<cite>NumericConstraint</cite>. i.e. a &lt; a.min.</p>
-</div></blockquote>
+<dd><p>A <cite>SelfConstraint</cite> is a constraint which tests a logical constraint on a property of itself, similar to
+a <cite>NumericConstraint</cite>. i.e. a &gt; a.min.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dependent_obj</strong> (<em>Union</em><em>[</em><a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Descriptor" title="easyCore.Objects.Base.Descriptor"><em>Descriptor</em></a><em>, </em><a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter"><em>Parameter</em></a><em>]</em>) – Dependent Parameter</p></li>
+<li><p><strong>operator</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Relation to between the parameter and the values. e.g. <code class="docutils literal notranslate"><span class="pre">=</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code></p></li>
+<li><p><strong>value</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Name of attribute to be compared against</p></li>
+</ul>
+</dd>
+<dt class="field-even">Example</dt>
+<dd class="field-even"><p></p></dd>
+</dl>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">easyCore.Fitting.Constraints</span> <span class="kn">import</span> <span class="n">SelfConstraint</span>
 <span class="kn">from</span> <span class="nn">easyCore.Objects.Base</span> <span class="kn">import</span> <span class="n">Parameter</span>
-<span class="c1"># Create an `a &lt; 1` constraint</span>
-<span class="n">a</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">)</span>
-<span class="n">constraint</span> <span class="o">=</span> <span class="n">NumericConstraint</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="s1">&#39;&lt;=&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="n">a</span><span class="o">.</span><span class="n">user_constraints</span><span class="p">[</span><span class="s1">&#39;LEQ_1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">constraint</span>
+<span class="c1"># Create an `a &lt; a.max` constraint</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">constraint</span> <span class="o">=</span> <span class="n">SelfConstraint</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="s1">&#39;&lt;=&#39;</span><span class="p">,</span> <span class="s1">&#39;max&#39;</span><span class="p">)</span>
+<span class="n">a</span><span class="o">.</span><span class="n">user_constraints</span><span class="p">[</span><span class="s1">&#39;MAX&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">constraint</span>
 <span class="c1"># This works</span>
 <span class="n">a</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="mf">0.85</span>
 <span class="c1"># This triggers the constraint</span>
@@ -242,29 +267,6 @@
 <span class="c1"># `a` is set to the maximum of the constraint (`a = 1`)</span>
 </pre></div>
 </div>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>dependent_obj</strong> (<em>Union</em><em>[</em><a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Descriptor" title="easyCore.Objects.Base.Descriptor"><em>Descriptor</em></a><em>, </em><a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter"><em>Parameter</em></a><em>]</em>) – </p></li>
-<li><p><strong>operator</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – </p></li>
-<li><p><strong>value</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – </p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="easyCore.Fitting.Constraints.SelfConstraint.as_dict">
-<span class="sig-name descname"><span class="pre">as_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">skip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easyCore.Fitting.Constraints.SelfConstraint.as_dict" title="Permalink to this definition">¶</a></dt>
-<dd><p>A JSON serializable dict representation of an object.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></p>
-</dd>
-<dt class="field-even">Parameters</dt>
-<dd class="field-even"><p><strong>skip</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – </p>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py property">
 <dt class="sig sig-object py" id="easyCore.Fitting.Constraints.SelfConstraint.enabled">
 <em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="pre">:</span> <span class="pre">bool</span></em><a class="headerlink" href="#easyCore.Fitting.Constraints.SelfConstraint.enabled" title="Permalink to this definition">¶</a></dt>
@@ -279,81 +281,24 @@
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="easyCore.Fitting.Constraints.SelfConstraint.from_dict">
-<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easyCore.Fitting.Constraints.SelfConstraint.from_dict" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>d</strong> – Dict representation.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>MSONable class.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="easyCore.Fitting.Constraints.SelfConstraint.get_key">
-<span class="sig-name descname"><span class="pre">get_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easyCore.Fitting.Constraints.SelfConstraint.get_key" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the unique key of a easyCore object</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>obj</strong> – easyCore object</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
-</dd>
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>key for easyCore object</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="easyCore.Fitting.Constraints.SelfConstraint.get_obj">
-<span class="sig-name descname"><span class="pre">get_obj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easyCore.Fitting.Constraints.SelfConstraint.get_obj" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get an easyCore object from its unique key</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>key</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – an easyCore objects unique key</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>Union[<a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Descriptor" title="easyCore.Objects.Base.Descriptor">Descriptor</a>, <a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter">Parameter</a>]</p>
-</dd>
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>easyCore object</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="easyCore.Fitting.Constraints.SelfConstraint.to_json">
-<span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#easyCore.Fitting.Constraints.SelfConstraint.to_json" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a json string representation of the MSONable object.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="easyCore.Fitting.Constraints.SelfConstraint.unsafe_hash">
-<span class="sig-name descname"><span class="pre">unsafe_hash</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#easyCore.Fitting.Constraints.SelfConstraint.unsafe_hash" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns an hash of the current object. This uses a generic but low
-performance method of converting the object to a dictionary, flattening
-any nested keys, and then performing a hash on the resulting object</p>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="easyCore.Fitting.Constraints.NumericConstraint">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">easyCore.Fitting.Constraints.</span></span><span class="sig-name descname"><span class="pre">NumericConstraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Fitting/Constraints.html#NumericConstraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Fitting.Constraints.NumericConstraint" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div><p>A <cite>NumericConstraint</cite> is a constraint whereby a dependent parameters value is something of an independent parameters
-value. I.e. a &lt; 1, a &gt; 5</p>
-</div></blockquote>
+<dd><p>A <cite>NumericConstraint</cite> is a constraint whereby a dependent parameters value is something of an independent
+parameters value. I.e. a &lt; 1, a &gt; 5</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dependent_obj</strong> (<em>Union</em><em>[</em><a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Descriptor" title="easyCore.Objects.Base.Descriptor"><em>Descriptor</em></a><em>, </em><a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter"><em>Parameter</em></a><em>]</em>) – Dependent Parameter</p></li>
+<li><p><strong>operator</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Relation to between the parameter and the values. e.g. <code class="docutils literal notranslate"><span class="pre">=</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code></p></li>
+<li><p><strong>value</strong> (<em>Number</em>) – What the parameters value should be compared against.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Example</dt>
+<dd class="field-even"><p></p></dd>
+</dl>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">easyCore.Fitting.Constraints</span> <span class="kn">import</span> <span class="n">NumericConstraint</span>
 <span class="kn">from</span> <span class="nn">easyCore.Objects.Base</span> <span class="kn">import</span> <span class="n">Parameter</span>
 <span class="c1"># Create an `a &lt; 1` constraint</span>
@@ -367,59 +312,180 @@ value. I.e. a &lt; 1, a &gt; 5</p>
 <span class="c1"># `a` is set to the maximum of the constraint (`a = 1`)</span>
 </pre></div>
 </div>
+<dl class="py property">
+<dt class="sig sig-object py" id="easyCore.Fitting.Constraints.NumericConstraint.enabled">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="pre">:</span> <span class="pre">bool</span></em><a class="headerlink" href="#easyCore.Fitting.Constraints.NumericConstraint.enabled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Is the current constraint enabled.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>dependent_obj</strong> (<em>Union</em><em>[</em><a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Descriptor" title="easyCore.Objects.Base.Descriptor"><em>Descriptor</em></a><em>, </em><a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter"><em>Parameter</em></a><em>]</em>) – </p></li>
-<li><p><strong>operator</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – </p></li>
-<li><p><strong>value</strong> (<em>Number</em>) – </p></li>
-</ul>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Logical answer to if the constraint is enabled.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)">bool</a></p>
 </dd>
 </dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="easyCore.Fitting.Constraints.ObjConstraint">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">easyCore.Fitting.Constraints.</span></span><span class="sig-name descname"><span class="pre">ObjConstraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">independent_obj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Fitting/Constraints.html#ObjConstraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Fitting.Constraints.ObjConstraint" title="Permalink to this definition">¶</a></dt>
 <dd><p>A <cite>ObjConstraint</cite> is a constraint whereby a dependent parameter is something of an independent parameter
-value. I.e. a &lt; b, a &gt; b</p>
+value. E.g. a (Dependent Parameter) &lt; b (Independent Parameter)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dependent_obj</strong> (<a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter"><em>Parameter</em></a>) – </p></li>
-<li><p><strong>operator</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – </p></li>
-<li><p><strong>independent_obj</strong> (<a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter"><em>Parameter</em></a>) – </p></li>
+<li><p><strong>dependent_obj</strong> (<a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter"><em>Parameter</em></a>) – Dependent Parameter</p></li>
+<li><p><strong>operator</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Relation to between the independent parameter and dependent parameter. e.g. <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">*</span></code>, <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">+</span></code></p></li>
+<li><p><strong>independent_obj</strong> (<a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter"><em>Parameter</em></a>) – Independent Parameter</p></li>
 </ul>
+</dd>
+<dt class="field-even">Example</dt>
+<dd class="field-even"><p></p></dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">easyCore.Fitting.Constraints</span> <span class="kn">import</span> <span class="n">ObjConstraint</span>
+<span class="kn">from</span> <span class="nn">easyCore.Objects.Base</span> <span class="kn">import</span> <span class="n">Parameter</span>
+<span class="c1"># Create an `a = 2 * b` constraint</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">)</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="n">constraint</span> <span class="o">=</span> <span class="n">ObjConstraint</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="s1">&#39;2*&#39;</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+<span class="n">b</span><span class="o">.</span><span class="n">user_constraints</span><span class="p">[</span><span class="s1">&#39;SET_A&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">constraint</span>
+<span class="n">b</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="c1"># This triggers the constraint</span>
+<span class="n">a</span><span class="o">.</span><span class="n">value</span> <span class="c1"># Should equal 2</span>
+</pre></div>
+</div>
+<dl class="py property">
+<dt class="sig sig-object py" id="easyCore.Fitting.Constraints.ObjConstraint.enabled">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="pre">:</span> <span class="pre">bool</span></em><a class="headerlink" href="#easyCore.Fitting.Constraints.ObjConstraint.enabled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Is the current constraint enabled.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Logical answer to if the constraint is enabled.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)">bool</a></p>
 </dd>
 </dl>
 </dd></dl>
 
+</dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="easyCore.Fitting.Constraints.FunctionalConstraint">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">easyCore.Fitting.Constraints.</span></span><span class="sig-name descname"><span class="pre">FunctionalConstraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">independent_objs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Fitting/Constraints.html#FunctionalConstraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Fitting.Constraints.FunctionalConstraint" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">easyCore.Fitting.Constraints.</span></span><span class="sig-name descname"><span class="pre">FunctionalConstraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Fitting/Constraints.html#FunctionalConstraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Fitting.Constraints.FunctionalConstraint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Functional constraints do not depend on other parameters and as such can be more complex.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dependent_obj</strong> (<em>Union</em><em>[</em><a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Descriptor" title="easyCore.Objects.Base.Descriptor"><em>Descriptor</em></a><em>, </em><a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter"><em>Parameter</em></a><em>]</em>) – </p></li>
-<li><p><strong>func</strong> (<em>Callable</em>) – </p></li>
+<li><p><strong>dependent_obj</strong> (<em>Union</em><em>[</em><a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Descriptor" title="easyCore.Objects.Base.Descriptor"><em>Descriptor</em></a><em>, </em><a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter"><em>Parameter</em></a><em>]</em>) – Dependent Parameter</p></li>
+<li><p><strong>func</strong> (<em>Callable</em>) – Function to be evaluated in the form <code class="docutils literal notranslate"><span class="pre">f(value,</span> <span class="pre">*args,</span> <span class="pre">**kwargs)</span></code></p></li>
 </ul>
 </dd>
+<dt class="field-even">Example</dt>
+<dd class="field-even"><p></p></dd>
 </dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">easyCore.Fitting.Constraints</span> <span class="kn">import</span> <span class="n">FunctionalConstraint</span>
+<span class="kn">from</span> <span class="nn">easyCore.Objects.Base</span> <span class="kn">import</span> <span class="n">Parameter</span>
+
+<span class="n">a</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">constraint</span> <span class="o">=</span> <span class="n">FunctionalConstraint</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">)</span>
+
+<span class="n">a</span><span class="o">.</span><span class="n">user_constraints</span><span class="p">[</span><span class="s1">&#39;abs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">constraint</span>
+
+<span class="c1"># This triggers the constraint</span>
+<span class="n">a</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="mf">0.85</span> <span class="c1"># `a` is set to 0.85</span>
+<span class="c1"># This triggers the constraint</span>
+<span class="n">a</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.5</span> <span class="c1"># `a` is set to 0.5</span>
+</pre></div>
+</div>
+<dl class="py property">
+<dt class="sig sig-object py" id="easyCore.Fitting.Constraints.FunctionalConstraint.enabled">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="pre">:</span> <span class="pre">bool</span></em><a class="headerlink" href="#easyCore.Fitting.Constraints.FunctionalConstraint.enabled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Is the current constraint enabled.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Logical answer to if the constraint is enabled.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="easyCore.Fitting.Constraints.MultiObjConstraint">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">easyCore.Fitting.Constraints.</span></span><span class="sig-name descname"><span class="pre">MultiObjConstraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">independent_objs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dependent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Fitting/Constraints.html#MultiObjConstraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Fitting.Constraints.MultiObjConstraint" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<dd><p>A <cite>MultiObjConstraint</cite> is similar to <a class="reference internal" href="#easyCore.Fitting.Constraints.ObjConstraint" title="easyCore.Fitting.Constraints.ObjConstraint"><code class="xref py py-class docutils literal notranslate"><span class="pre">easyCore.Fitting.Constraints.ObjConstraint</span></code></a> except that it relates
+to one or more independent objects.</p>
+<p>E.g.
+* a (Dependent Parameter) + b (Independent Parameter) = 1
+* a (Dependent Parameter) + b (Independent Parameter) - 2*c (Independent Parameter) = 0</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>independent_objs</strong> (<em>List</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Descriptor" title="easyCore.Objects.Base.Descriptor"><em>Descriptor</em></a><em>, </em><a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter"><em>Parameter</em></a><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>operator</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em>) – </p></li>
-<li><p><strong>dependent_obj</strong> (<em>Union</em><em>[</em><a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Descriptor" title="easyCore.Objects.Base.Descriptor"><em>Descriptor</em></a><em>, </em><a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter"><em>Parameter</em></a><em>]</em>) – </p></li>
-<li><p><strong>value</strong> (<em>Number</em>) – </p></li>
+<li><p><strong>independent_objs</strong> (<em>List</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Descriptor" title="easyCore.Objects.Base.Descriptor"><em>Descriptor</em></a><em>, </em><a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter"><em>Parameter</em></a><em>]</em><em>]</em>) – List of Independent Parameters</p></li>
+<li><p><strong>operator</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em>) – List of operators operating on the Independent Parameters</p></li>
+<li><p><strong>dependent_obj</strong> (<em>Union</em><em>[</em><a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Descriptor" title="easyCore.Objects.Base.Descriptor"><em>Descriptor</em></a><em>, </em><a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter"><em>Parameter</em></a><em>]</em>) – Dependent Parameter</p></li>
+<li><p><strong>value</strong> (<em>Number</em>) – Value of the expression</p></li>
 </ul>
 </dd>
+<dt class="field-even">Example</dt>
+<dd class="field-even"><p></p></dd>
 </dl>
+<p><strong>a + b = 1</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">easyCore.Fitting.Constraints</span> <span class="kn">import</span> <span class="n">MultiObjConstraint</span>
+<span class="kn">from</span> <span class="nn">easyCore.Objects.Base</span> <span class="kn">import</span> <span class="n">Parameter</span>
+<span class="c1"># Create an `a + b = 1` constraint</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">)</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">)</span>
+
+<span class="n">constraint</span> <span class="o">=</span> <span class="n">MultiObjConstraint</span><span class="p">([</span><span class="n">b</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;+&#39;</span><span class="p">],</span> <span class="n">a</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">b</span><span class="o">.</span><span class="n">user_constraints</span><span class="p">[</span><span class="s1">&#39;SET_A&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">constraint</span>
+<span class="n">b</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="mf">0.4</span>
+<span class="c1"># This triggers the constraint</span>
+<span class="n">a</span><span class="o">.</span><span class="n">value</span> <span class="c1"># Should equal 0.6</span>
+</pre></div>
+</div>
+<p><strong>a + b - 2c = 0</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">easyCore.Fitting.Constraints</span> <span class="kn">import</span> <span class="n">MultiObjConstraint</span>
+<span class="kn">from</span> <span class="nn">easyCore.Objects.Base</span> <span class="kn">import</span> <span class="n">Parameter</span>
+<span class="c1"># Create an `a + b - 2c = 0` constraint</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">)</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+
+<span class="n">constraint</span> <span class="o">=</span> <span class="n">MultiObjConstraint</span><span class="p">([</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;-2*&#39;</span><span class="p">],</span> <span class="n">a</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">b</span><span class="o">.</span><span class="n">user_constraints</span><span class="p">[</span><span class="s1">&#39;SET_A&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">constraint</span>
+<span class="n">c</span><span class="o">.</span><span class="n">user_constraints</span><span class="p">[</span><span class="s1">&#39;SET_A&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">constraint</span>
+<span class="n">b</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="mf">0.4</span>
+<span class="c1"># This triggers the constraint. Or it could be triggered by changing the value of c</span>
+<span class="n">a</span><span class="o">.</span><span class="n">value</span> <span class="c1"># Should equal 0.2</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This constraint is evaluated as <code class="docutils literal notranslate"><span class="pre">dependent</span></code> = <code class="docutils literal notranslate"><span class="pre">value</span></code> - SUM(<code class="docutils literal notranslate"><span class="pre">operator_i</span></code> <code class="docutils literal notranslate"><span class="pre">independent_i</span></code>)</p>
+</div>
+<dl class="py property">
+<dt class="sig sig-object py" id="easyCore.Fitting.Constraints.MultiObjConstraint.enabled">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="pre">:</span> <span class="pre">bool</span></em><a class="headerlink" href="#easyCore.Fitting.Constraints.MultiObjConstraint.enabled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Is the current constraint enabled.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Logical answer to if the constraint is enabled.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -430,14 +496,6 @@ value. I.e. a &lt; b, a &gt; b</p>
 <dt class="sig sig-object py" id="easyCore.Fitting.Constraints.ConstraintBase">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">easyCore.Fitting.Constraints.</span></span><span class="sig-name descname"><span class="pre">ConstraintBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">independent_obj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Fitting/Constraints.html#ConstraintBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Fitting.Constraints.ConstraintBase" title="Permalink to this definition">¶</a></dt>
 <dd><p>A base class used to describe a constraint to be applied to easyCore base objects.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>dependent_obj</strong> (<em>Union</em><em>[</em><a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Descriptor" title="easyCore.Objects.Base.Descriptor"><em>Descriptor</em></a><em>, </em><a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter"><em>Parameter</em></a><em>]</em>) – </p></li>
-<li><p><strong>independent_obj</strong> (<em>Union</em><em>[</em><a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter"><em>Parameter</em></a><em>, </em><a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Descriptor" title="easyCore.Objects.Base.Descriptor"><em>Descriptor</em></a><em>, </em><em>List</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Descriptor" title="easyCore.Objects.Base.Descriptor"><em>Descriptor</em></a><em>, </em><a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter"><em>Parameter</em></a><em>]</em><em>]</em><em>, </em><em>noneType</em><em>]</em>) – </p></li>
-</ul>
-</dd>
-</dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="easyCore.Fitting.Constraints.ConstraintBase.enabled">
 <em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="pre">:</span> <span class="pre">bool</span></em><a class="headerlink" href="#easyCore.Fitting.Constraints.ConstraintBase.enabled" title="Permalink to this definition">¶</a></dt>

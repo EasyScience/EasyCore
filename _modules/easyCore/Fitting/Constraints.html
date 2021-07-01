@@ -344,25 +344,31 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A `NumericConstraint` is a constraint whereby a dependent parameters value is something of an independent parameters</span>
 <span class="sd">    value. I.e. a &lt; 1, a &gt; 5</span>
-
-<span class="sd">.. highlight:: python</span>
-<span class="sd">.. code-block:: python</span>
-
-<span class="sd">     from easyCore.Fitting.Constraints import NumericConstraint</span>
-<span class="sd">     from easyCore.Objects.Base import Parameter</span>
-<span class="sd">     # Create an `a &lt; 1` constraint</span>
-<span class="sd">     a = Parameter(&#39;a&#39;, 0.2)</span>
-<span class="sd">     constraint = NumericConstraint(a, &#39;&lt;=&#39;, 1)</span>
-<span class="sd">     a.user_constraints[&#39;LEQ_1&#39;] = constraint</span>
-<span class="sd">     # This works</span>
-<span class="sd">     a.value = 0.85</span>
-<span class="sd">     # This triggers the constraint</span>
-<span class="sd">     a.value = 2.0</span>
-<span class="sd">     # `a` is set to the maximum of the constraint (`a = 1`)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dependent_obj</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Descriptor</span><span class="p">,</span> <span class="n">Parameter</span><span class="p">],</span> <span class="n">operator</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Number</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A `NumericConstraint` is a constraint whereby a dependent parameters value is something of an independent</span>
+<span class="sd">        parameters value. I.e. a &lt; 1, a &gt; 5</span>
+
+<span class="sd">        :param dependent_obj: Dependent Parameter</span>
+<span class="sd">        :param operator: Relation to between the parameter and the values. e.g. ``=``, ``&lt;``, ``&gt;``</span>
+<span class="sd">        :param value: What the parameters value should be compared against.</span>
+
+<span class="sd">        :example:</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">             from easyCore.Fitting.Constraints import NumericConstraint</span>
+<span class="sd">             from easyCore.Objects.Base import Parameter</span>
+<span class="sd">             # Create an `a &lt; 1` constraint</span>
+<span class="sd">             a = Parameter(&#39;a&#39;, 0.2)</span>
+<span class="sd">             constraint = NumericConstraint(a, &#39;&lt;=&#39;, 1)</span>
+<span class="sd">             a.user_constraints[&#39;LEQ_1&#39;] = constraint</span>
+<span class="sd">             # This works</span>
+<span class="sd">             a.value = 0.85</span>
+<span class="sd">             # This triggers the constraint</span>
+<span class="sd">             a.value = 2.0</span>
+<span class="sd">             # `a` is set to the maximum of the constraint (`a = 1`)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">NumericConstraint</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dependent_obj</span><span class="p">,</span> <span class="n">operator</span><span class="o">=</span><span class="n">operator</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
 
@@ -393,25 +399,33 @@
 <div class="viewcode-block" id="SelfConstraint"><a class="viewcode-back" href="../../../fitting/constraints.html#easyCore.Fitting.Constraints.SelfConstraint">[docs]</a><span class="k">class</span> <span class="nc">SelfConstraint</span><span class="p">(</span><span class="n">ConstraintBase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A `SelfConstraint` is a constraint which tests a logical constraint on a property of itself, similar to a</span>
-<span class="sd">    `NumericConstraint`. i.e. a &lt; a.min.</span>
-
-<span class="sd">.. highlight:: python</span>
-<span class="sd">.. code-block:: python</span>
-
-<span class="sd">     from easyCore.Fitting.Constraints import SelfConstraint</span>
-<span class="sd">     from easyCore.Objects.Base import Parameter</span>
-<span class="sd">     # Create an `a &lt; 1` constraint</span>
-<span class="sd">     a = Parameter(&#39;a&#39;, 0.2)</span>
-<span class="sd">     constraint = NumericConstraint(a, &#39;&lt;=&#39;, 1)</span>
-<span class="sd">     a.user_constraints[&#39;LEQ_1&#39;] = constraint</span>
-<span class="sd">     # This works</span>
-<span class="sd">     a.value = 0.85</span>
-<span class="sd">     # This triggers the constraint</span>
-<span class="sd">     a.value = 2.0</span>
-<span class="sd">     # `a` is set to the maximum of the constraint (`a = 1`)</span>
+<span class="sd">    `NumericConstraint`. i.e. a &gt; a.min. These constraints are usually used in the internal easyCore logic.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dependent_obj</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Descriptor</span><span class="p">,</span> <span class="n">Parameter</span><span class="p">],</span> <span class="n">operator</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A `SelfConstraint` is a constraint which tests a logical constraint on a property of itself, similar to</span>
+<span class="sd">        a `NumericConstraint`. i.e. a &gt; a.min.</span>
+
+<span class="sd">        :param dependent_obj: Dependent Parameter</span>
+<span class="sd">        :param operator: Relation to between the parameter and the values. e.g. ``=``, ``&lt;``, ``&gt;``</span>
+<span class="sd">        :param value: Name of attribute to be compared against</span>
+
+<span class="sd">        :example:</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">             from easyCore.Fitting.Constraints import SelfConstraint</span>
+<span class="sd">             from easyCore.Objects.Base import Parameter</span>
+<span class="sd">             # Create an `a &lt; a.max` constraint</span>
+<span class="sd">             a = Parameter(&#39;a&#39;, 0.2, max=1)</span>
+<span class="sd">             constraint = SelfConstraint(a, &#39;&lt;=&#39;, &#39;max&#39;)</span>
+<span class="sd">             a.user_constraints[&#39;MAX&#39;] = constraint</span>
+<span class="sd">             # This works</span>
+<span class="sd">             a.value = 0.85</span>
+<span class="sd">             # This triggers the constraint</span>
+<span class="sd">             a.value = 2.0</span>
+<span class="sd">             # `a` is set to the maximum of the constraint (`a = 1`)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">SelfConstraint</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dependent_obj</span><span class="p">,</span> <span class="n">operator</span><span class="o">=</span><span class="n">operator</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_parse_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Descriptor</span><span class="p">,</span> <span class="n">Parameter</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Number</span><span class="p">:</span>
@@ -439,10 +453,34 @@
 <div class="viewcode-block" id="ObjConstraint"><a class="viewcode-back" href="../../../fitting/constraints.html#easyCore.Fitting.Constraints.ObjConstraint">[docs]</a><span class="k">class</span> <span class="nc">ObjConstraint</span><span class="p">(</span><span class="n">ConstraintBase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A `ObjConstraint` is a constraint whereby a dependent parameter is something of an independent parameter</span>
-<span class="sd">    value. I.e. a &lt; b, a &gt; b</span>
+<span class="sd">    value. E.g. a (Dependent Parameter) = 2* b (Independent Parameter)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dependent_obj</span><span class="p">:</span> <span class="n">Parameter</span><span class="p">,</span> <span class="n">operator</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">independent_obj</span><span class="p">:</span> <span class="n">Parameter</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A `ObjConstraint` is a constraint whereby a dependent parameter is something of an independent parameter</span>
+<span class="sd">        value. E.g. a (Dependent Parameter) &lt; b (Independent Parameter)</span>
+
+<span class="sd">        :param dependent_obj: Dependent Parameter</span>
+<span class="sd">        :param operator: Relation to between the independent parameter and dependent parameter. e.g. ``2 *``, ``1 +``</span>
+<span class="sd">        :param independent_obj: Independent Parameter</span>
+
+<span class="sd">        :example:</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">             from easyCore.Fitting.Constraints import ObjConstraint</span>
+<span class="sd">             from easyCore.Objects.Base import Parameter</span>
+<span class="sd">             # Create an `a = 2 * b` constraint</span>
+<span class="sd">             a = Parameter(&#39;a&#39;, 0.2)</span>
+<span class="sd">             b = Parameter(&#39;b&#39;, 1)</span>
+
+<span class="sd">             constraint = ObjConstraint(a, &#39;2*&#39;, b)</span>
+<span class="sd">             b.user_constraints[&#39;SET_A&#39;] = constraint</span>
+<span class="sd">             b.value = 1</span>
+<span class="sd">             # This triggers the constraint</span>
+<span class="sd">             a.value # Should equal 2</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">ObjConstraint</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dependent_obj</span><span class="p">,</span> <span class="n">independent_obj</span><span class="o">=</span><span class="n">independent_obj</span><span class="p">,</span> <span class="n">operator</span><span class="o">=</span><span class="n">operator</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">external</span> <span class="o">=</span> <span class="kc">True</span>
 
@@ -463,10 +501,63 @@
 
 
 <div class="viewcode-block" id="MultiObjConstraint"><a class="viewcode-back" href="../../../fitting/constraints.html#easyCore.Fitting.Constraints.MultiObjConstraint">[docs]</a><span class="k">class</span> <span class="nc">MultiObjConstraint</span><span class="p">(</span><span class="n">ConstraintBase</span><span class="p">):</span>
-
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A `MultiObjConstraint` is similar to :class:`easyCore.Fitting.Constraints.ObjConstraint` except that it relates to</span>
+<span class="sd">    multiple independent objects.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">independent_objs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Descriptor</span><span class="p">,</span> <span class="n">Parameter</span><span class="p">]],</span>
                  <span class="n">operator</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">dependent_obj</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Descriptor</span><span class="p">,</span> <span class="n">Parameter</span><span class="p">],</span>
                  <span class="n">value</span><span class="p">:</span> <span class="n">Number</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A `MultiObjConstraint` is similar to :class:`easyCore.Fitting.Constraints.ObjConstraint` except that it relates</span>
+<span class="sd">        to one or more independent objects.</span>
+
+<span class="sd">        E.g.</span>
+<span class="sd">        * a (Dependent Parameter) + b (Independent Parameter) = 1</span>
+<span class="sd">        * a (Dependent Parameter) + b (Independent Parameter) - 2*c (Independent Parameter) = 0</span>
+
+<span class="sd">        :param independent_objs: List of Independent Parameters</span>
+<span class="sd">        :param operator: List of operators operating on the Independent Parameters</span>
+<span class="sd">        :param dependent_obj: Dependent Parameter</span>
+<span class="sd">        :param value: Value of the expression</span>
+
+<span class="sd">        :example:</span>
+<span class="sd">        **a + b = 1**</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">             from easyCore.Fitting.Constraints import MultiObjConstraint</span>
+<span class="sd">             from easyCore.Objects.Base import Parameter</span>
+<span class="sd">             # Create an `a + b = 1` constraint</span>
+<span class="sd">             a = Parameter(&#39;a&#39;, 0.2)</span>
+<span class="sd">             b = Parameter(&#39;b&#39;, 0.3)</span>
+
+<span class="sd">             constraint = MultiObjConstraint([b], [&#39;+&#39;], a, 1)</span>
+<span class="sd">             b.user_constraints[&#39;SET_A&#39;] = constraint</span>
+<span class="sd">             b.value = 0.4</span>
+<span class="sd">             # This triggers the constraint</span>
+<span class="sd">             a.value # Should equal 0.6</span>
+
+<span class="sd">        **a + b - 2c = 0**</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">             from easyCore.Fitting.Constraints import MultiObjConstraint</span>
+<span class="sd">             from easyCore.Objects.Base import Parameter</span>
+<span class="sd">             # Create an `a + b - 2c = 0` constraint</span>
+<span class="sd">             a = Parameter(&#39;a&#39;, 0.5)</span>
+<span class="sd">             b = Parameter(&#39;b&#39;, 0.3)</span>
+<span class="sd">             c = Parameter(&#39;c&#39;, 0.1)</span>
+
+<span class="sd">             constraint = MultiObjConstraint([b, c], [&#39;+&#39;, &#39;-2*&#39;], a, 0)</span>
+<span class="sd">             b.user_constraints[&#39;SET_A&#39;] = constraint</span>
+<span class="sd">             c.user_constraints[&#39;SET_A&#39;] = constraint</span>
+<span class="sd">             b.value = 0.4</span>
+<span class="sd">             # This triggers the constraint. Or it could be triggered by changing the value of c</span>
+<span class="sd">             a.value # Should equal 0.2</span>
+
+<span class="sd">        .. note:: This constraint is evaluated as ``dependent`` = ``value`` - SUM(``operator_i`` ``independent_i``)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">MultiObjConstraint</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dependent_obj</span><span class="p">,</span> <span class="n">independent_obj</span><span class="o">=</span><span class="n">independent_objs</span><span class="p">,</span>
                                                  <span class="n">operator</span><span class="o">=</span><span class="n">operator</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">external</span> <span class="o">=</span> <span class="kc">True</span>
@@ -493,10 +584,34 @@
 
 
 <div class="viewcode-block" id="FunctionalConstraint"><a class="viewcode-back" href="../../../fitting/constraints.html#easyCore.Fitting.Constraints.FunctionalConstraint">[docs]</a><span class="k">class</span> <span class="nc">FunctionalConstraint</span><span class="p">(</span><span class="n">ConstraintBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Functional constraints do not depend on other parameters and as such can be more complex.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dependent_obj</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Descriptor</span><span class="p">,</span> <span class="n">Parameter</span><span class="p">],</span> <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Functional constraints do not depend on other parameters and as such can be more complex.</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dependent_obj</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Descriptor</span><span class="p">,</span> <span class="n">Parameter</span><span class="p">],</span> <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
-                 <span class="n">independent_objs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">FunctionalConstraint</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dependent_obj</span><span class="p">,</span> <span class="n">independent_obj</span><span class="o">=</span><span class="n">independent_objs</span><span class="p">)</span>
+<span class="sd">        :param dependent_obj: Dependent Parameter</span>
+<span class="sd">        :param func: Function to be evaluated in the form ``f(value, *args, **kwargs)``</span>
+
+<span class="sd">        :example:</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            import numpy as np</span>
+<span class="sd">            from easyCore.Fitting.Constraints import FunctionalConstraint</span>
+<span class="sd">            from easyCore.Objects.Base import Parameter</span>
+
+<span class="sd">            a = Parameter(&#39;a&#39;, 0.2, max=1)</span>
+<span class="sd">            constraint = FunctionalConstraint(a, np.abs)</span>
+
+<span class="sd">            a.user_constraints[&#39;abs&#39;] = constraint</span>
+
+<span class="sd">            # This triggers the constraint</span>
+<span class="sd">            a.value = 0.85 # `a` is set to 0.85</span>
+<span class="sd">            # This triggers the constraint</span>
+<span class="sd">            a.value = -0.5 # `a` is set to 0.5</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">FunctionalConstraint</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dependent_obj</span><span class="p">,</span> <span class="n">independent_obj</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">function</span> <span class="o">=</span> <span class="n">func</span>
 
     <span class="k">def</span> <span class="nf">_parse_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Descriptor</span><span class="p">,</span> <span class="n">Parameter</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Number</span><span class="p">:</span>

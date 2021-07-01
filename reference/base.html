@@ -197,14 +197,26 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="easyCore.Objects.Base.Descriptor">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">easyCore.Objects.Base.</span></span><span class="sig-name descname"><span class="pre">Descriptor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">name</span></em>, <em class="sig-param"><span class="pre">value</span></em>, <em class="sig-param"><span class="pre">units=None</span></em>, <em class="sig-param"><span class="pre">description=''</span></em>, <em class="sig-param"><span class="pre">url=''</span></em>, <em class="sig-param"><span class="pre">display_name=None</span></em>, <em class="sig-param"><span class="pre">callback=&lt;property</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">enabled=True</span></em>, <em class="sig-param"><span class="pre">parent=None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Objects/Base.html#Descriptor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Objects.Base.Descriptor" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div><p>This is the base of all variable descriptions for models. It contains all information to describe a single
+<dd><p>This is the base of all variable descriptions for models. It contains all information to describe a single
 unique property of an object. This description includes a name and value as well as optionally a unit, description
 and url (for reference material). Also implemented is a callback so that the value can be read/set from a linked
 library object.</p>
 <p>A <cite>Descriptor</cite> is typically something which describes part of a model and is non-fittable and generally changes the
 state of an object.</p>
-</div></blockquote>
+<p>Units are provided by pint: <a class="reference external" href="https://github.com/hgrecco/pint">https://github.com/hgrecco/pint</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Name of this object</p></li>
+<li><p><strong>value</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>) – Value of this object</p></li>
+<li><p><strong>units</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Unit</span></code>]) – This object can have a physical unit associated with it</p></li>
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – A brief summary of what this object is</p></li>
+<li><p><strong>url</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – Lookup url for documentation/information</p></li>
+<li><p><strong>callback</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#property" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">property</span></code></a>]) – The property which says how the object is linked to another one</p></li>
+<li><p><strong>parent</strong> – The object which is the parent to this one</p></li>
+</ul>
+</dd>
+</dl>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">easyCore.Objects.Base</span> <span class="kn">import</span> <span class="n">Descriptor</span>
 <span class="c1"># Describe a color by text</span>
 <span class="n">color_text</span> <span class="o">=</span> <span class="n">Descriptor</span><span class="p">(</span><span class="s1">&#39;fav_colour&#39;</span><span class="p">,</span> <span class="s1">&#39;red&#39;</span><span class="p">)</span>
@@ -216,33 +228,16 @@ state of an object.</p>
 <p class="admonition-title">Note</p>
 <p>Undo/Redo functionality is implemented for the attributes <cite>value</cite>, <cite>unit</cite> and <cite>display name</cite>.</p>
 </div>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – </p></li>
-<li><p><strong>value</strong> (<em>Any</em>) – </p></li>
-<li><p><strong>units</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)"><em>None</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>pint.unit.build_unit_class.&lt;locals&gt;.Unit</em><em>]</em>) – </p></li>
-<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – </p></li>
-<li><p><strong>url</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – </p></li>
-<li><p><strong>display_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – </p></li>
-<li><p><strong>callback</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#property" title="(in Python v3.9)"><em>property</em></a>) – </p></li>
-<li><p><strong>enabled</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – </p></li>
-</ul>
-</dd>
-</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="easyCore.Objects.Base.Descriptor.as_dict">
 <span class="sig-name descname"><span class="pre">as_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">skip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Objects/Base.html#Descriptor.as_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Objects.Base.Descriptor.as_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert ones self into a serialized form.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>dictionary of ones self</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a></p>
-</dd>
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>skip</strong> (<em>Optional</em><em>[</em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em><em>]</em>) – </p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dictionary of ones self</p>
 </dd>
 </dl>
 </dd></dl>
@@ -252,11 +247,11 @@ state of an object.</p>
 <em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">compatible_units</span></span><em class="property"><span class="pre">:</span> <span class="pre">List[str]</span></em><a class="headerlink" href="#easyCore.Objects.Base.Descriptor.compatible_units" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns all possible units for which the current unit can be converted.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Possible conversion units</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>List[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a>]</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Possible conversion units</p>
 </dd>
 </dl>
 </dd></dl>
@@ -278,11 +273,11 @@ state of an object.</p>
 <em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">display_name</span></span><em class="property"><span class="pre">:</span> <span class="pre">str</span></em><a class="headerlink" href="#easyCore.Objects.Base.Descriptor.display_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a pretty display name.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>The pretty display name.</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a></p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The pretty display name.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -292,11 +287,11 @@ state of an object.</p>
 <em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="pre">:</span> <span class="pre">bool</span></em><a class="headerlink" href="#easyCore.Objects.Base.Descriptor.enabled" title="Permalink to this definition">¶</a></dt>
 <dd><p>Logical property to see if the objects value can be directly set.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Can the objects value be set</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)">bool</a></p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Can the objects value be set</p>
 </dd>
 </dl>
 </dd></dl>
@@ -306,11 +301,11 @@ state of an object.</p>
 <em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">raw_value</span></span><em class="property"><span class="pre">:</span> <span class="pre">Any</span></em><a class="headerlink" href="#easyCore.Objects.Base.Descriptor.raw_value" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the raw value of self without a unit.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>The raw value of self</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>Any</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The raw value of self</p>
 </dd>
 </dl>
 </dd></dl>
@@ -322,15 +317,12 @@ state of an object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data_type</strong> (<em>Callable</em>) – class constructor of what we want to be</p></li>
+<li><p><strong>data_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.ForwardRef" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardRef</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.ForwardRef" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardRef</span></code></a>]) – class constructor of what we want to be</p></li>
 <li><p><strong>kwargs</strong> – Additional keyword/value pairs for conversion</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>self as a new type</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>Callable</p>
 </dd>
 </dl>
 </dd></dl>
@@ -340,11 +332,11 @@ state of an object.</p>
 <em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">unit</span></span><em class="property"><span class="pre">:</span> <span class="pre">pint.registry.UnitRegistry</span></em><a class="headerlink" href="#easyCore.Objects.Base.Descriptor.unit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the unit associated with the object.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Unit associated with self in <cite>pint</cite> form.</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://pint.readthedocs.io/en/stable/developers_reference.html#pint.registry.UnitRegistry" title="(in pint v0.17)"><code class="xref py py-class docutils literal notranslate"><span class="pre">UnitRegistry</span></code></a></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://pint.readthedocs.io/en/stable/developers_reference.html#pint.UnitRegistry" title="(in pint v0.17)">pint.UnitRegistry</a></p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Unit associated with self in <cite>pint</cite> form.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -355,11 +347,11 @@ state of an object.</p>
 <dd><p>Get the value of self as a pint. This is should be usable for most cases. If a pint
 is not acceptable then the raw value can be obtained through <cite>obj.raw_value</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Value of self with unit.</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>Any</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Value of self with unit.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -372,11 +364,22 @@ is not acceptable then the raw value can be obtained through <cite>obj.raw_value
 <dl class="py class">
 <dt class="sig sig-object py" id="easyCore.Objects.Base.Parameter">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">easyCore.Objects.Base.</span></span><span class="sig-name descname"><span class="pre">Parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Objects/Base.html#Parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Objects.Base.Parameter" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div><p>This class is an extension of a <code class="docutils literal notranslate"><span class="pre">easyCore.Object.Base.Descriptor</span></code>. Where the descriptor was for static objects,
+<dd><p>This class is an extension of a <code class="docutils literal notranslate"><span class="pre">easyCore.Object.Base.Descriptor</span></code>. Where the descriptor was for static objects,
 a <cite>Parameter</cite> is for dynamic objects. A parameter has the ability to be used in fitting and
 has additional fields to facilitate this.</p>
-</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Name of this obj</p></li>
+<li><p><strong>value</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/numbers.html#numbers.Number" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Number</span></code></a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a>]) – Value of this object</p></li>
+<li><p><strong>error</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/numbers.html#numbers.Number" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Number</span></code></a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]) – Error associated as sigma for this parameter</p></li>
+<li><p><strong>min</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/numbers.html#numbers.Number" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Number</span></code></a>]) – Minimum value for fitting</p></li>
+<li><p><strong>max</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/numbers.html#numbers.Number" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Number</span></code></a>]) – Maximum value for fitting</p></li>
+<li><p><strong>fixed</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>]) – Should this parameter vary when fitting?</p></li>
+<li><p><strong>kwargs</strong> – Key word arguments for the <cite>Descriptor</cite> class.</p></li>
+</ul>
+</dd>
+</dl>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">easyCore.Objects.Base</span> <span class="kn">import</span> <span class="n">Parameter</span>
 <span class="c1"># Describe a phase</span>
 <span class="n">phase_basic</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;phase&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
@@ -388,45 +391,33 @@ has additional fields to facilitate this.</p>
 <p class="admonition-title">Note</p>
 <p>Undo/Redo functionality is implemented for the attributes <cite>value</cite>, <cite>error</cite>, <cite>min</cite>, <cite>max</cite>, <cite>fixed</cite></p>
 </div>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – </p></li>
-<li><p><strong>value</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/numbers.html#numbers.Number" title="(in Python v3.9)"><em>numbers.Number</em></a><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>error</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/numbers.html#numbers.Number" title="(in Python v3.9)"><em>numbers.Number</em></a><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a><em>]</em>) – </p></li>
-<li><p><strong>min</strong> (<a class="reference external" href="https://docs.python.org/3/library/numbers.html#numbers.Number" title="(in Python v3.9)"><em>numbers.Number</em></a>) – </p></li>
-<li><p><strong>max</strong> (<a class="reference external" href="https://docs.python.org/3/library/numbers.html#numbers.Number" title="(in Python v3.9)"><em>numbers.Number</em></a>) – </p></li>
-<li><p><strong>fixed</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – </p></li>
-</ul>
-</dd>
-</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="easyCore.Objects.Base.Parameter.as_dict">
 <span class="sig-name descname"><span class="pre">as_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">skip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Objects/Base.html#Parameter.as_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Objects.Base.Parameter.as_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Include enabled in the dict output as it’s unfortunately skipped</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>skip</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – Which items to skip when serializing</p>
+<dd class="field-odd"><p><strong>skip</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]) – Which items to skip when serializing</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Serialized dictionary</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a></p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Serialized dictionary</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="easyCore.Objects.Base.Parameter.builtin_constraints">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">builtin_constraints</span></span><em class="property"><span class="pre">:</span> <span class="pre">Dict[str,</span> <span class="pre">easyCore.Objects.Base.Constraint]</span></em><a class="headerlink" href="#easyCore.Objects.Base.Parameter.builtin_constraints" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">builtin_constraints</span></span><em class="property"><span class="pre">:</span> <span class="pre">Dict[str,</span> <span class="pre">Type[Constraint]]</span></em><a class="headerlink" href="#easyCore.Objects.Base.Parameter.builtin_constraints" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the built in constrains of the object. Typically these are the min/max</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Dictionary of constraints which are built into the system</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Dict[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a>, Type[Constraint]]</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a></p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Dictionary of constraints which are built into the system</p>
 </dd>
 </dl>
 </dd></dl>
@@ -436,11 +427,11 @@ has additional fields to facilitate this.</p>
 <em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">compatible_units</span></span><em class="property"><span class="pre">:</span> <span class="pre">List[str]</span></em><a class="headerlink" href="#easyCore.Objects.Base.Parameter.compatible_units" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns all possible units for which the current unit can be converted.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Possible conversion units</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>List[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a>]</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Possible conversion units</p>
 </dd>
 </dl>
 </dd></dl>
@@ -451,16 +442,10 @@ has additional fields to facilitate this.</p>
 <dd><p>Perform unit conversion. The value, max and min can change on unit change.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>value_str</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – new unit</p></li>
-<li><p><strong>new_unit</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – </p></li>
-</ul>
+<dd class="field-odd"><p><strong>new_unit</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – new unit</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>None</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>noneType</p>
 </dd>
 </dl>
 </dd></dl>
@@ -470,11 +455,11 @@ has additional fields to facilitate this.</p>
 <em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">display_name</span></span><em class="property"><span class="pre">:</span> <span class="pre">str</span></em><a class="headerlink" href="#easyCore.Objects.Base.Parameter.display_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a pretty display name.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>The pretty display name.</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a></p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The pretty display name.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -484,11 +469,11 @@ has additional fields to facilitate this.</p>
 <em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="pre">:</span> <span class="pre">bool</span></em><a class="headerlink" href="#easyCore.Objects.Base.Parameter.enabled" title="Permalink to this definition">¶</a></dt>
 <dd><p>Logical property to see if the objects value can be directly set.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Can the objects value be set</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)">bool</a></p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Can the objects value be set</p>
 </dd>
 </dl>
 </dd></dl>
@@ -498,11 +483,11 @@ has additional fields to facilitate this.</p>
 <em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">error</span></span><em class="property"><span class="pre">:</span> <span class="pre">float</span></em><a class="headerlink" href="#easyCore.Objects.Base.Parameter.error" title="Permalink to this definition">¶</a></dt>
 <dd><p>The error associated with the parameter.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Error associated with parameter</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)">float</a></p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Error associated with parameter</p>
 </dd>
 </dl>
 </dd></dl>
@@ -539,11 +524,11 @@ has additional fields to facilitate this.</p>
 <em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">max</span></span><em class="property"><span class="pre">:</span> <span class="pre">numbers.Number</span></em><a class="headerlink" href="#easyCore.Objects.Base.Parameter.max" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the maximum value for fitting.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>maximum value</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/numbers.html#numbers.Number" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Number</span></code></a></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)">float</a></p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>maximum value</p>
 </dd>
 </dl>
 </dd></dl>
@@ -553,11 +538,11 @@ has additional fields to facilitate this.</p>
 <em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">min</span></span><em class="property"><span class="pre">:</span> <span class="pre">numbers.Number</span></em><a class="headerlink" href="#easyCore.Objects.Base.Parameter.min" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the minimum value for fitting.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>minimum value</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/numbers.html#numbers.Number" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Number</span></code></a></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)">float</a></p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>minimum value</p>
 </dd>
 </dl>
 </dd></dl>
@@ -567,11 +552,11 @@ has additional fields to facilitate this.</p>
 <em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">raw_value</span></span><em class="property"><span class="pre">:</span> <span class="pre">Any</span></em><a class="headerlink" href="#easyCore.Objects.Base.Parameter.raw_value" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the raw value of self without a unit.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>The raw value of self</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>Any</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The raw value of self</p>
 </dd>
 </dl>
 </dd></dl>
@@ -594,15 +579,12 @@ has additional fields to facilitate this.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data_type</strong> (<em>Callable</em>) – class constructor of what we want to be</p></li>
+<li><p><strong>data_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.ForwardRef" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardRef</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.ForwardRef" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardRef</span></code></a>]) – class constructor of what we want to be</p></li>
 <li><p><strong>kwargs</strong> – Additional keyword/value pairs for conversion</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>self as a new type</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>Callable</p>
 </dd>
 </dl>
 </dd></dl>
@@ -612,11 +594,11 @@ has additional fields to facilitate this.</p>
 <em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">unit</span></span><em class="property"><span class="pre">:</span> <span class="pre">pint.registry.UnitRegistry</span></em><a class="headerlink" href="#easyCore.Objects.Base.Parameter.unit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the unit associated with the object.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Unit associated with self in <cite>pint</cite> form.</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://pint.readthedocs.io/en/stable/developers_reference.html#pint.registry.UnitRegistry" title="(in pint v0.17)"><code class="xref py py-class docutils literal notranslate"><span class="pre">UnitRegistry</span></code></a></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://pint.readthedocs.io/en/stable/developers_reference.html#pint.UnitRegistry" title="(in pint v0.17)">pint.UnitRegistry</a></p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Unit associated with self in <cite>pint</cite> form.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -631,14 +613,14 @@ any nested keys, and then performing a hash on the resulting object</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="easyCore.Objects.Base.Parameter.user_constraints">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">user_constraints</span></span><em class="property"><span class="pre">:</span> <span class="pre">Dict[str,</span> <span class="pre">easyCore.Objects.Base.Constraint]</span></em><a class="headerlink" href="#easyCore.Objects.Base.Parameter.user_constraints" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">user_constraints</span></span><em class="property"><span class="pre">:</span> <span class="pre">Dict[str,</span> <span class="pre">Type[Constraint]]</span></em><a class="headerlink" href="#easyCore.Objects.Base.Parameter.user_constraints" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the user specified constrains of the object.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Dictionary of constraints which are user supplied</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Dict[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a>, Type[Constraint]]</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a></p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Dictionary of constraints which are user supplied</p>
 </dd>
 </dl>
 </dd></dl>
@@ -649,11 +631,11 @@ any nested keys, and then performing a hash on the resulting object</p>
 <dd><p>Get the value of self as a pint. This is should be usable for most cases. If a pint
 is not acceptable then the raw value can be obtained through <cite>obj.raw_value</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Value of self with unit.</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>Any</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Value of self with unit.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -669,24 +651,16 @@ is not acceptable then the raw value can be obtained through <cite>obj.raw_value
 <dl class="py class">
 <dt class="sig sig-object py" id="easyCore.Objects.Base.BasedBase">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">easyCore.Objects.Base.</span></span><span class="sig-name descname"><span class="pre">BasedBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Objects/Base.html#BasedBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Objects.Base.BasedBase" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – </p>
-</dd>
-</dl>
-<dl class="py method">
+<dd><dl class="py method">
 <dt class="sig sig-object py" id="easyCore.Objects.Base.BasedBase.as_dict">
 <span class="sig-name descname"><span class="pre">as_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">skip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Objects/Base.html#BasedBase.as_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Objects.Base.BasedBase.as_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert ones self into a serialized form.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>dictionary of ones self</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a></p>
-</dd>
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>skip</strong> (<em>Optional</em><em>[</em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em><em>]</em>) – </p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dictionary of ones self</p>
 </dd>
 </dl>
 </dd></dl>
@@ -720,11 +694,11 @@ is not acceptable then the raw value can be obtained through <cite>obj.raw_value
 <span class="sig-name descname"><span class="pre">get_fit_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Objects/Base.html#BasedBase.get_fit_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Objects.Base.BasedBase.get_fit_parameters" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get all objects which can be fitted (and are not fixed) as a list.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>List of <cite>Parameter</cite> objects which can be used in fitting.</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a>]</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>List[<a class="reference internal" href="#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter">Parameter</a>]</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of <cite>Parameter</cite> objects which can be used in fitting.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -734,11 +708,11 @@ is not acceptable then the raw value can be obtained through <cite>obj.raw_value
 <span class="sig-name descname"><span class="pre">get_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Objects/Base.html#BasedBase.get_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Objects.Base.BasedBase.get_parameters" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get all parameter objects as a list.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>List of <cite>Parameter</cite> objects.</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a>]</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>List[<a class="reference internal" href="#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter">Parameter</a>]</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of <cite>Parameter</cite> objects.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -754,11 +728,11 @@ is not acceptable then the raw value can be obtained through <cite>obj.raw_value
 <em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="pre">:</span> <span class="pre">str</span></em><a class="headerlink" href="#easyCore.Objects.Base.BasedBase.name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the common name of the object.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Common name of the object</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a></p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Common name of the object</p>
 </dd>
 </dl>
 </dd></dl>
@@ -767,11 +741,6 @@ is not acceptable then the raw value can be obtained through <cite>obj.raw_value
 <dt class="sig sig-object py" id="easyCore.Objects.Base.BasedBase.switch_interface">
 <span class="sig-name descname"><span class="pre">switch_interface</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_interface_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Objects/Base.html#BasedBase.switch_interface"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Objects.Base.BasedBase.switch_interface" title="Permalink to this definition">¶</a></dt>
 <dd><p>Switch or create a new interface.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>new_interface_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – </p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -798,13 +767,14 @@ any nested keys, and then performing a hash on the resulting object</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="easyCore.Objects.Base.BaseObj">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">easyCore.Objects.Base.</span></span><span class="sig-name descname"><span class="pre">BaseObj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Objects/Base.html#BaseObj"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Objects.Base.BaseObj" title="Permalink to this definition">¶</a></dt>
-<dd><p>This is the base class for which all higher level classes are built off of.
-NOTE: This object is serializable only if parameters are supplied as:
-<cite>BaseObj(a=value, b=value)</cite>. For <cite>Parameter</cite> or <cite>Descriptor</cite> objects we can
-cheat with <cite>BaseObj(*[Descriptor(…), Parameter(…), …])</cite>.</p>
+<dd><p>Set up the base class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – </p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Name of this object</p></li>
+<li><p><strong>args</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>[<a class="reference internal" href="#easyCore.Objects.Base.Descriptor" title="easyCore.Objects.Base.Descriptor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Descriptor</span></code></a>], <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>[<a class="reference internal" href="#easyCore.Objects.Base.BasedBase" title="easyCore.Objects.Base.BasedBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasedBase</span></code></a>], <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]) – Any arguments?</p></li>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>[<a class="reference internal" href="#easyCore.Objects.Base.Descriptor" title="easyCore.Objects.Base.Descriptor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Descriptor</span></code></a>], <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>[<a class="reference internal" href="#easyCore.Objects.Base.BasedBase" title="easyCore.Objects.Base.BasedBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasedBase</span></code></a>], <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]) – Fields which this class should contain</p></li>
+</ul>
 </dd>
 </dl>
 <dl class="py method">
@@ -812,14 +782,11 @@ cheat with <cite>BaseObj(*[Descriptor(…), Parameter(…), …])</cite>.</p>
 <span class="sig-name descname"><span class="pre">as_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">skip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easyCore.Objects.Base.BaseObj.as_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert ones self into a serialized form.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>dictionary of ones self</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a></p>
-</dd>
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>skip</strong> (<em>Optional</em><em>[</em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em><em>]</em>) – </p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dictionary of ones self</p>
 </dd>
 </dl>
 </dd></dl>
@@ -853,11 +820,11 @@ cheat with <cite>BaseObj(*[Descriptor(…), Parameter(…), …])</cite>.</p>
 <span class="sig-name descname"><span class="pre">get_fit_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#easyCore.Objects.Base.BaseObj.get_fit_parameters" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get all objects which can be fitted (and are not fixed) as a list.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>List of <cite>Parameter</cite> objects which can be used in fitting.</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a>]</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>List[<a class="reference internal" href="#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter">Parameter</a>]</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of <cite>Parameter</cite> objects which can be used in fitting.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -867,11 +834,11 @@ cheat with <cite>BaseObj(*[Descriptor(…), Parameter(…), …])</cite>.</p>
 <span class="sig-name descname"><span class="pre">get_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#easyCore.Objects.Base.BaseObj.get_parameters" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get all parameter objects as a list.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>List of <cite>Parameter</cite> objects.</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a>]</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>List[<a class="reference internal" href="#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter">Parameter</a>]</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of <cite>Parameter</cite> objects.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -887,11 +854,11 @@ cheat with <cite>BaseObj(*[Descriptor(…), Parameter(…), …])</cite>.</p>
 <em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="pre">:</span> <span class="pre">str</span></em><a class="headerlink" href="#easyCore.Objects.Base.BaseObj.name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the common name of the object.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Common name of the object</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a></p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Common name of the object</p>
 </dd>
 </dl>
 </dd></dl>
@@ -900,11 +867,6 @@ cheat with <cite>BaseObj(*[Descriptor(…), Parameter(…), …])</cite>.</p>
 <dt class="sig sig-object py" id="easyCore.Objects.Base.BaseObj.switch_interface">
 <span class="sig-name descname"><span class="pre">switch_interface</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_interface_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easyCore.Objects.Base.BaseObj.switch_interface" title="Permalink to this definition">¶</a></dt>
 <dd><p>Switch or create a new interface.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>new_interface_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – </p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -934,13 +896,14 @@ any nested keys, and then performing a hash on the resulting object</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="easyCore.Objects.Groups.BaseCollection">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">easyCore.Objects.Groups.</span></span><span class="sig-name descname"><span class="pre">BaseCollection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Objects/Groups.html#BaseCollection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Objects.Groups.BaseCollection" title="Permalink to this definition">¶</a></dt>
-<dd><p>This is the base class for which all higher level classes are built off of.
-NOTE: This object is serializable only if parameters are supplied as:
-<cite>BaseObj(a=value, b=value)</cite>. For <cite>Parameter</cite> or <cite>Descriptor</cite> objects we can
-cheat with <cite>BaseObj(*[Descriptor(…), Parameter(…), …])</cite>.</p>
+<dd><p>Set up the base collection class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – </p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Name of this object</p></li>
+<li><p><strong>args</strong> – selection of</p></li>
+<li><p><strong>_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)"><em>dict</em></a>) – Fields which this class should contain</p></li>
+</ul>
 </dd>
 </dl>
 <dl class="py method">
@@ -959,9 +922,6 @@ cheat with <cite>BaseObj(*[Descriptor(…), Parameter(…), …])</cite>.</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a></p>
-</dd>
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>skip</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em>]</em>) – </p>
 </dd>
 </dl>
 </dd></dl>
@@ -1012,11 +972,11 @@ cheat with <cite>BaseObj(*[Descriptor(…), Parameter(…), …])</cite>.</p>
 <span class="sig-name descname"><span class="pre">get_fit_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#easyCore.Objects.Groups.BaseCollection.get_fit_parameters" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get all objects which can be fitted (and are not fixed) as a list.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>List of <cite>Parameter</cite> objects which can be used in fitting.</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a>]</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>List[<a class="reference internal" href="#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter">Parameter</a>]</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of <cite>Parameter</cite> objects which can be used in fitting.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1026,11 +986,11 @@ cheat with <cite>BaseObj(*[Descriptor(…), Parameter(…), …])</cite>.</p>
 <span class="sig-name descname"><span class="pre">get_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#easyCore.Objects.Groups.BaseCollection.get_parameters" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get all parameter objects as a list.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>List of <cite>Parameter</cite> objects.</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a>]</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>List[<a class="reference internal" href="#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter">Parameter</a>]</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of <cite>Parameter</cite> objects.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1074,11 +1034,11 @@ recommended.</p>
 <em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="pre">:</span> <span class="pre">str</span></em><a class="headerlink" href="#easyCore.Objects.Groups.BaseCollection.name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the common name of the object.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Common name of the object</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a></p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Common name of the object</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1106,11 +1066,6 @@ Raise ValueError if the value is not present.</p>
 <dt class="sig sig-object py" id="easyCore.Objects.Groups.BaseCollection.switch_interface">
 <span class="sig-name descname"><span class="pre">switch_interface</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_interface_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easyCore.Objects.Groups.BaseCollection.switch_interface" title="Permalink to this definition">¶</a></dt>
 <dd><p>Switch or create a new interface.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>new_interface_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – </p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -1142,11 +1097,6 @@ any nested keys, and then performing a hash on the resulting object</p>
 <dt class="sig sig-object py" id="easyCore.Datasets.xarray.easyCoreDataarrayAccessor">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">easyCore.Datasets.xarray.</span></span><span class="sig-name descname"><span class="pre">easyCoreDataarrayAccessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xarray_obj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Datasets/xarray.html#easyCoreDataarrayAccessor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Datasets.xarray.easyCoreDataarrayAccessor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Accessor to extend an xarray DataArray to easyCore. These functions can be accessed by <cite>obj.easyCore.func</cite>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>xarray_obj</strong> (<em>xarray.core.dataarray.DataArray</em>) – </p>
-</dd>
-</dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="easyCore.Datasets.xarray.easyCoreDataarrayAccessor.compute_func">
 <em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">compute_func</span></span><em class="property"><span class="pre">:</span> <span class="pre">Callable</span></em><a class="headerlink" href="#easyCore.Datasets.xarray.easyCoreDataarrayAccessor.compute_func" title="Permalink to this definition">¶</a></dt>
@@ -1273,19 +1223,11 @@ concatenated along the second axis (<cite>fit_dim</cite>).</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="easyCore.Datasets.xarray.easyCoreDatasetAccessor">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">easyCore.Datasets.xarray.</span></span><span class="sig-name descname"><span class="pre">easyCoreDatasetAccessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xarray_obj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Datasets/xarray.html#easyCoreDatasetAccessor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Datasets.xarray.easyCoreDatasetAccessor" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div><p>Accessor to extend an xarray DataSet to easyCore. These functions can be accessed by <cite>obj.easyCore.func</cite>.
-The objective for this class accessor is to facilitate:</p>
-</div></blockquote>
-<ul class="simple">
-<li><p>Creation of nd datasets by making and assigning axes and data more accessible</p></li>
-<li><p>To add and keep track of errors in the form of sigma for datasets.py</p></li>
-<li><p>To perform fitting on one or more data arrays in the dataset simultaneously.</p></li>
-<li><p>To facilitate dask computation if required.</p></li>
-</ul>
+<dd><p>This is called whenever you access obj.easyCore, hence the attributes in the obj should only be written if they
+have not been previously instantiated.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>xarray_obj</strong> (<em>xarray.core.dataset.Dataset</em>) – </p>
+<dd class="field-odd"><p><strong>xarray_obj</strong> (<a class="reference external" href="https://xarray.pydata.org/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v0.18.3.dev1)"><em>xarray.Dataset</em></a>) – DataSet which is called by obj.easyCore</p>
 </dd>
 </dl>
 <dl class="py method">
@@ -1380,7 +1322,6 @@ and given key-word arguments control the <cite>xarray.apply_ufunc</cite> functio
 <li><p><strong>fn_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)"><em>dict</em></a>) – Dictionary of key-words to be supplied to the fit function</p></li>
 <li><p><strong>vectorized</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – Should the fit function be given dependents in a single object or split</p></li>
 <li><p><strong>kwargs</strong> (<em>Any</em>) – Key-word arguments for <cite>xarray.apply_ufunc</cite>. See <cite>xarray.apply_ufunc</cite> documentation</p></li>
-<li><p><strong>data_arrays</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – </p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1424,9 +1365,6 @@ concatenated along the second axis (<cite>fit_dim</cite>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">DataArray</span></code></p>
-</dd>
-<dt class="field-even">Parameters</dt>
-<dd class="field-even"><p><strong>coordinates</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em>) – </p>
 </dd>
 </dl>
 </dd></dl>
@@ -1510,7 +1448,6 @@ already used the it!</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>variable_label</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Name of the DataArray to perform the calculation on</p></li>
 <li><p><strong>sigma_func</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>) – Function to generate the sigmas. Must be of the form f(x) and return an array of the same</p></li>
-<li><p><strong>label_prefix</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em>) – </p></li>
 </ul>
 </dd>
 </dl>
