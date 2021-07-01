@@ -15,8 +15,14 @@
   <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/gallery-binder.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/gallery-dataframe.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/gallery-rendered-html.css" type="text/css" />
 
   
+  
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
   
 
   
@@ -59,7 +65,7 @@
 
           
             
-            <img src="../../../_static/ec_logo_single.png" class="logo" alt="Logo"/>
+            <img src="../../../_static/ec_sidebar_w.png" class="logo" alt="Logo"/>
           
           </a>
 
@@ -91,12 +97,22 @@
               <p class="caption"><span class="caption-text">Getting Started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../getting-started/overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting-started/installation.html">Installation</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Base Classes</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Parameters and Objects</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html#super-classes-and-collections">Super Classes and Collections</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html#data-containers">Data Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/base.html">Parameters and Objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/base.html#super-classes-and-collections">Super Classes and Collections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/base.html#data-containers">Data Containers</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Fitting</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../fitting/introduction.html">Fitting in easyCore</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../fitting/constraints.html">Constraints</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Example galleries</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../auto_examples/index.html">Example Galleries</a></li>
 </ul>
 
             
@@ -163,8 +179,9 @@
            <div itemprop="articleBody">
             
   <h1>Source code for easyCore.Datasets.xarray</h1><div class="highlight"><pre>
-<span></span><span class="c1">#  SPDX-FileCopyrightText: 2021 European Spallation Source &lt;info@ess.eu&gt;</span>
+<span></span><span class="c1">#  SPDX-FileCopyrightText: 2021 easyCore contributors  &lt;core@easyscience.software&gt;</span>
 <span class="c1">#  SPDX-License-Identifier: BSD-3-Clause</span>
+<span class="c1">#  © 2021 Contributors to the easyCore project &lt;https://github.com/easyScience/easyCore&gt;</span>
 
 <span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;github.com/wardsimon&#39;</span>
 <span class="n">__version__</span> <span class="o">=</span> <span class="s1">&#39;0.1.0&#39;</span>
@@ -181,7 +198,7 @@
 <span class="n">T_</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s1">&#39;T_&#39;</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="easyCoreDatasetAccessor"><a class="viewcode-back" href="../../../reference/index.html#easyCore.Datasets.xarray.easyCoreDatasetAccessor">[docs]</a><span class="nd">@xr</span><span class="o">.</span><span class="n">register_dataset_accessor</span><span class="p">(</span><span class="s2">&quot;easyCore&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="easyCoreDatasetAccessor"><a class="viewcode-back" href="../../../reference/base.html#easyCore.Datasets.xarray.easyCoreDatasetAccessor">[docs]</a><span class="nd">@xr</span><span class="o">.</span><span class="n">register_dataset_accessor</span><span class="p">(</span><span class="s2">&quot;easyCore&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">easyCoreDatasetAccessor</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Accessor to extend an xarray DataSet to easyCore. These functions can be accessed by `obj.easyCore.func`.</span>
@@ -306,7 +323,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_core_object</span> <span class="o">=</span> <span class="n">weakref</span><span class="o">.</span><span class="n">ref</span><span class="p">(</span><span class="n">new_core_object</span><span class="p">)</span>
 
-<div class="viewcode-block" id="easyCoreDatasetAccessor.add_coordinate"><a class="viewcode-back" href="../../../reference/index.html#easyCore.Datasets.xarray.easyCoreDatasetAccessor.add_coordinate">[docs]</a>    <span class="k">def</span> <span class="nf">add_coordinate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coordinate_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">coordinate_values</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">T_</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">unit</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="easyCoreDatasetAccessor.add_coordinate"><a class="viewcode-back" href="../../../reference/base.html#easyCore.Datasets.xarray.easyCoreDatasetAccessor.add_coordinate">[docs]</a>    <span class="k">def</span> <span class="nf">add_coordinate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coordinate_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">coordinate_values</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">T_</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">unit</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add a coordinate to the DataSet. This can be then be assigned to one or more DataArrays.</span>
 
@@ -322,7 +339,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">coordinate_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">coordinate_values</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;units&#39;</span><span class="p">][</span><span class="n">coordinate_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">ureg</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="easyCoreDatasetAccessor.remove_coordinate"><a class="viewcode-back" href="../../../reference/index.html#easyCore.Datasets.xarray.easyCoreDatasetAccessor.remove_coordinate">[docs]</a>    <span class="k">def</span> <span class="nf">remove_coordinate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coordinate_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<div class="viewcode-block" id="easyCoreDatasetAccessor.remove_coordinate"><a class="viewcode-back" href="../../../reference/base.html#easyCore.Datasets.xarray.easyCoreDatasetAccessor.remove_coordinate">[docs]</a>    <span class="k">def</span> <span class="nf">remove_coordinate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coordinate_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Remove a coordinate from the DataSet. Note that this will not remove the coordinate from DataArrays which have</span>
 <span class="sd">        already used the it!</span>
@@ -335,7 +352,7 @@
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">coordinate_name</span><span class="p">]</span>
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;units&#39;</span><span class="p">][</span><span class="n">coordinate_name</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="easyCoreDatasetAccessor.add_variable"><a class="viewcode-back" href="../../../reference/index.html#easyCore.Datasets.xarray.easyCoreDatasetAccessor.add_variable">[docs]</a>    <span class="k">def</span> <span class="nf">add_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable_name</span><span class="p">,</span> <span class="n">variable_coordinates</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+<div class="viewcode-block" id="easyCoreDatasetAccessor.add_variable"><a class="viewcode-back" href="../../../reference/base.html#easyCore.Datasets.xarray.easyCoreDatasetAccessor.add_variable">[docs]</a>    <span class="k">def</span> <span class="nf">add_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable_name</span><span class="p">,</span> <span class="n">variable_coordinates</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
                      <span class="n">variable_values</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">T_</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">variable_sigma</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">T_</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                      <span class="n">unit</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">auto_sigma</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -404,7 +421,7 @@
             <span class="k">if</span> <span class="n">auto_sigma</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;units&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma_label_prefix</span> <span class="o">+</span> <span class="n">variable_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">ureg</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="easyCoreDatasetAccessor.remove_variable"><a class="viewcode-back" href="../../../reference/index.html#easyCore.Datasets.xarray.easyCoreDatasetAccessor.remove_variable">[docs]</a>    <span class="k">def</span> <span class="nf">remove_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<div class="viewcode-block" id="easyCoreDatasetAccessor.remove_variable"><a class="viewcode-back" href="../../../reference/base.html#easyCore.Datasets.xarray.easyCoreDatasetAccessor.remove_variable">[docs]</a>    <span class="k">def</span> <span class="nf">remove_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Remove a DataArray from the DataSet by supplied name.</span>
 
@@ -415,7 +432,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">[</span><span class="n">variable_name</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="easyCoreDatasetAccessor.sigma_generator"><a class="viewcode-back" href="../../../reference/index.html#easyCore.Datasets.xarray.easyCoreDatasetAccessor.sigma_generator">[docs]</a>    <span class="k">def</span> <span class="nf">sigma_generator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable_label</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<div class="viewcode-block" id="easyCoreDatasetAccessor.sigma_generator"><a class="viewcode-back" href="../../../reference/base.html#easyCore.Datasets.xarray.easyCoreDatasetAccessor.sigma_generator">[docs]</a>    <span class="k">def</span> <span class="nf">sigma_generator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable_label</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
                         <span class="n">sigma_func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span>
                         <span class="n">label_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -434,7 +451,7 @@
         <span class="n">sigma_values</span> <span class="o">=</span> <span class="n">sigma_func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">[</span><span class="n">variable_label</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sigma_attach</span><span class="p">(</span><span class="n">variable_label</span><span class="p">,</span> <span class="n">sigma_values</span><span class="p">,</span> <span class="n">label_prefix</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="easyCoreDatasetAccessor.sigma_attach"><a class="viewcode-back" href="../../../reference/index.html#easyCore.Datasets.xarray.easyCoreDatasetAccessor.sigma_attach">[docs]</a>    <span class="k">def</span> <span class="nf">sigma_attach</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable_label</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<div class="viewcode-block" id="easyCoreDatasetAccessor.sigma_attach"><a class="viewcode-back" href="../../../reference/base.html#easyCore.Datasets.xarray.easyCoreDatasetAccessor.sigma_attach">[docs]</a>    <span class="k">def</span> <span class="nf">sigma_attach</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable_label</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
                      <span class="n">sigma_values</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">T_</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">],</span>
                      <span class="n">label_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -464,7 +481,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">[</span><span class="n">sigma_label</span><span class="p">]</span> <span class="o">=</span> <span class="n">sigma_values</span></div>
 
-<div class="viewcode-block" id="easyCoreDatasetAccessor.generate_points"><a class="viewcode-back" href="../../../reference/index.html#easyCore.Datasets.xarray.easyCoreDatasetAccessor.generate_points">[docs]</a>    <span class="k">def</span> <span class="nf">generate_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coordinates</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">:</span>
+<div class="viewcode-block" id="easyCoreDatasetAccessor.generate_points"><a class="viewcode-back" href="../../../reference/base.html#easyCore.Datasets.xarray.easyCoreDatasetAccessor.generate_points">[docs]</a>    <span class="k">def</span> <span class="nf">generate_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coordinates</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate an expanded DataArray of points which corresponds to broadcasted dimensions (`all_x`) which have been</span>
 <span class="sd">        concatenated along the second axis (`fit_dim`).</span>
@@ -495,7 +512,7 @@
         <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">all_x</span><span class="o">=</span><span class="n">n_array</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">f</span></div>
 
-<div class="viewcode-block" id="easyCoreDatasetAccessor.fit"><a class="viewcode-back" href="../../../reference/index.html#easyCore.Datasets.xarray.easyCoreDatasetAccessor.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fitter</span><span class="p">,</span> <span class="n">data_arrays</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+<div class="viewcode-block" id="easyCoreDatasetAccessor.fit"><a class="viewcode-back" href="../../../reference/base.html#easyCore.Datasets.xarray.easyCoreDatasetAccessor.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fitter</span><span class="p">,</span> <span class="n">data_arrays</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span>
             <span class="n">dask</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;forbidden&#39;</span><span class="p">,</span>
             <span class="n">fit_kwargs</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">fn_kwargs</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -591,7 +608,7 @@
             <span class="k">return</span> <span class="n">f_res</span></div></div>
 
 
-<div class="viewcode-block" id="easyCoreDataarrayAccessor"><a class="viewcode-back" href="../../../reference/index.html#easyCore.Datasets.xarray.easyCoreDataarrayAccessor">[docs]</a><span class="nd">@xr</span><span class="o">.</span><span class="n">register_dataarray_accessor</span><span class="p">(</span><span class="s2">&quot;easyCore&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="easyCoreDataarrayAccessor"><a class="viewcode-back" href="../../../reference/base.html#easyCore.Datasets.xarray.easyCoreDataarrayAccessor">[docs]</a><span class="nd">@xr</span><span class="o">.</span><span class="n">register_dataarray_accessor</span><span class="p">(</span><span class="s2">&quot;easyCore&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">easyCoreDataarrayAccessor</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Accessor to extend an xarray DataArray to easyCore. These functions can be accessed by `obj.easyCore.func`.</span>
@@ -727,7 +744,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;computation&#39;</span><span class="p">][</span><span class="s1">&#39;postcompute_func&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_computational_fn</span>
 
-<div class="viewcode-block" id="easyCoreDataarrayAccessor.fit_prep"><a class="viewcode-back" href="../../../reference/index.html#easyCore.Datasets.xarray.easyCoreDataarrayAccessor.fit_prep">[docs]</a>    <span class="k">def</span> <span class="nf">fit_prep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func_in</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">bdims</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dask_chunks</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]:</span>
+<div class="viewcode-block" id="easyCoreDataarrayAccessor.fit_prep"><a class="viewcode-back" href="../../../reference/base.html#easyCore.Datasets.xarray.easyCoreDataarrayAccessor.fit_prep">[docs]</a>    <span class="k">def</span> <span class="nf">fit_prep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func_in</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">bdims</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dask_chunks</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate boradcasted coordinates for fitting and reform the fitting function into one which can handle xarrays</span>
 
@@ -765,7 +782,7 @@
 
         <span class="k">return</span> <span class="n">bdims</span><span class="p">,</span> <span class="n">func</span></div>
 
-<div class="viewcode-block" id="easyCoreDataarrayAccessor.generate_points"><a class="viewcode-back" href="../../../reference/index.html#easyCore.Datasets.xarray.easyCoreDataarrayAccessor.generate_points">[docs]</a>    <span class="k">def</span> <span class="nf">generate_points</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">:</span>
+<div class="viewcode-block" id="easyCoreDataarrayAccessor.generate_points"><a class="viewcode-back" href="../../../reference/base.html#easyCore.Datasets.xarray.easyCoreDataarrayAccessor.generate_points">[docs]</a>    <span class="k">def</span> <span class="nf">generate_points</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate an expanded DataArray of points which corresponds to broadcasted dimensions (`all_x`) which have been</span>
 <span class="sd">        concatenated along the second axis (`fit_dim`).</span>
@@ -785,7 +802,7 @@
         <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">all_x</span><span class="o">=</span><span class="n">n_array</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">f</span></div>
 
-<div class="viewcode-block" id="easyCoreDataarrayAccessor.fit"><a class="viewcode-back" href="../../../reference/index.html#easyCore.Datasets.xarray.easyCoreDataarrayAccessor.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fitter</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+<div class="viewcode-block" id="easyCoreDataarrayAccessor.fit"><a class="viewcode-back" href="../../../reference/base.html#easyCore.Datasets.xarray.easyCoreDataarrayAccessor.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fitter</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span>
             <span class="n">fit_kwargs</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">fn_kwargs</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">vectorize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>

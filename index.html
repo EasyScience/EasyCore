@@ -15,8 +15,14 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/gallery.css" type="text/css" />
+  <link rel="stylesheet" href="_static/gallery-binder.css" type="text/css" />
+  <link rel="stylesheet" href="_static/gallery-dataframe.css" type="text/css" />
+  <link rel="stylesheet" href="_static/gallery-rendered-html.css" type="text/css" />
 
   
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
   
 
   
@@ -60,7 +66,7 @@
 
           
             
-            <img src="_static/ec_logo_single.png" class="logo" alt="Logo"/>
+            <img src="_static/ec_sidebar_w.png" class="logo" alt="Logo"/>
           
           </a>
 
@@ -92,12 +98,22 @@
               <p class="caption"><span class="caption-text">Getting Started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="getting-started/overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started/installation.html">Installation</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Base Classes</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="reference/index.html">Parameters and Objects</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reference/index.html#super-classes-and-collections">Super Classes and Collections</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reference/index.html#data-containers">Data Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/base.html">Parameters and Objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/base.html#super-classes-and-collections">Super Classes and Collections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/base.html#data-containers">Data Containers</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Fitting</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="fitting/introduction.html">Fitting in easyCore</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fitting/constraints.html">Constraints</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Example galleries</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="auto_examples/index.html">Example Galleries</a></li>
 </ul>
 
             
@@ -165,11 +181,9 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <a class="reference external image-reference" href="https://github.com/easyscience/easycore"><img alt="https://raw.githubusercontent.com/easyScience/easyCore/master/resources/images/ec_logo.svg" src="https://raw.githubusercontent.com/easyScience/easyCore/master/resources/images/ec_logo.svg" /></a>
-<p><code class="docutils literal notranslate"><span class="pre">easyCore</span></code> is the foundation of the easyScience universe, providing the building blocks for libraries and applications which aim to make scientific data simulation and analysis easier.</p>
-<div class="section" id="welcome-to-easycore-s-documentation">
+  <div class="section" id="welcome-to-easycore-s-documentation">
 <h1>Welcome to easyCore’s documentation!<a class="headerlink" href="#welcome-to-easycore-s-documentation" title="Permalink to this headline">¶</a></h1>
-<p>The code of the project is on Github: <a class="reference external" href="https://github.com/easyScience/easyCore">easyCore</a></p>
+<p><strong>easyCore</strong> is the foundation of the easyScience universe, providing the building blocks for libraries and applications which aim to make scientific data simulation and analysis easier.</p>
 <div class="section" id="features-of-easycore">
 <h2>Features of easyCore<a class="headerlink" href="#features-of-easycore" title="Permalink to this headline">¶</a></h2>
 <p>Free and open-source
@@ -183,61 +197,66 @@ Anyone is free to use easyCore and the source code is openly shared on GitHub.</
 <div class="section" id="projects-using-easycore">
 <h2>Projects using easyCore<a class="headerlink" href="#projects-using-easycore" title="Permalink to this headline">¶</a></h2>
 <p>easyCore is currently being used in the following projects:</p>
-<ul class="simple">
-<li><p><a class="reference external" href="https://easydiffraction.org">easyDiffraction</a> - Scientific software for modelling and analysis of neutron diffraction data.</p></li>
-<li><p><a class="reference external" href="https://easyreflectometry.org">easyReflectometry</a> - Scientific software for modelling and analysis of neutron reflectometry data.</p></li>
-</ul>
-</div>
-<div class="section" id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="install-via-pip">
-<h3>Install via <code class="docutils literal notranslate"><span class="pre">pip</span></code><a class="headerlink" href="#install-via-pip" title="Permalink to this headline">¶</a></h3>
-<p>You can do a direct install via pip by using:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ pip install easyScienceCore
-</pre></div>
-</div>
-</div>
-<div class="section" id="install-as-an-easycore-developer">
-<h3>Install as an easyCore developer<a class="headerlink" href="#install-as-an-easycore-developer" title="Permalink to this headline">¶</a></h3>
-<p>You can get the latest development source from our <a class="reference external" href="https://github.com/github.com/easyScience/easyCore">Github repository</a>.:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> git clone https://github.com/easyScience/easyCore
-<span class="gp">$</span> <span class="nb">cd</span> easyCore
-</pre></div>
-</div>
-<p>And install via pip:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> pip install -r requirements.txt
-<span class="gp">$</span> pip install -e .
-</pre></div>
-</div>
-<p>Or Poetry</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> git clone https://github.com/easyScience/easyCore
-<span class="gp">$</span> <span class="nb">cd</span> easyCore
-<span class="gp">$</span> poetry install
-</pre></div>
-</div>
-</div>
+<a class="reference external image-reference" href="https://easydiffraction.org"><img alt="https://raw.githubusercontent.com/easyScience/easyDiffractionWww/master/assets/img/card.png" src="https://raw.githubusercontent.com/easyScience/easyDiffractionWww/master/assets/img/card.png" /></a>
+<p>Scientific software for modelling and analysis of neutron diffraction data.</p>
+<a class="reference external image-reference" href="https://easyreflectometry.org"><img alt="https://raw.githubusercontent.com/easyScience/easyReflectometryWww/master/assets/img/card.png" src="https://raw.githubusercontent.com/easyScience/easyReflectometryWww/master/assets/img/card.png" /></a>
+<p>Scientific software for modelling and analysis of neutron reflectometry data.</p>
 <div class="section" id="documentation">
 <h3>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h3>
 <div class="toctree-wrapper compound">
 <p class="caption"><span class="caption-text">Getting Started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="getting-started/overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started/installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/installation.html#install-via-pip">Install via <code class="docutils literal notranslate"><span class="pre">pip</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/installation.html#install-as-an-easycore-developer">Install as an easyCore developer</a></li>
+</ul>
+</li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">
 <p class="caption"><span class="caption-text">Base Classes</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="reference/index.html">Parameters and Objects</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="reference/index.html#descriptors">Descriptors</a></li>
-<li class="toctree-l2"><a class="reference internal" href="reference/index.html#parameters">Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/base.html">Parameters and Objects</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="reference/base.html#descriptors">Descriptors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/base.html#parameters">Parameters</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="reference/index.html#super-classes-and-collections">Super Classes and Collections</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="reference/index.html#super-classes">Super Classes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="reference/index.html#collections">Collections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/base.html#super-classes-and-collections">Super Classes and Collections</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="reference/base.html#super-classes">Super Classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/base.html#collections">Collections</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="reference/index.html#data-containers">Data Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/base.html#data-containers">Data Containers</a></li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Fitting</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="fitting/introduction.html">Fitting in easyCore</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fitting/constraints.html">Constraints</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="fitting/constraints.html#anatomy-of-a-constraint">Anatomy of a constraint</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fitting/constraints.html#constraints-on-parameters">Constraints on Parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fitting/constraints.html#constraints-on-fitting">Constraints on Fitting</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="fitting/constraints.html#constraint-reference">Constraint Reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fitting/constraints.html#examples-using-constraints">Examples using <cite>Constraints</cite></a></li>
+<li class="toctree-l3"><a class="reference internal" href="fitting/constraints.html#built-in-constraints">Built-in constraints</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fitting/constraints.html#user-created-constraints">User created constraints</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Example galleries</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="auto_examples/index.html">Example Galleries</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="auto_examples/index.html#fitting-examples">Fitting Examples</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
