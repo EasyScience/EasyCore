@@ -44,8 +44,15 @@ build
 *.pytest_cache/
 .tox
 
+# Docs
+docs/_build
+
 dask-worker-space/dask-worker-space/
 
 poetry.lock
 
 .coveragerc
+
+docs/src/base_examples/
+docs/src/fitting_examples/
+docs/src/gen_modules/

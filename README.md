@@ -1,9 +1,39 @@
-# [![License][50]][51] [![Release][30]][31] [![Downloads][70]][71] [![CI Build][20]][21] [![CodeFactor][83]][84] [![Lines of code][81]](<>) [![Total lines][80]](<>) [![Files][82]](<>)
+# [![License][50]][51] [![Release][32]][33] [![Downloads][70]][71] [![CI Build][20]][21] 
+
+[![CodeFactor][83]][84] [![Lines of code][81]](<>) [![Total lines][80]](<>) [![Files][82]](<>)
 
 
 <img height="80"><img src="https://raw.githubusercontent.com/easyScience/easyCore/master/resources/images/ec_logo.svg" height="65">
 
 **easyCore** is the foundation of the *easyScience* universe, providing the building blocks for libraries and applications which aim to make scientific data simulation and analysis easier.
+
+## Install
+
+**easyCore** can be downloaded using pip:
+
+```pip install easysciencecore```
+
+Or direct from the repository:
+
+```pip install https://github.com/easyScience/easyCore```
+
+## Test
+
+After installation, launch the test suite:
+
+```python -m pytest```
+
+## Documentation
+
+Documentation can be found at:
+
+[https://easyScience.github.io/easyCore](https://easyScience.github.io/easyCore)
+
+## Contributing
+We absolutely welcome contributions. **easyCore** is maintained by the ESS and on a volunteer basis and thus we need to foster a community that can support user questions and develop new features to make this software a useful tool for all users while encouraging every member of the community to share their ideas.
+
+## License
+While **easyCore** is under the BSD-3 license, DFO_LS is subject to the GPL license.
 
 <!---CI Build Status--->
 
@@ -14,9 +44,10 @@
 
 <!---Release--->
 
-[30]: https://img.shields.io/github/release/easyScience/easyCore.svg
+[32]: https://img.shields.io/pypi/v/easyScienceCore.svg
 
-[31]: https://github.com/easyScience/easyCore/releases
+[33]: https://pypi.org/project/easyScienceCore
+
 
 <!---License--->
 
@@ -27,9 +58,9 @@
 
 <!---Downloads--->
 
-[70]: https://img.shields.io/github/downloads/easyScience/easyCore/total.svg
+[70]: https://img.shields.io/pypi/dm/easyScienceCore.svg
 
-[71]: https://github.com/easyScience/easyCore/releases
+[71]: https://pypi.org/project/easyScienceCore
 
 <!---Code statistics--->
 

@@ -1,5 +1,8 @@
-#  SPDX-FileCopyrightText: 2021 European Spallation Source <info@ess.eu>
+#  SPDX-FileCopyrightText: 2021 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
+#  © 2021 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+
+from __future__ import annotations
 
 __author__ = 'github.com/wardsimon'
 __version__ = '0.1.0'
@@ -8,9 +11,9 @@ import numbers
 import weakref
 
 from copy import deepcopy
-from typing import List, Union, Any, Iterable
+from typing import List, Union, Any, Iterable, Dict, Optional, Type, TYPE_CHECKING, Callable
 
-from easyCore import borg, ureg, np
+from easyCore import borg, ureg, np, pint
 from easyCore.Utils.classTools import addLoggedProp, addProp
 from easyCore.Utils.Exceptions import CoreSetException
 from easyCore.Utils.typing import noneType
@@ -18,17 +21,22 @@ from easyCore.Utils.UndoRedo import property_stack_deco
 from easyCore.Utils.json import MSONable
 from easyCore.Fitting.Constraints import SelfConstraint
 
+if TYPE_CHECKING:
+    from easyCore.Fitting.Constraints import ConstraintBase as Constraint
+
 Q_ = ureg.Quantity
 M_ = ureg.Measurement
 
 
 class Descriptor(MSONable):
     """
-    Class which is the base of all models. It contains all information to describe an objects unique property. This
-    includes a value, unit, description and url (for reference material). All so implemented is a callback so that the
-    value can be read from a linked library object.
+    This is the base of all variable descriptions for models. It contains all information to describe a single
+    unique property of an object. This description includes a name and value as well as optionally a unit, description
+    and url (for reference material). Also implemented is a callback so that the value can be read/set from a linked
+    library object.
 
-    Undo/Redo functionality is implemented for value, unit, display name.
+    A `Descriptor` is typically something which describes part of a model and is non-fittable and generally changes the
+    state of an object.
     """
 
     _constructor = Q_
@@ -36,33 +44,41 @@ class Descriptor(MSONable):
 
     def __init__(self, name: str,
                  value: Any,
-                 units: Union[noneType, str, ureg.Unit] = None,
-                 description: str = '',
-                 url: str = '',
-                 display_name: str = None,
-                 callback: property = property(),
-                 enabled: bool = True,
+                 units: Optional[Union[noneType, str, ureg.Unit]] = None,
+                 description: Optional[str] = '',
+                 url: Optional[str] = '',
+                 display_name: Optional[str] = None,
+                 callback: Optional[property] = property(),
+                 enabled: Optional[bool] = True,
                  parent=None):  # noqa: S107
         """
-        Class to describe a static-property. i.e Not a property which is fitable. The value and unit of this property
-        can vary and the changes implement undo/redo functionality.
+        This is the base of all variable descriptions for models. It contains all information to describe a single
+        unique property of an object. This description includes a name and value as well as optionally a unit,
+        description and url (for reference material). Also implemented is a callback so that the value can be read/set
+        from a linked library object.
+
+        A `Descriptor` is typically something which describes part of a model and is non-fittable and generally changes
+        the state of an object.
 
         Units are provided by pint: https://github.com/hgrecco/pint
 
         :param name: Name of this object
-        :type name: str
         :param value: Value of this object
-        :type value: Any
         :param units: This object can have a physical unit associated with it
-        :type units: str, ureg.Unit
         :param description: A brief summary of what this object is
-        :type description: str
         :param url: Lookup url for documentation/information
-        :type url: str
         :param callback: The property which says how the object is linked to another one
-        :type callback: parameter
         :param parent: The object which is the parent to this one
-        :type parent:Any
+
+        .. code-block:: python
+
+             from easyCore.Objects.Base import Descriptor
+             # Describe a color by text
+             color_text = Descriptor('fav_colour', 'red')
+             # Describe a color by RGB
+             color_num = Descriptor('fav_colour', [1, 0, 0])
+
+        .. note:: Undo/Redo functionality is implemented for the attributes `value`, `unit` and `display name`.
         """
         if not hasattr(self, '_args'):
             self._args = {
@@ -110,8 +126,7 @@ class Descriptor(MSONable):
         """
         Get a pretty display name.
 
-        :return: the pretty display name
-        :rtype: str
+        :return: The pretty display name.
         """
         # TODO This might be better implementing fancy f-strings where we can return html,latex, markdown etc
         display_name = self._display_name
@@ -125,20 +140,17 @@ class Descriptor(MSONable):
         """
         Set the pretty display name.
 
-        :param name_str: pretty display name
-        :type name_str: str
+        :param name_str: Pretty display name of the object.
         :return: None
-        :rtype: noneType
         """
         self._display_name = name_str
 
     @property
-    def unit(self) -> ureg.Unit:
+    def unit(self) -> pint.UnitRegistry:
         """
-        Get the unit associated with the value.
+        Get the unit associated with the object.
 
-        :return: Unit associated with self
-        :rtype: ureg.Unit
+        :return: Unit associated with self in `pint` form.
         """
         return self._units.units
 
@@ -148,10 +160,8 @@ class Descriptor(MSONable):
         """
         Set the unit to a new one.
 
-        :param unit_str:
-        :type unit_str: str
+        :param unit_str: String representation of the unit required. i.e `m/s`
         :return: None
-        :rtype: noneType
         """
         if not isinstance(unit_str, str):
             unit_str = str(unit_str)
@@ -161,13 +171,12 @@ class Descriptor(MSONable):
         self._value = self.__class__._constructor(**self._args)
 
     @property
-    def value(self):
+    def value(self) -> Any:
         """
         Get the value of self as a pint. This is should be usable for most cases. If a pint
         is not acceptable then the raw value can be obtained through `obj.raw_value`.
 
-        :return: Value of self
-        :rtype: Any
+        :return: Value of self with unit.
         """
         # Cached property? Should reference callback.
         # Also should reference for undo/redo
@@ -180,14 +189,12 @@ class Descriptor(MSONable):
                 raise e
         return self._value
 
-    def __deepValueSetter(self, value):
+    def __deepValueSetter(self, value: Any):
         """
         Set the value of self. This creates a pint with a unit.
 
-        :param value: new value of self
-        :type value: Any
+        :param value: New value of self
         :return: None
-        :rtype: noneType
         """
         # TODO there should be a callback to the collective, logging this as a return(if from a non `easyCore` class)
         if hasattr(value, 'magnitude'):
@@ -203,10 +210,8 @@ class Descriptor(MSONable):
         """
         Set the value of self. This creates a pint with a unit.
 
-        :param value: new value of self
-        :type value: Any
+        :param value: New value of self
         :return: None
-        :rtype: noneType
         """
         if not self.enabled:
             if borg.debug:
@@ -220,12 +225,11 @@ class Descriptor(MSONable):
                 raise CoreSetException(e)
 
     @property
-    def raw_value(self):
+    def raw_value(self) -> Any:
         """
         Return the raw value of self without a unit.
 
-        :return: raw value of self
-        :rtype: Any
+        :return: The raw value of self
         """
         value = self._value
         if hasattr(value, 'magnitude'):
@@ -240,7 +244,6 @@ class Descriptor(MSONable):
         Logical property to see if the objects value can be directly set.
 
         :return: Can the objects value be set
-        :rtype: bool
         """
         return self._enabled
 
@@ -251,7 +254,6 @@ class Descriptor(MSONable):
         Enable and disable the direct setting of an objects value field.
 
         :param value: True - objects value can be set, False - the opposite
-        :type value: bool
         """
         self._enabled = value
 
@@ -261,7 +263,6 @@ class Descriptor(MSONable):
         `compatible_units` to see if your new unit is compatible.
 
         :param unit_str: New unit in string form
-        :type unit_str: str
         """
         new_unit = ureg.parse_expression(unit_str)
         self._value = self._value.to(new_unit)
@@ -276,7 +277,6 @@ class Descriptor(MSONable):
         Returns all possible units for which the current unit can be converted.
 
         :return: Possible conversion units
-        :rtype: List[str]
         """
         return [str(u) for u in self.unit.compatible_units()]
 
@@ -293,12 +293,11 @@ class Descriptor(MSONable):
         out_str = f"<{class_name} '{obj_name}': {obj_value}{obj_units}>"
         return out_str
 
-    def as_dict(self, skip: list = None) -> dict:
+    def as_dict(self, skip: List[str] = None) -> Dict[str, str]:
         """
         Convert ones self into a serialized form.
 
         :return: dictionary of ones self
-        :rtype: dict
         """
         if skip is None:
             skip = []
@@ -310,18 +309,14 @@ class Descriptor(MSONable):
         super_dict['@id'] = str(self._borg.map.convert_id(self).int)
         return super_dict
 
-    def to_obj_type(self, data_type: Union['Descriptor', 'Parameter'], *kwargs):
+    def to_obj_type(self, data_type: Parameter, *kwargs):
         """
         Convert between a `Parameter` and a `Descriptor`.
 
         :param data_type: class constructor of what we want to be
-        :type data_type: Callable
         :param kwargs: Additional keyword/value pairs for conversion
         :return: self as a new type
-        :rtype: Callable
         """
-        if issubclass(data_type, Descriptor):
-            raise AttributeError
         pickled_obj = self.as_dict()
         pickled_obj.update(kwargs)
         return data_type.from_dict(pickled_obj)
@@ -329,7 +324,7 @@ class Descriptor(MSONable):
 
 class Parameter(Descriptor):
     """
-    This class is an extension of a `Descriptor`. Where the descriptor was for static objects,
+    This class is an extension of a ``easyCore.Object.Base.Descriptor``. Where the descriptor was for static objects,
     a `Parameter` is for dynamic objects. A parameter has the ability to be used in fitting and
     has additional fields to facilitate this.
     """
@@ -338,29 +333,35 @@ class Parameter(Descriptor):
 
     def __init__(self,
                  name: str,
-                 value: Union[numbers.Number, np.ndarray, noneType],
-                 error: Union[numbers.Number, np.ndarray] = 0.,
-                 min: numbers.Number = -np.Inf,
-                 max: numbers.Number = np.Inf,
-                 fixed: bool = False,
+                 value: Union[numbers.Number, np.ndarray],
+                 error: Optional[Union[numbers.Number, np.ndarray]] = 0.,
+                 min: Optional[numbers.Number] = -np.Inf,
+                 max: Optional[numbers.Number] = np.Inf,
+                 fixed: Optional[bool] = False,
                  **kwargs):
         """
-        Class to describe a dynamic-property which can be optimised. It inherits from `Descriptor`
-        and can as such be serialised.
+        This class is an extension of a ``easyCore.Object.Base.Descriptor``. Where the descriptor was for static
+        objects, a `Parameter` is for dynamic objects. A parameter has the ability to be used in fitting and has
+        additional fields to facilitate this.
 
         :param name: Name of this obj
-        :type name: str
         :param value: Value of this object
-        :type value: Any
         :param error: Error associated as sigma for this parameter
-        :type error: float
         :param min: Minimum value for fitting
-        :type min: float
         :param max: Maximum value for fitting
-        :type max: float
         :param fixed: Should this parameter vary when fitting?
-        :type fixed: bool
         :param kwargs: Key word arguments for the `Descriptor` class.
+
+        .. code-block:: python
+
+             from easyCore.Objects.Base import Parameter
+             # Describe a phase
+             phase_basic = Parameter('phase', 3)
+             # Describe a phase with a unit
+             phase_unit = Parameter('phase', 3, units,='rad/s')
+
+        .. note::
+            Undo/Redo functionality is implemented for the attributes `value`, `error`, `min`, `max`, `fixed`
         """
         # Set the error
         self._args = {
@@ -386,7 +387,7 @@ class Parameter(Descriptor):
         self._max: numbers.Number = max
         self._fixed: bool = fixed
         self.initial_value = self.value
-        self.constraints: dict = {
+        self._constraints: dict = {
             'user':    {},
             'builtin': {'min': SelfConstraint(self, '>=', '_min'),
                         'max': SelfConstraint(self, '<=', '_max')}
@@ -399,7 +400,7 @@ class Parameter(Descriptor):
         fun = self.__class__.value.fset
         if hasattr(fun, 'func'):
             fun = getattr(fun, 'func')
-        self.__previous_set = fun
+        self.__previous_set: Callable = fun
 
         # Monkey patch the unit and the value to take into account the new max/min situation
         addProp(self, 'value',
@@ -408,19 +409,17 @@ class Parameter(Descriptor):
                 fdel=self.__class__.value.fdel)
 
     @property
-    def _property_value(self):
+    def _property_value(self) -> Union[numbers.Number, np.ndarray]:
         return self.value
 
     @_property_value.setter
     @property_stack_deco
-    def _property_value(self, set_value):
+    def _property_value(self, set_value: Union[numbers.Number, np.ndarray]):
         """
         Verify value against constraints. This hasn't really been implemented as fitting is tricky.
 
-        :param value: value to be verified
-        :type value: Any
+        :param set_value: value to be verified
         :return: new value from constraint
-        :rtype: Any
         """
         if isinstance(set_value, M_):
             set_value = set_value.magnitude.nominal_value
@@ -443,10 +442,10 @@ class Parameter(Descriptor):
             return newer_value
 
         # First run the built in constraints. i.e. min/max
-        constraint_type: dict = self.constraints['builtin']
+        constraint_type: dict = self.builtin_constraints
         new_value = constraint_runner(constraint_type, set_value)
         # Then run any user constraints.
-        constraint_type: dict = self.constraints['user']
+        constraint_type: dict = self.user_constraints
 
         state = self._borg.stack.enabled
         if state:
@@ -464,10 +463,8 @@ class Parameter(Descriptor):
         """
         Perform unit conversion. The value, max and min can change on unit change.
 
-        :param value_str: new unit
-        :type value_str: str
+        :param new_unit: new unit
         :return: None
-        :rtype: noneType
         """
         old_unit = str(self._args['units'])
         super().convert_unit(new_unit)
@@ -484,7 +481,6 @@ class Parameter(Descriptor):
         Get the minimum value for fitting.
 
         :return: minimum value
-        :rtype: float
         """
         return self._min
 
@@ -496,9 +492,7 @@ class Parameter(Descriptor):
         - implements undo/redo functionality.
 
         :param value: new minimum value
-        :type value: float
         :return: None
-        :rtype: noneType
         """
         if value <= self.raw_value:
             self._min = value
@@ -511,7 +505,6 @@ class Parameter(Descriptor):
         Get the maximum value for fitting.
 
         :return: maximum value
-        :rtype: float
         """
         return self._max
 
@@ -523,9 +516,7 @@ class Parameter(Descriptor):
         - implements undo/redo functionality.
 
         :param value: new maximum value
-        :type value: float
         :return: None
-        :rtype: noneType
         """
         if value >= self.raw_value:
             self._max = value
@@ -550,9 +541,7 @@ class Parameter(Descriptor):
         - implements undo/redo functionality.
 
         :param value: True = fixed, False = can vary
-        :type value: bool
         :return: None
-        :rtype: noneType
         """
         if not self.enabled:
             if self._borg.stack.enabled:
@@ -571,7 +560,6 @@ class Parameter(Descriptor):
         The error associated with the parameter.
 
         :return: Error associated with parameter
-        :rtype: float
         """
         return self._value.error.magnitude
 
@@ -583,17 +571,17 @@ class Parameter(Descriptor):
         - implements undo/redo functionality.
 
         :param value: New error value
-        :type value: float
         :return: None
-        :rtype: noneType
         """
         if value < 0:
             raise ValueError
         self._args['error'] = value
         self._value = self.__class__._constructor(**self._args)
 
-    def __repr__(self):
-        """Return printable representation of a Parameter object."""
+    def __repr__(self) -> str:
+        """
+        Return printable representation of a Parameter object.
+        """
         super_str = super().__repr__()
         super_str = super_str[:-1]
         s = []
@@ -603,18 +591,41 @@ class Parameter(Descriptor):
         s.append("bounds=[%s:%s]" % (repr(self.min), repr(self.max)))
         return "%s>" % ', '.join(s)
 
+    def __float__(self) -> float:
+        return float(self.raw_value)
+
     def as_dict(self, skip: List[str] = None) -> dict:
         """
         Include enabled in the dict output as it's unfortunately skipped
 
         :param skip: Which items to skip when serializing
-        :type skip: list
         :return: Serialized dictionary
-        :rtype: dict
         """
         new_dict = super(Parameter, self).as_dict()
         new_dict['enabled'] = self.enabled
         return new_dict
+
+    @property
+    def builtin_constraints(self) -> Dict[str, Type[Constraint]]:
+        """
+        Get the built in constrains of the object. Typically these are the min/max
+
+        :return: Dictionary of constraints which are built into the system
+        """
+        return self._constraints['builtin']
+
+    @property
+    def user_constraints(self) -> Dict[str, Type[Constraint]]:
+        """
+        Get the user specified constrains of the object.
+
+        :return: Dictionary of constraints which are user supplied
+        """
+        return self._constraints['user']
+
+    @user_constraints.setter
+    def user_constraints(self, constraints_dict: Dict[str, Type[Constraint]]):
+        self._constraints['user'] = constraints_dict
 
 
 class BasedBase(MSONable):
@@ -628,21 +639,31 @@ class BasedBase(MSONable):
         self.user_data: dict = {}
         self._name: str = name
 
-    def __getstate__(self):
+    def __getstate__(self) -> Dict[str, str]:
         return self.as_dict(skip=['interface'])
 
-    def __setstate__(self, state):
+    def __setstate__(self, state: Dict[str, str]):
         obj = self.from_dict(state)
         self.__init__(**obj._kwargs)
 
     @property
-    def name(self):
+    def name(self) -> str:
+        """
+        Get the common name of the object.
+        
+        :return: Common name of the object
+        """
         return self._name
 
     @name.setter
-    @property_stack_deco
-    def name(self, value):
-        self._name = value
+    def name(self, new_name: str):
+        """
+        Set a new common name for the object.
+
+        :param new_name: New name for the object
+        :return: None
+        """
+        self._name = new_name
 
     @property
     def interface(self):
@@ -692,21 +713,20 @@ class BasedBase(MSONable):
         self.generate_bindings()
 
     @property
-    def constraints(self) -> list:
+    def constraints(self) -> List[Type[Constraint]]:
         pars = self.get_parameters()
         constraints = []
         for par in pars:
-            con = par.constraints['user']
+            con: Dict[str, Type[Constraint]] = par.user_constraints
             for key in con.keys():
                 constraints.append(con[key])
         return constraints
 
-    def as_dict(self, skip: list = None) -> dict:
+    def as_dict(self, skip: List[str] = None) -> Dict[str, str]:
         """
         Convert ones self into a serialized form.
 
         :return: dictionary of ones self
-        :rtype: dict
         """
         if skip is None:
             skip = []
@@ -724,22 +744,20 @@ class BasedBase(MSONable):
         Get all parameter objects as a list.
 
         :return: List of `Parameter` objects.
-        :rtype: List[Parameter]
         """
-        fit_list = []
+        par_list = []
         for key, item in self._kwargs.items():
             if hasattr(item, 'get_parameters'):
-                fit_list = [*fit_list, *item.get_parameters()]
+                par_list = [*par_list, *item.get_parameters()]
             elif isinstance(item, Parameter):
-                fit_list.append(item)
-        return fit_list
+                par_list.append(item)
+        return par_list
 
     def _get_linkable_attributes(self) -> List[Union[Descriptor, Parameter]]:
         """
         Get all objects which can be linked against as a list.
 
         :return: List of `Descriptor`/`Parameter` objects.
-        :rtype: List[Parameter]
         """
         item_list = []
         for key, item in self._kwargs.items():
@@ -754,7 +772,6 @@ class BasedBase(MSONable):
         Get all objects which can be fitted (and are not fixed) as a list.
 
         :return: List of `Parameter` objects which can be used in fitting.
-        :rtype: List[Parameter]
         """
         fit_list = []
         for key, item in self._kwargs.items():
@@ -769,7 +786,6 @@ class BasedBase(MSONable):
         This creates auto-completion and helps out in iPython notebooks.
 
         :return: list of function and parameter names for auto-completion
-        :rtype: List[str]
         """
         new_class_objs = list(k for k in dir(self.__class__) if not k.startswith('_'))
         return sorted(new_class_objs)
@@ -782,22 +798,19 @@ class BaseObj(BasedBase):
     `BaseObj(a=value, b=value)`. For `Parameter` or `Descriptor` objects we can
     cheat with `BaseObj(*[Descriptor(...), Parameter(...), ...])`.
     """
-    def __init__(self, name: str, *args, **kwargs):
+    def __init__(self, name: str, *args: Optional[Union[Type[Descriptor], Type[BasedBase]]],
+                 **kwargs: Optional[Union[Type[Descriptor], Type[BasedBase]]]):
         """
         Set up the base class.
 
         :param name: Name of this object
-        :type name: str
         :param args: Any arguments?
-        :type args: Union[Parameter, Descriptor]
-        :param parent: Parent object which is used for linking
-        :type parent: Any
         :param kwargs: Fields which this class should contain
         """
         super(BaseObj, self).__init__(name)
         # If Parameter or Descriptor is given as arguments...
         for arg in args:
-            if issubclass(arg.__class__, (BaseObj, Descriptor)):
+            if issubclass(type(arg), (BaseObj, Descriptor)):
                 kwargs[getattr(arg, 'name')] = arg
         # Set kwargs, also useful for serialization
         known_keys = self.__dict__.keys()
@@ -809,9 +822,17 @@ class BaseObj(BasedBase):
                     'BaseCollection' in [c.__name__ for c in type(kwargs[key]).__bases__]:
                 self._borg.map.add_edge(self, kwargs[key])
                 self._borg.map.reset_type(kwargs[key], 'created_internal')
-            addLoggedProp(self, key, self.__getter(key), self.__setter(key), get_id=key, my_self=self, test_class=BaseObj)
+            addLoggedProp(self, key, self.__getter(key), self.__setter(key),
+                          get_id=key, my_self=self, test_class=BaseObj)
 
-    def _add_component(self, key: str, component):
+    def _add_component(self, key: str, component: Union[Type[Descriptor], Type[BasedBase]]):
+        """
+        Dynamically add a component to the class.
+
+        :param key: Name of component to be added
+        :param component: Component to be added
+        :return: None
+        """
         self._kwargs[key] = component
         self._borg.map.add_edge(self, component)
         self._borg.map.reset_type(component, 'created_internal')
@@ -830,18 +851,15 @@ class BaseObj(BasedBase):
 
     @staticmethod
     def __getter(key: str):
-
-        def getter(obj):
+        def getter(obj: Union[Type[Descriptor], Type[BasedBase]]):
             return obj._kwargs[key]
-
         return getter
 
     @staticmethod
-    def __setter(key):
-        def setter(obj, value):
+    def __setter(key: str):
+        def setter(obj: Union[Type[Descriptor], Type[BasedBase]], value: float):
             if issubclass(obj._kwargs[key].__class__, Descriptor):
                 obj._kwargs[key].value = value
             else:
                 obj._kwargs[key] = value
-
         return setter

@@ -358,7 +358,7 @@ def test_baseCollection_constraints(cls):
     p2 = Parameter('p2', 2)
 
     from easyCore.Fitting.Constraints import ObjConstraint
-    p2.constraints['user']['testing'] = ObjConstraint(p2, '2*', p1)
+    p2.user_constraints['testing'] = ObjConstraint(p2, '2*', p1)
 
     obj = cls(name, p1, p2)
 

@@ -6,8 +6,9 @@ __email__ = "shyuep@gmail.com"
 __status__ = "Production"
 __date__ = "Sep 23, 2011"
 
-#  SPDX-FileCopyrightText: 2021 European Spallation Source <info@ess.eu>
+#  SPDX-FileCopyrightText: 2021 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
+#  © 2021 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
 """
 This module provides classes that operate on points or vectors in 3D space.

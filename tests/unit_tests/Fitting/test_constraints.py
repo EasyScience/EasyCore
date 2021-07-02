@@ -80,8 +80,8 @@ def test_ObjConstraint_Multiple(threePars):
 
     value = 1.5
 
-    p0.constraints['user']['num_1'] = ObjConstraint(p1, '', p0)
-    p0.constraints['user']['num_2'] = ObjConstraint(p2, '', p0)
+    p0.user_constraints['num_1'] = ObjConstraint(p1, '', p0)
+    p0.user_constraints['num_2'] = ObjConstraint(p2, '', p0)
 
     p0.value = value
     assert p0.raw_value == value

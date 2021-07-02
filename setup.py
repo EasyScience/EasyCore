@@ -26,7 +26,7 @@ setup(
     name='easyScienceCore',
     version='0.1.0',
     description='Generic logic for easyScience libraries',
-    python_requires='==3.*,>=3.6.0,>=3.6.1',
+    python_requires='==3.*,>=3.7.0',
     project_urls={"documentation": "https://github.com/easyScience/easyCore", "homepage": "https://github.com/easyScience/easyCore"},
     author='Simon Ward',
     license='GPL-3.0',
@@ -34,5 +34,5 @@ setup(
     packages=['easyCore', 'easyCore.Datasets', 'easyCore.Elements', 'easyCore.Elements.Basic', 'easyCore.Elements.HigherLevel', 'easyCore.Fitting', 'easyCore.Objects', 'easyCore.Symmetry', 'easyCore.Utils', 'easyCore.Utils.Hugger', 'easyCore.Utils.io'],
     package_dir={"": "."},
     package_data={"easyCore.Elements": ["*.json"], "easyCore.Symmetry": ["*.json"]},
-    install_requires=['asteval==0.*,>=0.9.23', 'bumps==0.*,>=0.8.0', 'dfo-ls==1.*,>=1.2.1', 'lmfit==1.*,>=1.0.0', 'numpy==1.*,>=1.19.0', 'pint==0.*,>=0.16.0', 'uncertainties==3.*,>=3.1.0', 'xarray==0.*,>=0.16.2'],
+    install_requires=['asteval==0.*,>=0.9.23', 'bumps==0.*,>=0.8.0', 'dfo-ls==1.*,>=1.2.0', 'lmfit==1.*,>=1.0.0', 'numpy==1.*,>=1.19.0', 'pint==0.*,>=0.16.0', 'uncertainties==3.*,>=3.1.0', 'xarray==0.*,>=0.16.0'],
 )
