@@ -193,7 +193,7 @@
 <span class="kn">import</span> <span class="nn">weakref</span>
 
 <span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">deepcopy</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">TYPE_CHECKING</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Callable</span>
 
 <span class="kn">from</span> <span class="nn">easyCore</span> <span class="k">import</span> <span class="n">borg</span><span class="p">,</span> <span class="n">ureg</span><span class="p">,</span> <span class="n">np</span><span class="p">,</span> <span class="n">pint</span>
 <span class="kn">from</span> <span class="nn">easyCore.Utils.classTools</span> <span class="k">import</span> <span class="n">addLoggedProp</span><span class="p">,</span> <span class="n">addProp</span>
@@ -235,12 +235,12 @@
                  <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>  <span class="c1"># noqa: S107</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This is the base of all variable descriptions for models. It contains all information to describe a single</span>
-<span class="sd">        unique property of an object. This description includes a name and value as well as optionally a unit, description</span>
-<span class="sd">        and url (for reference material). Also implemented is a callback so that the value can be read/set from a linked</span>
-<span class="sd">        library object.</span>
+<span class="sd">        unique property of an object. This description includes a name and value as well as optionally a unit,</span>
+<span class="sd">        description and url (for reference material). Also implemented is a callback so that the value can be read/set</span>
+<span class="sd">        from a linked library object.</span>
 
-<span class="sd">        A `Descriptor` is typically something which describes part of a model and is non-fittable and generally changes the</span>
-<span class="sd">        state of an object.</span>
+<span class="sd">        A `Descriptor` is typically something which describes part of a model and is non-fittable and generally changes</span>
+<span class="sd">        the state of an object.</span>
 
 <span class="sd">        Units are provided by pint: https://github.com/hgrecco/pint</span>
 
@@ -436,7 +436,6 @@
 <span class="sd">        Enable and disable the direct setting of an objects value field.</span>
 
 <span class="sd">        :param value: True - objects value can be set, False - the opposite</span>
-<span class="sd">        :type value: bool</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_enabled</span> <span class="o">=</span> <span class="n">value</span>
 
@@ -446,7 +445,6 @@
 <span class="sd">        `compatible_units` to see if your new unit is compatible.</span>
 
 <span class="sd">        :param unit_str: New unit in string form</span>
-<span class="sd">        :type unit_str: str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">new_unit</span> <span class="o">=</span> <span class="n">ureg</span><span class="o">.</span><span class="n">parse_expression</span><span class="p">(</span><span class="n">unit_str</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">new_unit</span><span class="p">)</span>
@@ -493,7 +491,7 @@
         <span class="n">super_dict</span><span class="p">[</span><span class="s1">&#39;@id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_borg</span><span class="o">.</span><span class="n">map</span><span class="o">.</span><span class="n">convert_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">super_dict</span></div>
 
-<div class="viewcode-block" id="Descriptor.to_obj_type"><a class="viewcode-back" href="../../../reference/base.html#easyCore.Objects.Base.Descriptor.to_obj_type">[docs]</a>    <span class="k">def</span> <span class="nf">to_obj_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_type</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s1">&#39;Descriptor&#39;</span><span class="p">,</span> <span class="s1">&#39;Parameter&#39;</span><span class="p">],</span> <span class="o">*</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Descriptor.to_obj_type"><a class="viewcode-back" href="../../../reference/base.html#easyCore.Objects.Base.Descriptor.to_obj_type">[docs]</a>    <span class="k">def</span> <span class="nf">to_obj_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_type</span><span class="p">:</span> <span class="n">Parameter</span><span class="p">,</span> <span class="o">*</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Convert between a `Parameter` and a `Descriptor`.</span>
 
@@ -501,8 +499,6 @@
 <span class="sd">        :param kwargs: Additional keyword/value pairs for conversion</span>
 <span class="sd">        :return: self as a new type</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">data_type</span><span class="p">,</span> <span class="n">Descriptor</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">AttributeError</span>
         <span class="n">pickled_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span>
         <span class="n">pickled_obj</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">data_type</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">pickled_obj</span><span class="p">)</span></div></div>
@@ -526,9 +522,9 @@
                  <span class="n">fixed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
                  <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        This class is an extension of a ``easyCore.Object.Base.Descriptor``. Where the descriptor was for static objects,</span>
-<span class="sd">        a `Parameter` is for dynamic objects. A parameter has the ability to be used in fitting and</span>
-<span class="sd">        has additional fields to facilitate this.</span>
+<span class="sd">        This class is an extension of a ``easyCore.Object.Base.Descriptor``. Where the descriptor was for static</span>
+<span class="sd">        objects, a `Parameter` is for dynamic objects. A parameter has the ability to be used in fitting and has</span>
+<span class="sd">        additional fields to facilitate this.</span>
 
 <span class="sd">        :param name: Name of this obj</span>
 <span class="sd">        :param value: Value of this object</span>
@@ -586,7 +582,7 @@
         <span class="n">fun</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">fset</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">fun</span><span class="p">,</span> <span class="s1">&#39;func&#39;</span><span class="p">):</span>
             <span class="n">fun</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">fun</span><span class="p">,</span> <span class="s1">&#39;func&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__previous_set</span> <span class="o">=</span> <span class="n">fun</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__previous_set</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">fun</span>
 
         <span class="c1"># Monkey patch the unit and the value to take into account the new max/min situation</span>
         <span class="n">addProp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span>
@@ -776,6 +772,9 @@
         <span class="n">s</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">super_str</span><span class="p">)</span>
         <span class="n">s</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;bounds=[</span><span class="si">%s</span><span class="s2">:</span><span class="si">%s</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min</span><span class="p">),</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max</span><span class="p">)))</span>
         <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&gt;&quot;</span> <span class="o">%</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__float__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">raw_value</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Parameter.as_dict"><a class="viewcode-back" href="../../../reference/base.html#easyCore.Objects.Base.Parameter.as_dict">[docs]</a>    <span class="k">def</span> <span class="nf">as_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">skip</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -993,7 +992,7 @@
         <span class="nb">super</span><span class="p">(</span><span class="n">BaseObj</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
         <span class="c1"># If Parameter or Descriptor is given as arguments...</span>
         <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="p">(</span><span class="n">BaseObj</span><span class="p">,</span> <span class="n">Descriptor</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">arg</span><span class="p">),</span> <span class="p">(</span><span class="n">BaseObj</span><span class="p">,</span> <span class="n">Descriptor</span><span class="p">)):</span>
                 <span class="n">kwargs</span><span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">arg</span>
         <span class="c1"># Set kwargs, also useful for serialization</span>
         <span class="n">known_keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
@@ -1005,7 +1004,8 @@
                     <span class="s1">&#39;BaseCollection&#39;</span> <span class="ow">in</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="vm">__name__</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">type</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">])</span><span class="o">.</span><span class="vm">__bases__</span><span class="p">]:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_borg</span><span class="o">.</span><span class="n">map</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_borg</span><span class="o">.</span><span class="n">map</span><span class="o">.</span><span class="n">reset_type</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="s1">&#39;created_internal&#39;</span><span class="p">)</span>
-            <span class="n">addLoggedProp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__getter</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">__setter</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="n">get_id</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">my_self</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_class</span><span class="o">=</span><span class="n">BaseObj</span><span class="p">)</span>
+            <span class="n">addLoggedProp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__getter</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">__setter</span><span class="p">(</span><span class="n">key</span><span class="p">),</span>
+                          <span class="n">get_id</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">my_self</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_class</span><span class="o">=</span><span class="n">BaseObj</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_add_component</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">component</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">Descriptor</span><span class="p">],</span> <span class="n">Type</span><span class="p">[</span><span class="n">BasedBase</span><span class="p">]]):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1033,20 +1033,17 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">__getter</span><span class="p">(</span><span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-
-        <span class="k">def</span> <span class="nf">getter</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">getter</span><span class="p">(</span><span class="n">obj</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">Descriptor</span><span class="p">],</span> <span class="n">Type</span><span class="p">[</span><span class="n">BasedBase</span><span class="p">]]):</span>
             <span class="k">return</span> <span class="n">obj</span><span class="o">.</span><span class="n">_kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-
         <span class="k">return</span> <span class="n">getter</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">__setter</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
-        <span class="k">def</span> <span class="nf">setter</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__setter</span><span class="p">(</span><span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">setter</span><span class="p">(</span><span class="n">obj</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">Descriptor</span><span class="p">],</span> <span class="n">Type</span><span class="p">[</span><span class="n">BasedBase</span><span class="p">]],</span> <span class="n">value</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
             <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">_kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="n">Descriptor</span><span class="p">):</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">_kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">_kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-
         <span class="k">return</span> <span class="n">setter</span></div>
 </pre></div>
 

@@ -40,12 +40,12 @@ class Pendulum(BaseObj):
     def __call__(self, t):
         return self.A.raw_value * np.sin(2*np.pi*self.f.raw_value*t + self.p.raw_value)
 
-    def plot(self, time, axis=None):
+    def plot(self, time, axis=None, **kwargs):
         if axis is None:
             axis = plt
         else:
             axis.set_title(f'A={self.A.raw_value}, F={self.f.raw_value}, P={self.p.raw_value}')
-        p = axis.plot(time, self(time))
+        p = axis.plot(time, self(time), **kwargs)
         return p
 
 #%%
@@ -88,6 +88,7 @@ fig.show()
 pendulum_array = [Pendulum.from_pars(p=phase) for phase in np.linspace(0, 1, 3)]
 fig = plt.figure()
 for pendulum in pendulum_array:
-    pendulum.plot(t)
+    pendulum.plot(t, label=f'Phase = {pendulum.p}')
+plt.legend(loc='lower right')
 fig.show()
 

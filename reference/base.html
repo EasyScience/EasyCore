@@ -199,11 +199,11 @@
 <dt class="sig sig-object py" id="easyCore.Objects.Base.Descriptor">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">easyCore.Objects.Base.</span></span><span class="sig-name descname"><span class="pre">Descriptor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">name</span></em>, <em class="sig-param"><span class="pre">value</span></em>, <em class="sig-param"><span class="pre">units=None</span></em>, <em class="sig-param"><span class="pre">description=''</span></em>, <em class="sig-param"><span class="pre">url=''</span></em>, <em class="sig-param"><span class="pre">display_name=None</span></em>, <em class="sig-param"><span class="pre">callback=&lt;property</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">enabled=True</span></em>, <em class="sig-param"><span class="pre">parent=None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Objects/Base.html#Descriptor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Objects.Base.Descriptor" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is the base of all variable descriptions for models. It contains all information to describe a single
-unique property of an object. This description includes a name and value as well as optionally a unit, description
-and url (for reference material). Also implemented is a callback so that the value can be read/set from a linked
-library object.</p>
-<p>A <cite>Descriptor</cite> is typically something which describes part of a model and is non-fittable and generally changes the
-state of an object.</p>
+unique property of an object. This description includes a name and value as well as optionally a unit,
+description and url (for reference material). Also implemented is a callback so that the value can be read/set
+from a linked library object.</p>
+<p>A <cite>Descriptor</cite> is typically something which describes part of a model and is non-fittable and generally changes
+the state of an object.</p>
 <p>Units are provided by pint: <a class="reference external" href="https://github.com/hgrecco/pint">https://github.com/hgrecco/pint</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -264,7 +264,7 @@ state of an object.</p>
 <cite>compatible_units</cite> to see if your new unit is compatible.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>unit_str</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – New unit in string form</p>
+<dd class="field-odd"><p><strong>unit_str</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – New unit in string form</p>
 </dd>
 </dl>
 </dd></dl>
@@ -318,7 +318,7 @@ state of an object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.ForwardRef" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardRef</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.ForwardRef" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardRef</span></code></a>]) – class constructor of what we want to be</p></li>
+<li><p><strong>data_type</strong> (<a class="reference internal" href="#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a>) – class constructor of what we want to be</p></li>
 <li><p><strong>kwargs</strong> – Additional keyword/value pairs for conversion</p></li>
 </ul>
 </dd>
@@ -365,9 +365,9 @@ is not acceptable then the raw value can be obtained through <cite>obj.raw_value
 <dl class="py class">
 <dt class="sig sig-object py" id="easyCore.Objects.Base.Parameter">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">easyCore.Objects.Base.</span></span><span class="sig-name descname"><span class="pre">Parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Objects/Base.html#Parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Objects.Base.Parameter" title="Permalink to this definition">¶</a></dt>
-<dd><p>This class is an extension of a <code class="docutils literal notranslate"><span class="pre">easyCore.Object.Base.Descriptor</span></code>. Where the descriptor was for static objects,
-a <cite>Parameter</cite> is for dynamic objects. A parameter has the ability to be used in fitting and
-has additional fields to facilitate this.</p>
+<dd><p>This class is an extension of a <code class="docutils literal notranslate"><span class="pre">easyCore.Object.Base.Descriptor</span></code>. Where the descriptor was for static
+objects, a <cite>Parameter</cite> is for dynamic objects. A parameter has the ability to be used in fitting and has
+additional fields to facilitate this.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -580,7 +580,7 @@ has additional fields to facilitate this.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.ForwardRef" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardRef</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.ForwardRef" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardRef</span></code></a>]) – class constructor of what we want to be</p></li>
+<li><p><strong>data_type</strong> (<a class="reference internal" href="#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a>) – class constructor of what we want to be</p></li>
 <li><p><strong>kwargs</strong> – Additional keyword/value pairs for conversion</p></li>
 </ul>
 </dd>

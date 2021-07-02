@@ -71,3 +71,5 @@ You can make your own constraints
 
 .. autoclass:: easyCore.Fitting.Constraints.ConstraintBase
   :members:
+  :private-members:
+  :special-members: __repr__
