@@ -66,7 +66,6 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
         Is the current constraint enabled.
 
         :return: Logical answer to if the constraint is enabled.
-        :rtype: bool
         """
         return self._enabled
 
@@ -79,9 +78,7 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
 ... note:: If the new value is ``True`` the constraint is also applied after enabling.
 
         :param enabled_value: New state of the constraint.
-        :type enabled_value: bool
         :return: None
-        :rtype: None
         """
 
         if self._enabled == enabled_value:

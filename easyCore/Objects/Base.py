@@ -11,7 +11,7 @@ import numbers
 import weakref
 
 from copy import deepcopy
-from typing import List, Union, Any, Iterable, Dict, Optional, Type, TYPE_CHECKING
+from typing import List, Union, Any, Iterable, Dict, Optional, Type, TYPE_CHECKING, Callable
 
 from easyCore import borg, ureg, np, pint
 from easyCore.Utils.classTools import addLoggedProp, addProp
@@ -53,12 +53,12 @@ class Descriptor(MSONable):
                  parent=None):  # noqa: S107
         """
         This is the base of all variable descriptions for models. It contains all information to describe a single
-        unique property of an object. This description includes a name and value as well as optionally a unit, description
-        and url (for reference material). Also implemented is a callback so that the value can be read/set from a linked
-        library object.
+        unique property of an object. This description includes a name and value as well as optionally a unit,
+        description and url (for reference material). Also implemented is a callback so that the value can be read/set
+        from a linked library object.
 
-        A `Descriptor` is typically something which describes part of a model and is non-fittable and generally changes the
-        state of an object.
+        A `Descriptor` is typically something which describes part of a model and is non-fittable and generally changes
+        the state of an object.
 
         Units are provided by pint: https://github.com/hgrecco/pint
 
@@ -254,7 +254,6 @@ class Descriptor(MSONable):
         Enable and disable the direct setting of an objects value field.
 
         :param value: True - objects value can be set, False - the opposite
-        :type value: bool
         """
         self._enabled = value
 
@@ -264,7 +263,6 @@ class Descriptor(MSONable):
         `compatible_units` to see if your new unit is compatible.
 
         :param unit_str: New unit in string form
-        :type unit_str: str
         """
         new_unit = ureg.parse_expression(unit_str)
         self._value = self._value.to(new_unit)
@@ -311,7 +309,7 @@ class Descriptor(MSONable):
         super_dict['@id'] = str(self._borg.map.convert_id(self).int)
         return super_dict
 
-    def to_obj_type(self, data_type: Union['Descriptor', 'Parameter'], *kwargs):
+    def to_obj_type(self, data_type: Parameter, *kwargs):
         """
         Convert between a `Parameter` and a `Descriptor`.
 
@@ -319,8 +317,6 @@ class Descriptor(MSONable):
         :param kwargs: Additional keyword/value pairs for conversion
         :return: self as a new type
         """
-        if issubclass(data_type, Descriptor):
-            raise AttributeError
         pickled_obj = self.as_dict()
         pickled_obj.update(kwargs)
         return data_type.from_dict(pickled_obj)
@@ -344,9 +340,9 @@ class Parameter(Descriptor):
                  fixed: Optional[bool] = False,
                  **kwargs):
         """
-        This class is an extension of a ``easyCore.Object.Base.Descriptor``. Where the descriptor was for static objects,
-        a `Parameter` is for dynamic objects. A parameter has the ability to be used in fitting and
-        has additional fields to facilitate this.
+        This class is an extension of a ``easyCore.Object.Base.Descriptor``. Where the descriptor was for static
+        objects, a `Parameter` is for dynamic objects. A parameter has the ability to be used in fitting and has
+        additional fields to facilitate this.
 
         :param name: Name of this obj
         :param value: Value of this object
@@ -404,7 +400,7 @@ class Parameter(Descriptor):
         fun = self.__class__.value.fset
         if hasattr(fun, 'func'):
             fun = getattr(fun, 'func')
-        self.__previous_set = fun
+        self.__previous_set: Callable = fun
 
         # Monkey patch the unit and the value to take into account the new max/min situation
         addProp(self, 'value',
@@ -594,6 +590,9 @@ class Parameter(Descriptor):
         s.append(super_str)
         s.append("bounds=[%s:%s]" % (repr(self.min), repr(self.max)))
         return "%s>" % ', '.join(s)
+
+    def __float__(self) -> float:
+        return float(self.raw_value)
 
     def as_dict(self, skip: List[str] = None) -> dict:
         """
@@ -811,7 +810,7 @@ class BaseObj(BasedBase):
         super(BaseObj, self).__init__(name)
         # If Parameter or Descriptor is given as arguments...
         for arg in args:
-            if issubclass(arg.__class__, (BaseObj, Descriptor)):
+            if issubclass(type(arg), (BaseObj, Descriptor)):
                 kwargs[getattr(arg, 'name')] = arg
         # Set kwargs, also useful for serialization
         known_keys = self.__dict__.keys()
@@ -823,7 +822,8 @@ class BaseObj(BasedBase):
                     'BaseCollection' in [c.__name__ for c in type(kwargs[key]).__bases__]:
                 self._borg.map.add_edge(self, kwargs[key])
                 self._borg.map.reset_type(kwargs[key], 'created_internal')
-            addLoggedProp(self, key, self.__getter(key), self.__setter(key), get_id=key, my_self=self, test_class=BaseObj)
+            addLoggedProp(self, key, self.__getter(key), self.__setter(key),
+                          get_id=key, my_self=self, test_class=BaseObj)
 
     def _add_component(self, key: str, component: Union[Type[Descriptor], Type[BasedBase]]):
         """
@@ -851,18 +851,15 @@ class BaseObj(BasedBase):
 
     @staticmethod
     def __getter(key: str):
-
-        def getter(obj):
+        def getter(obj: Union[Type[Descriptor], Type[BasedBase]]):
             return obj._kwargs[key]
-
         return getter
 
     @staticmethod
-    def __setter(key):
-        def setter(obj, value):
+    def __setter(key: str):
+        def setter(obj: Union[Type[Descriptor], Type[BasedBase]], value: float):
             if issubclass(obj._kwargs[key].__class__, Descriptor):
                 obj._kwargs[key].value = value
             else:
                 obj._kwargs[key] = value
-
         return setter
