@@ -17,6 +17,7 @@ __pycache__
 .venv
 .coverage
 .pyc
+coverage.xml
 
 # Poetry
 dist
@@ -40,5 +41,18 @@ build
 *.zip
 .ci/
 .idea/
+*.pytest_cache/
+.tox
 
-tests/unit_tests/Objects/.pytest_cache/
+# Docs
+docs/_build
+
+dask-worker-space/dask-worker-space/
+
+poetry.lock
+
+.coveragerc
+
+docs/src/base_examples/
+docs/src/fitting_examples/
+docs/src/gen_modules/

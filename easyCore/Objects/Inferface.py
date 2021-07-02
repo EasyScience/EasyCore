@@ -1,11 +1,16 @@
 __author__ = 'github.com/wardsimon'
-__version__ = '0.0.1'
+__version__ = '0.1.0'
 
 
-import numpy as np
+#  SPDX-FileCopyrightText: 2021 easyCore contributors  <core@easyscience.software>
+#  SPDX-License-Identifier: BSD-3-Clause
+#  © 2021 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
 from abc import ABCMeta, abstractmethod
-from typing import TypeVar, List
+from typing import TypeVar, List, NamedTuple, Callable
+
+from easyCore import np
+
 
 _C = TypeVar("_C", bound=ABCMeta)
 _M = TypeVar("_M")
@@ -93,7 +98,8 @@ class InterfaceFactoryTemplate:
         """
         return self.return_name(self._current_interface)
 
-    def fit_func(self, x_array: np.ndarray, *args, **kwargs) -> np.ndarray:
+    @property
+    def fit_func(self) -> Callable: # , x_array: np.ndarray, *args, **kwargs) -> np.ndarray:
         """
         Pass through to the underlying interfaces fitting function.
 
@@ -105,14 +111,10 @@ class InterfaceFactoryTemplate:
         :type kwargs: Any
         :return: points calculated at positional values `x`
         :rtype: np.ndarray
-        """
-        def outer_fit_func(obj):
-            def inner_fit_func(x_array, *args, **kwargs):
-                return obj.__interface_obj.fit_func(x_array, *args, **kwargs)
-            return inner_fit_func
-        return outer_fit_func(self)(x_array, *args, **kwargs)
+        # """
+        return self.__interface_obj.fit_func
 
-    def generate_bindings(self, model):
+    def generate_bindings(self, model, *args, ifun=None, **kwargs):
         """
         Automatically bind a `Parameter` to the corresponding interface.
         :param name: parameter name
@@ -120,22 +122,17 @@ class InterfaceFactoryTemplate:
         :return: binding property
         :rtype: property
         """
-        props = model.get_parameters()
-        for prop in props:
-            prop._callback = self.generate_binding(prop.name)
-            prop._callback.fset(prop.raw_value)
-
-    @abstractmethod
-    def generate_binding(self, name, *args, **kwargs) -> property:
-        """
-        Automatically bind a `Parameter` to the corresponding interface.
-
-        :param name: parameter name
-        :type name: str
-        :return: binding property
-        :rtype: property
-        """
-        pass
+        class_links = self.__interface_obj.create(model)
+        props = model._get_linkable_attributes()
+        props_names = [prop.name for prop in props]
+        for item in class_links:
+            for item_key in item.name_conversion.keys():
+                if item_key not in props_names:
+                    continue
+                idx = props_names.index(item_key)
+                prop = props[idx]
+                prop._callback = item.make_prop(item_key)
+                prop._callback.fset(prop.raw_value)
 
     def __call__(self, *args, **kwargs) -> _M:
         return self.__interface_obj
@@ -149,3 +146,30 @@ class InterfaceFactoryTemplate:
         if hasattr(this_interface, 'name'):
             interface_name = getattr(this_interface, 'name')
         return interface_name
+
+
+class ItemContainer(NamedTuple):
+    link_name: str
+    name_conversion: dict
+    getter_fn: Callable
+    setter_fn: Callable
+
+    def make_prop(self, parameter_name) -> property:
+        return property(fget=self.__make_getter(parameter_name),
+                        fset=self.__make_setter(parameter_name))
+
+    def convert_key(self, lookup_key: str) -> str:
+        key = self.name_conversion.get(lookup_key, None)
+        return key
+
+    def __make_getter(self, get_name: str) -> Callable:
+        def get_value():
+            inner_key = self.name_conversion.get(get_name, None)
+            return self.getter_fn(self.link_name, inner_key)
+        return get_value
+
+    def __make_setter(self, get_name: str) -> Callable:
+        def set_value(value):
+            inner_key = self.name_conversion.get(get_name, None)
+            self.setter_fn(self.link_name, **{inner_key: value})
+        return set_value

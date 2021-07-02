@@ -1,9 +1,15 @@
+#  SPDX-FileCopyrightText: 2021 easyCore contributors  <core@easyscience.software>
+#  SPDX-License-Identifier: BSD-3-Clause
+#  © 2021 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+
 __author__ = 'github.com/wardsimon'
-__version__ = '0.0.1'
+__version__ = '0.1.0'
 
 import inspect
+from typing import List
 
-from easyCore.Fitting.fitting_template import noneType, Union, Callable, FittingTemplate, np, FitResults
+from easyCore.Fitting.fitting_template import noneType, Union, Callable, \
+    FittingTemplate, np, FitResults, NameConverter, FitError
 
 # Import lmfit specific objects
 from lmfit import Parameter as lmParameter, Parameters as lmParameters, Model as lmModel
@@ -43,14 +49,14 @@ class lmfit(FittingTemplate):  # noqa: S101
         if pars is None:
             pars = self._cached_pars
         # Create the model
-        model = lmModel(fit_func, independent_vars=['x'], param_names=list(pars.keys()))
+        model = lmModel(fit_func, independent_vars=['x'], param_names=['p' + str(key) for key in pars.keys()])
         # Assign values from the `Parameter` to the model
         for name, item in pars.items():
             if isinstance(item, lmParameter):
                 value = item.value
             else:
                 value = item.raw_value
-            model.set_param_hint(name, value=value, min=item.min, max=item.max)
+            model.set_param_hint('p' + str(name), value=value, min=item.min, max=item.max)
 
         # Cache the model for later reference
         self._cached_model = model
@@ -67,8 +73,9 @@ class lmfit(FittingTemplate):  # noqa: S101
         # Original fit function
         func = self._original_fit_function
         # Get a list of `Parameters`
-        for parameter in self._object.get_parameters():
-            self._cached_pars[parameter.name] = parameter
+        self._cached_pars = {}
+        for parameter in self._object.get_fit_parameters():
+            self._cached_pars[NameConverter().get_key(parameter)] = parameter
 
         # Make a new fit function
         def fit_function(x: np.ndarray, **kwargs):
@@ -84,12 +91,14 @@ class lmfit(FittingTemplate):  # noqa: S101
             # Update the `Parameter` values and the callback if needed
             # TODO THIS IS NOT THREAD SAFE :-(
             for name, value in kwargs.items():
-                if name in self._cached_pars.keys():
-                    self._cached_pars[name].value = value
-                    update_fun = self._cached_pars[name]._callback.fset
-                    if update_fun:
-                        update_fun(value)
+                par_name = int(name[1:])
+                if par_name in self._cached_pars.keys():
+                    # This will take in to account constraints
+                    self._cached_pars[par_name].value = value
+                    # Since we are calling the parameter fset will be called.
             # TODO Pre processing here
+            for constraint in self.fit_constraints():
+                constraint()
             return_data = func(x)
             # TODO Loading or manipulating data here
             return return_data
@@ -100,7 +109,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         # Where we need to be generic. Note that this won't hold for much outside of this scope.
         params = [inspect.Parameter('x',
                                     inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                                    annotation=inspect._empty), *[inspect.Parameter(name,
+                                    annotation=inspect._empty), *[inspect.Parameter('p' + str(name),
                                                                                     inspect.Parameter.POSITIONAL_OR_KEYWORD,
                                                                                     annotation=inspect._empty,
                                                                                     default=parameter.raw_value)
@@ -112,10 +121,12 @@ class lmfit(FittingTemplate):  # noqa: S101
 
     def fit(self, x: np.ndarray, y: np.ndarray,
             weights: Union[np.ndarray, noneType] = None, model: Union[lmModel, noneType] = None,
-            parameters: Union[lmParameters, noneType] = None, **kwargs) -> FitResults:
+            parameters: Union[lmParameters, noneType] = None, method: str = None, **kwargs) -> FitResults:
         """
         Perform a fit using the lmfit engine.
 
+        :param method:
+        :type method:
         :param x: points to be calculated at
         :type x: np.ndarray
         :param y: measured points
@@ -130,6 +141,12 @@ class lmfit(FittingTemplate):  # noqa: S101
         :return: Fit results
         :rtype: ModelResult
         """
+        default_method = {}
+        if method is not None and method in self.available_methods():
+            default_method['method'] = method
+
+        if weights is None:
+            weights = np.sqrt(np.abs(y))
 
         # Why do we do this? Because a fitting template has to have borg instantiated outside pre-runtime
         from easyCore import borg
@@ -137,13 +154,15 @@ class lmfit(FittingTemplate):  # noqa: S101
             borg.stack.beginMacro('Fitting routine')
             if model is None:
                 model = self.make_model()
-            model_results = model.fit(y, x=x, weights=weights, **kwargs)
+
+            model_results = model.fit(y, x=x, weights=weights, **default_method, **kwargs)
             self._set_parameter_fit_result(model_results)
+            results = self._gen_fit_results(model_results)
         except Exception as e:
-            raise e
+            raise FitError(e)
         finally:
             borg.stack.endMacro()
-        return self._gen_fit_results(model_results)
+        return results
 
     def convert_to_pars_obj(self, par_list: Union[list, noneType] = None) -> lmParameters:
         """
@@ -156,7 +175,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         """
         if par_list is None:
             # Assume that we have a BaseObj for which we can obtain a list
-            par_list = self._object.get_parameters()
+            par_list = self._object.get_fit_parameters()
         pars_obj = lmParameters().add_many([self.__class__.convert_to_par_object(obj) for obj in par_list])
         return pars_obj
 
@@ -168,7 +187,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         :return: lmfit Parameter compatible object.
         :rtype: lmParameter
         """
-        return lmParameter(obj.name, value=obj.raw_value, vary=~obj.fixed,
+        return lmParameter('p' + str(NameConverter().get_key(obj)), value=obj.raw_value, vary=~obj.fixed,
                            min=obj.min, max=obj.max, expr=None, brute_step=None
                            )
 
@@ -182,8 +201,11 @@ class lmfit(FittingTemplate):  # noqa: S101
         """
         pars = self._cached_pars
         for name in pars.keys():
-            pars[name].value = fit_result.params[name].value
-            pars[name].error = fit_result.params[name].stderr
+            pars[name].value = fit_result.params['p' + str(name)].value
+            if fit_result.errorbars:
+                pars[name].error = fit_result.params['p' + str(name)].stderr
+            else:
+                pars[name].error = 0.0
 
     def _gen_fit_results(self, fit_results: ModelResult, **kwargs) -> FitResults:
         """
@@ -213,4 +235,9 @@ class lmfit(FittingTemplate):  # noqa: S101
         results.fit_args = None
 
         results.engine_result = fit_results
+        # results.check_sanity()
         return results
+
+    def available_methods(self) -> List[str]:
+        return ['leastsq', 'least_squares', 'differential_evolution', 'basinhopping', 'ampgo', 'nelder', 'lbfgsb',
+                'powell', 'cg', 'newton', 'cobyla', 'bfgs']

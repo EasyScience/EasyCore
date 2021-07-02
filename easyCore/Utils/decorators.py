@@ -1,9 +1,15 @@
+#  SPDX-FileCopyrightText: 2021 easyCore contributors  <core@easyscience.software>
+#  SPDX-License-Identifier: BSD-3-Clause
+#  © 2021 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+
 __author__ = 'github.com/wardsimon'
-__version__ = '0.0.1'
+__version__ = '0.1.0'
 
 import collections
 import functools
+
 from time import time
+
 from easyCore import borg
 
 
@@ -25,10 +31,9 @@ class memoized:
             return self.func(*args)
         if args in self.cache:
             return self.cache[args]
-        else:
-            value = self.func(*args)
-            self.cache[args] = value
-            return value
+        value = self.func(*args)
+        self.cache[args] = value
+        return value
 
     def __repr__(self):
         """Return the function's docstring."""
