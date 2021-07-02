@@ -5,8 +5,8 @@
 
 Computation times
 =================
-**00:01.143** total execution time for **base_examples** files:
+**00:01.212** total execution time for **base_examples** files:
 
 +---------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_base_examples_plot_baseclass1.py` (``plot_baseclass1.py``) | 00:01.143 | 0.0 MB |
+| :ref:`sphx_glr_base_examples_plot_baseclass1.py` (``plot_baseclass1.py``) | 00:01.212 | 0.0 MB |
 +---------------------------------------------------------------------------+-----------+--------+
