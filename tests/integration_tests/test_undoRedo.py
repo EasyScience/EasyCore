@@ -226,8 +226,8 @@ def test_fittingUndoRedo():
     borg.stack.enabled = True
     res = f.fit(x, y)
 
-    assert l1.c.raw_value == pytest.approx(l2.c.raw_value, rel=l2.c.error)
-    assert l1.m.raw_value == pytest.approx(l2.m.raw_value, rel=l2.m.error)
+    assert l1.c.raw_value == pytest.approx(l2.c.raw_value, rel=l2.c.error*2)
+    assert l1.m.raw_value == pytest.approx(l2.m.raw_value, rel=l2.m.error*2)
     assert borg.stack.undoText() == 'Fitting routine'
 
     borg.stack.undo()
