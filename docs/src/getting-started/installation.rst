@@ -17,7 +17,7 @@ Install as an easyCore developer
 --------------------------------
 
 You can obtain the latest development source from our `Github repository
-<https://github.com/github.com/easyScience/easyCore>`_.:
+<https://github.com/easyScience/easyCore>`_.:
 
 .. code-block:: console
 
