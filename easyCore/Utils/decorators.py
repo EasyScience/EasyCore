@@ -5,7 +5,7 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.1.0'
 
-import collections
+import collections.abc
 import functools
 
 from time import time
@@ -25,7 +25,7 @@ class memoized:
         self.cache = {}
 
     def __call__(self, *args):
-        if not isinstance(args, collections.Hashable):
+        if not isinstance(args, collections.abc.Hashable):
             # uncacheable. a list, for instance.
             # better to not cache than blow up.
             return self.func(*args)
