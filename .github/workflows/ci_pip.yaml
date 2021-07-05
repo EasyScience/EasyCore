@@ -83,6 +83,7 @@ jobs:
         documentation_path: docs/src
     - name: Push changes
       uses: ad-m/github-push-action@master
+      continue-on-error: true
       with:
         github_token: ${{ secrets.CORE_TOKEN }}
         branch: gh-pages
