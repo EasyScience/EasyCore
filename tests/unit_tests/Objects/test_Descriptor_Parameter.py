@@ -31,7 +31,7 @@ def _generate_inputs():
     advanced = {'units':        ['cm', 'mm', 'kelvin'],
                 'description':  'This is a test',
                 'url':          'https://www.whatever.com',
-                'display_name': "\Chi",
+                'display_name': r"\Chi",
                 }
     advanced_result = {
         'units':        {'name': 'unit', 'value': ['centimeter', 'millimeter', 'kelvin']},
