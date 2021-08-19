@@ -138,6 +138,17 @@ class InterfaceFactoryTemplate:
     def __call__(self, *args, **kwargs) -> _M:
         return self.__interface_obj
 
+    def __reduce__(self):
+        return (self.__state_restore__, (self.__class__, self.current_interface_name, ))
+
+    @staticmethod
+    def __state_restore__(cls, interface_str):
+        obj = cls()
+        if interface_str in obj.available_interfaces:
+            obj.switch(interface_str)
+        return obj
+
+
     @staticmethod
     def return_name(this_interface) -> str:
         """
