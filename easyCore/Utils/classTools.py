@@ -14,7 +14,7 @@ from easyCore.Utils.Hugger.Property import LoggedProperty
 def addLoggedProp(inst, name, *args, **kwargs):
     cls = type(inst)
     if not hasattr(cls, '__perinstance'):
-        cls = type(cls.__name__, (cls,), {})
+        cls = type(cls.__name__, (cls,), {'__module__': inst.__module__})
         cls.__perinstance = True
         inst.__old_class__ = inst.__class__
         inst.__class__ = cls
@@ -24,17 +24,18 @@ def addLoggedProp(inst, name, *args, **kwargs):
 def addProp(inst, name, *args, **kwargs):
     cls = type(inst)
     if not hasattr(cls, '__perinstance'):
-        cls = type(cls.__name__, (cls,), {})
+        cls = type(cls.__name__, (cls,), {'__module__': __name__})
         cls.__perinstance = True
         inst.__old_class__ = inst.__class__
         inst.__class__ = cls
+
     setattr(cls, name, property(*args, **kwargs))
 
 
 def removeProp(inst, name):
     cls = type(inst)
     if not hasattr(cls, '__perinstance'):
-        cls = type(cls.__name__, (cls,), {})
+        cls = type(cls.__name__, (cls,), {'__module__': __name__})
         cls.__perinstance = True
         inst.__old_class__ = inst.__class__
         inst.__class__ = cls

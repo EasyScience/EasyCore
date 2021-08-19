@@ -7,7 +7,7 @@ __version__ = '0.1.0'
 
 import abc
 from collections import deque, UserDict
-from typing import Union, Any, NoReturn, Callable, TypeVar, MutableMapping
+from typing import Union, Any, NoReturn, Callable, TypeVar
 
 from easyCore import borg
 

@@ -11,6 +11,7 @@ import numbers
 import weakref
 
 from copy import deepcopy
+from functools import wraps
 from typing import List, Union, Any, Iterable, Dict, Optional, Type, TYPE_CHECKING, Callable
 
 from easyCore import borg, ureg, np, pint
@@ -19,10 +20,11 @@ from easyCore.Utils.Exceptions import CoreSetException
 from easyCore.Utils.typing import noneType
 from easyCore.Utils.UndoRedo import property_stack_deco
 from easyCore.Utils.json import MSONable
-from easyCore.Fitting.Constraints import SelfConstraint
+from easyCore.Fitting.Constraints import SelfConstraint, NumericConstraint
 
 if TYPE_CHECKING:
     from easyCore.Fitting.Constraints import ConstraintBase as Constraint
+    from easyCore.Objects.Inferface import InterfaceFactoryTemplate as Interface
 
 Q_ = ureg.Quantity
 M_ = ureg.Measurement
@@ -50,7 +52,7 @@ class Descriptor(MSONable):
                  display_name: Optional[str] = None,
                  callback: Optional[property] = property(),
                  enabled: Optional[bool] = True,
-                 parent=None):  # noqa: S107
+                 parent: Optional[Union[Any, None]] = None):  # noqa: S107
         """
         This is the base of all variable descriptions for models. It contains all information to describe a single
         unique property of an object. This description includes a name and value as well as optionally a unit,
@@ -121,6 +123,19 @@ class Descriptor(MSONable):
             weakref.finalize(self, self._callback.fdel)
         self._finalizer = finalizer
 
+    def __reduce__(self):
+        """
+        Make the class picklable. Due to the nature of the dynamic class definitions special measures need to be taken.
+
+        :return: Tuple consisting of how to make the object
+        :rtype: tuple
+        """
+        state = self.as_dict()
+        cls = self.__class__
+        if hasattr(self, '__old_class__'):
+            cls = self.__old_class__
+        return cls.from_dict, (state, )
+
     @property
     def display_name(self) -> str:
         """
@@ -186,7 +201,7 @@ class Descriptor(MSONable):
                 if value != self._value:
                     self.__deepValueSetter(value)
             except Exception as e:
-                raise e
+                raise ValueError(f'Unable to return value:\n{e}')
         return self._value
 
     def __deepValueSetter(self, value: Any):
@@ -322,6 +337,27 @@ class Descriptor(MSONable):
         return data_type.from_dict(pickled_obj)
 
 
+class ComboDescriptor(Descriptor):
+    """
+    This class is an extension of a ``easyCore.Object.Base.Descriptor``. This class has a selection of values which can
+    be checked against. For example, combo box styling.
+    """
+    def __init__(self, *args, available_options=None, **kwargs):
+        super(ComboDescriptor, self).__init__(*args, **kwargs)
+        if available_options is None:
+            available_options = []
+        self._available_options = available_options
+
+    @property
+    def available_options(self):
+        return self._available_options
+
+    @available_options.setter
+    @property_stack_deco
+    def available_options(self, available_options: list):
+        self._available_options = available_options
+
+
 class Parameter(Descriptor):
     """
     This class is an extension of a ``easyCore.Object.Base.Descriptor``. Where the descriptor was for static objects,
@@ -400,7 +436,8 @@ class Parameter(Descriptor):
         fun = self.__class__.value.fset
         if hasattr(fun, 'func'):
             fun = getattr(fun, 'func')
-        self.__previous_set: Callable = fun
+        self.__previous_set: \
+            Callable[[Type[Descriptor], Union[numbers.Number, np.ndarray]], Union[numbers.Number, np.ndarray]] = fun
 
         # Monkey patch the unit and the value to take into account the new max/min situation
         addProp(self, 'value',
@@ -561,7 +598,7 @@ class Parameter(Descriptor):
 
         :return: Error associated with parameter
         """
-        return self._value.error.magnitude
+        return float(self._value.error.magnitude)
 
     @error.setter
     @property_stack_deco
@@ -594,7 +631,7 @@ class Parameter(Descriptor):
     def __float__(self) -> float:
         return float(self.raw_value)
 
-    def as_dict(self, skip: List[str] = None) -> dict:
+    def as_dict(self, skip: Optional[Union[List[str], None]] = None) -> Dict[str, Union[str, bool, numbers.Number]]:
         """
         Include enabled in the dict output as it's unfortunately skipped
 
@@ -629,22 +666,27 @@ class Parameter(Descriptor):
 
 
 class BasedBase(MSONable):
-
     __slots__ = ['_name', '_borg', 'user_data', '_kwargs']
 
-    def __init__(self, name: str, interface=None):
+    def __init__(self, name: str, interface: Optional[Union[Type[Interface, None]]] = None):
         self._borg = borg
         self._borg.map.add_vertex(self, obj_type='created')
         self.interface = interface
         self.user_data: dict = {}
         self._name: str = name
 
-    def __getstate__(self) -> Dict[str, str]:
-        return self.as_dict(skip=['interface'])
+    def __reduce__(self):
+        """
+        Make the class picklable. Due to the nature of the dynamic class definitions special measures need to be taken.
 
-    def __setstate__(self, state: Dict[str, str]):
-        obj = self.from_dict(state)
-        self.__init__(**obj._kwargs)
+        :return: Tuple consisting of how to make the object
+        :rtype: tuple
+        """
+        state = self.as_dict()
+        cls = self.__class__
+        if hasattr(self, '__old_class__'):
+            cls = self.__old_class__
+        return cls.from_dict, (state, )
 
     @property
     def name(self) -> str:
@@ -666,14 +708,14 @@ class BasedBase(MSONable):
         self._name = new_name
 
     @property
-    def interface(self):
+    def interface(self) -> Type[Interface]:
         """
         Get the current interface of the object
         """
         return self._interface
 
     @interface.setter
-    def interface(self, value):
+    def interface(self, value: Type[Interface]):
         """
         Set the current interface to the object and generate bindings if possible. I.e.
         ```
@@ -722,7 +764,7 @@ class BasedBase(MSONable):
                 constraints.append(con[key])
         return constraints
 
-    def as_dict(self, skip: List[str] = None) -> Dict[str, str]:
+    def as_dict(self, skip: List[str] = None) -> Dict[str, Union[str, bool, numbers.Number]]:
         """
         Convert ones self into a serialized form.
 
@@ -798,6 +840,7 @@ class BaseObj(BasedBase):
     `BaseObj(a=value, b=value)`. For `Parameter` or `Descriptor` objects we can
     cheat with `BaseObj(*[Descriptor(...), Parameter(...), ...])`.
     """
+
     def __init__(self, name: str, *args: Optional[Union[Type[Descriptor], Type[BasedBase]]],
                  **kwargs: Optional[Union[Type[Descriptor], Type[BasedBase]]]):
         """
@@ -838,7 +881,7 @@ class BaseObj(BasedBase):
         self._borg.map.reset_type(component, 'created_internal')
         addLoggedProp(self, key, self.__getter(key), self.__setter(key), get_id=key, my_self=self,
                       test_class=BaseObj)
-        
+
     def __setattr__(self, key, value):
         if hasattr(self, key) and issubclass(type(value), (BasedBase, Descriptor)):
             old_obj = self.__getattribute__(key)
@@ -853,6 +896,7 @@ class BaseObj(BasedBase):
     def __getter(key: str):
         def getter(obj: Union[Type[Descriptor], Type[BasedBase]]):
             return obj._kwargs[key]
+
         return getter
 
     @staticmethod
@@ -862,4 +906,6 @@ class BaseObj(BasedBase):
                 obj._kwargs[key].value = value
             else:
                 obj._kwargs[key] = value
+
         return setter
+

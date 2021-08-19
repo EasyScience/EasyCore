@@ -64,7 +64,8 @@ class InterfaceFactoryTemplate:
         interfaces = self.available_interfaces
         if new_interface in interfaces:
             self._current_interface = self._interfaces[interfaces.index(new_interface)]
-            self.__interface_obj = self._current_interface.from_dict(serialized)
+            # self.__interface_obj = self._current_interface.from_dict(serialized)
+            self.__interface_obj = self._current_interface()
         else:
             raise AttributeError
 

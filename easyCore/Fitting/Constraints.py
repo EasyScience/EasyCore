@@ -437,7 +437,7 @@ class FunctionalConstraint(ConstraintBase):
         return f'{self.__class__.__name__}'
 
 
-def cleanup_constraint(obj_id, enabled):
+def cleanup_constraint(obj_id: str, enabled: bool):
     try:
         obj = borg.map.get_item_by_key(obj_id)
         obj.enabled = enabled

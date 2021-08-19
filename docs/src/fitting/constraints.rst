@@ -67,7 +67,7 @@ These are the built in constraints which you can use
 User created constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can make your own constraints
+You can also make your own constraints by subclassing the :class:`easyCore.Fitting.Constraints.ConstraintBase` class. For this at a minimum the abstract methods ``_parse_operator`` and ``__repr__`` need to be written.
 
 .. autoclass:: easyCore.Fitting.Constraints.ConstraintBase
   :members:

@@ -4,15 +4,18 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
 
-import numpy as np
 import pytest
+import math
+
+import numpy as np
+
 from easyCore.Objects.Base import Descriptor, Parameter, BaseObj
 from easyCore.Objects.Groups import BaseCollection
-import math
+
 
 def createSingleObjs(idx):
     alphabet = 'abcdefghijklmnopqrstuvwxyz'
-    reps = math.floor(idx/len(alphabet)) + 1
+    reps = math.floor(idx / len(alphabet)) + 1
     name = alphabet[idx % len(alphabet)] * reps
     if idx % 2:
         return Parameter(name, idx)
@@ -52,12 +55,13 @@ def doUndoRedo(obj, attr, future, additional=''):
         borg.stack.enabled = False
     return e
 
+
 @pytest.mark.parametrize('test', [createParam(option) for option in [('value', 500), ('error', 5), ('enabled', False),
-                                                                     ('unit', 'meter / second'), ('display_name', 'boom'),
+                                                                     ('unit', 'meter / second'),
+                                                                     ('display_name', 'boom'),
                                                                      ('fixed', False), ('max', 505), ('min', -1)]])
 @pytest.mark.parametrize('idx', [pytest.param(0, id='Descriptor'), pytest.param(1, id='Parameter')])
 def test_SinglesUndoRedo(idx, test):
-
     obj = createSingleObjs(idx)
     attr = test[0]
     value = test[1]
@@ -156,7 +160,6 @@ def test_BaseCollectionUndoRedo():
 
 
 def test_UndoRedoMacros():
-
     items = [createSingleObjs(idx) for idx in range(5)]
     offset = 5
     undo_text = 'test_macro'
@@ -185,7 +188,6 @@ def test_UndoRedoMacros():
 
 
 def test_fittingUndoRedo():
-    
     m_value = 6
     c_value = 2
     x = np.linspace(-5, 5, 100)
@@ -218,7 +220,7 @@ def test_fittingUndoRedo():
     l2.m.fixed = False
     l2.c.fixed = False
 
-    y = l1(x) + 0.125*(dy - 0.5)
+    y = l1(x) + 0.125 * (dy - 0.5)
 
     from easyCore.Fitting.Fitting import Fitter
     f = Fitter(l2, l2)
@@ -238,3 +240,123 @@ def test_fittingUndoRedo():
     borg.stack.redo()
     assert l2.m.raw_value == res.p[f'p{borg.map.convert_id_to_key(l2.m)}']
     assert l2.c.raw_value == res.p[f'p{borg.map.convert_id_to_key(l2.c)}']
+
+
+# @pytest.mark.parametrize('math_funcs', [pytest.param([Parameter.__iadd__, float.__add__], id='Addition'),
+#                                         pytest.param([Parameter.__isub__, float.__sub__], id='Subtraction')])
+# def test_parameter_maths_basic(math_funcs):
+#     a = 1.0
+#     b = 2.0
+#     sa = 0.1
+#     sb = 0.2
+#
+#     p_fun = math_funcs[0]
+#     f_fun = math_funcs[1]
+#
+#     result_value = f_fun(a, b)
+#     result_error = (sa ** 2 + sb ** 2) ** 0.5
+#
+#     from easyCore import borg
+#     borg.stack.enabled = True
+#
+#     # Perform basic test
+#     p1 = Parameter('a', a)
+#     p2 = Parameter('b', b)
+#
+#     p1 = p_fun(p1, p2)
+#     assert float(p1) == result_value
+#     borg.stack.undo()
+#     assert float(p1) == a
+#     borg.stack.redo()
+#     assert float(p1) == result_value
+#
+#     # Perform basic + error
+#     p1 = Parameter('a', a, error=sa)
+#     p2 = Parameter('b', b, error=sb)
+#     p1 = p_fun(p1, p2)
+#     assert float(p1) == result_value
+#     assert p1.error == result_error
+#     borg.stack.undo()
+#     assert float(p1) == a
+#     assert p1.error == sa
+#     borg.stack.redo()
+#     assert float(p1) == result_value
+#     assert p1.error == result_error
+#
+#     # Perform basic + units
+#     p1 = Parameter('a', a, error=sa, units='m/s')
+#     p2 = Parameter('b', b, error=sb, units='m/s')
+#     p1 = p_fun(p1, p2)
+#     assert float(p1) == result_value
+#     assert p1.error == result_error
+#     assert str(p1.unit) == 'meter / second'
+#     borg.stack.undo()
+#     assert float(p1) == a
+#     assert p1.error == sa
+#     assert str(p1.unit) == 'meter / second'
+#     borg.stack.redo()
+#     assert float(p1) == result_value
+#     assert p1.error == result_error
+#     assert str(p1.unit) == 'meter / second'
+#
+#
+# @pytest.mark.parametrize('math_funcs', [pytest.param([Parameter.__imul__, float.__mul__,
+#                                                       'meter ** 2 / second ** 2'], id='Multiplication'),
+#                                         pytest.param([Parameter.__itruediv__, float.__truediv__,
+#                                                       'dimensionless'], id='Division')])
+# def test_parameter_maths_advanced(math_funcs):
+#     a = 4.0
+#     b = 2.0
+#     sa = 0.1
+#     sb = 0.2
+#     unit = 'meter / second'
+#
+#     p_fun = math_funcs[0]
+#     f_fun = math_funcs[1]
+#     u_str = math_funcs[2]
+#
+#     result_value = f_fun(a, b)
+#     result_error = ((sa / a) ** 2 + (sb / b) ** 2) ** 0.5 * result_value
+#
+#     from easyCore import borg
+#     borg.stack.enabled = True
+#
+#     # Perform basic test
+#     p1 = Parameter('a', a)
+#     p2 = Parameter('b', b)
+#
+#     p1 = p_fun(p1, p2)
+#     assert float(p1) == result_value
+#     borg.stack.undo()
+#     assert float(p1) == a
+#     borg.stack.redo()
+#     assert float(p1) == result_value
+#
+#     # Perform basic + error
+#     p1 = Parameter('a', a, error=sa)
+#     p2 = Parameter('b', b, error=sb)
+#     p1 = p_fun(p1, p2)
+#     assert float(p1) == result_value
+#     assert p1.error == result_error
+#     borg.stack.undo()
+#     assert float(p1) == a
+#     assert p1.error == sa
+#     borg.stack.redo()
+#     assert float(p1) == result_value
+#     assert p1.error == result_error
+#
+#     # Perform basic + units
+#     p1 = Parameter('a', a, error=sa, units=unit)
+#     p2 = Parameter('b', b, error=sb, units=unit)
+#     p1 = p_fun(p1, p2)
+#     assert float(p1) == result_value
+#     assert p1.error == result_error
+#     assert str(p1.unit) == u_str
+#     borg.stack.undo()
+#     assert float(p1) == a
+#     assert p1.error == sa
+#     assert str(p1.unit) == unit
+#     borg.stack.redo()
+#     assert float(p1) == result_value
+#     assert p1.error == result_error
+#     assert str(p1.unit) == u_str

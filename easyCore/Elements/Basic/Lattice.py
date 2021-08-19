@@ -887,6 +887,8 @@ class PeriodicLattice(Lattice):
             self.angle_alpha.enabled = False
             self.angle_gamma = 90
             self.angle_gamma.enabled = False
+        elif crys_system == 'triclinic':
+            return
         else:
             raise TypeError('The current crystal system is unknown so symmetry cannot be enforced')
 
