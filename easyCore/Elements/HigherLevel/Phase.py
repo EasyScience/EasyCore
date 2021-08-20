@@ -30,14 +30,13 @@ class Phase(BaseObj):
             cell = PeriodicLattice.from_lattice_and_spacegroup(cell, spacegroup)
         if atoms is None:
             atoms = Atoms('atoms')
-        ## TODO get PeriodicAtoms to work :-/
-        # if isinstance(atoms, Atoms):
-        #     atoms = PeriodicAtoms(atoms.name, *atoms, lattice=cell, interface=atoms.interface)
+        scale = Parameter('scale', 1, min=0)
 
         super(Phase, self).__init__(name,
                                     cell=cell,
                                     _spacegroup=spacegroup,
-                                    atoms=atoms)
+                                    atoms=atoms,
+                                    scale=scale)
         if not enforce_sym:
             self.cell.clear_sym()
         self._enforce_sym = enforce_sym
