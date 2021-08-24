@@ -4,6 +4,23 @@
 requires = ["poetry>=1.0"]
 build-backend = "poetry.masonry.api"
 
+[tool.black]
+line-length = 88
+target-version = ['py37']
+include = '\.pyi?$'
+extend-exclude = '''
+# A regex preceded with ^/ will apply only to files and directories
+# in the root of the project.
+^/foo.py  # exclude a file named foo.py in the root of the project (in addition to the defaults)
+'''
+
+[tool.coverage.run]
+source = ['easyCore']
+
+[tool.github.info]
+organization = 'easyScience'
+repo = 'easyCore'
+
 [tool.poetry]
 name = "easyScienceCore"
 version = "0.1.0"
@@ -13,7 +30,7 @@ authors = ["Simon Ward"]
 readme = "README.md"
 homepage = "https://github.com/easyScience/easyCore"
 documentation = "https://github.com/easyScience/easyCore"
-classifiers=[
+classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",  # Define that your audience are developers
     "Topic :: Scientific/Engineering :: Physics",
@@ -33,7 +50,6 @@ bumps = "^0.8"
 asteval = "^0.9.23"
 DFO-LS = {version = "^1.2", optional = true}
 xarray = ">=0.16,<0.20"
-#pint-xarray = "^0.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.2"
@@ -46,18 +62,6 @@ Sphinx = "^4.0.2"
 sphinx-rtd-theme = "^0.5.2"
 sphinx-autodoc-typehints = "^1.12.0"
 sphinx-gallery = "^0.9.0"
-
-[tool.github.info]
-organization = 'easyScience'
-repo = 'easyCore'
-
-[tool.coverage.run]
-source = ['easyCore']
-
-[tool.dephell.main]
-from = {format = "poetry", path = "pyproject.toml"}
-to = {format = "setuppy", path = "setup.py"}
-envs = ["main"]
 
 [tool.tox]
 legacy_tox_ini = """
