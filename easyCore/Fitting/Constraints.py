@@ -442,5 +442,5 @@ def cleanup_constraint(obj_id: str, enabled: bool):
         obj = borg.map.get_item_by_key(obj_id)
         obj.enabled = enabled
     except ValueError:
-        if borg.debug.enabled:
+        if borg.debug:
             print(f'Object with ID {obj_id} has already been deleted')

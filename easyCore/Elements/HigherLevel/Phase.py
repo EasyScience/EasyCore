@@ -297,7 +297,7 @@ class Phases(BaseCollection):
         if not isinstance(item, Phase):
             raise TypeError('Item must be a Phase')
         if item.name in self.phase_names:
-            raise AttributeError(f'An atom of name {item.name} already exists.')
+            raise AttributeError(f'A phase of name {item.name} already exists.')
         super(Phases, self).append(item)
         self._create_cif()
 
