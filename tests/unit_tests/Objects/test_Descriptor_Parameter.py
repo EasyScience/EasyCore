@@ -1,12 +1,12 @@
 __author__ = 'github.com/wardsimon'
-__version__ = '0.0.1'
+__version__ = '0.1.0'
 
 from copy import deepcopy
 from typing import List
 
 import pytest
 import numpy as np
-from easyCore.Objects.Base import Descriptor, Parameter, ureg, Q_
+from easyCore.Objects.Base import Descriptor, Parameter, ureg, Q_, CoreSetException, borg
 
 
 @pytest.fixture
@@ -31,7 +31,7 @@ def _generate_inputs():
     advanced = {'units':        ['cm', 'mm', 'kelvin'],
                 'description':  'This is a test',
                 'url':          'https://www.whatever.com',
-                'display_name': "\Chi",
+                'display_name': r"\Chi",
                 }
     advanced_result = {
         'units':        {'name': 'unit', 'value': ['centimeter', 'millimeter', 'kelvin']},
@@ -98,16 +98,38 @@ def test_Parameter_value_get(element, expected):
     d = Parameter('test', 1, units=element)
     assert str(d.value) == expected
 
-
+@pytest.mark.parametrize('debug', (True, False))
+@pytest.mark.parametrize('enabled', (None, True, False))
 @pytest.mark.parametrize('instance', (Descriptor, Parameter), indirect=True)
-def test_item_value_set(instance):
+def test_item_value_set(instance, enabled, debug):
+    borg.debug = debug
+    set_value = 2
     d = instance('test', 1)
-    d.value = 2
-    assert d.raw_value == 2
+    if enabled is not None:
+        d.enabled = enabled
+    else:
+        enabled = True
+    if enabled:
+        d.value = set_value
+        assert d.raw_value == set_value
+    else:
+        if debug:
+            with pytest.raises(CoreSetException):
+                d.value = set_value
     d = instance('test', 1, units='kelvin')
-    d.value = 2
-    assert d.raw_value == 2
-    assert str(d.unit) == 'kelvin'
+    if enabled is not None:
+        d.enabled = enabled
+    else:
+        enabled = True
+
+    if enabled:
+        d.value = set_value
+        assert d.raw_value == set_value
+        assert str(d.unit) == 'kelvin'
+    else:
+        if debug:
+            with pytest.raises(CoreSetException):
+                d.value = set_value
 
 
 @pytest.mark.parametrize('instance', (Descriptor, Parameter), indirect=True)
@@ -165,21 +187,21 @@ def test_item_compatible_units(instance):
 
 def test_descriptor_repr():
     d = Descriptor('test', 1)
-    assert repr(d) == f'<{d.__class__.__name__} \'test\' = 1>'
+    assert repr(d) == f'<{d.__class__.__name__} \'test\': 1>'
     d = Descriptor('test', 1, units='cm')
-    assert repr(d) == f'<{d.__class__.__name__} \'test\' = 1 centimeter>'
+    assert repr(d) == f'<{d.__class__.__name__} \'test\': 1 cm>'
 
 
 def test_parameter_repr():
     d = Parameter('test', 1)
-    assert repr(d) == f'<{d.__class__.__name__} \'test\' = 1.0+/-0, bounds=[-inf:inf]>'
+    assert repr(d) == f'<{d.__class__.__name__} \'test\': 1.0+/-0, bounds=[-inf:inf]>'
     d = Parameter('test', 1, units='cm')
-    assert repr(d) == f'<{d.__class__.__name__} \'test\' = 1.0+/-0 centimeter, bounds=[-inf:inf]>'
+    assert repr(d) == f'<{d.__class__.__name__} \'test\': 1.0+/-0 cm, bounds=[-inf:inf]>'
 
     d = Parameter('test', 1, fixed=True)
-    assert repr(d) == f'<{d.__class__.__name__} \'test\' = 1.0+/-0 (fixed), bounds=[-inf:inf]>'
+    assert repr(d) == f'<{d.__class__.__name__} \'test\': 1.0+/-0 (fixed), bounds=[-inf:inf]>'
     d = Parameter('test', 1, units='cm', fixed=True)
-    assert repr(d) == f'<{d.__class__.__name__} \'test\' = 1.0+/-0 centimeter (fixed), bounds=[-inf:inf]>'
+    assert repr(d) == f'<{d.__class__.__name__} \'test\': 1.0+/-0 cm (fixed), bounds=[-inf:inf]>'
 
 
 def test_descriptor_as_dict():
@@ -187,7 +209,7 @@ def test_descriptor_as_dict():
     result = d.as_dict()
     expected = {'@module':      'easyCore.Objects.Base',
                 '@class':       'Descriptor',
-                '@version':     '0.0.1',
+                '@version':     '0.1.0',
                 'name':         'test',
                 'value':        1,
                 'units':        'dimensionless',
@@ -206,7 +228,7 @@ def test_parameter_as_dict():
     result = d.as_dict()
     expected = {'@module':  'easyCore.Objects.Base',
                 '@class':   'Parameter',
-                '@version': '0.0.1',
+                '@version': '0.1.0',
                 'name':     'test',
                 'value':    1.0,
                 'error':    0.0,
@@ -224,7 +246,7 @@ def test_parameter_as_dict():
     result = d.as_dict()
     expected = {'@module':  'easyCore.Objects.Base',
                 '@class':   'Parameter',
-                '@version': '0.0.1',
+                '@version': '0.1.0',
                 'name':     'test',
                 'units':    'kilometer',
                 'value':    1.0,
@@ -241,7 +263,7 @@ def test_parameter_as_dict():
 
 @pytest.mark.parametrize('reference, constructor', ([{'@module':      'easyCore.Objects.Base',
                                                       '@class':       'Descriptor',
-                                                      '@version':     '0.0.1',
+                                                      '@version':     '0.1.0',
                                                       'name':         'test',
                                                       'value':        1,
                                                       'units':        'dimensionless',
@@ -251,7 +273,7 @@ def test_parameter_as_dict():
                                                       'callback':     None}, Descriptor],
                                                     [{'@module':  'easyCore.Objects.Base',
                                                       '@class':   'Parameter',
-                                                      '@version': '0.0.1',
+                                                      '@version': '0.1.0',
                                                       'name':     'test',
                                                       'units':    'kilometer',
                                                       'value':    1.0,
@@ -278,7 +300,7 @@ def test_item_from_dict(reference, constructor):
 
 @pytest.mark.parametrize('construct', ({'@module':      'easyCore.Objects.Base',
                                         '@class':       'Descriptor',
-                                        '@version':     '0.0.1',
+                                        '@version':     '0.1.0',
                                         'name':         'test',
                                         'value':        1,
                                         'units':        'dimensionless',
@@ -288,7 +310,7 @@ def test_item_from_dict(reference, constructor):
                                         'callback':     None},
                                        {'@module':  'easyCore.Objects.Base',
                                         '@class':   'Parameter',
-                                        '@version': '0.0.1',
+                                        '@version': '0.1.0',
                                         'name':     'test',
                                         'units':    'kilometer',
                                         'value':    1.0,
@@ -421,3 +443,12 @@ def test_parameter_advanced_creation(element, expected):
             if isinstance(obtained, (ureg.Unit, Q_)):
                 obtained = str(obtained)
             assert obtained == ref
+
+
+@pytest.mark.parametrize('value', ('This is ', 'a fun ', 'test'))
+def test_parameter_display_name(value):
+    p = Parameter('test', 1, display_name=value)
+    assert p.display_name == value
+
+    p = Descriptor('test', 1, display_name=value)
+    assert p.display_name == value

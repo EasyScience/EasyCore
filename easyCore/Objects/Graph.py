@@ -1,5 +1,9 @@
+#  SPDX-FileCopyrightText: 2021 easyCore contributors  <core@easyscience.software>
+#  SPDX-License-Identifier: BSD-3-Clause
+#  © 2021 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+
 __author__ = 'github.com/wardsimon'
-__version__ = '0.0.1'
+__version__ = '0.1.0'
 
 import weakref
 import sys
@@ -29,6 +33,9 @@ class _EntryList(list):
             s += 'out'
         s += 'a finalizer.'
         return s
+
+    def __delitem__(self, key):
+        super(_EntryList, self).__delitem__(key)
 
     def remove_type(self, old_type: str):
         if old_type in self.__known_types and old_type in self._type:
@@ -106,11 +113,10 @@ class Graph:
     def returned_objs(self) -> List[int]:
         return self._nested_get('returned')
 
-    def get_item_by_id(self, item_id: int) -> object:
+    def get_item_by_key(self, item_id: int) -> object:
         if item_id in self._store.keys():
             return self._store[item_id]
-        else:
-            raise ValueError
+        raise ValueError
 
     def is_known(self, vertex: object) -> bool:
         return self.convert_id(vertex).int in self._store.keys()
@@ -143,6 +149,13 @@ class Graph:
         else:
             raise AttributeError
 
+    def get_edges(self, start_obj) -> List[str]:
+        vertex1 = self.convert_id(start_obj).int
+        if vertex1 in self.__graph_dict.keys():
+            return list(self.__graph_dict[vertex1])
+        else:
+            raise AttributeError
+
     def __generate_edges(self) -> list:
         """ A static method generating the edges of the
             graph "graph". Edges are represented as sets
@@ -155,6 +168,13 @@ class Graph:
                 if {neighbour, vertex} not in edges:
                     edges.append({vertex, neighbour})
         return edges
+
+    def prune_vertex_from_edge(self, parent_obj, child_obj):
+        vertex1 = self.convert_id(parent_obj).int
+        vertex2 = self.convert_id(child_obj).int
+
+        if vertex1 in self.__graph_dict.keys() and vertex2 in self.__graph_dict[vertex1]:
+            del self.__graph_dict[vertex1][self.__graph_dict[vertex1].index(vertex2)]
 
     def prune(self, key: int):
         if key in self.__graph_dict.keys():
@@ -174,8 +194,12 @@ class Graph:
         """ find a path from start_vertex to end_vertex
             in graph """
 
-        start_vertex = self.convert_id(start_obj).int
-        end_vertex = self.convert_id(end_obj).int
+        try:
+            start_vertex = self.convert_id(start_obj).int
+            end_vertex = self.convert_id(end_obj).int
+        except TypeError:
+            start_vertex = start_obj
+            end_vertex = end_obj
 
         graph = self.__graph_dict
         path = path + [start_vertex]
@@ -228,16 +252,13 @@ class Graph:
         """
         end_vertex = self.convert_id(end_obj).int
 
-        if end_vertex in self.find_isolated_vertices():
-            return []
-
         path_length = sys.maxsize
         optimum_path = []
         if start_obj is None:
             # We now have to find where to begin.....
             for possible_start, vertices in self.__graph_dict.items():
                 if end_vertex in vertices:
-                    temp_path = self.find_path(possible_start, end_obj)
+                    temp_path = self.find_path(possible_start, end_vertex)
                     if len(temp_path) < path_length:
                         path_length = len(temp_path)
                         optimum_path = temp_path

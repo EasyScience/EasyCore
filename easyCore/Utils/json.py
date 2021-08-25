@@ -30,6 +30,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 JSON serialization and deserialization utilities.
 """
 
+#  SPDX-FileCopyrightText: 2021 easyCore contributors  <core@easyscience.software>
+#  SPDX-License-Identifier: BSD-3-Clause
+#  © 2021 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+
 import os
 import json
 import datetime
@@ -42,10 +46,10 @@ from importlib import import_module
 
 from inspect import getfullargspec
 
-try:
-    import numpy as np
-except ImportError:
-    np = None  # type: ignore
+from easyCore import np
+
+
+_KNOWN_CORE_TYPES = ('Descriptor', 'Parameter')
 
 try:
     import bson
@@ -164,7 +168,7 @@ class MSONable:
             if isinstance(obj, dict):
                 return {kk: recursive_as_dict(vv) for kk, vv in obj.items()}
             if hasattr(obj, "as_dict"):
-                return obj.as_dict()
+                return obj.as_dict(skip=skip)
             return obj
 
         for c in args:
@@ -175,14 +179,32 @@ class MSONable:
                     try:
                         a = self.__getattribute__("_" + c)
                     except AttributeError:
-                        raise NotImplementedError(
-                            "Unable to automatically determine as_dict "
-                            "format from class. MSONAble requires all "
-                            "args to be present as either self.argname or "
-                            "self._argname, and kwargs to be present under"
-                            "a self.kwargs variable to automatically "
-                            "determine the dict format. Alternatively, "
-                            "you can implement both as_dict and from_dict.")
+                        err = True
+                        if hasattr(self, "kwargs"):
+                            # type: ignore
+                            option = getattr(self, "kwargs")
+                            if hasattr(option, c):
+                                v = getattr(option, c)
+                                delattr(option, c)
+                                d.update(v)  # pylint: disable=E1101
+                                err = False
+                        if hasattr(self, "_kwargs"):
+                            # type: ignore
+                            option = getattr(self, "_kwargs")
+                            if hasattr(option, c):
+                                v = getattr(option, c)
+                                delattr(option, c)
+                                d.update(v)  # pylint: disable=E1101
+                                err = False
+                        if err:
+                            raise NotImplementedError(
+                                "Unable to automatically determine as_dict "
+                                "format from class. MSONAble requires all "
+                                "args to be present as either self.argname or "
+                                "self._argname, and kwargs to be present under"
+                                "a self.kwargs variable to automatically "
+                                "determine the dict format. Alternatively, "
+                                "you can implement both as_dict and from_dict.")
                 d[c] = recursive_as_dict(a)
         if hasattr(self, "kwargs"):
             # type: ignore
@@ -212,6 +234,22 @@ class MSONable:
         Returns a json string representation of the MSONable object.
         """
         return json.dumps(self, cls=MontyEncoder)
+
+    def to_data_dict(self, skip: list = []) -> dict:
+        d = self.as_dict(skip=skip)
+
+        def parse_dict(in_dict) -> dict:
+            out_dict = dict()
+            for key in in_dict.keys():
+                if key[0] == '@':
+                    if key == '@class' and in_dict[key] not in _KNOWN_CORE_TYPES:
+                        out_dict['name'] = in_dict[key]
+                    continue
+                out_dict[key] = in_dict[key]
+                if isinstance(in_dict[key], dict):
+                    out_dict[key] = parse_dict(in_dict[key])
+            return out_dict
+        return parse_dict(d)
 
     def unsafe_hash(self):
         """
@@ -244,7 +282,7 @@ class MSONable:
         ordered_keys = sorted(flatten(jsanitize(self.as_dict())).items(),
                               key=lambda x: x[0])
         ordered_keys = [item for item in ordered_keys if "@" not in item[0]]
-        return sha1(json.dumps(OrderedDict(ordered_keys)).encode("utf-8"))
+        return sha1(json.dumps(OrderedDict(ordered_keys)).encode("utf-8"))  # nosec
 
 
 class MontyEncoder(json.JSONEncoder):

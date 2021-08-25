@@ -1,15 +1,20 @@
+#  SPDX-FileCopyrightText: 2021 easyCore contributors  <core@easyscience.software>
+#  SPDX-License-Identifier: BSD-3-Clause
+#  © 2021 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+
 __author__ = 'github.com/wardsimon'
-__version__ = '0.0.1'
+__version__ = '0.1.0'
 
 import inspect
 from typing import List
 
-from easyCore.Fitting.fitting_template import noneType, Union, Callable, FittingTemplate, np, FitResults
+from easyCore.Fitting.fitting_template import noneType, Union, Callable, \
+    FittingTemplate, np, FitResults, NameConverter, FitError
 
 # Import bumps specific objects
 from bumps.names import Curve, FitProblem
 from bumps.parameter import Parameter as bumpsParameter
-from bumps.fitters import fit as bumps_fit
+from bumps.fitters import fit as bumps_fit, FIT_AVAILABLE_IDS
 
 
 class bumps(FittingTemplate):  # noqa: S101
@@ -34,6 +39,7 @@ class bumps(FittingTemplate):  # noqa: S101
         """
         super().__init__(obj, fit_function)
         self._cached_pars_order = ()
+        self.p_0 = {}
 
     def make_model(self, pars: Union[noneType, List[bumpsParameter]] = None) -> Callable:
         """
@@ -50,10 +56,10 @@ class bumps(FittingTemplate):  # noqa: S101
                 par = {}
                 if not pars:
                     for name, item in obj._cached_pars.items():
-                        par[name] = obj.convert_to_par_object(item)
+                        par['p' + str(name)] = obj.convert_to_par_object(item)
                 else:
                     for item in pars:
-                        par[item.name] = obj.convert_to_par_object(item)
+                        par['p' + str(NameConverter().get_key(item))] = obj.convert_to_par_object(item)
                 return Curve(fit_func, x, y, weights, **par)
 
             return make_func
@@ -71,8 +77,9 @@ class bumps(FittingTemplate):  # noqa: S101
         # Original fit function
         func = self._original_fit_function
         # Get a list of `Parameters`
-        for parameter in self._object.get_parameters():
-            self._cached_pars[parameter.name] = parameter
+        self._cached_pars = {}
+        for parameter in self._object.get_fit_parameters():
+            self._cached_pars[NameConverter().get_key(parameter)] = parameter
 
         # Make a new fit function
         def fit_function(x: np.ndarray, **kwargs):
@@ -87,12 +94,15 @@ class bumps(FittingTemplate):  # noqa: S101
             """
             # Update the `Parameter` values and the callback if needed
             for name, value in kwargs.items():
-                if name in self._cached_pars.keys():
-                    self._cached_pars[name].value = value
-                    update_fun = self._cached_pars[name]._callback.fset
+                par_name = int(name[1:])
+                if par_name in self._cached_pars.keys():
+                    self._cached_pars[par_name].value = value
+                    update_fun = self._cached_pars[par_name]._callback.fset
                     if update_fun:
                         update_fun(value)
             # TODO Pre processing here
+            for constraint in self.fit_constraints():
+                constraint()
             return_data = func(x)
             # TODO Loading or manipulating data here
             return return_data
@@ -105,7 +115,7 @@ class bumps(FittingTemplate):  # noqa: S101
         self._cached_pars_order = tuple(self._cached_pars.keys())
         params = [inspect.Parameter('x',
                                     inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                                    annotation=inspect._empty), *[inspect.Parameter(name,
+                                    annotation=inspect._empty), *[inspect.Parameter('p' + str(name),
                                                                                     inspect.Parameter.POSITIONAL_OR_KEYWORD,
                                                                                     annotation=inspect._empty,
                                                                                     default=self._cached_pars[
@@ -117,7 +127,7 @@ class bumps(FittingTemplate):  # noqa: S101
         return fit_function
 
     def fit(self, x: np.ndarray, y: np.ndarray, weights: Union[np.ndarray, noneType] = None,
-            model=None, parameters=None, xtol=1e-6, ftol=1e-8, **kwargs) -> FitResults:
+            model=None, parameters=None, method: str = None, xtol: float = 1e-6, ftol: float = 1e-8, **kwargs) -> FitResults:
         """
         Perform a fit using the lmfit engine.
 
@@ -132,25 +142,37 @@ class bumps(FittingTemplate):  # noqa: S101
         :param parameters: Optional parameters for the fit
         :type parameters: List[bumpsParameter]
         :param kwargs: Additional arguments for the fitting function.
+        :param method: Method for minimization
+        :type method: str
         :return: Fit results
         :rtype: ModelResult
         """
 
+        default_method = {}
+        if method is not None and method in self.available_methods():
+            default_method['method'] = method
+
         if weights is None:
-            weights = np.sqrt(x)
+            weights = np.sqrt(np.abs(y))
 
         if model is None:
             model = self.make_model(pars=parameters)
             model = model(x, y, weights)
         self._cached_model = model
+        self.p_0 = {f'p{key}': self._cached_pars[key].raw_value for key in self._cached_pars.keys()}
         problem = FitProblem(model)
         # Why do we do this? Because a fitting template has to have borg instantiated outside pre-runtime
         from easyCore import borg
         borg.stack.beginMacro('Fitting routine')
-        model_results = bumps_fit(problem, **kwargs)
-        self._set_parameter_fit_result(model_results)
-        borg.stack.endMacro()
-        return self._gen_fit_results(model_results)
+        try:
+            model_results = bumps_fit(problem, **kwargs)
+            self._set_parameter_fit_result(model_results)
+            results = self._gen_fit_results(model_results)
+        except Exception as e:
+            raise FitError(e)
+        finally:
+            borg.stack.endMacro()
+        return results
 
     def convert_to_pars_obj(self, par_list: Union[list, noneType] = None) -> List[bumpsParameter]:
         """
@@ -163,7 +185,7 @@ class bumps(FittingTemplate):  # noqa: S101
         """
         if par_list is None:
             # Assume that we have a BaseObj for which we can obtain a list
-            par_list = self._object.get_parameters()
+            par_list = self._object.get_fit_parameters()
         pars_obj = ([self.__class__.convert_to_par_object(obj) for obj in par_list])
         return pars_obj
 
@@ -176,7 +198,9 @@ class bumps(FittingTemplate):  # noqa: S101
         :return: bumps Parameter compatible object.
         :rtype: bumpsParameter
         """
-        return bumpsParameter(name=obj.name, value=obj.raw_value, bounds=[obj.min, obj.max], fixed=obj.fixed)
+        return bumpsParameter(name='p' + str(NameConverter().get_key(obj)),
+                              value=obj.raw_value, bounds=[obj.min, obj.max],
+                              fixed=obj.fixed)
 
     def _set_parameter_fit_result(self, fit_result):
         """
@@ -188,9 +212,9 @@ class bumps(FittingTemplate):  # noqa: S101
         """
         pars = self._cached_pars
         for index, name in enumerate(self._cached_model._pnames):
-            item = pars[name]
-            item.value = fit_result.x[index]
-            item.error = fit_result.dx[index]
+            dict_name = int(name[1:])
+            pars[dict_name].value = fit_result.x[index]
+            pars[dict_name].error = fit_result.dx[index]
 
     def _gen_fit_results(self, fit_results, **kwargs) -> FitResults:
         """
@@ -205,24 +229,24 @@ class bumps(FittingTemplate):  # noqa: S101
         for name, value in kwargs.items():
             if getattr(results, name, False):
                 setattr(results, name, value)
-        pars = self._cached_pars
-        pars_dict = {}
-        for name, par in pars.items():
-            pars_dict[name] = par.raw_value
-
         results.success = fit_results.success
         pars = self._cached_pars
         item = {}
         for index, name in enumerate(self._cached_model._pnames):
-            item[name] = pars[name].raw_value
+            dict_name = int(name[1:])
+            item[name] = pars[dict_name].raw_value
+        results.p0 = self.p_0
         results.p = item
         results.x = self._cached_model.x
         results.y_obs = self._cached_model.y
-        results.y_calc = self.evaluate(results.x)
+        results.y_calc = self.evaluate(results.x, parameters=results.p)
         results.residual = results.y_obs - results.y_calc
         results.goodness_of_fit = fit_results.fun
 
         results.fitting_engine = self.__class__
         results.fit_args = None
-
+        # results.check_sanity()
         return results
+
+    def available_methods(self) -> List[str]:
+        return FIT_AVAILABLE_IDS

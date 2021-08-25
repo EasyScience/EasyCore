@@ -1,5 +1,9 @@
+#  SPDX-FileCopyrightText: 2021 easyCore contributors  <core@easyscience.software>
+#  SPDX-License-Identifier: BSD-3-Clause
+#  © 2021 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+
 __author__ = 'github.com/wardsimon'
-__version__ = '0.0.1'
+__version__ = '0.1.0'
 
 import sys
 
@@ -65,7 +69,7 @@ class LoggedProperty(property):
                     result_item(item)
             Store().append_log(self.makeEntry('get', res))
             if borg.debug:  # noqa: S1006
-                print(f"I'm {self._my_self} and {self._get_id} has been called outside!")
+                print(f"I'm {self._my_self} and {self._get_id} has been called from the outside!")
         return res
 
     def __set__(self, instance, value):
@@ -75,7 +79,7 @@ class LoggedProperty(property):
         if not test and self._get_id is not None and self._my_self is not None:
             Store().append_log(self.makeEntry('set', value))
             if borg.debug:  # noqa: S1006
-                print(f"I'm {self._my_self} and {self._get_id} has been set to {value} outside!")
+                print(f"I'm {self._my_self} and {self._get_id} has been set to {value} from the outside!")
         return super().__set__(instance, value)
 
     def makeEntry(self, log_type, returns, *args, **kwargs) -> str:

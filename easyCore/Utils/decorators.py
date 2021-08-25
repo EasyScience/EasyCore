@@ -1,9 +1,15 @@
-__author__ = 'github.com/wardsimon'
-__version__ = '0.0.1'
+#  SPDX-FileCopyrightText: 2021 easyCore contributors  <core@easyscience.software>
+#  SPDX-License-Identifier: BSD-3-Clause
+#  © 2021 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
-import collections
+__author__ = 'github.com/wardsimon'
+__version__ = '0.1.0'
+
+import collections.abc
 import functools
+
 from time import time
+
 from easyCore import borg
 
 
@@ -19,16 +25,15 @@ class memoized:
         self.cache = {}
 
     def __call__(self, *args):
-        if not isinstance(args, collections.Hashable):
+        if not isinstance(args, collections.abc.Hashable):
             # uncacheable. a list, for instance.
             # better to not cache than blow up.
             return self.func(*args)
         if args in self.cache:
             return self.cache[args]
-        else:
-            value = self.func(*args)
-            self.cache[args] = value
-            return value
+        value = self.func(*args)
+        self.cache[args] = value
+        return value
 
     def __repr__(self):
         """Return the function's docstring."""

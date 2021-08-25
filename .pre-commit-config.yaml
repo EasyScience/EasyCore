@@ -1,0 +1,37 @@
+repos:
+- repo: https://github.com/psf/black
+  rev: stable   # Replace by any tag/version: https://github.com/psf/black/tags
+  hooks:
+  - id: black
+    language_version: python3     # Should be a command that runs python3.6+
+
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.0.1    # Use the ref you want to point at
+  hooks:
+  - id: trailing-whitespace
+  - id: check-yaml
+  - id: check-xml
+  - id: requirements-txt-fixer
+  - id: check-toml
+  - id: pretty-format-json
+  - id: detect-private-key
+- repo: local
+  hooks:
+  - id: export-requirements
+    name: Export requeriments.txt
+    language: system
+    pass_filenames: false
+    entry: poetry export --without-hashes -o requirements.txt
+    files: ^(pyproject.toml|poetry.lock)$
+#  - id: export-setup
+#    name: Export setup.py
+#    language: system
+#    pass_filenames: false
+#    entry: ~/anaconda3/bin/poetry2setup > setup.py
+- repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
+  rev: v2.1.0
+  hooks:
+  - id: pretty-format-yaml
+    args: [--autofix, --indent, '2']
+  - id: pretty-format-toml
+    args: [--autofix]
