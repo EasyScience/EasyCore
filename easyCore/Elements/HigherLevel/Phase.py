@@ -352,7 +352,7 @@ class Phase(BaseObj):
         return d
 
 
-class Phases(BaseCollection[Phase]):
+class Phases(BaseCollection):
     def __init__(self, name: str = "phases", *args, interface=None, **kwargs):
         """
         Generate a collection of crystals.
