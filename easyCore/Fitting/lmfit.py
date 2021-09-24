@@ -290,8 +290,8 @@ class lmfit(FittingTemplate):  # noqa: S101
 
     def available_methods(self) -> List[str]:
         return [
-            "leastsq",
             "least_squares",
+            "leastsq",
             "differential_evolution",
             "basinhopping",
             "ampgo",
