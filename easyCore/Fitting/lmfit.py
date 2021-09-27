@@ -150,6 +150,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         parameters: Union[lmParameters, noneType] = None,
         method: str = None,
         minimizer_kwargs: dict = None,
+        engine_kwargs: dict = None,
         **kwargs,
     ) -> FitResults:
         """
@@ -180,10 +181,14 @@ class lmfit(FittingTemplate):  # noqa: S101
         if weights is None:
             weights = np.sqrt(np.abs(y))
 
+        if engine_kwargs is None:
+            engine_kwargs = {}
+
         if minimizer_kwargs is None:
             minimizer_kwargs = {}
         else:
             minimizer_kwargs = {"fit_kws": minimizer_kwargs}
+        minimizer_kwargs.update(engine_kwargs)
 
         # Why do we do this? Because a fitting template has to have borg instantiated outside pre-runtime
         from easyCore import borg
