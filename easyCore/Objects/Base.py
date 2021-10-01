@@ -4,15 +4,25 @@
 
 from __future__ import annotations
 
-__author__ = 'github.com/wardsimon'
-__version__ = '0.1.0'
+__author__ = "github.com/wardsimon"
+__version__ = "0.1.0"
 
 import numbers
 import weakref
 
 from copy import deepcopy
 from functools import wraps
-from typing import List, Union, Any, Iterable, Dict, Optional, Type, TYPE_CHECKING, Callable
+from typing import (
+    List,
+    Union,
+    Any,
+    Iterable,
+    Dict,
+    Optional,
+    Type,
+    TYPE_CHECKING,
+    Callable,
+)
 
 from easyCore import borg, ureg, np, pint
 from easyCore.Utils.classTools import addLoggedProp, addProp
@@ -44,15 +54,18 @@ class Descriptor(MSONable):
     _constructor = Q_
     _borg = borg
 
-    def __init__(self, name: str,
-                 value: Any,
-                 units: Optional[Union[noneType, str, ureg.Unit]] = None,
-                 description: Optional[str] = '',
-                 url: Optional[str] = '',
-                 display_name: Optional[str] = None,
-                 callback: Optional[property] = property(),
-                 enabled: Optional[bool] = True,
-                 parent: Optional[Union[Any, None]] = None):  # noqa: S107
+    def __init__(
+        self,
+        name: str,
+        value: Any,
+        units: Optional[Union[noneType, str, ureg.Unit]] = None,
+        description: Optional[str] = "",
+        url: Optional[str] = "",
+        display_name: Optional[str] = None,
+        callback: Optional[property] = property(),
+        enabled: Optional[bool] = True,
+        parent: Optional[Union[Any, None]] = None,
+    ):  # noqa: S107
         """
         This is the base of all variable descriptions for models. It contains all information to describe a single
         unique property of an object. This description includes a name and value as well as optionally a unit,
@@ -82,14 +95,11 @@ class Descriptor(MSONable):
 
         .. note:: Undo/Redo functionality is implemented for the attributes `value`, `unit` and `display name`.
         """
-        if not hasattr(self, '_args'):
-            self._args = {
-                'value': None,
-                'units': ''
-            }
+        if not hasattr(self, "_args"):
+            self._args = {"value": None, "units": ""}
 
         # Let the collective know we've been assimilated
-        self._borg.map.add_vertex(self, obj_type='created')
+        self._borg.map.add_vertex(self, obj_type="created")
         # Make the connection between self and parent
         if parent is not None:
             self._borg.map.add_edge(parent, self)
@@ -103,8 +113,8 @@ class Descriptor(MSONable):
         else:
             raise AttributeError
         # Clunky method of keeping self.value up to date
-        self._args['value'] = value
-        self._args['units'] = str(self.unit)
+        self._args["value"] = value
+        self._args["units"] = str(self.unit)
         self._value = self.__class__._constructor(**self._args)
 
         self._enabled = enabled
@@ -132,9 +142,9 @@ class Descriptor(MSONable):
         """
         state = self.as_dict()
         cls = self.__class__
-        if hasattr(self, '__old_class__'):
+        if hasattr(self, "__old_class__"):
             cls = self.__old_class__
-        return cls.from_dict, (state, )
+        return cls.from_dict, (state,)
 
     @property
     def display_name(self) -> str:
@@ -182,7 +192,7 @@ class Descriptor(MSONable):
             unit_str = str(unit_str)
         new_unit = ureg.parse_expression(unit_str)
         self._units = new_unit
-        self._args['units'] = str(new_unit)
+        self._args["units"] = str(new_unit)
         self._value = self.__class__._constructor(**self._args)
 
     @property
@@ -201,7 +211,7 @@ class Descriptor(MSONable):
                 if value != self._value:
                     self.__deepValueSetter(value)
             except Exception as e:
-                raise ValueError(f'Unable to return value:\n{e}')
+                raise ValueError(f"Unable to return value:\n{e}")
         return self._value
 
     def __deepValueSetter(self, value: Any):
@@ -212,11 +222,11 @@ class Descriptor(MSONable):
         :return: None
         """
         # TODO there should be a callback to the collective, logging this as a return(if from a non `easyCore` class)
-        if hasattr(value, 'magnitude'):
+        if hasattr(value, "magnitude"):
             value = value.magnitude
-            if hasattr(value, 'nominal_value'):
+            if hasattr(value, "nominal_value"):
                 value = value.nominal_value
-        self._args['value'] = value
+        self._args["value"] = value
         self._value = self.__class__._constructor(**self._args)
 
     @value.setter
@@ -230,7 +240,7 @@ class Descriptor(MSONable):
         """
         if not self.enabled:
             if borg.debug:
-                raise CoreSetException(f'{str(self)} is not enabled.')
+                raise CoreSetException(f"{str(self)} is not enabled.")
             return
         self.__deepValueSetter(value)
         if self._callback.fset is not None:
@@ -247,9 +257,9 @@ class Descriptor(MSONable):
         :return: The raw value of self
         """
         value = self._value
-        if hasattr(value, 'magnitude'):
+        if hasattr(value, "magnitude"):
             value = value.magnitude
-            if hasattr(value, 'nominal_value'):
+            if hasattr(value, "nominal_value"):
                 value = value.nominal_value
         return value
 
@@ -282,8 +292,8 @@ class Descriptor(MSONable):
         new_unit = ureg.parse_expression(unit_str)
         self._value = self._value.to(new_unit)
         self._units = new_unit
-        self._args['value'] = self.raw_value
-        self._args['units'] = str(self.unit)
+        self._args["value"] = self.raw_value
+        self._args["units"] = str(self.unit)
 
     # @cached_property
     @property
@@ -301,10 +311,10 @@ class Descriptor(MSONable):
         obj_name = self.name
         obj_value = self._value.magnitude
         if isinstance(obj_value, float):
-            obj_value = '{:0.04f}'.format(obj_value)
-        obj_units = ''
+            obj_value = "{:0.04f}".format(obj_value)
+        obj_units = ""
         if not self.unit.dimensionless:
-            obj_units = ' {:~P}'.format(self.unit)
+            obj_units = " {:~P}".format(self.unit)
         out_str = f"<{class_name} '{obj_name}': {obj_value}{obj_units}>"
         return out_str
 
@@ -316,12 +326,12 @@ class Descriptor(MSONable):
         """
         if skip is None:
             skip = []
-        super_dict = super().as_dict(skip=skip + ['parent', 'callback', '_finalizer'])
-        super_dict['value'] = self.raw_value
-        super_dict['units'] = self._args['units']
+        super_dict = super().as_dict(skip=skip + ["parent", "callback", "_finalizer"])
+        super_dict["value"] = self.raw_value
+        super_dict["units"] = self._args["units"]
         # Attach the id. This might be useful in connected applications.
         # Note that it is converted to int and then str because javascript....
-        super_dict['@id'] = str(self._borg.map.convert_id(self).int)
+        super_dict["@id"] = str(self._borg.map.convert_id(self).int)
         return super_dict
 
     def to_obj_type(self, data_type: Parameter, *kwargs):
@@ -342,6 +352,7 @@ class ComboDescriptor(Descriptor):
     This class is an extension of a ``easyCore.Object.Base.Descriptor``. This class has a selection of values which can
     be checked against. For example, combo box styling.
     """
+
     def __init__(self, *args, available_options=None, **kwargs):
         super(ComboDescriptor, self).__init__(*args, **kwargs)
         if available_options is None:
@@ -367,14 +378,16 @@ class Parameter(Descriptor):
 
     _constructor = M_
 
-    def __init__(self,
-                 name: str,
-                 value: Union[numbers.Number, np.ndarray],
-                 error: Optional[Union[numbers.Number, np.ndarray]] = 0.,
-                 min: Optional[numbers.Number] = -np.Inf,
-                 max: Optional[numbers.Number] = np.Inf,
-                 fixed: Optional[bool] = False,
-                 **kwargs):
+    def __init__(
+        self,
+        name: str,
+        value: Union[numbers.Number, np.ndarray],
+        error: Optional[Union[numbers.Number, np.ndarray]] = 0.0,
+        min: Optional[numbers.Number] = -np.Inf,
+        max: Optional[numbers.Number] = np.Inf,
+        fixed: Optional[bool] = False,
+        **kwargs,
+    ):
         """
         This class is an extension of a ``easyCore.Object.Base.Descriptor``. Where the descriptor was for static
         objects, a `Parameter` is for dynamic objects. A parameter has the ability to be used in fitting and has
@@ -400,11 +413,7 @@ class Parameter(Descriptor):
             Undo/Redo functionality is implemented for the attributes `value`, `error`, `min`, `max`, `fixed`
         """
         # Set the error
-        self._args = {
-            'value': value,
-            'units': '',
-            'error': error
-        }
+        self._args = {"value": value, "units": "", "error": error}
 
         if not isinstance(value, numbers.Number):
             raise ValueError("In a parameter the `value` must be numeric")
@@ -416,7 +425,7 @@ class Parameter(Descriptor):
             raise ValueError("Standard deviation `error` must be positive")
 
         super().__init__(name, value, **kwargs)
-        self._args['units'] = str(self.unit)
+        self._args["units"] = str(self.unit)
 
         # Create additional fitting elements
         self._min: numbers.Number = min
@@ -424,9 +433,11 @@ class Parameter(Descriptor):
         self._fixed: bool = fixed
         self.initial_value = self.value
         self._constraints: dict = {
-            'user':    {},
-            'builtin': {'min': SelfConstraint(self, '>=', '_min'),
-                        'max': SelfConstraint(self, '<=', '_max')}
+            "user": {},
+            "builtin": {
+                "min": SelfConstraint(self, ">=", "_min"),
+                "max": SelfConstraint(self, "<=", "_max"),
+            },
         }
         # This is for the serialization. Otherwise we wouldn't catch the values given to `super()`
         self._kwargs = kwargs
@@ -434,16 +445,21 @@ class Parameter(Descriptor):
         # We have initialized from the Descriptor class where value has it's own undo/redo decorator
         # This needs to be bypassed to use the Parameter undo/redo stack
         fun = self.__class__.value.fset
-        if hasattr(fun, 'func'):
-            fun = getattr(fun, 'func')
-        self.__previous_set: \
-            Callable[[Type[Descriptor], Union[numbers.Number, np.ndarray]], Union[numbers.Number, np.ndarray]] = fun
+        if hasattr(fun, "func"):
+            fun = getattr(fun, "func")
+        self.__previous_set: Callable[
+            [Type[Descriptor], Union[numbers.Number, np.ndarray]],
+            Union[numbers.Number, np.ndarray],
+        ] = fun
 
         # Monkey patch the unit and the value to take into account the new max/min situation
-        addProp(self, 'value',
-                fget=self.__class__.value.fget,
-                fset=self.__class__._property_value.fset,
-                fdel=self.__class__.value.fdel)
+        addProp(
+            self,
+            "value",
+            fget=self.__class__.value.fget,
+            fset=self.__class__._property_value.fset,
+            fdel=self.__class__.value.fdel,
+        )
 
     @property
     def _property_value(self) -> Union[numbers.Number, np.ndarray]:
@@ -462,7 +478,9 @@ class Parameter(Descriptor):
             set_value = set_value.magnitude.nominal_value
         # Save the old state and create the new state
         old_value = self._value
-        self._value = self.__class__._constructor(value=set_value, units=self._args['units'], error=self._args['error'])
+        self._value = self.__class__._constructor(
+            value=set_value, units=self._args["units"], error=self._args["error"]
+        )
 
         def constraint_runner(this_constraint_type: dict, newer_value: numbers.Number):
             for constraint in this_constraint_type.values():
@@ -472,9 +490,12 @@ class Parameter(Descriptor):
                 this_new_value = constraint(no_set=True)
                 if this_new_value != newer_value:
                     if borg.debug:
-                        print(f'Constraint `{constraint}` has been applied')
-                    self._value = self.__class__._constructor(value=this_new_value, units=self._args['units'],
-                                                              error=self._args['error'])
+                        print(f"Constraint `{constraint}` has been applied")
+                    self._value = self.__class__._constructor(
+                        value=this_new_value,
+                        units=self._args["units"],
+                        error=self._args["error"],
+                    )
                 newer_value = this_new_value
             return newer_value
 
@@ -503,14 +524,14 @@ class Parameter(Descriptor):
         :param new_unit: new unit
         :return: None
         """
-        old_unit = str(self._args['units'])
+        old_unit = str(self._args["units"])
         super().convert_unit(new_unit)
         # Deal with min/max. Error is auto corrected
-        if not self.value.unitless and old_unit != 'dimensionless':
+        if not self.value.unitless and old_unit != "dimensionless":
             self._min = Q_(self.min, old_unit).to(self._units).magnitude
             self._max = Q_(self.max, old_unit).to(self._units).magnitude
         # Log the new converted error
-        self._args['error'] = self.value.error.magnitude
+        self._args["error"] = self.value.error.magnitude
 
     @property
     def min(self) -> numbers.Number:
@@ -584,7 +605,7 @@ class Parameter(Descriptor):
             if self._borg.stack.enabled:
                 self._borg.stack.pop()
             if borg.debug:
-                raise CoreSetException(f'{str(self)} is not enabled.')
+                raise CoreSetException(f"{str(self)} is not enabled.")
             return
         # TODO Should we try and cast value to bool rather than throw ValueError?
         if not isinstance(value, bool):
@@ -612,7 +633,7 @@ class Parameter(Descriptor):
         """
         if value < 0:
             raise ValueError
-        self._args['error'] = value
+        self._args["error"] = value
         self._value = self.__class__._constructor(**self._args)
 
     def __repr__(self) -> str:
@@ -626,12 +647,14 @@ class Parameter(Descriptor):
             super_str += " (fixed)"
         s.append(super_str)
         s.append("bounds=[%s:%s]" % (repr(self.min), repr(self.max)))
-        return "%s>" % ', '.join(s)
+        return "%s>" % ", ".join(s)
 
     def __float__(self) -> float:
         return float(self.raw_value)
 
-    def as_dict(self, skip: Optional[Union[List[str], None]] = None) -> Dict[str, Union[str, bool, numbers.Number]]:
+    def as_dict(
+        self, skip: Optional[Union[List[str], None]] = None
+    ) -> Dict[str, Union[str, bool, numbers.Number]]:
         """
         Include enabled in the dict output as it's unfortunately skipped
 
@@ -639,7 +662,7 @@ class Parameter(Descriptor):
         :return: Serialized dictionary
         """
         new_dict = super(Parameter, self).as_dict()
-        new_dict['enabled'] = self.enabled
+        new_dict["enabled"] = self.enabled
         return new_dict
 
     @property
@@ -649,7 +672,7 @@ class Parameter(Descriptor):
 
         :return: Dictionary of constraints which are built into the system
         """
-        return self._constraints['builtin']
+        return self._constraints["builtin"]
 
     @property
     def user_constraints(self) -> Dict[str, Type[Constraint]]:
@@ -658,19 +681,21 @@ class Parameter(Descriptor):
 
         :return: Dictionary of constraints which are user supplied
         """
-        return self._constraints['user']
+        return self._constraints["user"]
 
     @user_constraints.setter
     def user_constraints(self, constraints_dict: Dict[str, Type[Constraint]]):
-        self._constraints['user'] = constraints_dict
+        self._constraints["user"] = constraints_dict
 
 
 class BasedBase(MSONable):
-    __slots__ = ['_name', '_borg', 'user_data', '_kwargs']
+    __slots__ = ["_name", "_borg", "user_data", "_kwargs"]
 
-    def __init__(self, name: str, interface: Optional[Union[Type[Interface, None]]] = None):
+    def __init__(
+        self, name: str, interface: Optional[Union[Type[Interface, None]]] = None
+    ):
         self._borg = borg
-        self._borg.map.add_vertex(self, obj_type='created')
+        self._borg.map.add_vertex(self, obj_type="created")
         self.interface = interface
         self.user_data: dict = {}
         self._name: str = name
@@ -684,15 +709,15 @@ class BasedBase(MSONable):
         """
         state = self.as_dict()
         cls = self.__class__
-        if hasattr(self, '__old_class__'):
+        if hasattr(self, "__old_class__"):
             cls = self.__old_class__
-        return cls.from_dict, (state, )
+        return cls.from_dict, (state,)
 
     @property
     def name(self) -> str:
         """
         Get the common name of the object.
-        
+
         :return: Common name of the object
         """
         return self._name
@@ -736,10 +761,14 @@ class BasedBase(MSONable):
         :raises: AttributeError
         """
         if self.interface is None:
-            raise AttributeError('Interface error for generating bindings. `interface` has to be set.')
-        interfaceable_children = [key
-                                  for key in self._borg.map.get_edges(self)
-                                  if issubclass(type(self._borg.map.get_item_by_key(key)), BasedBase)]
+            raise AttributeError(
+                "Interface error for generating bindings. `interface` has to be set."
+            )
+        interfaceable_children = [
+            key
+            for key in self._borg.map.get_edges(self)
+            if issubclass(type(self._borg.map.get_item_by_key(key)), BasedBase)
+        ]
         for child_key in interfaceable_children:
             child = self._borg.map.get_item_by_key(child_key)
             child.interface = self.interface
@@ -750,7 +779,9 @@ class BasedBase(MSONable):
         Switch or create a new interface.
         """
         if self.interface is None:
-            raise AttributeError('Interface error for generating bindings. `interface` has to be set.')
+            raise AttributeError(
+                "Interface error for generating bindings. `interface` has to be set."
+            )
         self.interface.switch(new_interface_name)
         self.generate_bindings()
 
@@ -764,7 +795,9 @@ class BasedBase(MSONable):
                 constraints.append(con[key])
         return constraints
 
-    def as_dict(self, skip: List[str] = None) -> Dict[str, Union[str, bool, numbers.Number]]:
+    def as_dict(
+        self, skip: List[str] = None
+    ) -> Dict[str, Union[str, bool, numbers.Number]]:
         """
         Convert ones self into a serialized form.
 
@@ -774,11 +807,11 @@ class BasedBase(MSONable):
             skip = []
         d = MSONable.as_dict(self, skip=skip)
         for key, item in d.items():
-            if hasattr(item, 'as_dict'):
+            if hasattr(item, "as_dict"):
                 d[key] = item.as_dict(skip=skip)
         # Attach the id. This might be useful in connected applications.
         # Note that it is converted to int and then str because javascript....
-        d['@id'] = str(self._borg.map.convert_id(self).int)
+        d["@id"] = str(self._borg.map.convert_id(self).int)
         return d
 
     def get_parameters(self) -> List[Parameter]:
@@ -789,7 +822,7 @@ class BasedBase(MSONable):
         """
         par_list = []
         for key, item in self._kwargs.items():
-            if hasattr(item, 'get_parameters'):
+            if hasattr(item, "get_parameters"):
                 par_list = [*par_list, *item.get_parameters()]
             elif isinstance(item, Parameter):
                 par_list.append(item)
@@ -803,7 +836,7 @@ class BasedBase(MSONable):
         """
         item_list = []
         for key, item in self._kwargs.items():
-            if hasattr(item, '_get_linkable_attributes'):
+            if hasattr(item, "_get_linkable_attributes"):
                 item_list = [*item_list, *item._get_linkable_attributes()]
             elif issubclass(type(item), Descriptor):
                 item_list.append(item)
@@ -817,7 +850,7 @@ class BasedBase(MSONable):
         """
         fit_list = []
         for key, item in self._kwargs.items():
-            if hasattr(item, 'get_fit_parameters'):
+            if hasattr(item, "get_fit_parameters"):
                 fit_list = [*fit_list, *item.get_fit_parameters()]
             elif isinstance(item, Parameter) and item.enabled and not item.fixed:
                 fit_list.append(item)
@@ -829,7 +862,7 @@ class BasedBase(MSONable):
 
         :return: list of function and parameter names for auto-completion
         """
-        new_class_objs = list(k for k in dir(self.__class__) if not k.startswith('_'))
+        new_class_objs = list(k for k in dir(self.__class__) if not k.startswith("_"))
         return sorted(new_class_objs)
 
 
@@ -841,8 +874,12 @@ class BaseObj(BasedBase):
     cheat with `BaseObj(*[Descriptor(...), Parameter(...), ...])`.
     """
 
-    def __init__(self, name: str, *args: Optional[Union[Type[Descriptor], Type[BasedBase]]],
-                 **kwargs: Optional[Union[Type[Descriptor], Type[BasedBase]]]):
+    def __init__(
+        self,
+        name: str,
+        *args: Optional[Union[Type[Descriptor], Type[BasedBase]]],
+        **kwargs: Optional[Union[Type[Descriptor], Type[BasedBase]]],
+    ):
         """
         Set up the base class.
 
@@ -854,21 +891,31 @@ class BaseObj(BasedBase):
         # If Parameter or Descriptor is given as arguments...
         for arg in args:
             if issubclass(type(arg), (BaseObj, Descriptor)):
-                kwargs[getattr(arg, 'name')] = arg
+                kwargs[getattr(arg, "name")] = arg
         # Set kwargs, also useful for serialization
         known_keys = self.__dict__.keys()
         self._kwargs = kwargs
         for key in kwargs.keys():
             if key in known_keys:
                 raise AttributeError
-            if issubclass(type(kwargs[key]), (BasedBase, Descriptor)) or \
-                    'BaseCollection' in [c.__name__ for c in type(kwargs[key]).__bases__]:
+            if issubclass(
+                type(kwargs[key]), (BasedBase, Descriptor)
+            ) or "BaseCollection" in [c.__name__ for c in type(kwargs[key]).__bases__]:
                 self._borg.map.add_edge(self, kwargs[key])
-                self._borg.map.reset_type(kwargs[key], 'created_internal')
-            addLoggedProp(self, key, self.__getter(key), self.__setter(key),
-                          get_id=key, my_self=self, test_class=BaseObj)
+                self._borg.map.reset_type(kwargs[key], "created_internal")
+            addLoggedProp(
+                self,
+                key,
+                self.__getter(key),
+                self.__setter(key),
+                get_id=key,
+                my_self=self,
+                test_class=BaseObj,
+            )
 
-    def _add_component(self, key: str, component: Union[Type[Descriptor], Type[BasedBase]]):
+    def _add_component(
+        self, key: str, component: Union[Type[Descriptor], Type[BasedBase]]
+    ):
         """
         Dynamically add a component to the class.
 
@@ -878,9 +925,16 @@ class BaseObj(BasedBase):
         """
         self._kwargs[key] = component
         self._borg.map.add_edge(self, component)
-        self._borg.map.reset_type(component, 'created_internal')
-        addLoggedProp(self, key, self.__getter(key), self.__setter(key), get_id=key, my_self=self,
-                      test_class=BaseObj)
+        self._borg.map.reset_type(component, "created_internal")
+        addLoggedProp(
+            self,
+            key,
+            self.__getter(key),
+            self.__setter(key),
+            get_id=key,
+            my_self=self,
+            test_class=BaseObj,
+        )
 
     def __setattr__(self, key, value):
         if hasattr(self, key) and issubclass(type(value), (BasedBase, Descriptor)):
@@ -908,4 +962,3 @@ class BaseObj(BasedBase):
                 obj._kwargs[key] = value
 
         return setter
-
