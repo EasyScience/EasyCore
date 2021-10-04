@@ -25,8 +25,10 @@ jobs:
 
     - name: Set name variable
       id: name
+      shell: bash
       run: |
         EDLVERSION=$( poetry version | awk -F'[" "|.|-]' '{ print $5=="" ? "v"$2"."$3"."$4 : "v"$2"."$3"."$4"-"$5 ;}' )
+        echo "REPOSITORY_NAME=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
         echo "::set-output name=tag::$EDLVERSION"
 
     - name: Upload Artifacts GitHub releases
@@ -39,11 +41,12 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         artifacts: ./**/*.whl
         tag: ${{ steps.name.outputs.tag }}
-        body: This is an alpha build of easyCore
+        body: This is an alpha build of easyCore (${{ steps.name.outputs.tag }})
 
     - name: Generate HTML
       run: |
-        python resources/scripts/generate_html.py ${{ steps.name.outputs.tag }}
+        pip install requests
+        python resources/scripts/generate_html.py ${{ env.REPOSITORY_NAME }}
 
     - name: Checkout target repo
       uses: actions/checkout@v2
