@@ -26,7 +26,7 @@ jobs:
     - name: Set name variable
       id: name
       run: |
-        EDLVERSION=$( poetry version | awk -F'[" "|.|-]' '{ print $5=="" ? $2"."$3"."$4 : $2"."$3"."$4"-"$5 ;}' )
+        EDLVERSION=$( poetry version | awk -F'[" "|.|-]' '{ print $5=="" ? "v"$2"."$3"."$4 : "v"$2"."$3"."$4"-"$5 ;}' )
         echo "::set-output name=tag::$EDLVERSION"
 
     - name: Upload Artifacts GitHub releases
