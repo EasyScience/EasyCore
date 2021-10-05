@@ -25,7 +25,7 @@ repo = 'easyCore'
 name = "easyScienceCore"
 version = "0.1.0"
 description = "Generic logic for easyScience libraries"
-license = "GPL-3.0"
+license = "BSD-3-Clause"
 authors = ["Simon Ward"]
 readme = "README.md"
 homepage = "https://github.com/easyScience/easyCore"
@@ -53,15 +53,15 @@ xarray = ">=0.16,<0.20"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.2"
-pytest-cov = "^2.11.1"
+pytest-cov = "^3.0.0"
 codecov = "^2.1.11"
 matplotlib = "^3.2.2"
 doc8 = "^0.9.0"
-readme-renderer = "^29.0"
+readme-renderer = "^30.0"
 Sphinx = "^4.0.2"
-sphinx-rtd-theme = "^0.5.2"
+sphinx-rtd-theme = "^1.0.0"
 sphinx-autodoc-typehints = "^1.12.0"
-sphinx-gallery = "^0.9.0"
+sphinx-gallery = "^0.10.0"
 
 [tool.tox]
 legacy_tox_ini = """

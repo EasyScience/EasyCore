@@ -1,0 +1,79 @@
+name: Build package for easyScience pypi
+
+on:
+  push:
+    branches: [develop]
+
+jobs:
+  Build_package:
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[ci skip]')"
+    steps:
+    - name: Check-out repository
+      uses: actions/checkout@v2
+
+    - uses: actions/setup-python@v2
+      name: Setup Python
+      with:
+        python-version: 3.8
+
+    - uses: Gr1N/setup-poetry@v4
+    - name: Install and build
+      run: |
+        poetry version prerelease
+        poetry build
+
+    - name: Set name variable
+      id: name
+      shell: bash
+      run: |
+        EDLVERSION=$( poetry version | awk -F'[" "|.|-]' '{ print $5=="" ? "v"$2"."$3"."$4 : "v"$2"."$3"."$4"-"$5 ;}' )
+        echo "REPOSITORY_NAME=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
+        echo "::set-output name=tag::$EDLVERSION"
+
+    - name: Upload Artifacts GitHub releases
+      uses: ncipollo/release-action@v1
+      with:
+        draft: false
+        prerelease: true
+        allowUpdates: true
+        replacesArtifacts: true
+        token: ${{ secrets.GITHUB_TOKEN }}
+        artifacts: ./**/*.whl
+        tag: ${{ steps.name.outputs.tag }}
+        body: This is an alpha build of easyCore (${{ steps.name.outputs.tag }})
+
+    - name: Generate HTML
+      run: |
+        pip install requests
+        python resources/scripts/generate_html.py ${{ env.REPOSITORY_NAME }}
+
+    - name: Checkout target repo
+      uses: actions/checkout@v2
+      env:
+        REPO: easyScience/pypi
+        REPO_PATH: pypi
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.ES_TOKEN }}
+        repository: ${{ env.REPO }}
+        path: ${{ env.REPO_PATH }}
+    - name: Copy index to new repo
+      env:
+        SOURCE: index.html
+        TARGET: pypi/easysciencecore/
+      run: cp ${{ env.SOURCE }} ${{ env.TARGET }}
+    - name: Push
+      env:
+        REPO_PATH: pypi
+        GIT_USERNAME: action
+        GIT_EMAIL: action@github.com
+      run: |
+        cd ${{ env.REPO_PATH }}
+        git config --local user.name "${{ env.GIT_USERNAME }}"
+        git config --local user.email "${{ env.GIT_EMAIL }}"
+        git add .
+        if [[ `git status --porcelain` ]]; then
+          git commit -m "Github Actions Automatically Built in `date +"%Y-%m-%d %H:%M"`"
+          git push
+        fi
