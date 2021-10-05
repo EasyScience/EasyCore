@@ -1,8 +1,10 @@
 version: 2
 updates:
 - package-ecosystem: pip
-  directory: "/"
+  directory: /
   schedule:
     interval: daily
   open-pull-requests-limit: 10
-  target-branch: "develop"
+  target-branch: develop
+  labels:
+  - dependencies
