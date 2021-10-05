@@ -1,82 +1,40 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>Constraints &mdash; easyCore 0.1.0 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/gallery.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/gallery-binder.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/gallery-dataframe.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/gallery-rendered-html.css" type="text/css" />
-
-  
-  
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sg_gallery.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sg_gallery-binder.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sg_gallery-dataframe.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sg_gallery-rendered-html.css" type="text/css" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
-  
-
-  
-  
-
-  
-
-  
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-
-    
+    <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Subclassing Examples" href="../base_examples/index.html" />
     <link rel="prev" title="Fitting in easyCore" href="introduction.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="../index.html">
-          
-
-          
-            
             <img src="../_static/ec_sidebar_w.png" class="logo" alt="Logo"/>
-          
           </a>
-
-          
-            
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -84,18 +42,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/overview.html">Overview</a></li>
@@ -132,88 +79,47 @@
 <li class="toctree-l1"><a class="reference internal" href="../fitting_examples/index.html">Fitting Examples</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">easyCore</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-        
       <li>Constraints</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="../_sources/fitting/constraints.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="constraints">
-<h1>Constraints<a class="headerlink" href="#constraints" title="Permalink to this headline">¶</a></h1>
+             
+  <section id="constraints">
+<h1>Constraints<a class="headerlink" href="#constraints" title="Permalink to this headline"></a></h1>
 <p>Constraints are a fundamental component in non-trivial fitting operations. They can also be used to affirm the minimum/maximum of a parameter or tie parameters together in a model.</p>
-<div class="section" id="anatomy-of-a-constraint">
-<h2>Anatomy of a constraint<a class="headerlink" href="#anatomy-of-a-constraint" title="Permalink to this headline">¶</a></h2>
+<section id="anatomy-of-a-constraint">
+<h2>Anatomy of a constraint<a class="headerlink" href="#anatomy-of-a-constraint" title="Permalink to this headline"></a></h2>
 <p>A constraint is a rule which is applied to a <strong>dependent</strong> variable. This rule can consist of a logical operation, relation to one or more <strong>independent</strong> variables or an arbitrary function.</p>
-<div class="section" id="constraints-on-parameters">
-<h3>Constraints on Parameters<a class="headerlink" href="#constraints-on-parameters" title="Permalink to this headline">¶</a></h3>
+<section id="constraints-on-parameters">
+<h3>Constraints on Parameters<a class="headerlink" href="#constraints-on-parameters" title="Permalink to this headline"></a></h3>
 <p><a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">easyCore.Objects.Base.Parameter</span></code></a> has the properties <cite>builtin_constraints</cite> and <cite>user_constraints</cite>. These are dictionaries which correspond to constraints which are intrinsic and extrinsic to the Parameter. This means that on the value change of the Parameter firstly the <cite>builtin_constraints</cite> are evaluated, followed by the <cite>user_constraints</cite>.</p>
-</div>
-<div class="section" id="constraints-on-fitting">
-<h3>Constraints on Fitting<a class="headerlink" href="#constraints-on-fitting" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="constraints-on-fitting">
+<h3>Constraints on Fitting<a class="headerlink" href="#constraints-on-fitting" title="Permalink to this headline"></a></h3>
 <p><code class="xref py py-class docutils literal notranslate"><span class="pre">easyCore.Fitting.Fitting.Fitter</span></code> has the ability to evaluate user supplied constraints which effect the value of both fixed and non-fixed parameters. A good example of one such use case would be the ratio between two parameters, where you would create a <a class="reference internal" href="#easyCore.Fitting.Constraints.ObjConstraint" title="easyCore.Fitting.Constraints.ObjConstraint"><code class="xref py py-class docutils literal notranslate"><span class="pre">easyCore.Fitting.Constraints.ObjConstraint</span></code></a>.</p>
-</div>
-</div>
-<div class="section" id="using-constraints">
-<h2>Using constraints<a class="headerlink" href="#using-constraints" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="using-constraints">
+<h2>Using constraints<a class="headerlink" href="#using-constraints" title="Permalink to this headline"></a></h2>
 <p>A constraint can be used in one of three ways; Assignment to a parameter, assignment to fitting or on demand. The first two are covered and on demand is shown below.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">easyCore.Fitting.Constraints</span> <span class="kn">import</span> <span class="n">NumericConstraint</span>
 <span class="kn">from</span> <span class="nn">easyCore.Objects.Base</span> <span class="kn">import</span> <span class="n">Parameter</span>
@@ -226,22 +132,24 @@
 <span class="c1"># A will now equal 1</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="constraint-reference">
-<h2>Constraint Reference<a class="headerlink" href="#constraint-reference" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="examples-using-constraints">
-<h3>Examples using <cite>Constraints</cite><a class="headerlink" href="#examples-using-constraints" title="Permalink to this headline">¶</a></h3>
-<div class="sphx-glr-thumbcontainer" tooltip="Constraints example"><div class="figure align-default" id="id1">
+</section>
+<section id="constraint-reference">
+<h2>Constraint Reference<a class="headerlink" href="#constraint-reference" title="Permalink to this headline"></a></h2>
+<section id="examples-using-constraints">
+<h3>Examples using <cite>Constraints</cite><a class="headerlink" href="#examples-using-constraints" title="Permalink to this headline"></a></h3>
+<div class="sphx-glr-thumbcontainer" tooltip="Constraints example"><figure class="align-default" id="id1">
 <img alt="Constraints example" src="../_images/sphx_glr_plot_constraints_thumb.png" />
-<p class="caption"><span class="caption-text"><a class="reference internal" href="../fitting_examples/plot_constraints.html#sphx-glr-fitting-examples-plot-constraints-py"><span class="std std-ref">Constraints example</span></a></span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
-</div>
-</div><div class="sphx-glr-clear"></div></div>
-<div class="section" id="built-in-constraints">
-<h3>Built-in constraints<a class="headerlink" href="#built-in-constraints" title="Permalink to this headline">¶</a></h3>
+<figcaption>
+<p><span class="caption-text"><a class="reference internal" href="../fitting_examples/plot_constraints.html#sphx-glr-fitting-examples-plot-constraints-py"><span class="std std-ref">Constraints example</span></a></span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</div><div class="sphx-glr-clear"></div></section>
+<section id="built-in-constraints">
+<h3>Built-in constraints<a class="headerlink" href="#built-in-constraints" title="Permalink to this headline"></a></h3>
 <p>These are the built in constraints which you can use</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="easyCore.Fitting.Constraints.SelfConstraint">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">easyCore.Fitting.Constraints.</span></span><span class="sig-name descname"><span class="pre">SelfConstraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Fitting/Constraints.html#SelfConstraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Fitting.Constraints.SelfConstraint" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">easyCore.Fitting.Constraints.</span></span><span class="sig-name descname"><span class="pre">SelfConstraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Fitting/Constraints.html#SelfConstraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Fitting.Constraints.SelfConstraint" title="Permalink to this definition"></a></dt>
 <dd><p>A <cite>SelfConstraint</cite> is a constraint which tests a logical constraint on a property of itself, similar to
 a <cite>NumericConstraint</cite>. i.e. a &gt; a.min.</p>
 <dl class="field-list simple">
@@ -270,7 +178,7 @@ a <cite>NumericConstraint</cite>. i.e. a &gt; a.min.</p>
 </div>
 <dl class="py property">
 <dt class="sig sig-object py" id="easyCore.Fitting.Constraints.SelfConstraint.enabled">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="pre">:</span> <span class="pre">bool</span></em><a class="headerlink" href="#easyCore.Fitting.Constraints.SelfConstraint.enabled" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#easyCore.Fitting.Constraints.SelfConstraint.enabled" title="Permalink to this definition"></a></dt>
 <dd><p>Is the current constraint enabled.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
@@ -286,7 +194,7 @@ a <cite>NumericConstraint</cite>. i.e. a &gt; a.min.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="easyCore.Fitting.Constraints.NumericConstraint">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">easyCore.Fitting.Constraints.</span></span><span class="sig-name descname"><span class="pre">NumericConstraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Fitting/Constraints.html#NumericConstraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Fitting.Constraints.NumericConstraint" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">easyCore.Fitting.Constraints.</span></span><span class="sig-name descname"><span class="pre">NumericConstraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Fitting/Constraints.html#NumericConstraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Fitting.Constraints.NumericConstraint" title="Permalink to this definition"></a></dt>
 <dd><p>A <cite>NumericConstraint</cite> is a constraint whereby a dependent parameters value is something of an independent
 parameters value. I.e. a &lt; 1, a &gt; 5</p>
 <dl class="field-list simple">
@@ -315,7 +223,7 @@ parameters value. I.e. a &lt; 1, a &gt; 5</p>
 </div>
 <dl class="py property">
 <dt class="sig sig-object py" id="easyCore.Fitting.Constraints.NumericConstraint.enabled">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="pre">:</span> <span class="pre">bool</span></em><a class="headerlink" href="#easyCore.Fitting.Constraints.NumericConstraint.enabled" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#easyCore.Fitting.Constraints.NumericConstraint.enabled" title="Permalink to this definition"></a></dt>
 <dd><p>Is the current constraint enabled.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
@@ -331,7 +239,7 @@ parameters value. I.e. a &lt; 1, a &gt; 5</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="easyCore.Fitting.Constraints.ObjConstraint">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">easyCore.Fitting.Constraints.</span></span><span class="sig-name descname"><span class="pre">ObjConstraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">independent_obj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Fitting/Constraints.html#ObjConstraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Fitting.Constraints.ObjConstraint" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">easyCore.Fitting.Constraints.</span></span><span class="sig-name descname"><span class="pre">ObjConstraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">independent_obj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Fitting/Constraints.html#ObjConstraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Fitting.Constraints.ObjConstraint" title="Permalink to this definition"></a></dt>
 <dd><p>A <cite>ObjConstraint</cite> is a constraint whereby a dependent parameter is something of an independent parameter
 value. E.g. a (Dependent Parameter) &lt; b (Independent Parameter)</p>
 <dl class="field-list simple">
@@ -360,7 +268,7 @@ value. E.g. a (Dependent Parameter) &lt; b (Independent Parameter)</p>
 </div>
 <dl class="py property">
 <dt class="sig sig-object py" id="easyCore.Fitting.Constraints.ObjConstraint.enabled">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="pre">:</span> <span class="pre">bool</span></em><a class="headerlink" href="#easyCore.Fitting.Constraints.ObjConstraint.enabled" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#easyCore.Fitting.Constraints.ObjConstraint.enabled" title="Permalink to this definition"></a></dt>
 <dd><p>Is the current constraint enabled.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
@@ -376,7 +284,7 @@ value. E.g. a (Dependent Parameter) &lt; b (Independent Parameter)</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="easyCore.Fitting.Constraints.FunctionalConstraint">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">easyCore.Fitting.Constraints.</span></span><span class="sig-name descname"><span class="pre">FunctionalConstraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Fitting/Constraints.html#FunctionalConstraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Fitting.Constraints.FunctionalConstraint" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">easyCore.Fitting.Constraints.</span></span><span class="sig-name descname"><span class="pre">FunctionalConstraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Fitting/Constraints.html#FunctionalConstraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Fitting.Constraints.FunctionalConstraint" title="Permalink to this definition"></a></dt>
 <dd><p>Functional constraints do not depend on other parameters and as such can be more complex.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -405,7 +313,7 @@ value. E.g. a (Dependent Parameter) &lt; b (Independent Parameter)</p>
 </div>
 <dl class="py property">
 <dt class="sig sig-object py" id="easyCore.Fitting.Constraints.FunctionalConstraint.enabled">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="pre">:</span> <span class="pre">bool</span></em><a class="headerlink" href="#easyCore.Fitting.Constraints.FunctionalConstraint.enabled" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#easyCore.Fitting.Constraints.FunctionalConstraint.enabled" title="Permalink to this definition"></a></dt>
 <dd><p>Is the current constraint enabled.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
@@ -421,7 +329,7 @@ value. E.g. a (Dependent Parameter) &lt; b (Independent Parameter)</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="easyCore.Fitting.Constraints.MultiObjConstraint">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">easyCore.Fitting.Constraints.</span></span><span class="sig-name descname"><span class="pre">MultiObjConstraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">independent_objs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dependent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Fitting/Constraints.html#MultiObjConstraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Fitting.Constraints.MultiObjConstraint" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">easyCore.Fitting.Constraints.</span></span><span class="sig-name descname"><span class="pre">MultiObjConstraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">independent_objs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dependent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Fitting/Constraints.html#MultiObjConstraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Fitting.Constraints.MultiObjConstraint" title="Permalink to this definition"></a></dt>
 <dd><p>A <cite>MultiObjConstraint</cite> is similar to <a class="reference internal" href="#easyCore.Fitting.Constraints.ObjConstraint" title="easyCore.Fitting.Constraints.ObjConstraint"><code class="xref py py-class docutils literal notranslate"><span class="pre">easyCore.Fitting.Constraints.ObjConstraint</span></code></a> except that it relates
 to one or more independent objects.</p>
 <p>E.g.
@@ -475,7 +383,7 @@ to one or more independent objects.</p>
 </div>
 <dl class="py property">
 <dt class="sig sig-object py" id="easyCore.Fitting.Constraints.MultiObjConstraint.enabled">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="pre">:</span> <span class="pre">bool</span></em><a class="headerlink" href="#easyCore.Fitting.Constraints.MultiObjConstraint.enabled" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#easyCore.Fitting.Constraints.MultiObjConstraint.enabled" title="Permalink to this definition"></a></dt>
 <dd><p>Is the current constraint enabled.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
@@ -489,23 +397,23 @@ to one or more independent objects.</p>
 
 </dd></dl>
 
-</div>
-<div class="section" id="user-created-constraints">
-<h3>User created constraints<a class="headerlink" href="#user-created-constraints" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="user-created-constraints">
+<h3>User created constraints<a class="headerlink" href="#user-created-constraints" title="Permalink to this headline"></a></h3>
 <p>You can make your own constraints</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="easyCore.Fitting.Constraints.ConstraintBase">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">easyCore.Fitting.Constraints.</span></span><span class="sig-name descname"><span class="pre">ConstraintBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">independent_obj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Fitting/Constraints.html#ConstraintBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Fitting.Constraints.ConstraintBase" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">easyCore.Fitting.Constraints.</span></span><span class="sig-name descname"><span class="pre">ConstraintBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">independent_obj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Fitting/Constraints.html#ConstraintBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Fitting.Constraints.ConstraintBase" title="Permalink to this definition"></a></dt>
 <dd><p>A base class used to describe a constraint to be applied to easyCore base objects.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="easyCore.Fitting.Constraints.ConstraintBase.__repr__">
-<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Fitting/Constraints.html#ConstraintBase.__repr__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Fitting.Constraints.ConstraintBase.__repr__" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Fitting/Constraints.html#ConstraintBase.__repr__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Fitting.Constraints.ConstraintBase.__repr__" title="Permalink to this definition"></a></dt>
 <dd><p>Return repr(self).</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="easyCore.Fitting.Constraints.ConstraintBase._parse_operator">
-<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">_parse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Fitting/Constraints.html#ConstraintBase._parse_operator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Fitting.Constraints.ConstraintBase._parse_operator" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">_parse_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Fitting/Constraints.html#ConstraintBase._parse_operator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Fitting.Constraints.ConstraintBase._parse_operator" title="Permalink to this definition"></a></dt>
 <dd><p>Abstract method which contains the constraint logic</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -522,7 +430,7 @@ to one or more independent objects.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="easyCore.Fitting.Constraints.ConstraintBase.enabled">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="pre">:</span> <span class="pre">bool</span></em><a class="headerlink" href="#easyCore.Fitting.Constraints.ConstraintBase.enabled" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></em><a class="headerlink" href="#easyCore.Fitting.Constraints.ConstraintBase.enabled" title="Permalink to this definition"></a></dt>
 <dd><p>Is the current constraint enabled.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
@@ -536,7 +444,7 @@ to one or more independent objects.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="easyCore.Fitting.Constraints.ConstraintBase.get_key">
-<span class="sig-name descname"><span class="pre">get_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Fitting/Constraints.html#ConstraintBase.get_key"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Fitting.Constraints.ConstraintBase.get_key" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Fitting/Constraints.html#ConstraintBase.get_key"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Fitting.Constraints.ConstraintBase.get_key" title="Permalink to this definition"></a></dt>
 <dd><p>Get the unique key of a easyCore object</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -553,7 +461,7 @@ to one or more independent objects.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="easyCore.Fitting.Constraints.ConstraintBase.get_obj">
-<span class="sig-name descname"><span class="pre">get_obj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Fitting/Constraints.html#ConstraintBase.get_obj"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Fitting.Constraints.ConstraintBase.get_obj" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_obj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easyCore/Fitting/Constraints.html#ConstraintBase.get_obj"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easyCore.Fitting.Constraints.ConstraintBase.get_obj" title="Permalink to this definition"></a></dt>
 <dd><p>Get an easyCore object from its unique key</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -570,56 +478,39 @@ to one or more independent objects.</p>
 
 </dd></dl>
 
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="../base_examples/index.html" class="btn btn-neutral float-right" title="Subclassing Examples" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="introduction.html" class="btn btn-neutral float-left" title="Fitting in easyCore" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../base_examples/index.html" class="btn btn-neutral float-right" title="Subclassing Examples" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2021, Simon Ward.
-
-    </p>
+    <p>&#169; Copyright 2021, Simon Ward.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>
