@@ -22,6 +22,7 @@ from typing import (
     Type,
     TYPE_CHECKING,
     Callable,
+    TypeVar,
 )
 
 from easyCore import borg, ureg, np, pint
@@ -653,7 +654,7 @@ class Parameter(Descriptor):
         return float(self.raw_value)
 
     def as_dict(
-        self, skip: Optional[Union[List[str], None]] = None
+        self, skip: Optional[List[str]] = None
     ) -> Dict[str, Union[str, bool, numbers.Number]]:
         """
         Include enabled in the dict output as it's unfortunately skipped
@@ -666,7 +667,7 @@ class Parameter(Descriptor):
         return new_dict
 
     @property
-    def builtin_constraints(self) -> Dict[str, Type[Constraint]]:
+    def builtin_constraints(self) -> Dict[str, Constraint]:
         """
         Get the built in constrains of the object. Typically these are the min/max
 
@@ -675,7 +676,7 @@ class Parameter(Descriptor):
         return self._constraints["builtin"]
 
     @property
-    def user_constraints(self) -> Dict[str, Type[Constraint]]:
+    def user_constraints(self) -> Dict[str, Constraint]:
         """
         Get the user specified constrains of the object.
 
@@ -684,16 +685,14 @@ class Parameter(Descriptor):
         return self._constraints["user"]
 
     @user_constraints.setter
-    def user_constraints(self, constraints_dict: Dict[str, Type[Constraint]]):
+    def user_constraints(self, constraints_dict: Dict[str, Constraint]):
         self._constraints["user"] = constraints_dict
 
 
 class BasedBase(MSONable):
     __slots__ = ["_name", "_borg", "user_data", "_kwargs"]
 
-    def __init__(
-        self, name: str, interface: Optional[Union[Type[Interface, None]]] = None
-    ):
+    def __init__(self, name: str, interface: Optional[Interface] = None):
         self._borg = borg
         self._borg.map.add_vertex(self, obj_type="created")
         self.interface = interface
@@ -733,14 +732,14 @@ class BasedBase(MSONable):
         self._name = new_name
 
     @property
-    def interface(self) -> Type[Interface]:
+    def interface(self) -> Interface:
         """
         Get the current interface of the object
         """
         return self._interface
 
     @interface.setter
-    def interface(self, value: Type[Interface]):
+    def interface(self, value: Interface):
         """
         Set the current interface to the object and generate bindings if possible. I.e.
         ```
@@ -786,11 +785,11 @@ class BasedBase(MSONable):
         self.generate_bindings()
 
     @property
-    def constraints(self) -> List[Type[Constraint]]:
+    def constraints(self) -> List[Constraint]:
         pars = self.get_parameters()
         constraints = []
         for par in pars:
-            con: Dict[str, Type[Constraint]] = par.user_constraints
+            con: Dict[str, Constraint] = par.user_constraints
             for key in con.keys():
                 constraints.append(con[key])
         return constraints
@@ -856,7 +855,7 @@ class BasedBase(MSONable):
                 fit_list.append(item)
         return fit_list
 
-    def __dir__(self) -> Iterable[str]:
+    def __dir__(self) -> List[str]:
         """
         This creates auto-completion and helps out in iPython notebooks.
 
@@ -877,8 +876,8 @@ class BaseObj(BasedBase):
     def __init__(
         self,
         name: str,
-        *args: Optional[Union[Type[Descriptor], Type[BasedBase]]],
-        **kwargs: Optional[Union[Type[Descriptor], Type[BasedBase]]],
+        *args: Optional[Union[Descriptor, BasedBase]],
+        **kwargs: Optional[Union[Descriptor, BasedBase]],
     ):
         """
         Set up the base class.
@@ -913,9 +912,7 @@ class BaseObj(BasedBase):
                 test_class=BaseObj,
             )
 
-    def _add_component(
-        self, key: str, component: Union[Type[Descriptor], Type[BasedBase]]
-    ):
+    def _add_component(self, key: str, component: Union[Descriptor, BasedBase]):
         """
         Dynamically add a component to the class.
 
@@ -936,7 +933,7 @@ class BaseObj(BasedBase):
             test_class=BaseObj,
         )
 
-    def __setattr__(self, key, value):
+    def __setattr__(self, key: str, value: Union[Descriptor, BasedBase]):
         if hasattr(self, key) and issubclass(type(value), (BasedBase, Descriptor)):
             old_obj = self.__getattribute__(key)
             self._borg.map.prune_vertex_from_edge(self, old_obj)
@@ -948,14 +945,14 @@ class BaseObj(BasedBase):
 
     @staticmethod
     def __getter(key: str):
-        def getter(obj: Union[Type[Descriptor], Type[BasedBase]]):
+        def getter(obj: Union[Descriptor, BasedBase]):
             return obj._kwargs[key]
 
         return getter
 
     @staticmethod
     def __setter(key: str):
-        def setter(obj: Union[Type[Descriptor], Type[BasedBase]], value: float):
+        def setter(obj: Union[Descriptor, BasedBase], value: float):
             if issubclass(obj._kwargs[key].__class__, Descriptor):
                 obj._kwargs[key].value = value
             else:

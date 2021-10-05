@@ -2,16 +2,21 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
-__author__ = 'github.com/wardsimon'
-__version__ = '0.1.0'
+from __future__ import annotations
+
+__author__ = "github.com/wardsimon"
+__version__ = "0.1.0"
 
 from numbers import Number
-from typing import Union
+from typing import Union, Type, Optional, TYPE_CHECKING
 
 from easyCore import borg
 from easyCore.Objects.Base import BasedBase, Descriptor
 from collections.abc import MutableSequence
 from easyCore.Utils.UndoRedo import NotarizedDict
+
+if TYPE_CHECKING:
+    from easyCore.Objects.Inferface import InterfaceFactoryTemplate as Interface
 
 
 class BaseCollection(BasedBase, MutableSequence):
@@ -22,7 +27,13 @@ class BaseCollection(BasedBase, MutableSequence):
     cheat with `BaseObj(*[Descriptor(...), Parameter(...), ...])`.
     """
 
-    def __init__(self, name: str, *args, interface=None, **kwargs):
+    def __init__(
+        self,
+        name: str,
+        *args: Union[Descriptor, BasedBase],
+        interface: Optional[Interface] = None,
+        **kwargs,
+    ):
         """
         Set up the base collection class.
 
@@ -37,11 +48,13 @@ class BaseCollection(BasedBase, MutableSequence):
 
         for item in [*kwargs.values(), *args]:
             if not issubclass(type(item), (Descriptor, BasedBase)):
-                raise AttributeError('A collection can only be formed from easyCore objects.')
+                raise AttributeError(
+                    "A collection can only be formed from easyCore objects."
+                )
 
         _kwargs = {}
         for key, item in kwargs.items():
-                _kwargs[key] = item
+            _kwargs[key] = item
         for arg in args:
             kwargs[str(borg.map.convert_id_to_key(arg))] = arg
             _kwargs[str(borg.map.convert_id_to_key(arg))] = arg
@@ -51,15 +64,17 @@ class BaseCollection(BasedBase, MutableSequence):
 
         for key in kwargs.keys():
             if key in self.__dict__.keys() or key in self.__slots__:
-                raise AttributeError(f'Given kwarg: `{key}`, is an internal attribute. Please rename.')
+                raise AttributeError(
+                    f"Given kwarg: `{key}`, is an internal attribute. Please rename."
+                )
             self._borg.map.add_edge(self, kwargs[key])
-            self._borg.map.reset_type(kwargs[key], 'created_internal')
+            self._borg.map.reset_type(kwargs[key], "created_internal")
             kwargs[key].interface = interface
             # TODO wrap getter and setter in Logger
         self.interface = interface
         self._kwargs._stack_enabled = True
 
-    def insert(self, index: int, value: Union[BasedBase, Descriptor]) -> None:
+    def insert(self, index: int, value: Union[Descriptor, BasedBase]) -> None:
         """
         Insert an object into the collection at an index.
 
@@ -81,10 +96,12 @@ class BaseCollection(BasedBase, MutableSequence):
             self._kwargs.reorder(**{k: v for k, v in zip(update_key, values)})
             # ADD EDGE
             self._borg.map.add_edge(self, value)
-            self._borg.map.reset_type(value, 'created_internal')
+            self._borg.map.reset_type(value, "created_internal")
             value.interface = self.interface
         else:
-            raise AttributeError('Only easyCore objects can be put into an easyCore group')
+            raise AttributeError(
+                "Only easyCore objects can be put into an easyCore group"
+            )
 
     def __getitem__(self, idx: Union[int, slice]) -> Union[Descriptor, BasedBase]:
         """
@@ -97,34 +114,38 @@ class BaseCollection(BasedBase, MutableSequence):
         """
         if isinstance(idx, slice):
             start, stop, step = idx.indices(len(self))
-            return self.__class__(getattr(self, 'name'), *[self[i] for i in range(start, stop, step)])
+            return self.__class__(
+                getattr(self, "name"), *[self[i] for i in range(start, stop, step)]
+            )
         if str(idx) in self._kwargs.keys():
             return self._kwargs[str(idx)]
         if isinstance(idx, str):
             idx = [index for index, item in enumerate(self) if item.name == idx]
             l = len(idx)
             if l == 0:
-                raise IndexError(f'Given index does not exist')
+                raise IndexError(f"Given index does not exist")
             elif l == 1:
                 idx = idx[0]
             else:
-                return self.__class__(getattr(self, 'name'), *[self[i] for i in idx])
+                return self.__class__(getattr(self, "name"), *[self[i] for i in idx])
         elif not isinstance(idx, int) or isinstance(idx, bool):
             if isinstance(idx, bool):
-                raise TypeError('Boolean indexing is not supported at the moment')
+                raise TypeError("Boolean indexing is not supported at the moment")
             try:
                 if idx > len(self):
-                    raise IndexError(f'Given index {idx} is out of bounds')
+                    raise IndexError(f"Given index {idx} is out of bounds")
             except TypeError:
-                raise IndexError('Index must be of type `int`/`slice` or an item name (`str`)')
+                raise IndexError(
+                    "Index must be of type `int`/`slice` or an item name (`str`)"
+                )
         keys = list(self._kwargs.keys())
         return self._kwargs[keys[idx]]
 
-    def __setitem__(self, key: int, value: Union[Number, BasedBase, Descriptor]):
+    def __setitem__(self, key: int, value: Union[Descriptor, BasedBase]):
         """
         Set an item via it's index.
 
-        :param key: Index in self. 
+        :param key: Index in self.
         :type key: int
         :param value: Value which index key should be set to.
         :type value: Any
@@ -141,12 +162,14 @@ class BaseCollection(BasedBase, MutableSequence):
             self._kwargs.update(update_dict)
             # ADD EDGE
             self._borg.map.add_edge(self, value)
-            self._borg.map.reset_type(value, 'created_internal')
+            self._borg.map.reset_type(value, "created_internal")
             value.interface = self.interface
             # REMOVE EDGE
             self._borg.map.prune_vertex_from_edge(self, old_item)
         else:
-            raise NotImplementedError('At the moment only numerical values or easyCore objects can be set.')
+            raise NotImplementedError(
+                "At the moment only numerical values or easyCore objects can be set."
+            )
 
     def __delitem__(self, key: int):
         """
@@ -182,16 +205,16 @@ class BaseCollection(BasedBase, MutableSequence):
         data = []
         dd = {}
         for key in d.keys():
-            if key == '@id':
+            if key == "@id":
                 continue
             if isinstance(d[key], dict):
                 data.append(d[key])
             else:
                 dd[key] = d[key]
-        dd['data'] = data
+        dd["data"] = data
         # Attach the id. This might be useful in connected applications.
         # Note that it is converted to int and then str because javascript....
-        dd['@id'] = d['@id']
+        dd["@id"] = d["@id"]
         return dd
 
     @classmethod
@@ -205,11 +228,13 @@ class BaseCollection(BasedBase, MutableSequence):
         """
 
         d = input_dict.copy()
-        if len(d['data']) > 0:
-            for idx, item in enumerate(d['data']):
-                d[item['@id']] = item
-        del d['data']
+        if len(d["data"]) > 0:
+            for idx, item in enumerate(d["data"]):
+                d[item["@id"]] = item
+        del d["data"]
         return super(BaseCollection, cls).from_dict(d)
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__} `{getattr(self, 'name')}` of length {len(self)}"
+        return (
+            f"{self.__class__.__name__} `{getattr(self, 'name')}` of length {len(self)}"
+        )

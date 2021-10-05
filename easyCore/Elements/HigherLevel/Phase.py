@@ -2,32 +2,42 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
+from __future__ import annotations
+
 __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
 from pathlib import Path
-from typing import Dict, Union, List
+from typing import Dict, Union, List, ClassVar, Optional, TYPE_CHECKING
 
 from easyCore import np
 from easyCore.Elements.Basic.Lattice import Lattice, PeriodicLattice
-from easyCore.Elements.Basic.Site import Site, PeriodicSite, PeriodicAtoms, Atoms
+from easyCore.Elements.Basic.Site import Site, PeriodicAtoms, Atoms
 from easyCore.Elements.Basic.SpaceGroup import SpaceGroup
-from easyCore.Objects.Base import BaseObj, Parameter, Descriptor
+from easyCore.Objects.Base import BaseObj, Parameter
 from easyCore.Objects.Groups import BaseCollection
+from easyCore.Utils.io.cif import CifIO, FakeCore, FakeItem, StarLoop
 
-from easyCore.Utils.io.cif import CifIO
+if TYPE_CHECKING:
+    from easyCore.Objects.Inferface import InterfaceFactoryTemplate as Interface
 
 
 class Phase(BaseObj):
+
+    cell: ClassVar[PeriodicLattice]
+    _spacegroup: ClassVar[SpaceGroup]
+    atoms: ClassVar[Atoms]
+    scale: ClassVar[Parameter]
+
     def __init__(
         self,
-        name,
-        spacegroup=None,
-        cell=None,
-        atoms=None,
-        scale=None,
-        interface=None,
-        enforce_sym=True,
+        name: str,
+        spacegroup: Optional[SpaceGroup] = None,
+        cell: Optional[Lattice] = None,
+        atoms: Optional[Atoms] = None,
+        scale: Optional[Parameter] = None,
+        interface: Optional[Interface] = None,
+        enforce_sym: bool = True,
     ):
         self.name = name
         if spacegroup is None:
@@ -36,6 +46,11 @@ class Phase(BaseObj):
             cell = Lattice.default()
         if isinstance(cell, Lattice):
             cell = PeriodicLattice.from_lattice_and_spacegroup(cell, spacegroup)
+        elif isinstance(cell, PeriodicLattice):
+            if not spacegroup == cell.spacegroup:
+                raise AttributeError(
+                    "The supplied spacegroup must be the same as in the periodic-lattice"
+                )
         if atoms is None:
             atoms = Atoms("atoms")
         if scale is None:
@@ -141,14 +156,28 @@ class Phase(BaseObj):
             self.cell.clear_sym()
 
     @property
-    def spacegroup(self):
+    def spacegroup(self) -> SpaceGroup:
+        """
+        Return the current SpaceGroup
+
+        :return: SpaceGroup object
+        :rtype: SpaceGroup
+        """
         return self._spacegroup
 
-    def set_spacegroup(self, value):
+    def set_spacegroup(self, hm_name: str):
+        """
+        Change the spacegroup for the phase by supplying a H-M name.
+
+        :param hm_name: HM name for the new spacegoup
+        :type hm_name: str
+        :return: None
+        :rtype: None
+        """
         if self._enforce_sym:
-            self.cell.space_group_HM_name = value
+            self.cell.space_group_HM_name = hm_name
         else:
-            self._spacegroup.space_group_HM_name = value
+            self._spacegroup.space_group_HM_name = hm_name
 
     @property
     def extent(self) -> np.ndarray:
@@ -211,6 +240,39 @@ class Phase(BaseObj):
         """
         return CifIO.from_objects(self.name, self.cell, self.spacegroup, self.atoms)
 
+    @property
+    def extended_cif(self) -> CifIO:
+        """
+        Generate an extended cif structure which contains the symmetry information as operators.
+        E.g. For spacegroup `P 1` the following is added:
+        _loop
+        _symmetry_equiv.id
+        symmetry_equiv_pos_as_xyz
+        1   `z, y, z`
+
+        :return:
+        :rtype:
+        """
+        loop = []
+        for idx, symm_op in enumerate(self.spacegroup.symmetry_opts):
+            item = FakeCore()
+            item._kwargs.update(
+                {
+                    "symmetry_equiv.id": FakeItem(idx + 1),
+                    "symmetry_equiv_pos_as_xyz": FakeItem(
+                        "'" + symm_op.as_xyz_string() + "'"
+                    ),
+                }
+            )
+            loop.append(item)
+        cif = self.cif
+        cif._writer[0]._cif["loops"].append(
+            StarLoop(
+                loop, entry_names=["symmetry_equiv.id", "symmetry_equiv_pos_as_xyz"]
+            )
+        )
+        return cif
+
     @classmethod
     def from_cif_str(cls, in_string: str):
         """
@@ -241,7 +303,7 @@ class Phase(BaseObj):
         name, kwargs = cif.to_crystal_form()
         return cls(name, **kwargs)
 
-    def _generate_positions(self, site, extent) -> np.ndarray:
+    def _generate_positions(self, site: Site, extent: np.ndarray) -> np.ndarray:
         """
         Generate all orbits for a given fractional position.
         """
@@ -257,7 +319,7 @@ class Phase(BaseObj):
             np.add, 1, offsets, np.array(sym_op(site.fract_coords))
         ).reshape((-1, 3))
 
-    def all_sites(self, extent=None) -> Dict[str, np.ndarray]:
+    def all_sites(self, extent: Optional[np.ndarray] = None) -> Dict[str, np.ndarray]:
         """
         Generate all atomic positions from the atom array and symmetry operations over an extent.
         :return:  dictionary with keys of atom labels, containing numpy arrays of unique points in the extent
@@ -290,7 +352,7 @@ class Phase(BaseObj):
         return d
 
 
-class Phases(BaseCollection):
+class Phases(BaseCollection[Phase]):
     def __init__(self, name: str = "phases", *args, interface=None, **kwargs):
         """
         Generate a collection of crystals.
@@ -311,9 +373,7 @@ class Phases(BaseCollection):
     def __repr__(self) -> str:
         return f"Collection of {len(self)} phases."
 
-    def __getitem__(
-        self, idx: Union[int, slice]
-    ) -> Union[Parameter, Descriptor, BaseObj, BaseCollection]:
+    def __getitem__(self, idx: Union[int, slice]) -> Phase:
         if isinstance(idx, str) and idx in self.phase_names:
             idx = self.phase_names.index(idx)
         return super(Phases, self).__getitem__(idx)
