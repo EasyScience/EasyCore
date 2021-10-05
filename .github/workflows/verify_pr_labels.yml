@@ -17,6 +17,6 @@ jobs:
       id: verify-pr-label
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        valid-labels: chore, fix, bugfix, bug, enhancement, feature, dependencies
+        valid-labels: chore, fix, bugfix, bug, enhancement, feature, dependencies, documentation
         pull-request-number: ${{ github.event.pull_request.number }}
         disable-reviews: false
