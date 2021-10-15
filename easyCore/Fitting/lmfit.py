@@ -46,7 +46,9 @@ class lmfit(FittingTemplate):  # noqa: S101
         """
         super().__init__(obj, fit_function)
 
-    def make_model(self, pars: Union[noneType, lmParameters] = None) -> lmModel:
+    def make_model(
+        self, independent_dims=None, pars: Union[noneType, lmParameters] = None
+    ) -> lmModel:
         """
         Generate a lmfit model from the supplied `fit_function` and parameters in the base object.
 
@@ -54,13 +56,15 @@ class lmfit(FittingTemplate):  # noqa: S101
         :rtype: lmModel
         """
         # Generate the fitting function
-        fit_func = self._generate_fit_function()
+        if independent_dims is None:
+            independent_dims = ["x"]
+        fit_func = self._generate_fit_function(independent_dims=independent_dims)
         if pars is None:
             pars = self._cached_pars
         # Create the model
         model = lmModel(
             fit_func,
-            independent_vars=["x"],
+            independent_vars=independent_dims,
             param_names=["p" + str(key) for key in pars.keys()],
         )
         # Assign values from the `Parameter` to the model
@@ -77,7 +81,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         self._cached_model = model
         return model
 
-    def _generate_fit_function(self) -> Callable:
+    def _generate_fit_function(self, independent_dims=None) -> Callable:
         """
         Using the user supplied `fit_function`, wrap it in such a way we can update `Parameter` on
         iterations.
@@ -86,6 +90,8 @@ class lmfit(FittingTemplate):  # noqa: S101
         :rtype: Callable
         """
         # Original fit function
+        if independent_dims is None:
+            independent_dims = ["x"]
         func = self._original_fit_function
         # Get a list of `Parameters`
         self._cached_pars = {}
@@ -105,16 +111,21 @@ class lmfit(FittingTemplate):  # noqa: S101
             """
             # Update the `Parameter` values and the callback if needed
             # TODO THIS IS NOT THREAD SAFE :-(
+            inputs = [x]
             for name, value in kwargs.items():
-                par_name = int(name[1:])
-                if par_name in self._cached_pars.keys():
-                    # This will take in to account constraints
-                    self._cached_pars[par_name].value = value
-                    # Since we are calling the parameter fset will be called.
+                if isinstance(name, str) and name.startswith("p"):
+                    par_name = int(name[1:])
+                    if par_name in self._cached_pars.keys():
+                        # This will take in to account constraints
+                        self._cached_pars[par_name].value = value
+                        # Since we are calling the parameter fset will be called.
+                else:
+                    # Additional
+                    inputs.append(value)
             # TODO Pre processing here
             for constraint in self.fit_constraints():
                 constraint()
-            return_data = func(x)
+            return_data = func(*inputs)
             # TODO Loading or manipulating data here
             return return_data
 
@@ -123,9 +134,14 @@ class lmfit(FittingTemplate):  # noqa: S101
         # f = (x, a=1, b=2)...
         # Where we need to be generic. Note that this won't hold for much outside of this scope.
         params = [
-            inspect.Parameter(
-                "x", inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=inspect._empty
-            ),
+            *[
+                inspect.Parameter(
+                    param,
+                    inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                    annotation=inspect._empty,
+                )
+                for param in independent_dims
+            ],
             *[
                 inspect.Parameter(
                     "p" + str(name),
@@ -190,16 +206,23 @@ class lmfit(FittingTemplate):  # noqa: S101
             minimizer_kwargs = {"fit_kws": minimizer_kwargs}
         minimizer_kwargs.update(engine_kwargs)
 
+        # Check to see if there is nd data
+        if isinstance(x, dict):
+            dims = list(x.keys())
+        else:
+            dims = ["x"]
+            x = {"x": x}
+
         # Why do we do this? Because a fitting template has to have borg instantiated outside pre-runtime
         from easyCore import borg
 
         try:
             borg.stack.beginMacro("Fitting routine")
             if model is None:
-                model = self.make_model()
+                model = self.make_model(independent_dims=dims)
 
             model_results = model.fit(
-                y, x=x, weights=weights, **default_method, **minimizer_kwargs, **kwargs
+                y, **x, weights=weights, **default_method, **minimizer_kwargs, **kwargs
             )
             self._set_parameter_fit_result(model_results)
             results = self._gen_fit_results(model_results)

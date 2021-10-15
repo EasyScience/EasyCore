@@ -630,7 +630,7 @@ class easyCoreDataarrayAccessor:
         self._obj.attrs["computation"]["postcompute_func"] = new_computational_fn
 
     def fit_prep(
-        self, func_in: Callable, bdims=None, dask_chunks={}
+        self, func_in: Callable, bdims=None, dask_chunks=None
     ) -> Tuple[Tuple[xr.DataArray], xr.DataArray, Callable]:
         """
         Generate boradcasted coordinates for fitting and reform the fitting function into one which can handle xarrays
@@ -645,6 +645,8 @@ class easyCoreDataarrayAccessor:
         :rtype: xarray.DataArray, Callable
         """
 
+        if dask_chunks is None:
+            dask_chunks = {}
         if bdims is None:
             coords = [self._obj.coords[da].transpose() for da in self._obj.dims]
             bdims = list(xr.broadcast(*coords))

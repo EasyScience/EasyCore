@@ -1,5 +1,5 @@
-__author__ = 'github.com/wardsimon'
-__version__ = '0.1.0'
+__author__ = "github.com/wardsimon"
+__version__ = "0.1.0"
 
 import pytest
 import numpy as np
@@ -10,35 +10,47 @@ from contextlib import contextmanager
 from easyCore.Objects.Base import Descriptor, Parameter, BaseObj
 from easyCore.Utils.json import MontyDecoder
 
+
 @pytest.fixture
 def setup_pars():
     d = {
-        'name': 'test',
-        'par1': Parameter('p1', 0.1, fixed=True),
-        'des1': Descriptor('d1', 0.1),
-        'par2': Parameter('p2', 0.1),
-        'des2': Descriptor('d2', 0.1),
-        'par3': Parameter('p3', 0.1),
+        "name": "test",
+        "par1": Parameter("p1", 0.1, fixed=True),
+        "des1": Descriptor("d1", 0.1),
+        "par2": Parameter("p2", 0.1),
+        "des2": Descriptor("d2", 0.1),
+        "par3": Parameter("p3", 0.1),
     }
     return d
 
 
 @contextmanager
-def not_raises(expected_exception: Union[Type[BaseException], List[Type[BaseException]]]):
+def not_raises(
+    expected_exception: Union[Type[BaseException], List[Type[BaseException]]]
+):
     try:
         yield
     except expected_exception:
-        raise pytest.fail('Did raise exception {0} when it should not.'.format(repr(expected_exception)))
+        raise pytest.fail(
+            "Did raise exception {0} when it should not.".format(
+                repr(expected_exception)
+            )
+        )
     except Exception as err:
-        raise pytest.fail('An unexpected exception {0} raised.'.format(repr(err)))
+        raise pytest.fail("An unexpected exception {0} raised.".format(repr(err)))
 
 
-@pytest.mark.parametrize('a, kw', [([], ['par1']),
-                                   (['par1'], []),
-                                   (['par1'], ['par2']),
-                                   (['par1', 'des1'], ['par2', 'des2'])])
+@pytest.mark.parametrize(
+    "a, kw",
+    [
+        ([], ["par1"]),
+        (["par1"], []),
+        (["par1"], ["par2"]),
+        (["par1", "des1"], ["par2", "des2"]),
+    ],
+)
 def test_baseobj_create(setup_pars: dict, a: List[str], kw: List[str]):
-    name = setup_pars['name']
+    name = setup_pars["name"]
     args = []
     for key in a:
         args.append(setup_pars[key])
@@ -53,12 +65,12 @@ def test_baseobj_create(setup_pars: dict, a: List[str], kw: List[str]):
 
 
 def test_baseobj_get(setup_pars: dict):
-    name = setup_pars['name']
-    explicit_name1 = 'par1'
-    explicit_name2 = 'par2'
+    name = setup_pars["name"]
+    explicit_name1 = "par1"
+    explicit_name2 = "par2"
     kwargs = {
         setup_pars[explicit_name1].name: setup_pars[explicit_name1],
-        setup_pars[explicit_name2].name: setup_pars[explicit_name2]
+        setup_pars[explicit_name2].name: setup_pars[explicit_name2],
     }
     obj = BaseObj(name, **kwargs)
     with not_raises(AttributeError):
@@ -69,8 +81,9 @@ def test_baseobj_get(setup_pars: dict):
 
 def test_baseobj_set(setup_pars: dict):
     from copy import deepcopy
-    name = setup_pars['name']
-    explicit_name1 = 'par1'
+
+    name = setup_pars["name"]
+    explicit_name1 = "par1"
     kwargs = {
         setup_pars[explicit_name1].name: setup_pars[explicit_name1],
     }
@@ -82,15 +95,15 @@ def test_baseobj_set(setup_pars: dict):
 
 
 def test_baseobj_get_parameters(setup_pars: dict):
-    name = setup_pars['name']
-    del setup_pars['name']
+    name = setup_pars["name"]
+    del setup_pars["name"]
     obj = BaseObj(name, **setup_pars)
     pars = obj.get_fit_parameters()
     assert isinstance(pars, list)
     assert len(pars) == 2
     par_names = [par.name for par in pars]
-    assert 'p2' in par_names
-    assert 'p3' in par_names
+    assert "p2" in par_names
+    assert "p3" in par_names
 
 
 def test_baseobj_fit_objects(setup_pars: dict):
@@ -98,78 +111,79 @@ def test_baseobj_fit_objects(setup_pars: dict):
 
 
 def test_baseobj_as_dict(setup_pars: dict):
-    name = setup_pars['name']
-    del setup_pars['name']
+    name = setup_pars["name"]
+    del setup_pars["name"]
     obj = BaseObj(name, **setup_pars)
     obtained = obj.as_dict()
     assert isinstance(obtained, dict)
-    expected = {'@module': 'easyCore.Objects.Base',
-                '@class': 'BaseObj',
-                '@version': '0.1.0',
-                'name': 'test',
-                'par1':
-                    {'@module': 'easyCore.Objects.Base',
-                     '@class': 'Parameter',
-                     '@version': '0.1.0',
-                     'name': 'p1',
-                     'value': 0.1,
-                     'error': 0.0,
-                     'min': -np.inf,
-                     'max': np.inf,
-                     'fixed': True,
-                     'units': 'dimensionless'
-                     },
-                'des1':
-                    {'@module': 'easyCore.Objects.Base',
-                     '@class': 'Descriptor',
-                     '@version': '0.1.0',
-                     'name': 'd1',
-                     'value': 0.1,
-                     'units': 'dimensionless',
-                     'description': '',
-                     'url': '',
-                     'display_name': 'd1'
-                     },
-                'par2':
-                    {'@module': 'easyCore.Objects.Base',
-                     '@class': 'Parameter',
-                     '@version': '0.1.0',
-                     'name': 'p2',
-                     'value': 0.1,
-                     'error': 0.0,
-                     'min': -np.inf,
-                     'max': np.inf,
-                     'fixed': False,
-                     'units': 'dimensionless'
-                     },
-                'des2':
-                    {'@module': 'easyCore.Objects.Base',
-                     '@class': 'Descriptor',
-                     '@version': '0.1.0',
-                     'name': 'd2',
-                     'value': 0.1,
-                     'units': 'dimensionless',
-                     'description': '',
-                     'url': '',
-                     'display_name': 'd2'
-                     },
-                'par3':
-                    {'@module': 'easyCore.Objects.Base',
-                     '@class': 'Parameter',
-                     '@version': '0.1.0',
-                     'name': 'p3',
-                     'value': 0.1,
-                     'error': 0.0,
-                     'min': -np.inf,
-                     'max': np.inf,
-                     'fixed': False,
-                     'units': 'dimensionless'
-                     }
-                }
+    expected = {
+        "@module": "easyCore.Objects.ObjectClasses",
+        "@class": "BaseObj",
+        "@version": "0.1.0",
+        "name": "test",
+        "par1": {
+            "@module": "easyCore.Objects.VariableClasses",
+            "@class": "Parameter",
+            "@version": "0.1.0",
+            "name": "p1",
+            "value": 0.1,
+            "error": 0.0,
+            "min": -np.inf,
+            "max": np.inf,
+            "fixed": True,
+            "units": "dimensionless",
+        },
+        "des1": {
+            "@module": "easyCore.Objects.VariableClasses",
+            "@class": "Descriptor",
+            "@version": "0.1.0",
+            "name": "d1",
+            "value": 0.1,
+            "units": "dimensionless",
+            "description": "",
+            "url": "",
+            "display_name": "d1",
+        },
+        "par2": {
+            "@module": "easyCore.Objects.VariableClasses",
+            "@class": "Parameter",
+            "@version": "0.1.0",
+            "name": "p2",
+            "value": 0.1,
+            "error": 0.0,
+            "min": -np.inf,
+            "max": np.inf,
+            "fixed": False,
+            "units": "dimensionless",
+        },
+        "des2": {
+            "@module": "easyCore.Objects.VariableClasses",
+            "@class": "Descriptor",
+            "@version": "0.1.0",
+            "name": "d2",
+            "value": 0.1,
+            "units": "dimensionless",
+            "description": "",
+            "url": "",
+            "display_name": "d2",
+        },
+        "par3": {
+            "@module": "easyCore.Objects.VariableClasses",
+            "@class": "Parameter",
+            "@version": "0.1.0",
+            "name": "p3",
+            "value": 0.1,
+            "error": 0.0,
+            "min": -np.inf,
+            "max": np.inf,
+            "fixed": False,
+            "units": "dimensionless",
+        },
+    }
 
     def check_dict(check, item):
         if isinstance(check, dict) and isinstance(item, dict):
-            if '@module' in item.keys():
+            if "@module" in item.keys():
                 with not_raises([ValueError, AttributeError]):
                     this_obj = MontyDecoder().process_decoded(item)
             for this_check_key, this_item_key in zip(check.keys(), item.keys()):
@@ -182,12 +196,30 @@ def test_baseobj_as_dict(setup_pars: dict):
 
 
 def test_baseobj_dir(setup_pars):
-    name = setup_pars['name']
-    del setup_pars['name']
+    name = setup_pars["name"]
+    del setup_pars["name"]
     obj = BaseObj(name, **setup_pars)
-    expected = ['REDIRECT', 'as_dict', 'constraints', 'des1', 'des2', 'from_dict',
-                'generate_bindings', 'get_fit_parameters', 'get_parameters', 'interface', 'name', 'par1',
-                'par2', 'par3', 'switch_interface', 'to_data_dict', 'to_json', 'unsafe_hash', 'user_data']
+    expected = [
+        "REDIRECT",
+        "as_dict",
+        "constraints",
+        "des1",
+        "des2",
+        "from_dict",
+        "generate_bindings",
+        "get_fit_parameters",
+        "get_parameters",
+        "interface",
+        "name",
+        "par1",
+        "par2",
+        "par3",
+        "switch_interface",
+        "to_data_dict",
+        "to_json",
+        "unsafe_hash",
+        "user_data",
+    ]
     obtained = dir(obj)
     assert len(obtained) == len(expected)
     assert obtained == sorted(obtained)
@@ -196,19 +228,19 @@ def test_baseobj_dir(setup_pars):
 
 
 def test_baseobj_get_parameters(setup_pars):
-    name = setup_pars['name']
-    del setup_pars['name']
+    name = setup_pars["name"]
+    del setup_pars["name"]
     obj = BaseObj(name, **setup_pars)
     pars = obj.get_parameters()
     assert len(pars) == 3
 
 
 def test_baseobj_get_parameters_nested(setup_pars):
-    name = setup_pars['name']
-    del setup_pars['name']
+    name = setup_pars["name"]
+    del setup_pars["name"]
     obj = BaseObj(name, **setup_pars)
 
-    name2 = name + '_2'
+    name2 = name + "_2"
     obj2 = BaseObj(name2, obj=obj, **setup_pars)
 
     pars = obj2.get_parameters()
@@ -219,19 +251,19 @@ def test_baseobj_get_parameters_nested(setup_pars):
 
 
 def test_baseobj_get_fit_parameters(setup_pars):
-    name = setup_pars['name']
-    del setup_pars['name']
+    name = setup_pars["name"]
+    del setup_pars["name"]
     obj = BaseObj(name, **setup_pars)
     pars = obj.get_fit_parameters()
     assert len(pars) == 2
 
 
 def test_baseobj_get_fit_parameters_nested(setup_pars):
-    name = setup_pars['name']
-    del setup_pars['name']
+    name = setup_pars["name"]
+    del setup_pars["name"]
     obj = BaseObj(name, **setup_pars)
 
-    name2 = name + '_2'
+    name2 = name + "_2"
     obj2 = BaseObj(name2, obj=obj, **setup_pars)
 
     pars = obj2.get_fit_parameters()
@@ -242,12 +274,12 @@ def test_baseobj_get_fit_parameters_nested(setup_pars):
 
 
 def test_baseobj__add_component(setup_pars):
-    name = setup_pars['name']
-    del setup_pars['name']
+    name = setup_pars["name"]
+    del setup_pars["name"]
     obj = BaseObj(name, **setup_pars)
 
-    p = Parameter('added_par', 1)
-    new_item_name = 'Added'
+    p = Parameter("added_par", 1)
+    new_item_name = "Added"
     obj._add_component(new_item_name, p)
 
     assert hasattr(obj, new_item_name)
@@ -256,7 +288,7 @@ def test_baseobj__add_component(setup_pars):
 
 
 def test_baseObj_name(setup_pars):
-    name = setup_pars['name']
-    del setup_pars['name']
+    name = setup_pars["name"]
+    del setup_pars["name"]
     obj = BaseObj(name, **setup_pars)
     assert obj.name == name
