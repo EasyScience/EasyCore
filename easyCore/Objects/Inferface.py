@@ -135,7 +135,6 @@ class InterfaceFactoryTemplate:
 
         def __fit_func(*args, **kwargs):
             return self.__interface_obj.fit_func(*args, **kwargs)
-
         return __fit_func
 
     def generate_bindings(self, model, *args, ifun=None, **kwargs):

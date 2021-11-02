@@ -415,8 +415,8 @@ line = Line(interface_factory=interface)
 f = Fitter(line, interface.fit_func)
 
 # y = 2x -1
-x = np.array([1, 2, 3])
-y = np.array([2, 4, 6]) - 1
+x = np.array([1, 2, 3], dtype=np.float64)
+y = np.array([2, 4, 6], dtype=np.float64) - 1
 
 f_res = f.fit(x, y)
 
