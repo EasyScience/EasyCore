@@ -49,7 +49,7 @@ lmfit = "^1.0"
 bumps = "^0.8"
 asteval = "^0.9.23"
 DFO-LS = {version = "^1.2", optional = true}
-xarray = ">=0.16,<0.20"
+xarray = ">=0.16,<0.21"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.2"
