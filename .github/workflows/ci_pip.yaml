@@ -26,7 +26,7 @@ jobs:
     - name: Install dependencies
       run: |
         poetry update
-        
+
     - name: Lint with flake8
       run: |
         poetry add flake8
@@ -34,12 +34,12 @@ jobs:
         poetry run flake8 ./easyCore --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         poetry run flake8 ./easyCore --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-        
+
     - name: Test with tox
       run: |
         poetry add -D tox tox-gh-actions coverage
         poetry run tox
-        
+
     - name: Upload coverage
       uses: codecov/codecov-action@v1.0.7
       with:
@@ -55,16 +55,16 @@ jobs:
     if: "!contains(github.event.head_commit.message, '[ci skip]')"
 
     steps:
-      - uses: actions/checkout@v2
+    - uses: actions/checkout@v2
 
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.x
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
 
-      - uses: Gr1N/setup-poetry@v4
-        
-      - name: Check Build
-        run: |
-          pip install twine
-          poetry build
-          python -m twine check dist/*
+    - uses: Gr1N/setup-poetry@v4
+
+    - name: Check Build
+      run: |
+        pip install twine
+        poetry build
+        python -m twine check dist/*
