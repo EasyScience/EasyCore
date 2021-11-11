@@ -180,8 +180,8 @@ class bumps(FittingTemplate):  # noqa: S101
         if method is not None and method in self.available_methods():
             default_method["method"] = method
 
-        # if weights is None:
-        #     weights = np.sqrt(np.abs(y))
+        if weights is None:
+            weights = np.sqrt(np.abs(y))
 
         if engine_kwargs is None:
             engine_kwargs = {}
@@ -206,7 +206,9 @@ class bumps(FittingTemplate):  # noqa: S101
 
         borg.stack.beginMacro("Fitting routine")
         try:
-            model_results = bumps_fit(problem, **default_method, **minimizer_kwargs, **kwargs)
+            model_results = bumps_fit(
+                problem, **default_method, **minimizer_kwargs, **kwargs
+            )
             self._set_parameter_fit_result(model_results)
             results = self._gen_fit_results(model_results)
         except Exception as e:
