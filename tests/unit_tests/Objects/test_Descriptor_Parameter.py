@@ -541,3 +541,31 @@ def test_parameter_display_name(value):
 
     p = Descriptor("test", 1, display_name=value)
     assert p.display_name == value
+
+
+@pytest.mark.parametrize("instance", (Descriptor, Parameter), indirect=True)
+def test_item_boolean_value(instance):
+    def creator(value):
+        if instance == Parameter:
+            with pytest.warns(UserWarning):
+                item = instance("test", value)
+        else:
+            item = instance("test", value)
+        return item
+
+    def setter(item, value):
+        if instance == Parameter:
+            with pytest.warns(UserWarning):
+                item.value = value
+        else:
+            item.value = value
+
+    item = creator(True)
+    assert item.value is True
+    setter(item, False)
+    assert item.value is False
+
+    item = creator(False)
+    assert item.value is False
+    setter(item, True)
+    assert item.value is True

@@ -9,6 +9,7 @@ __version__ = "0.1.0"
 
 import numbers
 import weakref
+import warnings
 
 from copy import deepcopy
 from functools import wraps
@@ -500,6 +501,13 @@ class Parameter(Descriptor):
 
         super().__init__(name, value, **kwargs)
         self._args["units"] = str(self.unit)
+
+        # Warnings if we are given a boolean
+        if self._type == bool:
+            warnings.warn(
+                "Boolean values are not officially supported in Parameter. Use a Descriptor instead",
+                UserWarning,
+            )
 
         # Create additional fitting elements
         self._min: numbers.Number = min
