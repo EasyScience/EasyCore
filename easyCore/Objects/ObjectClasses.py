@@ -133,7 +133,7 @@ class BasedBase(MSONable):
         return constraints
 
     def as_dict(
-        self, skip: List[str] = None
+        self, skip: Optional[List[str]] = None
     ) -> Dict[str, Union[str, bool, numbers.Number]]:
         """
         Convert ones self into a serialized form.
@@ -145,7 +145,7 @@ class BasedBase(MSONable):
         d = MSONable.as_dict(self, skip=skip)
         for key, item in d.items():
             if hasattr(item, "as_dict"):
-                d[key] = item.as_dict()
+                d[key] = item.as_dict(skip=skip)
         # Attach the id. This might be useful in connected applications.
         # Note that it is converted to int and then str because javascript....
         d["@id"] = str(self._borg.map.convert_id(self).int)
