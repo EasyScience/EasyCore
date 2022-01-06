@@ -72,7 +72,7 @@ class bumps(FittingTemplate):  # noqa: S101
                         par[
                             "p" + str(NameConverter().get_key(item))
                         ] = obj.convert_to_par_object(item)
-                return Curve(fit_func, x, y, weights, **par)
+                return Curve(fit_func, x, y, dy=weights, **par)
 
             return make_func
 
@@ -188,8 +188,8 @@ class bumps(FittingTemplate):  # noqa: S101
 
         if minimizer_kwargs is None:
             minimizer_kwargs = {}
-        else:
-            minimizer_kwargs = {"fit_kws": minimizer_kwargs}
+        # else:
+        #     minimizer_kwargs = {"fit_kws": minimizer_kwargs}
         minimizer_kwargs.update(engine_kwargs)
 
         if model is None:
@@ -206,7 +206,9 @@ class bumps(FittingTemplate):  # noqa: S101
 
         borg.stack.beginMacro("Fitting routine")
         try:
-            model_results = bumps_fit(problem, **kwargs)
+            model_results = bumps_fit(
+                problem, **default_method, **minimizer_kwargs, **kwargs
+            )
             self._set_parameter_fit_result(model_results)
             results = self._gen_fit_results(model_results)
         except Exception as e:
@@ -291,6 +293,7 @@ class bumps(FittingTemplate):  # noqa: S101
 
         results.fitting_engine = self.__class__
         results.fit_args = None
+        results.engine_result = fit_results
         # results.check_sanity()
         return results
 

@@ -22,9 +22,9 @@ install_requires = [
     "bumps>=0.8,<0.9",
     "lmfit>=1.0,<2.0",
     "numpy>=1.19,<2.0",
-    "pint>=0.17,<0.18",
+    "pint>=0.17,<0.19",
     "uncertainties>=3.1,<4.0",
-    "xarray>=0.16,<0.20",
+    "xarray>=0.16,<0.21",
 ]
 
 setup_kwargs = {

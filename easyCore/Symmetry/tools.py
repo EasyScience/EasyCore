@@ -30,7 +30,7 @@ class SpacegroupInfo:
 
     @staticmethod
     def get_all_systems() -> List[str]:
-        return ["triclinic", "monoclinic", "orthorhombic", "tetragonal", "hexagonal", "cubic"]
+        return ["triclinic", "monoclinic", "orthorhombic", "tetragonal", "trigonal", "hexagonal", "cubic"]
 
     @staticmethod
     def get_ints_from_system(system: str) -> List[int]:

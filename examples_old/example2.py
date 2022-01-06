@@ -13,12 +13,16 @@ class Line(BaseObj):
     Simple descriptor of a line.
     """
 
-    _defaults = [Parameter('m', 1),
-                 Parameter('c', 0)]
+    _m = 1
+    _c = 0
 
     def __init__(self):
         super().__init__(self.__class__.__name__,
                          *self._defaults)
+
+    @property
+    def _defaults(self):
+        return [Parameter('m', self._m), Parameter('c', self._c)]
 
     @property
     def gradient(self):
