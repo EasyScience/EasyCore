@@ -1,6 +1,6 @@
-#  SPDX-FileCopyrightText: 2022 easyCrystallography contributors  <crystallography@easyscience.software>
+#  SPDX-FileCopyrightText: 2022 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
-#  © 2022 Contributors to the easyCore project <https://github.com/easyScience/easyCrystallography>
+#  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
 __author__ = 'github.com/wardsimon'
 __version__ = '0.0.1'
@@ -8,13 +8,13 @@ __version__ = '0.0.1'
 import scipp as sc
 
 from easyCore import np
-from easyCore.Datasets.extensions import register_accessor
+from .extensions import register_accessor
 from easyCore.Fitting.fitting_template import FitResults
 
 
 @register_accessor('easyFitting', sc.DataArray)
 class easyFitting:
-    def __init__(self, scipp_obj = None):
+    def __init__(self, scipp_obj=None):
         self._obj = scipp_obj
         self.fit_function = None
 
@@ -47,53 +47,8 @@ class easyFitting:
         :return: Results of the fit
         :rtype: FitResults
         """
+        pass
 
-        # Deal with any kwargs which has been given
-        if fn_kwargs is None:
-            fn_kwargs = {}
-        if fit_kwargs is None:
-            fit_kwargs = {}
-        old_fit_func = fitter.fit_function
-
-        # Wrap and broadcast
-        bdims, f = self.fit_prep(fitter.fit_function)
-        dims = self._obj.dims
-
-        # Find which coords we need
-        if isinstance(dims, dict):
-            dims = list(dims.keys())
-
-        # Wrap the wrap in a callable
-        def local_fit_func(x, *args, **kwargs):
-            """
-            Function which will be called by the fitter. This will deal with sending the function the correct data.
-            """
-            kwargs['vectorize'] = vectorize
-            res = xr.apply_ufunc(f, *bdims, *args, dask=dask, kwargs=fn_kwargs, **kwargs)
-            if dask != 'forbidden':
-                res.compute()
-            return res.stack(all_x=dims)
-
-        # Set the new callable to the fitter and initialize
-        fitter.initialize(fitter.fit_object, local_fit_func)
-        # Make easyCore.Fitting.Fitter compatible `x`
-        x_for_fit = xr.concat(bdims, dim='fit_dim')
-        x_for_fit = x_for_fit.stack(all_x=[d.name for d in bdims])
-        try:
-            # Deal with any sigmas if supplied
-            if fit_kwargs.get('weights', None) is not None:
-                fit_kwargs['weights'] = xr.DataArray(
-                    np.array(fit_kwargs['weights']),
-                    dims=['all_x'],
-                    coords={'all_x': x_for_fit.all_x}
-                )
-            # Try to perform a fit
-            f_res = fitter.fit(x_for_fit, self._obj.stack(all_x=dims), **fit_kwargs)
-            f_res = check_sanity_single(f_res)
-        finally:
-            # Reset the fit function on the fitter to the old fit function.
-            fitter.fit_function = old_fit_func
-        return f_res
 
 def check_sanity_single(fit_results: FitResults) -> FitResults:
     """
@@ -108,16 +63,16 @@ def check_sanity_single(fit_results: FitResults) -> FitResults:
 
     for item in items:
         array = getattr(fit_results, item)
-        if isinstance(array, xr.DataArray):
+        if isinstance(array, sc.DataArray):
             array = array.unstack()
             array.name = item
             setattr(fit_results, item, array)
 
     x_array = fit_results.x
-    if isinstance(x_array, xr.DataArray):
+    if isinstance(x_array, sc.DataArray):
         fit_results.x.name = 'axes_broadcast'
         x_array = x_array.unstack()
-        x_dataset = xr.Dataset()
+        x_dataset = sc.Dataset()
         dims = [dims for dims in x_array.dims if dims != 'fit_dim']
         for idx, dim in enumerate(dims):
             x_dataset[dim + '_broadcast'] = x_array[idx]
