@@ -22,7 +22,7 @@ from typing import (
 from easyCore import borg
 from easyCore.Utils.json import MSONable
 from easyCore.Utils.classTools import addLoggedProp
-from .VariableClasses import Parameter, Descriptor
+from .Variable import Parameter, Descriptor
 
 if TYPE_CHECKING:
     from easyCore.Fitting.Constraints import ConstraintBase as Constraint
@@ -49,9 +49,7 @@ class BasedBase(MSONable):
         :rtype: tuple
         """
         state = self.as_dict()
-        cls = self.__class__
-        if hasattr(self, "__old_class__"):
-            cls = self.__old_class__
+        cls = getattr(self, "__old_class__", self.__class__)
         return cls.from_dict, (state,)
 
     @property

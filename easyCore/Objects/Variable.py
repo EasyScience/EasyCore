@@ -13,6 +13,7 @@ import warnings
 
 from copy import deepcopy
 from functools import wraps
+from types import MappingProxyType
 from typing import (
     List,
     Union,
@@ -108,7 +109,7 @@ class Descriptor(MSONable):
         self.name: str = name
         # Attach units if necessary
         if isinstance(units, ureg.Unit):
-            self._units = deepcopy(units)
+            self._units = ureg.Quantity(1, units=deepcopy(units))
         elif isinstance(units, (str, noneType)):
             self._units = ureg.parse_expression(units)
         else:
@@ -520,6 +521,7 @@ class Parameter(Descriptor):
                 "min": SelfConstraint(self, ">=", "_min"),
                 "max": SelfConstraint(self, "<=", "_max"),
             },
+            "virtual": {},
         }
         # This is for the serialization. Otherwise we wouldn't catch the values given to `super()`
         self._kwargs = kwargs
@@ -564,7 +566,10 @@ class Parameter(Descriptor):
             value=set_value, units=self._args["units"], error=self._args["error"]
         )
 
-        def constraint_runner(this_constraint_type: dict, newer_value: numbers.Number):
+        def constraint_runner(
+            this_constraint_type: Union[dict, MappingProxyType],
+            newer_value: numbers.Number,
+        ):
             for constraint in this_constraint_type.values():
                 if constraint.external:
                     constraint()
@@ -582,11 +587,10 @@ class Parameter(Descriptor):
             return newer_value
 
         # First run the built in constraints. i.e. min/max
-        constraint_type: dict = self.builtin_constraints
+        constraint_type: MappingProxyType = self.builtin_constraints
         new_value = constraint_runner(constraint_type, set_value)
         # Then run any user constraints.
         constraint_type: dict = self.user_constraints
-
         state = self._borg.stack.enabled
         if state:
             self._borg.stack.force_state(False)
@@ -594,6 +598,10 @@ class Parameter(Descriptor):
             new_value = constraint_runner(constraint_type, new_value)
         finally:
             self._borg.stack.force_state(state)
+
+        # And finally update any virtual constraints
+        constraint_type: dict = self._constraints["virtual"]
+        _ = constraint_runner(constraint_type, new_value)
 
         # Restore to the old state
         self._value = old_value
@@ -748,13 +756,13 @@ class Parameter(Descriptor):
         return new_dict
 
     @property
-    def builtin_constraints(self) -> Dict[str, Type[Constraint]]:
+    def builtin_constraints(self) -> MappingProxyType[Any, Any]:
         """
         Get the built in constrains of the object. Typically these are the min/max
 
         :return: Dictionary of constraints which are built into the system
         """
-        return self._constraints["builtin"]
+        return MappingProxyType(self._constraints["builtin"])
 
     @property
     def user_constraints(self) -> Dict[str, Type[Constraint]]:

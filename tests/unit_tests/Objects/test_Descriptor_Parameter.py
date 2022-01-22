@@ -10,7 +10,7 @@ from typing import List
 
 import pytest
 import numpy as np
-from easyCore.Objects.VariableClasses import (
+from easyCore.Objects.Variable import (
     Descriptor,
     Parameter,
     ureg,
@@ -265,7 +265,7 @@ def test_descriptor_as_dict():
     d = Descriptor("test", 1)
     result = d.as_dict()
     expected = {
-        "@module": "easyCore.Objects.VariableClasses",
+        "@module": "easyCore.Objects.Variable",
         "@class": "Descriptor",
         "@version": "0.1.0",
         "name": "test",
@@ -286,7 +286,7 @@ def test_parameter_as_dict():
     d = Parameter("test", 1)
     result = d.as_dict()
     expected = {
-        "@module": "easyCore.Objects.VariableClasses",
+        "@module": "easyCore.Objects.Variable",
         "@class": "Parameter",
         "@version": "0.1.0",
         "name": "test",
@@ -306,7 +306,7 @@ def test_parameter_as_dict():
     d = Parameter("test", 1, units="km", url="https://www.boo.com")
     result = d.as_dict()
     expected = {
-        "@module": "easyCore.Objects.VariableClasses",
+        "@module": "easyCore.Objects.Variable",
         "@class": "Parameter",
         "@version": "0.1.0",
         "name": "test",
@@ -329,7 +329,7 @@ def test_parameter_as_dict():
     (
         [
             {
-                "@module": "easyCore.Objects.VariableClasses",
+                "@module": "easyCore.Objects.Variable",
                 "@class": "Descriptor",
                 "@version": "0.1.0",
                 "name": "test",
@@ -344,7 +344,7 @@ def test_parameter_as_dict():
         ],
         [
             {
-                "@module": "easyCore.Objects.VariableClasses",
+                "@module": "easyCore.Objects.Variable",
                 "@class": "Parameter",
                 "@version": "0.1.0",
                 "name": "test",
@@ -380,7 +380,7 @@ def test_item_from_dict(reference, constructor):
     "construct",
     (
         {
-            "@module": "easyCore.Objects.VariableClasses",
+            "@module": "easyCore.Objects.Variable",
             "@class": "Descriptor",
             "@version": "0.1.0",
             "name": "test",
@@ -392,7 +392,7 @@ def test_item_from_dict(reference, constructor):
             "callback": None,
         },
         {
-            "@module": "easyCore.Objects.VariableClasses",
+            "@module": "easyCore.Objects.Variable",
             "@class": "Parameter",
             "@version": "0.1.0",
             "name": "test",
