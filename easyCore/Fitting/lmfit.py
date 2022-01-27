@@ -15,9 +15,9 @@ from easyCore.Fitting.fitting_template import (
     FittingTemplate,
     np,
     FitResults,
-    NameConverter,
     FitError,
 )
+from easyCore.Utils.classTools import NameConverter
 
 # Import lmfit specific objects
 from lmfit import Parameter as lmParameter, Parameters as lmParameters, Model as lmModel

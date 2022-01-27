@@ -15,9 +15,9 @@ from easyCore.Fitting.fitting_template import (
     FittingTemplate,
     np,
     FitResults,
-    NameConverter,
     FitError,
 )
+from easyCore.Utils.classTools import NameConverter
 
 # Import bumps specific objects
 from bumps.names import Curve, FitProblem

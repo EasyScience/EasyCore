@@ -776,3 +776,15 @@ class Parameter(Descriptor):
     @user_constraints.setter
     def user_constraints(self, constraints_dict: Dict[str, Type[Constraint]]):
         self._constraints["user"] = constraints_dict
+
+    def _quick_set(self, set_value):
+        """
+        This is a quick setter for the parameter. It bypasses all the checks and constraints,
+        just setting the value and issuing the interface callbacks.
+
+        WARNING: This is a dangerous function and should only be used when you know what you are doing.
+        """
+        self._property_value._magnitude._nominal_value = set_value
+        self._args['value'] = set_value
+        if self._callback.fset is not None:
+            self._callback.fset(set_value)

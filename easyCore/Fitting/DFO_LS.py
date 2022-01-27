@@ -9,7 +9,8 @@ from typing import List
 from numbers import Number
 
 from easyCore.Fitting.fitting_template import noneType, Union, Callable, \
-    FittingTemplate, np, FitResults, NameConverter, FitError
+    FittingTemplate, np, FitResults, FitError
+from easyCore.Utils.classTools import NameConverter
 
 # Import dfols specific objects
 import dfols
