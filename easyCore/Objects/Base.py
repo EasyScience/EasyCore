@@ -553,6 +553,18 @@ class Parameter(Descriptor):
         if not isinstance(value, bool):
             raise ValueError
         self._fixed = value
+        
+    def vary(self, min: numbers:Number, max: numbers.Number):
+        """
+        A convenience function to make a parameter vary between a 
+        given range.
+        
+        :param min: Minimum value
+        :param max: Maximum value
+        """
+        self.fixed = False
+        self.min = min
+        self.max = max
 
     @property
     def error(self) -> float:
