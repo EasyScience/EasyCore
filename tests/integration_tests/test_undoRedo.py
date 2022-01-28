@@ -73,6 +73,27 @@ def test_SinglesUndoRedo(idx, test):
     if e:
         raise e
 
+@pytest.mark.parametrize("value", (True, False))
+def test_Parameter_Bounds_UndoRedo(value):
+    from easyCore import borg
+    borg.stack.enabled = True
+    p = Parameter("test", 1, enabled=value)
+    assert p.min == -np.inf
+    assert p.max == np.inf
+    assert p.bounds == (-np.inf, np.inf)
+
+    p.bounds = (0, 2)
+    assert p.min == 0
+    assert p.max == 2
+    assert p.bounds == (0, 2)
+    assert p.enabled is True
+
+    borg.stack.undo()
+    assert p.min == -np.inf
+    assert p.max == np.inf
+    assert p.bounds == (-np.inf, np.inf)
+    assert p.enabled is value
+
 
 def test_BaseObjUndoRedo():
     objs = {obj.name: obj for obj in [createSingleObjs(idx) for idx in range(5)]}
