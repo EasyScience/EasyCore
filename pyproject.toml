@@ -42,7 +42,10 @@ packages = [ { include = "easyCore" } ]
 
 [tool.poetry.dependencies]
 python = "^3.7" # "^3.8" generates error when installing PySide2 in easyAppGui
-numpy = "^1.19"
+numpy = [
+    {version = "^1.19", python = "^3.7.0"},
+    {version = "^1.22", python = "^3.8"}
+]
 pint = ">=0.17,<0.19"
 uncertainties = "^3.1"
 lmfit = "^1.0"

@@ -44,8 +44,8 @@ jobs:
 
     - name: Test with tox
       run: |
-        poetry add -D tox tox-gh-actions coverage
-        poetry run tox
+        poetry add -D pytest coverage
+        poetry run pytest --cov --cov-report=xml
 
     - name: Upload coverage
       uses: codecov/codecov-action@v1.0.7
