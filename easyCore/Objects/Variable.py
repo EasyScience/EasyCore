@@ -23,7 +23,7 @@ from typing import (
     Optional,
     Type,
     TYPE_CHECKING,
-    Callable,
+    Callable, Tuple,
 )
 
 from easyCore import borg, ureg, np, pint
@@ -625,7 +625,7 @@ class Parameter(Descriptor):
         if value <= self.raw_value:
             self._min = value
         else:
-            raise ValueError
+            raise ValueError(f"The current set value ({self.raw_value}) is less than the desired min value ({value}).")
 
     @property
     def max(self) -> numbers.Number:
@@ -649,7 +649,7 @@ class Parameter(Descriptor):
         if value >= self.raw_value:
             self._max = value
         else:
-            raise ValueError
+            raise ValueError(f"The current set value ({self.raw_value}) is greater than the desired max value ({value}).")
 
     @property
     def fixed(self) -> bool:
@@ -812,3 +812,43 @@ class Parameter(Descriptor):
                 )
             newer_value = this_new_value
         return newer_value
+
+    @property
+    def bounds(self) -> Tuple[numbers.Number, numbers.Number]:
+        """
+        Get the bounds of the parameter.
+
+        :return: Tuple of the parameters minimum and maximum values
+        """
+        return self._min, self._max
+
+    @bounds.setter
+    def bounds(self, new_bound: Union[Tuple[numbers.Number, numbers.Number], numbers.Number]) -> None:
+        """
+        Set the bounds of the parameter. *This will also enable the parameter*.
+
+        :param new_bound: New bounds. This can be a tuple of (min, max) or a single number (min).
+        For changing the max use (None, max_value).
+        """
+        # Macro checking and opening for undo/redo
+        close_macro = False
+        if self._borg.stack.enabled:
+            self._borg.stack.beginMacro("Setting bounds")
+            close_macro = True
+        # Have we only been given a single number (MIN)?
+        if isinstance(new_bound, numbers.Number):
+            self.min = new_bound
+        # Have we been given a tuple?
+        if isinstance(new_bound, tuple):
+            new_min, new_max = new_bound
+            # Are there any None values?
+            if isinstance(new_min, numbers.Number):
+                self.min = new_min
+            if isinstance(new_max, numbers.Number):
+                self.max = new_max
+        # Enable the parameter if needed
+        if not self.enabled:
+            self.enabled = True
+        # Close the macro if we opened it
+        if close_macro:
+            self._borg.stack.endMacro()
