@@ -1,6 +1,10 @@
 __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
+#  SPDX-FileCopyrightText: 2022 easyCore contributors  <core@easyscience.software>
+#  SPDX-License-Identifier: BSD-3-Clause
+#  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+
 import pytest
 import numpy as np
 
@@ -122,7 +126,7 @@ def test_baseobj_as_dict(setup_pars: dict):
         "@version": "0.1.0",
         "name": "test",
         "par1": {
-            "@module": "easyCore.Objects.VariableClasses",
+            "@module": "easyCore.Objects.Variable",
             "@class": "Parameter",
             "@version": "0.1.0",
             "name": "p1",
@@ -134,7 +138,7 @@ def test_baseobj_as_dict(setup_pars: dict):
             "units": "dimensionless",
         },
         "des1": {
-            "@module": "easyCore.Objects.VariableClasses",
+            "@module": "easyCore.Objects.Variable",
             "@class": "Descriptor",
             "@version": "0.1.0",
             "name": "d1",
@@ -145,7 +149,7 @@ def test_baseobj_as_dict(setup_pars: dict):
             "display_name": "d1",
         },
         "par2": {
-            "@module": "easyCore.Objects.VariableClasses",
+            "@module": "easyCore.Objects.Variable",
             "@class": "Parameter",
             "@version": "0.1.0",
             "name": "p2",
@@ -157,7 +161,7 @@ def test_baseobj_as_dict(setup_pars: dict):
             "units": "dimensionless",
         },
         "des2": {
-            "@module": "easyCore.Objects.VariableClasses",
+            "@module": "easyCore.Objects.Variable",
             "@class": "Descriptor",
             "@version": "0.1.0",
             "name": "d2",
@@ -168,7 +172,7 @@ def test_baseobj_as_dict(setup_pars: dict):
             "display_name": "d2",
         },
         "par3": {
-            "@module": "easyCore.Objects.VariableClasses",
+            "@module": "easyCore.Objects.Variable",
             "@class": "Parameter",
             "@version": "0.1.0",
             "name": "p3",

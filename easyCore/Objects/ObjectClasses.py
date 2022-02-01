@@ -3,6 +3,10 @@ from __future__ import annotations
 __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
+#  SPDX-FileCopyrightText: 2022 easyCore contributors  <core@easyscience.software>
+#  SPDX-License-Identifier: BSD-3-Clause
+#  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+
 import numbers
 
 from typing import (
@@ -18,7 +22,7 @@ from typing import (
 from easyCore import borg
 from easyCore.Utils.json import MSONable
 from easyCore.Utils.classTools import addLoggedProp
-from .VariableClasses import Parameter, Descriptor
+from .Variable import Parameter, Descriptor
 
 if TYPE_CHECKING:
     from easyCore.Fitting.Constraints import ConstraintBase as Constraint
@@ -45,9 +49,7 @@ class BasedBase(MSONable):
         :rtype: tuple
         """
         state = self.as_dict()
-        cls = self.__class__
-        if hasattr(self, "__old_class__"):
-            cls = self.__old_class__
+        cls = getattr(self, "__old_class__", self.__class__)
         return cls.from_dict, (state,)
 
     @property
