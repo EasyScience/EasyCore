@@ -64,6 +64,11 @@ sphinx-rtd-theme = "^1.0.0"
 sphinx-autodoc-typehints = "^1.12.0"
 sphinx-gallery = "^0.10.0"
 
+[tool.dephell.main]
+from = {format = "poetry", path = "pyproject.toml"}
+to = {format = "setuppy", path = "setup.py"}
+envs = ["main"]
+
 [tool.tox]
 legacy_tox_ini = """
 [tox]
