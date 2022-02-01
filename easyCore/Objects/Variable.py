@@ -645,7 +645,7 @@ class Parameter(Descriptor):
         if value <= self.raw_value:
             self._min = value
         else:
-            raise ValueError
+            raise ValueError(f"The current set value ({self.raw_value}) is less than the desired min value ({value}).")
 
     @property
     def max(self) -> numbers.Number:
@@ -669,7 +669,7 @@ class Parameter(Descriptor):
         if value >= self.raw_value:
             self._max = value
         else:
-            raise ValueError
+            raise ValueError(f"The current set value ({self.raw_value}) is greater than the desired max value ({value}).")
 
     @property
     def fixed(self) -> bool:
