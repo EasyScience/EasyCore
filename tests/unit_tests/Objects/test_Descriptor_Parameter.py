@@ -1,12 +1,16 @@
 __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
+#  SPDX-FileCopyrightText: 2022 easyCore contributors  <core@easyscience.software>
+#  SPDX-License-Identifier: BSD-3-Clause
+#  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+
 from copy import deepcopy
 from typing import List
 
 import pytest
 import numpy as np
-from easyCore.Objects.VariableClasses import (
+from easyCore.Objects.Variable import (
     Descriptor,
     Parameter,
     ureg,
@@ -261,7 +265,7 @@ def test_descriptor_as_dict():
     d = Descriptor("test", 1)
     result = d.as_dict()
     expected = {
-        "@module": "easyCore.Objects.VariableClasses",
+        "@module": "easyCore.Objects.Variable",
         "@class": "Descriptor",
         "@version": "0.1.0",
         "name": "test",
@@ -282,7 +286,7 @@ def test_parameter_as_dict():
     d = Parameter("test", 1)
     result = d.as_dict()
     expected = {
-        "@module": "easyCore.Objects.VariableClasses",
+        "@module": "easyCore.Objects.Variable",
         "@class": "Parameter",
         "@version": "0.1.0",
         "name": "test",
@@ -302,7 +306,7 @@ def test_parameter_as_dict():
     d = Parameter("test", 1, units="km", url="https://www.boo.com")
     result = d.as_dict()
     expected = {
-        "@module": "easyCore.Objects.VariableClasses",
+        "@module": "easyCore.Objects.Variable",
         "@class": "Parameter",
         "@version": "0.1.0",
         "name": "test",
@@ -325,7 +329,7 @@ def test_parameter_as_dict():
     (
         [
             {
-                "@module": "easyCore.Objects.VariableClasses",
+                "@module": "easyCore.Objects.Variable",
                 "@class": "Descriptor",
                 "@version": "0.1.0",
                 "name": "test",
@@ -340,7 +344,7 @@ def test_parameter_as_dict():
         ],
         [
             {
-                "@module": "easyCore.Objects.VariableClasses",
+                "@module": "easyCore.Objects.Variable",
                 "@class": "Parameter",
                 "@version": "0.1.0",
                 "name": "test",
@@ -376,7 +380,7 @@ def test_item_from_dict(reference, constructor):
     "construct",
     (
         {
-            "@module": "easyCore.Objects.VariableClasses",
+            "@module": "easyCore.Objects.Variable",
             "@class": "Descriptor",
             "@version": "0.1.0",
             "name": "test",
@@ -388,7 +392,7 @@ def test_item_from_dict(reference, constructor):
             "callback": None,
         },
         {
-            "@module": "easyCore.Objects.VariableClasses",
+            "@module": "easyCore.Objects.Variable",
             "@class": "Parameter",
             "@version": "0.1.0",
             "name": "test",
@@ -569,3 +573,18 @@ def test_item_boolean_value(instance):
     assert item.value is False
     setter(item, True)
     assert item.value is True
+
+
+@pytest.mark.parametrize("value", (True, False))
+def test_parameter_bounds(value):
+    p = Parameter("test", 1, enabled=value)
+    assert p.min == -np.inf
+    assert p.max == np.inf
+    assert p.bounds == (-np.inf, np.inf)
+
+    p.bounds = (0, 2)
+    assert p.min == 0
+    assert p.max == 2
+    assert p.bounds == (0, 2)
+    assert p.enabled is True
+

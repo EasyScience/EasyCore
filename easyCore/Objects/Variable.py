@@ -1,6 +1,6 @@
-#  SPDX-FileCopyrightText: 2021 easyCore contributors  <core@easyscience.software>
+#  SPDX-FileCopyrightText: 2022 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
-#  © 2021 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+#  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ import warnings
 
 from copy import deepcopy
 from functools import wraps
+from types import MappingProxyType
 from typing import (
     List,
     Union,
@@ -22,7 +23,7 @@ from typing import (
     Optional,
     Type,
     TYPE_CHECKING,
-    Callable,
+    Callable, Tuple,
 )
 
 from easyCore import borg, ureg, np, pint
@@ -108,7 +109,7 @@ class Descriptor(MSONable):
         self.name: str = name
         # Attach units if necessary
         if isinstance(units, ureg.Unit):
-            self._units = deepcopy(units)
+            self._units = ureg.Quantity(1, units=deepcopy(units))
         elif isinstance(units, (str, noneType)):
             self._units = ureg.parse_expression(units)
         else:
@@ -520,6 +521,7 @@ class Parameter(Descriptor):
                 "min": SelfConstraint(self, ">=", "_min"),
                 "max": SelfConstraint(self, "<=", "_max"),
             },
+            "virtual": {},
         }
         # This is for the serialization. Otherwise we wouldn't catch the values given to `super()`
         self._kwargs = kwargs
@@ -564,7 +566,10 @@ class Parameter(Descriptor):
             value=set_value, units=self._args["units"], error=self._args["error"]
         )
 
-        def constraint_runner(this_constraint_type: dict, newer_value: numbers.Number):
+        def constraint_runner(
+            this_constraint_type: Union[dict, MappingProxyType],
+            newer_value: numbers.Number,
+        ):
             for constraint in this_constraint_type.values():
                 if constraint.external:
                     constraint()
@@ -582,11 +587,10 @@ class Parameter(Descriptor):
             return newer_value
 
         # First run the built in constraints. i.e. min/max
-        constraint_type: dict = self.builtin_constraints
+        constraint_type: MappingProxyType = self.builtin_constraints
         new_value = constraint_runner(constraint_type, set_value)
         # Then run any user constraints.
         constraint_type: dict = self.user_constraints
-
         state = self._borg.stack.enabled
         if state:
             self._borg.stack.force_state(False)
@@ -594,6 +598,10 @@ class Parameter(Descriptor):
             new_value = constraint_runner(constraint_type, new_value)
         finally:
             self._borg.stack.force_state(state)
+
+        # And finally update any virtual constraints
+        constraint_type: dict = self._constraints["virtual"]
+        _ = constraint_runner(constraint_type, new_value)
 
         # Restore to the old state
         self._value = old_value
@@ -748,13 +756,13 @@ class Parameter(Descriptor):
         return new_dict
 
     @property
-    def builtin_constraints(self) -> Dict[str, Type[Constraint]]:
+    def builtin_constraints(self) -> MappingProxyType[Any, Any]:
         """
         Get the built in constrains of the object. Typically these are the min/max
 
         :return: Dictionary of constraints which are built into the system
         """
-        return self._constraints["builtin"]
+        return MappingProxyType(self._constraints["builtin"])
 
     @property
     def user_constraints(self) -> Dict[str, Type[Constraint]]:
@@ -768,3 +776,43 @@ class Parameter(Descriptor):
     @user_constraints.setter
     def user_constraints(self, constraints_dict: Dict[str, Type[Constraint]]):
         self._constraints["user"] = constraints_dict
+
+    @property
+    def bounds(self) -> Tuple[numbers.Number, numbers.Number]:
+        """
+        Get the bounds of the parameter.
+
+        :return: Tuple of the parameters minimum and maximum values
+        """
+        return self._min, self._max
+
+    @bounds.setter
+    def bounds(self, new_bound: Union[Tuple[numbers.Number, numbers.Number], numbers.Number]) -> None:
+        """
+        Set the bounds of the parameter. *This will also enable the parameter*.
+
+        :param new_bound: New bounds. This can be a tuple of (min, max) or a single number (min).
+        For changing the max use (None, max_value).
+        """
+        # Macro checking and opening for undo/redo
+        close_macro = False
+        if self._borg.stack.enabled:
+            self._borg.stack.beginMacro("Setting bounds")
+            close_macro = True
+        # Have we only been given a single number (MIN)?
+        if isinstance(new_bound, numbers.Number):
+            self.min = new_bound
+        # Have we been given a tuple?
+        if isinstance(new_bound, tuple):
+            new_min, new_max = new_bound
+            # Are there any None values?
+            if isinstance(new_min, numbers.Number):
+                self.min = new_min
+            if isinstance(new_max, numbers.Number):
+                self.max = new_max
+        # Enable the parameter if needed
+        if not self.enabled:
+            self.enabled = True
+        # Close the macro if we opened it
+        if close_macro:
+            self._borg.stack.endMacro()

@@ -50,6 +50,7 @@ bumps = "^0.8"
 asteval = "^0.9.23"
 DFO-LS = {version = "^1.2", optional = true}
 xarray = ">=0.16,<0.21"
+# scipp = "^0.11"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.2"
@@ -67,12 +68,14 @@ sphinx-gallery = "^0.10.0"
 legacy_tox_ini = """
 [tox]
 isolated_build = True
-envlist = py{37,38,39}
+envlist = py{37,38,39,310,311}
 [gh-actions]
 python =
     3.7: py37
     3.8: py38
     3.9: py39
+    3.10: py310
+    3.11.0-alpha.1: py311
 [gh-actions:env]
 PLATFORM =
     ubuntu-latest: linux
