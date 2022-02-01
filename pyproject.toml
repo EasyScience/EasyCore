@@ -23,7 +23,7 @@ repo = 'easyCore'
 
 [tool.poetry]
 name = "easyScienceCore"
-version = "0.1.0"
+version = "0.2.0"
 description = "Generic logic for easyScience libraries"
 license = "BSD-3-Clause"
 authors = ["Simon Ward"]
