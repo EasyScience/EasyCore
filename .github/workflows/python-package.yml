@@ -5,18 +5,18 @@ name: Python package testing
 
 on:
   push:
-    branches: [ master, pre-release ]
+    branches: [master, pre-release]
   pull_request:
-    branches: [ master, pre-release ]
+    branches: [master, pre-release]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        python-version: [3.6, 3.7, 3.8, 3.9]
     if: "!contains(github.event.head_commit.message, '[ci skip]')"
-    
+
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
@@ -33,7 +33,7 @@ jobs:
         cd ./dist
         poetry run pytest ../
     - uses: actions/upload-artifact@v2
-      with:	
+      with:
         name: easyCore - Python ${{ matrix.python-version }}
         path: ${{ github.workspace }}/dist/*
 
