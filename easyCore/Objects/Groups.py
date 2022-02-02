@@ -217,6 +217,10 @@ class BaseCollection(BasedBase, MutableSequence):
         dd["@id"] = d["@id"]
         return dd
 
+    @property
+    def data(self) -> tuple:
+        return tuple(self._kwargs.values())
+
     @classmethod
     def from_dict(cls, input_dict: dict):
         """

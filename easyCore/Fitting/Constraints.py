@@ -227,7 +227,7 @@ class NumericConstraint(ConstraintBase):
             self.aeval.eval(f"value3 = value1 {self.operator} value2")
             logic = self.aeval.symtable["value3"]
             if isinstance(logic, np.ndarray):
-                value[~logic] = self.aeval.symtable["value2"]
+                value[not logic] = self.aeval.symtable["value2"]
             else:
                 if not logic:
                     value = self.aeval.symtable["value2"]
@@ -287,7 +287,7 @@ class SelfConstraint(ConstraintBase):
             self.aeval.eval(f"value3 = value1 {self.operator} value2")
             logic = self.aeval.symtable["value3"]
             if isinstance(logic, np.ndarray):
-                value[~logic] = self.aeval.symtable["value2"]
+                value[not logic] = self.aeval.symtable["value2"]
             else:
                 if not logic:
                     value = self.aeval.symtable["value2"]

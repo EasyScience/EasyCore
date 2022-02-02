@@ -516,7 +516,7 @@ class Parameter(Descriptor):
         self._fixed: bool = fixed
         self.initial_value = self.value
         self._constraints: dict = {
-            "user": {},
+            "user":    {},
             "builtin": {
                 "min": SelfConstraint(self, ">=", "_min"),
                 "max": SelfConstraint(self, "<=", "_max"),
@@ -566,42 +566,22 @@ class Parameter(Descriptor):
             value=set_value, units=self._args["units"], error=self._args["error"]
         )
 
-        def constraint_runner(
-            this_constraint_type: Union[dict, MappingProxyType],
-            newer_value: numbers.Number,
-        ):
-            for constraint in this_constraint_type.values():
-                if constraint.external:
-                    constraint()
-                    continue
-                this_new_value = constraint(no_set=True)
-                if this_new_value != newer_value:
-                    if borg.debug:
-                        print(f"Constraint `{constraint}` has been applied")
-                    self._value = self.__class__._constructor(
-                        value=this_new_value,
-                        units=self._args["units"],
-                        error=self._args["error"],
-                    )
-                newer_value = this_new_value
-            return newer_value
-
         # First run the built in constraints. i.e. min/max
         constraint_type: MappingProxyType = self.builtin_constraints
-        new_value = constraint_runner(constraint_type, set_value)
+        new_value = self.__constraint_runner(constraint_type, set_value)
         # Then run any user constraints.
         constraint_type: dict = self.user_constraints
         state = self._borg.stack.enabled
         if state:
             self._borg.stack.force_state(False)
         try:
-            new_value = constraint_runner(constraint_type, new_value)
+            new_value = self.__constraint_runner(constraint_type, new_value)
         finally:
             self._borg.stack.force_state(state)
 
         # And finally update any virtual constraints
         constraint_type: dict = self._constraints["virtual"]
-        _ = constraint_runner(constraint_type, new_value)
+        _ = self.__constraint_runner(constraint_type, new_value)
 
         # Restore to the old state
         self._value = old_value
@@ -743,7 +723,7 @@ class Parameter(Descriptor):
         return float(self.raw_value)
 
     def as_dict(
-        self, skip: Optional[Union[List[str], None]] = None
+            self, skip: Optional[Union[List[str], None]] = None
     ) -> Dict[str, Union[str, bool, numbers.Number]]:
         """
         Include enabled in the dict output as it's unfortunately skipped
@@ -776,6 +756,62 @@ class Parameter(Descriptor):
     @user_constraints.setter
     def user_constraints(self, constraints_dict: Dict[str, Type[Constraint]]):
         self._constraints["user"] = constraints_dict
+
+    def _quick_set(self, set_value,
+                   run_builtin_constraints=False,
+                   run_user_constraints=False,
+                   run_virtual_constraints=False):
+        """
+        This is a quick setter for the parameter. It bypasses all the checks and constraints,
+        just setting the value and issuing the interface callbacks.
+
+        WARNING: This is a dangerous function and should only be used when you know what you are doing.
+        """
+        # First run the built-in constraints. i.e. min/max
+        if run_builtin_constraints:
+            constraint_type: MappingProxyType = self.builtin_constraints
+            set_value = self.__constraint_runner(constraint_type, set_value)
+        # Then run any user constraints.
+        if run_user_constraints:
+            constraint_type: dict = self.user_constraints
+            state = self._borg.stack.enabled
+            if state:
+                self._borg.stack.force_state(False)
+            try:
+                set_value = self.__constraint_runner(constraint_type, set_value)
+            finally:
+                self._borg.stack.force_state(state)
+        if run_virtual_constraints:
+            # And finally update any virtual constraints
+            constraint_type: dict = self._constraints["virtual"]
+            _ = self.__constraint_runner(constraint_type, set_value)
+
+        # Finally set the value
+        self._property_value._magnitude._nominal_value = set_value
+        self._args['value'] = set_value
+        if self._callback.fset is not None:
+            self._callback.fset(set_value)
+
+    def __constraint_runner(
+            self,
+            this_constraint_type: Union[dict, MappingProxyType],
+            newer_value: numbers.Number,
+    ):
+        for constraint in this_constraint_type.values():
+            if constraint.external:
+                constraint()
+                continue
+            this_new_value = constraint(no_set=True)
+            if this_new_value != newer_value:
+                if borg.debug:
+                    print(f"Constraint `{constraint}` has been applied")
+                self._value = self.__class__._constructor(
+                    value=this_new_value,
+                    units=self._args["units"],
+                    error=self._args["error"],
+                )
+            newer_value = this_new_value
+        return newer_value
 
     @property
     def bounds(self) -> Tuple[numbers.Number, numbers.Number]:
@@ -813,6 +849,9 @@ class Parameter(Descriptor):
         # Enable the parameter if needed
         if not self.enabled:
             self.enabled = True
+        # Unfix the parameter if needed
+        if self.fixed:
+            self.fixed = False
         # Close the macro if we opened it
         if close_macro:
             self._borg.stack.endMacro()
