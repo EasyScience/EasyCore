@@ -1,18 +1,18 @@
-#  SPDX-FileCopyrightText: 2021 easyCore contributors  <core@easyscience.software>
+#  SPDX-FileCopyrightText: 2022 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
-#  © 2021 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+#  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
 from __future__ import annotations
 
-__author__ = 'github.com/wardsimon'
-__version__ = '0.1.0'
+__author__ = "github.com/wardsimon"
+__version__ = "0.1.0"
 
 from abc import abstractmethod, ABCMeta
 
 import weakref
 from asteval import Interpreter
 from numbers import Number
-from typing import List, Union, Callable, TYPE_CHECKING
+from typing import List, Union, Callable, TYPE_CHECKING, Optional
 
 from easyCore import borg, np
 from easyCore.Utils.json import MSONable
@@ -26,11 +26,18 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
     """
     A base class used to describe a constraint to be applied to easyCore base objects.
     """
+
     _borg = borg
 
-    def __init__(self, dependent_obj: Union[Descriptor, Parameter],
-                 independent_obj: Union[Parameter, Descriptor, List[Union[Descriptor, Parameter]], noneType] = None,
-                 operator=None, value=None):
+    def __init__(
+        self,
+        dependent_obj: Union[Descriptor, Parameter],
+        independent_obj: Union[
+            Parameter, Descriptor, List[Union[Descriptor, Parameter]], noneType
+        ] = None,
+        operator=None,
+        value=None,
+    ):
         self.aeval = Interpreter()
         self.dependent_obj_ids = self.get_key(dependent_obj)
         self.independent_obj_ids = None
@@ -39,23 +46,35 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
         self._finalizer = None
         if independent_obj is not None:
             if isinstance(independent_obj, list):
-                self.independent_obj_ids = [self.get_key(obj) for obj in independent_obj]
+                self.independent_obj_ids = [
+                    self.get_key(obj) for obj in independent_obj
+                ]
                 if self.dependent_obj_ids in self.independent_obj_ids:
-                    raise AttributeError('A dependent object can not be an independent object')
+                    raise AttributeError(
+                        "A dependent object can not be an independent object"
+                    )
             else:
                 self.independent_obj_ids = self.get_key(independent_obj)
                 if self.dependent_obj_ids == self.independent_obj_ids:
-                    raise AttributeError('A dependent object can not be an independent object')
+                    raise AttributeError(
+                        "A dependent object can not be an independent object"
+                    )
             # Test if dependent is a parameter or a descriptor.
             # We can not import `Parameter`, so......
-            if dependent_obj.__class__.__name__ == 'Parameter':
+            if dependent_obj.__class__.__name__ == "Parameter":
                 if not dependent_obj.enabled:
-                    raise AssertionError('A dependent object needs to be initially enabled.')
+                    raise AssertionError(
+                        "A dependent object needs to be initially enabled."
+                    )
                 if borg.debug:
-                    print(f'Dependent variable {dependent_obj}. It should be a `Descriptor`.'
-                          f'Setting to fixed')
+                    print(
+                        f"Dependent variable {dependent_obj}. It should be a `Descriptor`."
+                        f"Setting to fixed"
+                    )
                 dependent_obj.enabled = False
-                self._finalizer = weakref.finalize(self, cleanup_constraint, self.dependent_obj_ids, True)
+                self._finalizer = weakref.finalize(
+                    self, cleanup_constraint, self.dependent_obj_ids, True
+                )
 
         self.operator = operator
         self.value = value
@@ -72,13 +91,13 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
     @enabled.setter
     def enabled(self, enabled_value: bool):
         """
-        Set the enabled state of the constraint. If the new value is the same as the current value only the state is
-        changed.
+                Set the enabled state of the constraint. If the new value is the same as the current value only the state is
+                changed.
 
-... note:: If the new value is ``True`` the constraint is also applied after enabling.
+        ... note:: If the new value is ``True`` the constraint is also applied after enabling.
 
-        :param enabled_value: New state of the constraint.
-        :return: None
+                :param enabled_value: New state of the constraint.
+                :return: None
         """
 
         if self._enabled == enabled_value:
@@ -108,7 +127,9 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
         if isinstance(self.independent_obj_ids, int):
             independent_objs = self.get_obj(self.independent_obj_ids)
         elif isinstance(self.independent_obj_ids, list):
-            independent_objs = [self.get_obj(obj_id) for obj_id in self.independent_obj_ids]
+            independent_objs = [
+                self.get_obj(obj_id) for obj_id in self.independent_obj_ids
+            ]
         if independent_objs is not None:
             value = self._parse_operator(independent_objs, *args, **kwargs)
         else:
@@ -125,7 +146,9 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
         return value
 
     @abstractmethod
-    def _parse_operator(self, obj: Union[Descriptor, Parameter], *args, **kwargs) -> Number:
+    def _parse_operator(
+        self, obj: Union[Descriptor, Parameter], *args, **kwargs
+    ) -> Number:
         """
         Abstract method which contains the constraint logic
 
@@ -162,7 +185,9 @@ class NumericConstraint(ConstraintBase):
     value. I.e. a < 1, a > 5
     """
 
-    def __init__(self, dependent_obj: Union[Descriptor, Parameter], operator: str, value: Number):
+    def __init__(
+        self, dependent_obj: Union[Descriptor, Parameter], operator: str, value: Number
+    ):
         """
         A `NumericConstraint` is a constraint whereby a dependent parameters value is something of an independent
         parameters value. I.e. a < 1, a > 5
@@ -186,22 +211,26 @@ class NumericConstraint(ConstraintBase):
              a.value = 2.0
              # `a` is set to the maximum of the constraint (`a = 1`)
         """
-        super(NumericConstraint, self).__init__(dependent_obj, operator=operator, value=value)
+        super(NumericConstraint, self).__init__(
+            dependent_obj, operator=operator, value=value
+        )
 
-    def _parse_operator(self, obj: Union[Descriptor, Parameter], *args, **kwargs) -> Number:
+    def _parse_operator(
+        self, obj: Union[Descriptor, Parameter], *args, **kwargs
+    ) -> Number:
         value = obj.raw_value
         if isinstance(value, list):
             value = np.array(value)
-        self.aeval.symtable['value1'] = value
-        self.aeval.symtable['value2'] = self.value
+        self.aeval.symtable["value1"] = value
+        self.aeval.symtable["value2"] = self.value
         try:
-            self.aeval.eval(f'value3 = value1 {self.operator} value2')
-            logic = self.aeval.symtable['value3']
+            self.aeval.eval(f"value3 = value1 {self.operator} value2")
+            logic = self.aeval.symtable["value3"]
             if isinstance(logic, np.ndarray):
-                value[~logic] = self.aeval.symtable['value2']
+                value[not logic] = self.aeval.symtable["value2"]
             else:
                 if not logic:
-                    value = self.aeval.symtable['value2']
+                    value = self.aeval.symtable["value2"]
         except Exception as e:
             raise e
         finally:
@@ -209,7 +238,7 @@ class NumericConstraint(ConstraintBase):
         return value
 
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__} with `value` {self.operator} {self.value}'
+        return f"{self.__class__.__name__} with `value` {self.operator} {self.value}"
 
 
 class SelfConstraint(ConstraintBase):
@@ -218,7 +247,9 @@ class SelfConstraint(ConstraintBase):
     `NumericConstraint`. i.e. a > a.min. These constraints are usually used in the internal easyCore logic.
     """
 
-    def __init__(self, dependent_obj: Union[Descriptor, Parameter], operator: str, value: str):
+    def __init__(
+        self, dependent_obj: Union[Descriptor, Parameter], operator: str, value: str
+    ):
         """
         A `SelfConstraint` is a constraint which tests a logical constraint on a property of itself, similar to
         a `NumericConstraint`. i.e. a > a.min.
@@ -242,20 +273,24 @@ class SelfConstraint(ConstraintBase):
              a.value = 2.0
              # `a` is set to the maximum of the constraint (`a = 1`)
         """
-        super(SelfConstraint, self).__init__(dependent_obj, operator=operator, value=value)
+        super(SelfConstraint, self).__init__(
+            dependent_obj, operator=operator, value=value
+        )
 
-    def _parse_operator(self, obj: Union[Descriptor, Parameter], *args, **kwargs) -> Number:
+    def _parse_operator(
+        self, obj: Union[Descriptor, Parameter], *args, **kwargs
+    ) -> Number:
         value = obj.raw_value
-        self.aeval.symtable['value1'] = value
-        self.aeval.symtable['value2'] = getattr(obj, self.value)
+        self.aeval.symtable["value1"] = value
+        self.aeval.symtable["value2"] = getattr(obj, self.value)
         try:
-            self.aeval.eval(f'value3 = value1 {self.operator} value2')
-            logic = self.aeval.symtable['value3']
+            self.aeval.eval(f"value3 = value1 {self.operator} value2")
+            logic = self.aeval.symtable["value3"]
             if isinstance(logic, np.ndarray):
-                value[~logic] = self.aeval.symtable['value2']
+                value[not logic] = self.aeval.symtable["value2"]
             else:
                 if not logic:
-                    value = self.aeval.symtable['value2']
+                    value = self.aeval.symtable["value2"]
         except Exception as e:
             raise e
         finally:
@@ -263,7 +298,9 @@ class SelfConstraint(ConstraintBase):
         return value
 
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__} with `value` {self.operator} obj.{self.value}'
+        return (
+            f"{self.__class__.__name__} with `value` {self.operator} obj.{self.value}"
+        )
 
 
 class ObjConstraint(ConstraintBase):
@@ -272,7 +309,9 @@ class ObjConstraint(ConstraintBase):
     value. E.g. a (Dependent Parameter) = 2* b (Independent Parameter)
     """
 
-    def __init__(self, dependent_obj: Parameter, operator: str, independent_obj: Parameter):
+    def __init__(
+        self, dependent_obj: Parameter, operator: str, independent_obj: Parameter
+    ):
         """
         A `ObjConstraint` is a constraint whereby a dependent parameter is something of an independent parameter
         value. E.g. a (Dependent Parameter) < b (Independent Parameter)
@@ -297,15 +336,19 @@ class ObjConstraint(ConstraintBase):
              a.value # Should equal 2
 
         """
-        super(ObjConstraint, self).__init__(dependent_obj, independent_obj=independent_obj, operator=operator)
+        super(ObjConstraint, self).__init__(
+            dependent_obj, independent_obj=independent_obj, operator=operator
+        )
         self.external = True
 
-    def _parse_operator(self, obj: Union[Descriptor, Parameter], *args, **kwargs) -> Number:
+    def _parse_operator(
+        self, obj: Union[Descriptor, Parameter], *args, **kwargs
+    ) -> Number:
         value = obj.raw_value
-        self.aeval.symtable['value1'] = value
+        self.aeval.symtable["value1"] = value
         try:
-            self.aeval.eval(f'value2 = {self.operator} value1')
-            value = self.aeval.symtable['value2']
+            self.aeval.eval(f"value2 = {self.operator} value1")
+            value = self.aeval.symtable["value2"]
         except Exception as e:
             raise e
         finally:
@@ -313,7 +356,7 @@ class ObjConstraint(ConstraintBase):
         return value
 
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__} with `dependent_obj` = {self.operator} `independent_obj`'
+        return f"{self.__class__.__name__} with `dependent_obj` = {self.operator} `independent_obj`"
 
 
 class MultiObjConstraint(ConstraintBase):
@@ -321,9 +364,14 @@ class MultiObjConstraint(ConstraintBase):
     A `MultiObjConstraint` is similar to :class:`easyCore.Fitting.Constraints.ObjConstraint` except that it relates to
     multiple independent objects.
     """
-    def __init__(self, independent_objs: List[Union[Descriptor, Parameter]],
-                 operator: List[str], dependent_obj: Union[Descriptor, Parameter],
-                 value: Number):
+
+    def __init__(
+        self,
+        independent_objs: List[Union[Descriptor, Parameter]],
+        operator: List[str],
+        dependent_obj: Union[Descriptor, Parameter],
+        value: Number,
+    ):
         """
         A `MultiObjConstraint` is similar to :class:`easyCore.Fitting.Constraints.ObjConstraint` except that it relates
         to one or more independent objects.
@@ -374,21 +422,29 @@ class MultiObjConstraint(ConstraintBase):
 
         .. note:: This constraint is evaluated as ``dependent`` = ``value`` - SUM(``operator_i`` ``independent_i``)
         """
-        super(MultiObjConstraint, self).__init__(dependent_obj, independent_obj=independent_objs,
-                                                 operator=operator, value=value)
+        super(MultiObjConstraint, self).__init__(
+            dependent_obj,
+            independent_obj=independent_objs,
+            operator=operator,
+            value=value,
+        )
         self.external = True
 
-    def _parse_operator(self, independent_objs: List[Union[Descriptor, Parameter]], *args, **kwargs) -> Number:
-        in_str = ''
+    def _parse_operator(
+        self, independent_objs: List[Union[Descriptor, Parameter]], *args, **kwargs
+    ) -> Number:
+        in_str = ""
         value = None
         for idx, obj in enumerate(independent_objs):
-            self.aeval.symtable['p' + str(self.independent_obj_ids[idx])] = obj.raw_value
-            in_str += ' p' + str(self.independent_obj_ids[idx])
+            self.aeval.symtable[
+                "p" + str(self.independent_obj_ids[idx])
+            ] = obj.raw_value
+            in_str += " p" + str(self.independent_obj_ids[idx])
             if idx < len(self.operator):
-                in_str += ' ' + self.operator[idx]
+                in_str += " " + self.operator[idx]
         try:
-            self.aeval.eval(f'final_value = {self.value} - ({in_str})')
-            value = self.aeval.symtable['final_value']
+            self.aeval.eval(f"final_value = {self.value} - ({in_str})")
+            value = self.aeval.symtable["final_value"]
         except Exception as e:
             raise e
         finally:
@@ -396,14 +452,20 @@ class MultiObjConstraint(ConstraintBase):
         return value
 
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__}'
+        return f"{self.__class__.__name__}"
 
 
 class FunctionalConstraint(ConstraintBase):
     """
     Functional constraints do not depend on other parameters and as such can be more complex.
     """
-    def __init__(self, dependent_obj: Union[Descriptor, Parameter], func: Callable):
+
+    def __init__(
+        self,
+        dependent_obj: Union[Descriptor, Parameter],
+        func: Callable,
+        independent_objs: Optional[List[Union[Descriptor, Parameter]]] = None,
+    ):
         """
         Functional constraints do not depend on other parameters and as such can be more complex.
 
@@ -427,20 +489,42 @@ class FunctionalConstraint(ConstraintBase):
             # This triggers the constraint
             a.value = -0.5 # `a` is set to 0.5
         """
-        super(FunctionalConstraint, self).__init__(dependent_obj, independent_obj=None)
+        super(FunctionalConstraint, self).__init__(
+            dependent_obj, independent_obj=independent_objs
+        )
         self.function = func
+        if independent_objs is not None:
+            self.external = True
 
-    def _parse_operator(self, obj: Union[Descriptor, Parameter], *args, **kwargs) -> Number:
-        return self.function(obj.raw_value, *args, **kwargs)
+    def _parse_operator(
+        self, obj: Union[Descriptor, Parameter], *args, **kwargs
+    ) -> Number:
+        self.aeval.symtable[f"f{id(self.function)}"] = self.function
+        value_str = f"r_value = f{id(self.function)}("
+        if isinstance(obj, list):
+            for o in obj:
+                value_str += f"{o.raw_value},"
+            value_str = value_str[:-1]
+        else:
+            value_str += f"{obj.raw_value}"
+        value_str += ")"
+        try:
+            self.aeval.eval(value_str)
+            value = self.aeval.symtable["r_value"]
+        except Exception as e:
+            raise e
+        finally:
+            self.aeval.symtable.clear()
+        return value
 
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__}'
+        return f"{self.__class__.__name__}"
 
 
-def cleanup_constraint(obj_id, enabled):
+def cleanup_constraint(obj_id: str, enabled: bool):
     try:
         obj = borg.map.get_item_by_key(obj_id)
         obj.enabled = enabled
     except ValueError:
-        if borg.debug.enabled:
-            print(f'Object with ID {obj_id} has already been deleted')
+        if borg.debug:
+            print(f"Object with ID {obj_id} has already been deleted")

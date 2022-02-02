@@ -1,6 +1,10 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.1.0'
 
+#  SPDX-FileCopyrightText: 2022 easyCore contributors  <core@easyscience.software>
+#  SPDX-License-Identifier: BSD-3-Clause
+#  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+
 from typing import List
 
 import pytest
@@ -297,7 +301,7 @@ def test_baseCollection_dir(cls):
     expected = {'generate_bindings', 'insert', 'name', 'reverse', 'append', 'to_data_dict', 'as_dict',
                 'REDIRECT', 'interface', 'clear', 'extend', 'pop', 'count', 'remove', 'user_data', 'index',
                 'constraints', 'to_json', 'from_dict', 'get_parameters', 'unsafe_hash', 'get_fit_parameters',
-                'switch_interface'}
+                'switch_interface', 'data'}
     assert not d.difference(expected)
 
 

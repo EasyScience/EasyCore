@@ -2,13 +2,14 @@ __author__ = 'github.com/wardsimon'
 __version__ = '0.1.0'
 
 import json
-from typing import Callable, List, TypeVar, Type, Union
+from typing import Callable, List, TypeVar
 from easyCore.Utils.json import MSONable
 
 import numpy as np
 
 from easyCore import borg
-from easyCore.Objects.Base import Parameter, BaseObj, LoggedProperty
+from easyCore.Objects.Base import Parameter, BaseObj
+# from easyCore.Objects.Base import LoggedProperty
 from easyCore.Objects.Inferface import InterfaceFactoryTemplate
 from easyCore.Fitting.Fitting import Fitter
 
@@ -25,25 +26,7 @@ class Calculator1:
     """
     Generic calculator in the style of crysPy
     """
-
-    class calcLine:
-        def __init__(self, m: float = 1, c: float = 0):
-            self.m = m
-            self.c = c
-
-        def __call__(self, *args, **kwargs):
-            return self.m * args[0] + self.c
-
-    class calcCurve:
-        def __init__(self, A=0, p=0, x_shift=0):
-            self.A = A
-            self.p = p
-            self.x_shift = x_shift
-
-        def __call__(self, *args, **kwargs):
-            return self.A * np.sin((2 * np.pi / self.p) * (x + self.x_shift))
-
-    def __init__(self):
+    def __init__(self, m: float = 1, c: float = 0):
         """
         Create a calculator object with m and c
 
@@ -52,22 +35,8 @@ class Calculator1:
         :param c: intercept
         :type c: float
         """
-        self._line = []
-        self._curve = []
-
-    def add_line(self, m: float = 1, c: float = 0):
-        self._line.append(self.calcLine(m, c))
-
-    def add_curve(self, A=0, p=0, x_shift=0):
-        self._curve.append(self.calcCurve(A, p, x_shift))
-
-    @property
-    def lines(self):
-        return self._line
-
-    @property
-    def curves(self):
-        return self._curve
+        self.m = m
+        self.c = c
 
     def calculate(self, x_array: np.ndarray) -> np.ndarray:
         """
@@ -78,12 +47,36 @@ class Calculator1:
         :return: points calculated at `x`
         :rtype: np.ndarray
         """
-        y = np.zeros_like(x_array)
-        for line in self._line:
-            y += line(x_array)
-        for curve in self._curve:
-            y += curve(x_array)
-        return y
+        return self.m * x_array + self.c
+
+
+class Calculator2:
+    """
+    Isolated calculator. This calculator can't have values set, it can
+    only load/save data and calculate from it. i.e in the style of crysfml
+    """
+    def __init__(self):
+        """
+        """
+        self._data = {'m': 0,
+                      'c': 0}
+
+    def calculate(self, x_array: np.ndarray) -> np.ndarray:
+        """
+        For a given x calculate the corresponding y
+
+        :param x_array: array of data points to be calculated
+        :type x_array: np.ndarray
+        :return: points calculated at `x`
+        :rtype: np.ndarray
+        """
+        return self._data['m'] * x_array + self._data['c']
+
+    def export_data(self) -> str:
+        return json.dumps(self._data)
+
+    def import_data(self, input_str: str):
+        self._data = json.loads(input_str)
 
 
 class InterfaceTemplate(MSONable, metaclass=ABCMeta):
@@ -109,11 +102,7 @@ class InterfaceTemplate(MSONable, metaclass=ABCMeta):
             cls._interfaces.append(cls)
 
     @abstractmethod
-    def create_curve(self, A, p, x_shift):
-        pass
-
-    @abstractmethod
-    def get_curve_value(self, curve, par, value_label: str) -> float:
+    def get_value(self, value_label: str) -> float:
         """
         Method to get a value from the calculator
 
@@ -125,7 +114,7 @@ class InterfaceTemplate(MSONable, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def set_curve_value(self, curve, par, value_label: str, value: float):
+    def set_value(self, value_label: str, value: float):
         """
         Method to set a value from the calculator
 
@@ -155,7 +144,6 @@ class Interface1(InterfaceTemplate):
     """
     A simple example interface using Calculator1
     """
-
     def __init__(self):
         # This interface will use calculator1
         self.calculator = Calculator1()
@@ -197,34 +185,6 @@ class Interface1(InterfaceTemplate):
         """
         return self.calculator.calculate(x_array)
 
-class Calculator2:
-    """
-    Isolated calculator. This calculator can't have values set, it can
-    only load/save data and calculate from it. i.e in the style of crysfml
-    """
-    def __init__(self):
-        """
-        """
-        self._data = {'m': 0,
-                      'c': 0}
-
-    def calculate(self, x_array: np.ndarray) -> np.ndarray:
-        """
-        For a given x calculate the corresponding y
-
-        :param x_array: array of data points to be calculated
-        :type x_array: np.ndarray
-        :return: points calculated at `x`
-        :rtype: np.ndarray
-        """
-        return self._data['m'] * x_array + self._data['c']
-
-    def export_data(self) -> str:
-        return json.dumps(self._data)
-
-    def import_data(self, input_str: str):
-        self._data = json.loads(input_str)
-
 
 class Interface2(InterfaceTemplate):
     """
@@ -232,7 +192,6 @@ class Interface2(InterfaceTemplate):
     transfer it to the calculator (get and calculate) and import data
     from the calculator (set)
     """
-
     def __init__(self):
         """
         Set up a calculator and a local dict
@@ -307,10 +266,8 @@ class InterfaceFactory(InterfaceFactoryTemplate):
         :return: function to get key
         :rtype: Callable
         """
-
         def inner(obj):
             obj().get_value(key)
-
         return lambda obj: inner(obj)
 
     @staticmethod
@@ -325,10 +282,8 @@ class InterfaceFactory(InterfaceFactoryTemplate):
         :return: function to set key
         :rtype: Callable
         """
-
         def inner(value):
             obj().set_value(key, value)
-
         return inner
 
 
@@ -341,7 +296,7 @@ class Line(BaseObj):
 
     def __init__(self, interface_factory: InterfaceFactory = None):
         """
-        Create a line and add an interface if requested
+        Create a line and add an interface if requested.
 
         :param interface_factory: interface controller object
         :type interface_factory: InterfaceFactory
@@ -357,92 +312,51 @@ class Line(BaseObj):
             for parameter in self.get_fit_parameters():
                 name = parameter.name
                 self.set_binding(name, self.interface.generate_bindings)
+
+    @property
+    def gradient(self):
+        # if self.interface:
+        #     return self.interface().get_value('m')
+        # else:
+        return self.m.raw_value
+
+    @property
+    def intercept(self):
+        # if self.interface:
+        #     return self.interface().get_value('c')
+        # else:
+        return self.c.raw_value
 
     def __repr__(self):
         return f'Line: m={self.m}, c={self.c}'
 
 
-class Curve(BaseObj):
-    """
-    Simple descriptor of a line.
-    """
-    _defaults = [Parameter('A', 1.0),
-                 Parameter('p', np.pi),
-                 Parameter('x_shift', 0.0)
-                 ]
-
-    def __init__(self, interface_factory: InterfaceFactory = None):
-        """
-        Create a line and add an interface if requested
-
-        :param interface_factory: interface controller object
-        :type interface_factory: InterfaceFactory
-        """
-        self.interface = interface_factory
-        super().__init__(self.__class__.__name__,
-                         *self._defaults)
-        self._set_interface()
-
-    def _set_interface(self):
-        if self.interface:
-            # If an interface is given, generate bindings
-            for parameter in self.get_fit_parameters():
-                name = parameter.name
-                self.set_binding(name, self.interface.generate_bindings)
-
-    def __repr__(self):
-        return f'Curve: A={self.A}, p={self.p}, x_shift={self.x_shift}'
-
-
-class Model(BaseObj):
-    """
-    Simple descriptor of a line.
-    """
-    _defaults = [Line,
-                 Curve]
-
-    def __init__(self, interface_factory: InterfaceFactory = None):
-        """
-        Create a line and add an interface if requested
-
-        :param interface_factory: interface controller object
-        :type interface_factory: InterfaceFactory
-        """
-        self.interface = interface_factory
-        super().__init__(self.__class__.__name__,
-                         *[default(interface) for default in self._defaults])
-
-    def __repr__(self):
-        this_str = 'Hybrid Model:\n'
-        for name, item in self._kwargs.items():
-            this_str += f'{name}: '
-            for par in item._defaults:
-                this_str += f'{par.name} = {par.value}, '
-            this_str = this_str[:-2] + '\n'
-        return this_str
-
+borg.debug = True
 
 interface = InterfaceFactory()
-hybrid = Model(interface_factory=interface)
-f = Fitter(hybrid, interface.fit_func)
-print(hybrid)
+line = Line(interface_factory=interface)
+f = Fitter(line, interface.fit_func)
 
 # y = 2x -1
-x = np.array([1, 2, 3])
-y = 2 * x - 1
+x = np.array([1, 2, 3], dtype=np.float64)
+y = 2*x - 1
 
 f_res = f.fit(x, y)
 
 print('\n######### Interface 1 #########\n')
 print(f_res)
-print(hybrid)
+print(line)
+
+a = line.c
 
 # Now lets change fitting engine
 f.switch_engine('bumps')
 # Reset the values so we don't cheat
-hybrid.m = 1
-hybrid.c = 0
-f_res = f.fit(x, y, weights=0.1 * np.ones_like(x))
+line.m = 1
+line.c = 0
+f_res = f.fit(x, y, weights=0.1*np.ones_like(x))
 print('\n######### bumps fitting #########\n')
 print(f_res)
-print(hybrid)
+print(line)
+
+

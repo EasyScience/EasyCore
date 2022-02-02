@@ -1,15 +1,23 @@
-#  SPDX-FileCopyrightText: 2021 easyCore contributors  <core@easyscience.software>
+#  SPDX-FileCopyrightText: 2022 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
-#  © 2021 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+#  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
-__author__ = 'github.com/wardsimon'
-__version__ = '0.1.0'
+__author__ = "github.com/wardsimon"
+__version__ = "0.1.0"
 
 import inspect
 from typing import List
 
-from easyCore.Fitting.fitting_template import noneType, Union, Callable, \
-    FittingTemplate, np, FitResults, NameConverter, FitError
+from easyCore.Fitting.fitting_template import (
+    noneType,
+    Union,
+    Callable,
+    FittingTemplate,
+    np,
+    FitResults,
+    NameConverter,
+    FitError,
+)
 
 # Import bumps specific objects
 from bumps.names import Curve, FitProblem
@@ -24,7 +32,7 @@ class bumps(FittingTemplate):  # noqa: S101
     """
 
     property_type = bumpsParameter
-    name = 'bumps'
+    name = "bumps"
 
     def __init__(self, obj, fit_function: Callable):
         """
@@ -41,7 +49,9 @@ class bumps(FittingTemplate):  # noqa: S101
         self._cached_pars_order = ()
         self.p_0 = {}
 
-    def make_model(self, pars: Union[noneType, List[bumpsParameter]] = None) -> Callable:
+    def make_model(
+        self, pars: Union[noneType, List[bumpsParameter]] = None
+    ) -> Callable:
         """
         Generate a bumps model from the supplied `fit_function` and parameters in the base object.
         Note that this makes a callable as it needs to be initialized with *x*, *y*, *weights*
@@ -56,11 +66,13 @@ class bumps(FittingTemplate):  # noqa: S101
                 par = {}
                 if not pars:
                     for name, item in obj._cached_pars.items():
-                        par['p' + str(name)] = obj.convert_to_par_object(item)
+                        par["p" + str(name)] = obj.convert_to_par_object(item)
                 else:
                     for item in pars:
-                        par['p' + str(NameConverter().get_key(item))] = obj.convert_to_par_object(item)
-                return Curve(fit_func, x, y, weights, **par)
+                        par[
+                            "p" + str(NameConverter().get_key(item))
+                        ] = obj.convert_to_par_object(item)
+                return Curve(fit_func, x, y, dy=weights, **par)
 
             return make_func
 
@@ -113,21 +125,37 @@ class bumps(FittingTemplate):  # noqa: S101
         # Where we need to be generic. Note that this won't hold for much outside of this scope.
 
         self._cached_pars_order = tuple(self._cached_pars.keys())
-        params = [inspect.Parameter('x',
-                                    inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                                    annotation=inspect._empty), *[inspect.Parameter('p' + str(name),
-                                                                                    inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                                                                                    annotation=inspect._empty,
-                                                                                    default=self._cached_pars[
-                                                                                        name].raw_value)
-                                                                  for name in self._cached_pars_order]]
+        params = [
+            inspect.Parameter(
+                "x", inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=inspect._empty
+            ),
+            *[
+                inspect.Parameter(
+                    "p" + str(name),
+                    inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                    annotation=inspect._empty,
+                    default=self._cached_pars[name].raw_value,
+                )
+                for name in self._cached_pars_order
+            ],
+        ]
         # Sign the function
         fit_function.__signature__ = inspect.Signature(params)
         self._fit_function = fit_function
         return fit_function
 
-    def fit(self, x: np.ndarray, y: np.ndarray, weights: Union[np.ndarray, noneType] = None,
-            model=None, parameters=None, method: str = None, xtol: float = 1e-6, ftol: float = 1e-8, **kwargs) -> FitResults:
+    def fit(
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        weights: Union[np.ndarray, noneType] = None,
+        model=None,
+        parameters=None,
+        method: str = None,
+        minimizer_kwargs: dict = None,
+        engine_kwargs: dict = None,
+        **kwargs,
+    ) -> FitResults:
         """
         Perform a fit using the lmfit engine.
 
@@ -150,22 +178,37 @@ class bumps(FittingTemplate):  # noqa: S101
 
         default_method = {}
         if method is not None and method in self.available_methods():
-            default_method['method'] = method
+            default_method["method"] = method
 
         if weights is None:
             weights = np.sqrt(np.abs(y))
+
+        if engine_kwargs is None:
+            engine_kwargs = {}
+
+        if minimizer_kwargs is None:
+            minimizer_kwargs = {}
+        # else:
+        #     minimizer_kwargs = {"fit_kws": minimizer_kwargs}
+        minimizer_kwargs.update(engine_kwargs)
 
         if model is None:
             model = self.make_model(pars=parameters)
             model = model(x, y, weights)
         self._cached_model = model
-        self.p_0 = {f'p{key}': self._cached_pars[key].raw_value for key in self._cached_pars.keys()}
+        self.p_0 = {
+            f"p{key}": self._cached_pars[key].raw_value
+            for key in self._cached_pars.keys()
+        }
         problem = FitProblem(model)
         # Why do we do this? Because a fitting template has to have borg instantiated outside pre-runtime
         from easyCore import borg
-        borg.stack.beginMacro('Fitting routine')
+
+        borg.stack.beginMacro("Fitting routine")
         try:
-            model_results = bumps_fit(problem, **kwargs)
+            model_results = bumps_fit(
+                problem, **default_method, **minimizer_kwargs, **kwargs
+            )
             self._set_parameter_fit_result(model_results)
             results = self._gen_fit_results(model_results)
         except Exception as e:
@@ -174,7 +217,9 @@ class bumps(FittingTemplate):  # noqa: S101
             borg.stack.endMacro()
         return results
 
-    def convert_to_pars_obj(self, par_list: Union[list, noneType] = None) -> List[bumpsParameter]:
+    def convert_to_pars_obj(
+        self, par_list: Union[list, noneType] = None
+    ) -> List[bumpsParameter]:
         """
         Create a container with the `Parameters` converted from the base object.
 
@@ -186,7 +231,7 @@ class bumps(FittingTemplate):  # noqa: S101
         if par_list is None:
             # Assume that we have a BaseObj for which we can obtain a list
             par_list = self._object.get_fit_parameters()
-        pars_obj = ([self.__class__.convert_to_par_object(obj) for obj in par_list])
+        pars_obj = [self.__class__.convert_to_par_object(obj) for obj in par_list]
         return pars_obj
 
     # For some reason I have to double staticmethod :-/
@@ -198,9 +243,12 @@ class bumps(FittingTemplate):  # noqa: S101
         :return: bumps Parameter compatible object.
         :rtype: bumpsParameter
         """
-        return bumpsParameter(name='p' + str(NameConverter().get_key(obj)),
-                              value=obj.raw_value, bounds=[obj.min, obj.max],
-                              fixed=obj.fixed)
+        return bumpsParameter(
+            name="p" + str(NameConverter().get_key(obj)),
+            value=obj.raw_value,
+            bounds=[obj.min, obj.max],
+            fixed=obj.fixed,
+        )
 
     def _set_parameter_fit_result(self, fit_result):
         """
@@ -245,6 +293,7 @@ class bumps(FittingTemplate):  # noqa: S101
 
         results.fitting_engine = self.__class__
         results.fit_args = None
+        results.engine_result = fit_results
         # results.check_sanity()
         return results
 

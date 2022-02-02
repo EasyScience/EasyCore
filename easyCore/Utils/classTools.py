@@ -1,6 +1,6 @@
-#  SPDX-FileCopyrightText: 2021 easyCore contributors  <core@easyscience.software>
+#  SPDX-FileCopyrightText: 2022 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
-#  © 2021 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+#  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
 __author__ = 'github.com/wardsimon'
 __version__ = '0.1.0'
@@ -14,7 +14,7 @@ from easyCore.Utils.Hugger.Property import LoggedProperty
 def addLoggedProp(inst, name, *args, **kwargs):
     cls = type(inst)
     if not hasattr(cls, '__perinstance'):
-        cls = type(cls.__name__, (cls,), {})
+        cls = type(cls.__name__, (cls,), {'__module__': inst.__module__})
         cls.__perinstance = True
         inst.__old_class__ = inst.__class__
         inst.__class__ = cls
@@ -24,17 +24,18 @@ def addLoggedProp(inst, name, *args, **kwargs):
 def addProp(inst, name, *args, **kwargs):
     cls = type(inst)
     if not hasattr(cls, '__perinstance'):
-        cls = type(cls.__name__, (cls,), {})
+        cls = type(cls.__name__, (cls,), {'__module__': __name__})
         cls.__perinstance = True
         inst.__old_class__ = inst.__class__
         inst.__class__ = cls
+
     setattr(cls, name, property(*args, **kwargs))
 
 
 def removeProp(inst, name):
     cls = type(inst)
     if not hasattr(cls, '__perinstance'):
-        cls = type(cls.__name__, (cls,), {})
+        cls = type(cls.__name__, (cls,), {'__module__': __name__})
         cls.__perinstance = True
         inst.__old_class__ = inst.__class__
         inst.__class__ = cls

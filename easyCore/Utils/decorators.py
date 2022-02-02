@@ -1,11 +1,11 @@
-#  SPDX-FileCopyrightText: 2021 easyCore contributors  <core@easyscience.software>
+#  SPDX-FileCopyrightText: 2022 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
-#  © 2021 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+#  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
-__author__ = 'github.com/wardsimon'
-__version__ = '0.1.0'
+__author__ = "github.com/wardsimon"
+__version__ = "0.1.0"
 
-import collections
+import collections.abc
 import functools
 
 from time import time
@@ -25,7 +25,7 @@ class memoized:
         self.cache = {}
 
     def __call__(self, *args):
-        if not isinstance(args, collections.Hashable):
+        if not isinstance(args, collections.abc.Hashable):
             # uncacheable. a list, for instance.
             # better to not cache than blow up.
             return self.func(*args)
@@ -51,11 +51,12 @@ def counted(func):
     :return: Results from function call
     """
 
+    @functools.wraps(func)
     def wrapped(*args, **kwargs):
-        wrapped.calls += 1
+        wrapped.n_calls += 1
         return func(*args, **kwargs)
 
-    wrapped.calls = 0
+    wrapped.n_calls = 0
     return wrapped
 
 
@@ -65,8 +66,8 @@ def time_it(func):
     :param func: function to be timed
     :return: callable function with timer
     """
-    name = func.__module__ + '.' + func.__name__
-    time_logger = borg.log.getLogger('timer.' + name)
+    name = func.__module__ + "." + func.__name__
+    time_logger = borg.log.getLogger("timer." + name)
 
     @functools.wraps(func)
     def _time_it(*args, **kwargs):
@@ -75,5 +76,8 @@ def time_it(func):
             return func(*args, **kwargs)
         finally:
             end_ = int(round(time() * 1000)) - start
-            time_logger.debug(f"\033[1;34;49mExecution time: {end_ if end_ > 0 else 0} ms\033[0m")
+            time_logger.debug(
+                f"\033[1;34;49mExecution time: {end_ if end_ > 0 else 0} ms\033[0m"
+            )
+
     return _time_it

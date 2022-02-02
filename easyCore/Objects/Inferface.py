@@ -1,19 +1,22 @@
-__author__ = 'github.com/wardsimon'
-__version__ = '0.1.0'
+from __future__ import annotations
 
-
-#  SPDX-FileCopyrightText: 2021 easyCore contributors  <core@easyscience.software>
+#  SPDX-FileCopyrightText: 2022 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
-#  © 2021 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+#  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+
+__author__ = "github.com/wardsimon"
+__version__ = "0.1.0"
 
 from abc import ABCMeta, abstractmethod
-from typing import TypeVar, List, NamedTuple, Callable
+from typing import TypeVar, List, NamedTuple, Callable, TYPE_CHECKING, Optional, Type
 
 from easyCore import np
 
 
 _C = TypeVar("_C", bound=ABCMeta)
 _M = TypeVar("_M")
+if TYPE_CHECKING:
+    from easyCore.Fitting.Fitting import Fitter
 
 
 class InterfaceFactoryTemplate:
@@ -21,13 +24,13 @@ class InterfaceFactoryTemplate:
     This class allows for the creation and transference of interfaces.
     """
 
-    def __init__(self, interface_list: List[_C]):
+    def __init__(self, interface_list: List[_C], *args, **kwargs):
         self._interfaces: List[_C] = interface_list
         self._current_interface: _C
         self.__interface_obj: _M = None
-        self.create()
+        self.create(*args, **kwargs)
 
-    def create(self, interface_name: str = None):
+    def create(self, *args, **kwargs):
         """
         Create an interface to a calculator from those initialized. Interfaces can be selected
         by `interface_name` where `interface_name` is one of `obj.available_interfaces`. This
@@ -38,35 +41,50 @@ class InterfaceFactoryTemplate:
         :return: None
         :rtype: noneType
         """
-        if interface_name is None:
+        if kwargs.get("interface_name", None) is None:
             if len(self._interfaces) > 0:
                 # Fallback name
                 interface_name = self.return_name(self._interfaces[0])
             else:
                 raise NotImplementedError
-
+        else:
+            interface_name = kwargs.pop("interface_name")
         interfaces = self.available_interfaces
         if interface_name in interfaces:
             self._current_interface = self._interfaces[interfaces.index(interface_name)]
-        self.__interface_obj = self._current_interface()
+        self.__interface_obj = self._current_interface(*args, **kwargs)
 
-    def switch(self, new_interface: str):
+    def switch(self, new_interface: str, fitter: Optional[Type[Fitter]] = None):
         """
         Changes the current interface to a new interface. The current interface is destroyed and
         all MSONable parameters carried over to the new interface. i.e. pick up where you left off.
 
         :param new_interface: name of new interface to be created
         :type new_interface: str
+        :param fitter: Fitting interface which contains the fitting object which may have bindings which will be updated.
+        :type fitter: easyCore.Fitting.Fitting.Fitter
         :return: None
         :rtype: noneType
         """
-        serialized = self.__interface_obj.as_dict()
         interfaces = self.available_interfaces
         if new_interface in interfaces:
             self._current_interface = self._interfaces[interfaces.index(new_interface)]
-            self.__interface_obj = self._current_interface.from_dict(serialized)
+            self.__interface_obj = self._current_interface()
         else:
-            raise AttributeError
+            raise AttributeError("The user supplied interface is not valid.")
+        if fitter is not None:
+            if hasattr(fitter, "_fit_object"):
+                obj = getattr(fitter, "_fit_object")
+                try:
+                    if hasattr(obj, "update_bindings"):
+                        obj.update_bindings()
+                except Exception as e:
+                    print(f"Unable to auto generate bindings.\n{e}")
+            elif hasattr(fitter, "generate_bindings"):
+                try:
+                    fitter.generate_bindings()
+                except Exception as e:
+                    print(f"Unable to auto generate bindings.\n{e}")
 
     @property
     def available_interfaces(self) -> List[str]:
@@ -99,7 +117,9 @@ class InterfaceFactoryTemplate:
         return self.return_name(self._current_interface)
 
     @property
-    def fit_func(self) -> Callable: # , x_array: np.ndarray, *args, **kwargs) -> np.ndarray:
+    def fit_func(
+        self,
+    ) -> Callable:  # , x_array: np.ndarray, *args, **kwargs) -> np.ndarray:
         """
         Pass through to the underlying interfaces fitting function.
 
@@ -111,8 +131,11 @@ class InterfaceFactoryTemplate:
         :type kwargs: Any
         :return: points calculated at positional values `x`
         :rtype: np.ndarray
-        # """
-        return self.__interface_obj.fit_func
+        #"""
+
+        def __fit_func(*args, **kwargs):
+            return self.__interface_obj.fit_func(*args, **kwargs)
+        return __fit_func
 
     def generate_bindings(self, model, *args, ifun=None, **kwargs):
         """
@@ -137,14 +160,30 @@ class InterfaceFactoryTemplate:
     def __call__(self, *args, **kwargs) -> _M:
         return self.__interface_obj
 
+    def __reduce__(self):
+        return (
+            self.__state_restore__,
+            (
+                self.__class__,
+                self.current_interface_name,
+            ),
+        )
+
+    @staticmethod
+    def __state_restore__(cls, interface_str):
+        obj = cls()
+        if interface_str in obj.available_interfaces:
+            obj.switch(interface_str)
+        return obj
+
     @staticmethod
     def return_name(this_interface) -> str:
         """
         Return an interfaces name
         """
         interface_name = this_interface.__name__
-        if hasattr(this_interface, 'name'):
-            interface_name = getattr(this_interface, 'name')
+        if hasattr(this_interface, "name"):
+            interface_name = getattr(this_interface, "name")
         return interface_name
 
 
@@ -155,8 +194,10 @@ class ItemContainer(NamedTuple):
     setter_fn: Callable
 
     def make_prop(self, parameter_name) -> property:
-        return property(fget=self.__make_getter(parameter_name),
-                        fset=self.__make_setter(parameter_name))
+        return property(
+            fget=self.__make_getter(parameter_name),
+            fset=self.__make_setter(parameter_name),
+        )
 
     def convert_key(self, lookup_key: str) -> str:
         key = self.name_conversion.get(lookup_key, None)
@@ -166,10 +207,12 @@ class ItemContainer(NamedTuple):
         def get_value():
             inner_key = self.name_conversion.get(get_name, None)
             return self.getter_fn(self.link_name, inner_key)
+
         return get_value
 
     def __make_setter(self, get_name: str) -> Callable:
         def set_value(value):
             inner_key = self.name_conversion.get(get_name, None)
             self.setter_fn(self.link_name, **{inner_key: value})
+
         return set_value

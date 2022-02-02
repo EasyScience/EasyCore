@@ -1,9 +1,9 @@
 __author__ = "github.com/wardsimon"
 __version__ = "0.0.1"
 
-#  SPDX-FileCopyrightText: 2021 easyCore contributors  <core@easyscience.software>
+#  SPDX-FileCopyrightText: 2022 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
-#  © 2021 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+#  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
 from abc import ABCMeta
 from types import FunctionType
@@ -21,6 +21,7 @@ class Fitter:
     """
     Wrapper to the fitting engines
     """
+
     _borg = borg
 
     def __init__(self, fit_object: object = None, fit_function: Callable = None):
@@ -42,9 +43,11 @@ class Fitter:
         self._is_initialized: bool = False
         self.create()
 
-        fit_methods = [x for x, y in Fitting.FittingTemplate.__dict__.items()
-                       if isinstance(y, FunctionType)
-                       and not x.startswith('_')]
+        fit_methods = [
+            x
+            for x, y in Fitting.FittingTemplate.__dict__.items()
+            if isinstance(y, FunctionType) and not x.startswith("_")
+        ]
         for method_name in fit_methods:
             setattr(self, method_name, self.__pass_through_generator(method_name))
 
@@ -68,7 +71,7 @@ class Fitter:
     def switch_engine(self, engine_name: str):
         # There isn't any state to carry over
         if not self._is_initialized:
-            print('The fitting engine must first be initialized')
+            print("The fitting engine must first be initialized")
             raise ReferenceError
         constraints = self.__engine_obj._constraints
         self.create(engine_name)
@@ -84,7 +87,7 @@ class Fitter:
         :rtype: List[str]
         """
         if Fitting.engines is None:
-            print('Fitting not instantiated yet')
+            print("Fitting not instantiated yet")
             raise ImportError
         return [engine.name for engine in Fitting.engines]
 
@@ -141,7 +144,7 @@ class Fitter:
 
         def inner(*args, **kwargs):
             if not obj.can_fit:
-                raise ReferenceError('The fitting engine must first be initialized')
+                raise ReferenceError("The fitting engine must first be initialized")
             func = getattr(obj.engine, name, None)
             if func is None:
                 raise ValueError

@@ -26,7 +26,7 @@ d.easyCore.add_coordinate('y', x + np.pi)
 d.easyCore.add_variable('z', ['x', 'y'], np.sin(x).reshape((-1, 1))*np.cos(x).reshape((1, -1)) + (0.5 - np.random.random(size=(int(nx), int(nx)))))
 
 def func(x, *args, **kwargs):
-    return np.sin(x[0, :]) * np.cos(x[1, :])
+    return np.sin(x[:, 0]) * np.cos(x[:, 1])
 
 bdims, f = d['z'].easyCore.fit_prep(func)
 d['x_broadcast'], d['y_broadcast'] = bdims

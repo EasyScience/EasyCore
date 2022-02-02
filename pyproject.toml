@@ -4,16 +4,33 @@
 requires = ["poetry>=1.0"]
 build-backend = "poetry.masonry.api"
 
+[tool.black]
+line-length = 88
+target-version = ['py37']
+include = '\.pyi?$'
+extend-exclude = '''
+# A regex preceded with ^/ will apply only to files and directories
+# in the root of the project.
+^/foo.py  # exclude a file named foo.py in the root of the project (in addition to the defaults)
+'''
+
+[tool.coverage.run]
+source = ['easyCore']
+
+[tool.github.info]
+organization = 'easyScience'
+repo = 'easyCore'
+
 [tool.poetry]
 name = "easyScienceCore"
-version = "0.1.0"
+version = "0.2.0"
 description = "Generic logic for easyScience libraries"
-license = "GPL-3.0"
+license = "BSD-3-Clause"
 authors = ["Simon Ward"]
 readme = "README.md"
 homepage = "https://github.com/easyScience/easyCore"
 documentation = "https://github.com/easyScience/easyCore"
-classifiers=[
+classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",  # Define that your audience are developers
     "Topic :: Scientific/Engineering :: Physics",
@@ -26,33 +43,26 @@ packages = [ { include = "easyCore" } ]
 [tool.poetry.dependencies]
 python = "^3.7" # "^3.8" generates error when installing PySide2 in easyAppGui
 numpy = "^1.19"
-pint = "^0.16"
+pint = ">=0.17,<0.19"
 uncertainties = "^3.1"
 lmfit = "^1.0"
 bumps = "^0.8"
 asteval = "^0.9.23"
 DFO-LS = {version = "^1.2", optional = true}
-xarray = "^0.16"
-#pint-xarray = "^0.2"
+xarray = ">=0.16,<0.21"
+# scipp = "^0.11"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.2"
-pytest-cov = "^2.11.1"
+pytest-cov = "^3.0.0"
 codecov = "^2.1.11"
 matplotlib = "^3.2.2"
-doc8 = "^0.8.0"
-readme-renderer = "^17.4"
+doc8 = "^0.10.1"
+readme-renderer = "^32.0"
 Sphinx = "^4.0.2"
-sphinx-rtd-theme = "^0.5.2"
+sphinx-rtd-theme = "^1.0.0"
 sphinx-autodoc-typehints = "^1.12.0"
-sphinx-gallery = "^0.9.0"
-
-[tool.github.info]
-organization = 'easyScience'
-repo = 'easyCore'
-
-[tool.coverage.run]
-source = ['easyCore']
+sphinx-gallery = "^0.10.0"
 
 [tool.dephell.main]
 from = {format = "poetry", path = "pyproject.toml"}
@@ -63,12 +73,14 @@ envs = ["main"]
 legacy_tox_ini = """
 [tox]
 isolated_build = True
-envlist = py{37,38,39}
+envlist = py{37,38,39,310,311}
 [gh-actions]
 python =
     3.7: py37
     3.8: py38
     3.9: py39
+    3.10: py310
+    3.11.0-alpha.1: py311
 [gh-actions:env]
 PLATFORM =
     ubuntu-latest: linux
