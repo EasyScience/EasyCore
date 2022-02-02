@@ -849,6 +849,8 @@ class Parameter(Descriptor):
         # Enable the parameter if needed
         if not self.enabled:
             self.enabled = True
+        # This parameter is now not fixed.
+        self.fixed = False
         # Close the macro if we opened it
         if close_macro:
             self._borg.stack.endMacro()

@@ -239,7 +239,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         return lmParameter(
             "p" + str(NameConverter().get_key(obj)),
             value=obj.raw_value,
-            vary=~obj.fixed,
+            vary=not obj.fixed,
             min=obj.min,
             max=obj.max,
             expr=None,
