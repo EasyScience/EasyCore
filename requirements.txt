@@ -5,7 +5,7 @@ lmfit==1.0.3; python_version >= "3.6"
 numpy==1.21.1; python_full_version >= "3.6.1" and python_version >= "3.7" or python_version >= "3.7.0" and python_version < "4.0.0"
 numpy==1.22.1; python_version >= "3.8" and python_version < "4.0"
 pint==0.18; python_version >= "3.7"
-scipp==0.10.1; python_version >= "3.7"
+scipp==0.11.1; python_version >= "3.7"
 scipy==1.7.3; python_version >= "3.7"
 typing-extensions==4.0.1; python_version < "3.8" and python_version >= "3.7"
 uncertainties==3.1.6
