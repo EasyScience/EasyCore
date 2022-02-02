@@ -577,14 +577,18 @@ def test_item_boolean_value(instance):
 
 @pytest.mark.parametrize("value", (True, False))
 def test_parameter_bounds(value):
-    p = Parameter("test", 1, enabled=value)
-    assert p.min == -np.inf
-    assert p.max == np.inf
-    assert p.bounds == (-np.inf, np.inf)
+    for fixed in (True, False):
+        p = Parameter("test", 1, enabled=value, fixed=fixed)
+        assert p.min == -np.inf
+        assert p.max == np.inf
+        assert p.fixed == fixed
+        assert p.bounds == (-np.inf, np.inf)
 
-    p.bounds = (0, 2)
-    assert p.min == 0
-    assert p.max == 2
-    assert p.bounds == (0, 2)
-    assert p.enabled is True
+        p.bounds = (0, 2)
+        assert p.min == 0
+        assert p.max == 2
+        assert p.bounds == (0, 2)
+        assert p.enabled is True
+        assert p.fixed is False
+
 
