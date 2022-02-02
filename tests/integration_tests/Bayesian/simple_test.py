@@ -2,13 +2,12 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
-__author__ = 'github.com/wardsimon'
-__version__ = '0.0.1'
+__author__ = "github.com/wardsimon"
+__version__ = "0.0.1"
 
 from easyCore import np
-from easyCore.BayesianAnalysis.Models import Line
-from easyCore.BayesianAnalysis.Likelihoods import LogLikeWithGrad, LogLike
-from easyCore.BayesianAnalysis.ParameterDistribution import Sampler
+from easyCore.models.polynomial import Line
+from easyCore.optimization.bayesian.parameterdistribution import Sampler
 from matplotlib import pyplot as plt
 import arviz as az
 
@@ -29,19 +28,20 @@ l.c.min = -10
 l.c.max = 10
 
 # generate some 'real' data
-truemodel = l.func(x_data)
+truemodel = l(x_data)
 # make data
 np.random.seed(716742)  # set random seed, so the data is reproducible each time
 y_data = sigma * np.random.randn(N) + truemodel
 
+
 def loglike(y, sigma, model):
-    logl = -.5 * np.sum(((y - model)/sigma)**2 + np.log(2*np.pi*sigma**2))
+    logl = -0.5 * np.sum(((y - model) / sigma) ** 2 + np.log(2 * np.pi * sigma ** 2))
     return logl
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # NO GRADIENT
-    # s = Sampler(l, 'func', use_quickset=True)
+    s = Sampler(l, "__call__", use_quickset=True)
     # # s.distribution_function = LogLikeWithGrad(s.model, logistic=loglike)
     # s.distribution_function = LogLike(s.model, logistic=loglike)
     #
@@ -50,7 +50,8 @@ if __name__ == '__main__':
     # s.distribution_function = LogLikeWithGrad(s.model, logistic=loglike)
 
     # NORMAL
-    s = Sampler(l, 'func', use_quickset=True, sample_type="NORMAL")
+    # s = Sampler(l, "__call__", use_quickset=True, sample_type="NORMAL")
+
     trace = s.sample(x_data, y_data, sigma, n_chains=4, n_samples=3000, tune=1000)
     s = az.summary(trace)
     print(s)
@@ -58,7 +59,12 @@ if __name__ == '__main__':
     plt.show()
 
     # plot the posterior predictive
-    plt.plot(x_data, y_data, 'o', label='data')
-    plt.plot(x_data, truemodel, 'k', label='true model')
-    plt.plot(x_data, l.func(x_data, s['mean']['c'], s['mean']['m']), 'r', label='posterior predictive')
+    plt.plot(x_data, y_data, "o", label="data")
+    plt.plot(x_data, truemodel, "k", label="true model")
+    plt.plot(
+        x_data,
+        l.func(x_data, s["mean"]["c"], s["mean"]["m"]),
+        "r",
+        label="posterior predictive",
+    )
     plt.show()

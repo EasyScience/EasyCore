@@ -2,40 +2,15 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
-__author__ = 'github.com/wardsimon'
-__version__ = '0.0.1'
+__author__ = "github.com/wardsimon"
+__version__ = "0.0.1"
 
 import numpy as np
 import pymc3 as pm
 import theano
 import theano.tensor as tt
-from .Likelihoods import LogLikeWithGrad, _LogLikeWithGrad
+from .likelihoods import LogLikeWithGrad, _LogLikeWithGrad
 from easyCore.Utils.classTools import NameConverter
-
-
-# class Objective:
-#     def __init__(self, easy_model, fit_function, x, y, sigma):
-#         self.model = easy_model
-#         self._wrapper = None
-#         self._fit_function = None
-#         self.fit_function = fit_function
-#         self.data = {'x': x, 'y': y, 'sigma': sigma}
-#
-#     @property
-#     def fit_function(self):
-#         return self._fit_function
-#
-#     @fit_function.setter
-#     def fit_function(self, value):
-#         self._fit_function = getattr(self.model, value)
-#         self._wrapper = Wrapper(self.model, value)
-#
-#     def _generative(self, theta):
-#         return self._wrapper(theta, self.data['x'])
-#
-#     @property
-#     def generative(self):
-#         return self._generative
 
 
 class Wrapper:
@@ -92,19 +67,21 @@ class Sampler:
 
     supported_sampling = ["DENSITY", "NORMAL"]
 
-    def __init__(self, easy_model, fit_function=None, sample_type="DENSITY", use_quickset=False):
+    def __init__(
+        self, easy_model, fit_function=None, sample_type="DENSITY", use_quickset=False
+    ):
         self._sampling = None
         self.sampling = sample_type
         self._use_quickset = None
         self._fit_function = None
         self.base_model = None
-        self.use_quickset = use_quickset
         if self.sampling == "NORMAL":
             return
         self.base_model = easy_model
         self.fit_function = fit_function
         self.model = Wrapper(easy_model, fit_function, use_quickset)
         self._distribution_function = LogLikeWithGrad(self.model)
+        self.use_quickset = use_quickset
 
     @property
     def sampling(self):
@@ -114,7 +91,11 @@ class Sampler:
     def sampling(self, sample_type):
         sample_type = sample_type.upper()
         if sample_type not in self.supported_sampling:
-            raise AttributeError("Sampling type not supported. Supported types are: {}".format(self.supported_sampling))
+            raise AttributeError(
+                "Sampling type not supported. Supported types are: {}".format(
+                    self.supported_sampling
+                )
+            )
         self._sampling = sample_type
 
     @property
@@ -166,14 +147,15 @@ class Sampler:
                 theta = tt.as_tensor_variable(priors)
 
                 # use a DensityDist (use a lamdba function to "call" the Op)
-                pm.DensityDist("likelihood",
-                               lambda v: dist(v),
-                               observed={"v": theta})
-                trace = pm.sample(n_samples, tune=tune, chains=n_chains,
-                                  discard_tuned_samples=True,
-                                  return_inferencedata=True,
-                                  idata_kwargs={"density_dist_obs": False},
-                                  )
+                pm.DensityDist("likelihood", lambda v: dist(v), observed={"v": theta})
+                trace = pm.sample(
+                    n_samples,
+                    tune=tune,
+                    chains=n_chains,
+                    discard_tuned_samples=True,
+                    return_inferencedata=True,
+                    idata_kwargs={"density_dist_obs": False},
+                )
         elif self.sampling == "NORMAL":
             raise NotImplementedError("Sampling type is not yet implemented")
             # # create our Op
@@ -188,7 +170,11 @@ class Sampler:
             #     trace = self.sample(x_data, y_data, sigma, n_samples=n_samples, n_chains=n_chains, tune=tune)
             #     self.sampling = old_sampling
         else:
-            raise ValueError("Sampling type not supported. Supported types are: {}".format(self.supported_sampling))
+            raise ValueError(
+                "Sampling type not supported. Supported types are: {}".format(
+                    self.supported_sampling
+                )
+            )
 
         return trace
 
@@ -241,10 +227,7 @@ def _to_pymc3_distribution(name, par):
     if np.isfinite([par.min, par.max]).all():
         return pm.Uniform(name, par.min, par.max)
     # no bounds
-    elif (
-        np.isneginf(par.min)
-        and np.isinf(par.max)
-    ):
+    elif np.isneginf(par.min) and np.isinf(par.max):
         return pm.Flat(name)
     # half open uniform
     elif not np.isfinite(par.min):

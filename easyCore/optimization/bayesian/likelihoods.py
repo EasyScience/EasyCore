@@ -2,19 +2,19 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
-__author__ = 'github.com/wardsimon'
-__version__ = '0.0.1'
+__author__ = "github.com/wardsimon"
+__version__ = "0.0.1"
 
 from abc import abstractmethod
 
 import numpy as np
 import theano
 import theano.tensor as tt
+
 # import pyximport; pyximport.install()
 # from .Gradient import gradients
 from scipy.stats import multivariate_normal
 from scipy.optimize._numdiff import approx_derivative
-
 
 
 class LogBase(tt.Op):
@@ -52,7 +52,7 @@ class LogBase(tt.Op):
         self.sigma = sigma
         if self.log is None:
             if not isinstance(sigma, np.ndarray):
-                sigma = sigma*np.ones_like(data)
+                sigma = sigma * np.ones_like(data)
             self._logl = multivariate_normal(data, np.diag(sigma))
             self.log = self._default_caller
 
@@ -123,7 +123,6 @@ class LogLikeWithGrad(LogBase):
 
         super(LogLikeWithGrad, self).__init__(model, logistic)
 
-
     def initialize(self, x, data, sigma):
         super(LogLikeWithGrad, self).initialize(x, data, sigma)
         # initialise the gradient Op (below)
@@ -142,6 +141,7 @@ class LogLikeWithGrad(LogBase):
         # vector-Jacobian product - g[0] is a vector of parameter values
         (theta,) = inputs  # our parameters
         return [g[0] * self.logpgrad(theta)]
+
 
 #
 # class LogLikeGrad(LogBase):
@@ -186,6 +186,7 @@ class LogLikeWithGrad(LogBase):
 #         eps_array[eps_array < factor] = factor    # avoid zero-wiggles
 #         grads = gradients(theta, lnlike, eps_array)
 #         outputs[0][0] = grads
+
 
 class LogLikeGrad(tt.Op):
 
