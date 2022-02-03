@@ -17,13 +17,18 @@ extend-exclude = '''
 [tool.coverage.run]
 source = ['easyCore']
 
+[tool.dephell.main]
+from = {format = "poetry", path = "pyproject.toml"}
+to = {format = "setuppy", path = "setup.py"}
+envs = ["main"]
+
 [tool.github.info]
 organization = 'easyScience'
 repo = 'easyCore'
 
 [tool.poetry]
 name = "easyScienceCore"
-version = "0.2.0"
+version = "0.2.1"
 description = "Generic logic for easyScience libraries"
 license = "BSD-3-Clause"
 authors = ["Simon Ward"]
@@ -50,7 +55,6 @@ bumps = "^0.8"
 asteval = "^0.9.23"
 DFO-LS = {version = "^1.2", optional = true}
 xarray = ">=0.16,<0.21"
-# scipp = "^0.11"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.2"
@@ -63,11 +67,6 @@ Sphinx = "^4.0.2"
 sphinx-rtd-theme = "^1.0.0"
 sphinx-autodoc-typehints = "^1.12.0"
 sphinx-gallery = "^0.10.0"
-
-[tool.dephell.main]
-from = {format = "poetry", path = "pyproject.toml"}
-to = {format = "setuppy", path = "setup.py"}
-envs = ["main"]
 
 [tool.tox]
 legacy_tox_ini = """

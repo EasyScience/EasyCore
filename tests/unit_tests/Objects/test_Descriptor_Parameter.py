@@ -1,15 +1,16 @@
-__author__ = "github.com/wardsimon"
-__version__ = "0.1.0"
-
 #  SPDX-FileCopyrightText: 2022 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+
+__author__ = "github.com/wardsimon"
+__version__ = "0.1.0"
 
 from copy import deepcopy
 from typing import List
 
 import pytest
 import numpy as np
+import easyCore
 from easyCore.Objects.Variable import (
     Descriptor,
     Parameter,
@@ -267,7 +268,7 @@ def test_descriptor_as_dict():
     expected = {
         "@module": "easyCore.Objects.Variable",
         "@class": "Descriptor",
-        "@version": "0.1.0",
+        "@version": easyCore.__version__,
         "name": "test",
         "value": 1,
         "units": "dimensionless",
@@ -288,7 +289,7 @@ def test_parameter_as_dict():
     expected = {
         "@module": "easyCore.Objects.Variable",
         "@class": "Parameter",
-        "@version": "0.1.0",
+        "@version": easyCore.__version__,
         "name": "test",
         "value": 1.0,
         "error": 0.0,
@@ -308,7 +309,7 @@ def test_parameter_as_dict():
     expected = {
         "@module": "easyCore.Objects.Variable",
         "@class": "Parameter",
-        "@version": "0.1.0",
+        "@version": easyCore.__version__,
         "name": "test",
         "units": "kilometer",
         "value": 1.0,
@@ -331,7 +332,7 @@ def test_parameter_as_dict():
             {
                 "@module": "easyCore.Objects.Variable",
                 "@class": "Descriptor",
-                "@version": "0.1.0",
+                "@version": easyCore.__version__,
                 "name": "test",
                 "value": 1,
                 "units": "dimensionless",
@@ -346,7 +347,7 @@ def test_parameter_as_dict():
             {
                 "@module": "easyCore.Objects.Variable",
                 "@class": "Parameter",
-                "@version": "0.1.0",
+                "@version": easyCore.__version__,
                 "name": "test",
                 "units": "kilometer",
                 "value": 1.0,
@@ -382,7 +383,7 @@ def test_item_from_dict(reference, constructor):
         {
             "@module": "easyCore.Objects.Variable",
             "@class": "Descriptor",
-            "@version": "0.1.0",
+            "@version": easyCore.__version__,
             "name": "test",
             "value": 1,
             "units": "dimensionless",
@@ -394,7 +395,7 @@ def test_item_from_dict(reference, constructor):
         {
             "@module": "easyCore.Objects.Variable",
             "@class": "Parameter",
-            "@version": "0.1.0",
+            "@version": easyCore.__version__,
             "name": "test",
             "units": "kilometer",
             "value": 1.0,
@@ -590,5 +591,3 @@ def test_parameter_bounds(value):
         assert p.bounds == (0, 2)
         assert p.enabled is True
         assert p.fixed is False
-
-

@@ -5,12 +5,13 @@
 __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
+import re
 import textwrap
 import warnings
-from collections import deque, OrderedDict
-from typing import List
-import re
 
+from collections import deque, OrderedDict
+from math import floor, log10
+from typing import List
 
 # STANDARD CIF
 # _MAX_LEN = 70
@@ -53,20 +54,41 @@ class ItemHolder:
         return len(f"{round(self.error, self.decimal_places)}".split(".")[-1])
 
     def __str__(self) -> str:
-        s = "{}"
-        if isinstance(self.value, str):
-            s = "{:s}".format(self.value)
-        else:
-            v_in = [round(self.value, self.decimal_places)]
-            if self.error is not None:
-                digits = self._get_error_digits()
-                if digits > self.decimal_places:
-                    v_in = [round(self.value, digits)]
-                this_err = int(self.error * 10 ** digits)
-                v_in.append(this_err)
-                digits = digits - (len(str(this_err)) - 1)
-                s = "{" + f":0.0{digits}f" + "}({})"
-            s = s.format(*v_in)
+        initial_str = "{:." + str(self.decimal_places) + "f}"
+        s = initial_str.format(round(self.value, self.decimal_places))
+        if self.error is not None:
+            # x_exp = int(floor(log10(self.value)))
+            xe_exp = int(floor(log10(self.error)))
+
+            # uncertainty
+            un_exp = xe_exp - self.decimal_places + 1
+            un_int = round(self.error * 10 ** (-un_exp))
+
+            # nominal value
+            no_exp = un_exp
+            no_int = round(self.value * 10 ** (-no_exp))
+
+            # format - nom(unc)
+            fmt = "%%.%df" % max(0, -no_exp)
+            s = (fmt + "(%.0f)") % (
+                no_int * 10 ** no_exp,
+                un_int * 10 ** max(0, un_exp),
+            )
+        # THIS IS THE OLD CODE, KEPT FOR REFERENCE
+        # s = "{}"
+        # if isinstance(self.value, str):
+        #     s = "{:s}".format(self.value)
+        # else:
+        #     v_in = [round(self.value, self.decimal_places)]
+        #     if self.error is not None:
+        #         digits = self._get_error_digits()
+        #         if digits > self.decimal_places:
+        #             v_in = [round(self.value, digits)]
+        #         this_err = int(self.error * 10 ** digits)
+        #         v_in.append(this_err)
+        #         digits = digits - (len(str(this_err)) - 1)
+        #         s = "{" + f":0.0{digits}f" + "}({})"
+        #     s = s.format(*v_in)
         if self.fixed is not None and not self.fixed and self.error is None:
             s += "()"
         return self._format_field(s)
