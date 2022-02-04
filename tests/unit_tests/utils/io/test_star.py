@@ -7,7 +7,7 @@ __version__ = "0.0.1"
 
 import pytest
 from easyCore.Utils.io.star import ItemHolder, StarLoop, StarSection
-from easyCore.Objects.Variable import Parameter
+from easyCore.Objects.Variable import Parameter, Descriptor
 from easyCore.models.polynomial import Line
 from easyCore.Objects.Groups import BaseCollection
 
@@ -61,6 +61,13 @@ def test_ItemHolder_fixed(fixed, value, precision, expected):
     if not p.fixed:
         expected += "()"
     assert str(s) == expected
+
+
+@pytest.mark.parametrize("cls", [Descriptor])
+def test_ItemHolder_str(cls):
+    v = cls("v", "fooooooooo")
+    s = ItemHolder(v)
+    assert str(s) == "fooooooooo"
 
 
 def test_StarSection():
