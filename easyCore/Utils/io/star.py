@@ -11,6 +11,7 @@ import warnings
 
 from collections import deque, OrderedDict
 from math import floor, log10
+from numbers import Number
 from typing import List
 
 # STANDARD CIF
@@ -54,26 +55,31 @@ class ItemHolder:
         return len(f"{round(self.error, self.decimal_places)}".split(".")[-1])
 
     def __str__(self) -> str:
-        initial_str = "{:." + str(self.decimal_places) + "f}"
-        s = initial_str.format(round(self.value, self.decimal_places))
-        if self.error is not None:
-            # x_exp = int(floor(log10(self.value)))
-            xe_exp = int(floor(log10(self.error)))
+        if isinstance(self.value, Number):
+            initial_str = "{:." + str(self.decimal_places) + "f}"
+            s = initial_str.format(round(self.value, self.decimal_places))
+            if self.error is not None:
+                # x_exp = int(floor(log10(self.value)))
+                xe_exp = int(floor(log10(self.error)))
 
-            # uncertainty
-            un_exp = xe_exp - self.decimal_places + 1
-            un_int = round(self.error * 10 ** (-un_exp))
+                # uncertainty
+                un_exp = xe_exp - self.decimal_places + 1
+                un_int = round(self.error * 10 ** (-un_exp))
 
-            # nominal value
-            no_exp = un_exp
-            no_int = round(self.value * 10 ** (-no_exp))
+                # nominal value
+                no_exp = un_exp
+                no_int = round(self.value * 10 ** (-no_exp))
 
-            # format - nom(unc)
-            fmt = "%%.%df" % max(0, -no_exp)
-            s = (fmt + "(%.0f)") % (
-                no_int * 10 ** no_exp,
-                un_int * 10 ** max(0, un_exp),
-            )
+                # format - nom(unc)
+                fmt = "%%.%df" % max(0, -no_exp)
+                s = (fmt + "(%.0f)") % (
+                    no_int * 10 ** no_exp,
+                    un_int * 10 ** max(0, un_exp),
+                )
+        elif isinstance(self.value, str):
+            s = "{:s}".format(self.value)
+        else:
+            s = "{:s}".format(str(self.value))
         # THIS IS THE OLD CODE, KEPT FOR REFERENCE
         # s = "{}"
         # if isinstance(self.value, str):
