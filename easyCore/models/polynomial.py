@@ -10,10 +10,11 @@ import functools
 
 from easyCore import np
 from easyCore.Objects.Variable import Parameter
-from easyCore.Objects.Base import BaseObj
+from easyCore.Objects.Base import BaseObjNew, BaseObj
 from easyCore.Objects.Groups import BaseCollection
 
-from typing import ClassVar, Optional, List, Iterable
+from easyCore.Utils.typing import ClassVar
+from typing import Optional, List, Iterable
 
 
 def designate_calc_fn(func):
@@ -79,12 +80,12 @@ class Polynomial(BaseObj):
         return "Polynomial({}, {})".format(self.name, s)
 
 
-class Line(BaseObj):
+class Line(BaseObjNew):
 
-    m: ClassVar[Parameter]
-    c: ClassVar[Parameter]
+    m: ClassVar[Parameter, ("m", 1.0)]
+    c: ClassVar[Parameter, ("c", 0.0)]
 
-    def __init__(self, m: Parameter, c: Parameter):
+    def __init__(self, m: Parameter = None, c: Parameter = None):
         super(Line, self).__init__("line", m=m, c=c)
 
     @classmethod

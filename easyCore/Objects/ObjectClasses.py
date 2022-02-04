@@ -289,22 +289,180 @@ class BaseObj(BasedBase):
         )
 
     def __setattr__(self, key: str, value):
-        # Assume that the annotation is a ClassVar
-        if (
-            hasattr(self.__class__, "__annotations__")
-            and key in self.__class__.__annotations__
-            and issubclass(
-                getattr(value, "__old_class__", value.__class__),
-                self.__class__.__annotations__[key].__args__,
-            )
-        ):
-            self._add_component(key, value)
-            return
-        if hasattr(self, key) and issubclass(type(value), (BasedBase, Descriptor)):
-            old_obj = self.__getattribute__(key)
-            self._borg.map.prune_vertex_from_edge(self, old_obj)
-            self._borg.map.add_edge(self, value)
+        if issubclass(type(value), (BasedBase, Descriptor)):
+            if hasattr(self, key):
+                old_obj = self.__getattribute__(key)
+                self._borg.map.prune_vertex_from_edge(self, old_obj)
+                self._borg.map.add_edge(self, value)
+            # Assume that the annotation is a ClassVar
+            else:
+                if (
+                    hasattr(self.__class__, "__annotations__")
+                    and key in self.__class__.__annotations__
+                    and issubclass(
+                        getattr(value, "__old_class__", value.__class__),
+                        self.__class__.__annotations__[key].__args__,
+                    )
+                ):
+                    self._add_component(key, value)
+                    return
         super(BaseObj, self).__setattr__(key, value)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__} `{getattr(self, 'name')}`"
+
+    @staticmethod
+    def __getter(key: str):
+        def getter(obj: Union[Type[Descriptor], Type[BasedBase]]):
+            return obj._kwargs[key]
+
+        return getter
+
+    @staticmethod
+    def __setter(key: str):
+        def setter(obj: Union[Type[Descriptor], Type[BasedBase]], value: float):
+            if issubclass(obj._kwargs[key].__class__, Descriptor):
+                obj._kwargs[key].value = value
+            else:
+                obj._kwargs[key] = value
+
+        return setter
+
+
+class BaseObjNew(BasedBase):
+    """
+    This is the base class for which all higher level classes are built off of.
+    NOTE: This object is serializable only if parameters are supplied as:
+    `BaseObj(a=value, b=value)`. For `Parameter` or `Descriptor` objects we can
+    cheat with `BaseObj(*[Descriptor(...), Parameter(...), ...])`.
+    """
+
+    def __init__(
+        self,
+        name: str,
+        *args: Optional[Union[Type[Descriptor], Type[BasedBase]]],
+        **kwargs: Optional[Union[Type[Descriptor], Type[BasedBase]]],
+    ):
+        """
+        Set up the base class.
+
+        :param name: Name of this object
+        :param args: Any arguments?
+        :param kwargs: Fields which this class should contain
+        """
+        super(BaseObjNew, self).__init__(name)
+        # If Parameter or Descriptor is given as arguments...
+        for arg in args:
+            if issubclass(type(arg), (BaseObj, Descriptor)):
+                kwargs[getattr(arg, "name")] = arg
+        # Automatically generate the default fields for this class
+        a_keys = set(self.__class__.__annotations__.keys())
+        # Remove non specified fields
+        kw_keys = set(kwargs.keys()) - {k for k, v in kwargs.items() if v is None}
+        # Get which might be created
+        add_keys = a_keys - kw_keys
+        for key in add_keys:
+            cls = self.__class__.__annotations__[key].__args__[0]
+            values = getattr(self, key, None)
+            # If we can make it, try to make it, else.... it might be added later.
+            if values is None and not hasattr(
+                self.__class__.__annotations__[key], "__creation_vars__"
+            ):
+                continue
+            if hasattr(self.__class__.__annotations__[key], "__creation_vars__"):
+                new_values = self.__class__.__annotations__[key].__creation_vars__
+                if len(new_values) > 0:
+                    values = new_values
+                else:
+                    continue
+            args = []
+            kkwargs = {}
+            for value in values:
+                if isinstance(value, dict):
+                    kkwargs = value
+                else:
+                    args.append(value)
+            # New kwargs is generated
+            try:
+                kwargs[key] = cls(*args, **kkwargs)
+            except Exception:
+                raise AttributeError("The typing annotation is not correct.")
+        # Set kwargs, also useful for serialization
+        known_keys = self.__dict__.keys()
+        self._kwargs = kwargs
+        for key in kwargs.keys():
+            if key in known_keys:
+                raise AttributeError
+            if issubclass(
+                type(kwargs[key]), (BasedBase, Descriptor)
+            ) or "BaseCollection" in [c.__name__ for c in type(kwargs[key]).__bases__]:
+                self._borg.map.add_edge(self, kwargs[key])
+                self._borg.map.reset_type(kwargs[key], "created_internal")
+            addLoggedProp(
+                self,
+                key,
+                self.__getter(key),
+                self.__setter(key),
+                get_id=key,
+                my_self=self,
+                test_class=BaseObj,
+            )
+
+    def _add_component(
+        self, key: str, component: Union[Type[Descriptor], Type[BasedBase]]
+    ):
+        """
+        Dynamically add a component to the class. This is an internal method, though can be called remotely.
+        The recommended alternative is to use typing, i.e.
+
+        class Foo(Bar):
+            def __init__(self, foo: Parameter, bar: Parameter):
+                super(Foo, self).__init__(bar=bar)
+                self._add_component("foo", foo)
+
+        Goes to:
+         class Foo(Bar):
+            foo: ClassVar[Parameter]
+            def __init__(self, foo: Parameter, bar: Parameter):
+                super(Foo, self).__init__(bar=bar)
+                self.foo = foo
+
+        :param key: Name of component to be added
+        :param component: Component to be added
+        :return: None
+        """
+        self._kwargs[key] = component
+        self._borg.map.add_edge(self, component)
+        self._borg.map.reset_type(component, "created_internal")
+        addLoggedProp(
+            self,
+            key,
+            self.__getter(key),
+            self.__setter(key),
+            get_id=key,
+            my_self=self,
+            test_class=BaseObj,
+        )
+
+    def __setattr__(self, key: str, value):
+        if issubclass(type(value), (BasedBase, Descriptor)):
+            if hasattr(self, key):
+                old_obj = self.__getattribute__(key)
+                self._borg.map.prune_vertex_from_edge(self, old_obj)
+                self._borg.map.add_edge(self, value)
+            # Assume that the annotation is a ClassVar
+            else:
+                if (
+                    hasattr(self.__class__, "__annotations__")
+                    and key in self.__class__.__annotations__
+                    and issubclass(
+                        getattr(value, "__old_class__", value.__class__),
+                        self.__class__.__annotations__[key].__args__,
+                    )
+                ):
+                    self._add_component(key, value)
+                    return
+        super(BaseObjNew, self).__setattr__(key, value)
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__} `{getattr(self, 'name')}`"
