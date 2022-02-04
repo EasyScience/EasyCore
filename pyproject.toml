@@ -52,7 +52,7 @@ DFO-LS = {version = "^1.2", optional = true}
 xarray = ">=0.16,<0.21"
 
 [tool.poetry.dev-dependencies]
-pytest = "^6.2.2"
+pytest = "^7.0.0"
 pytest-cov = "^3.0.0"
 codecov = "^2.1.11"
 matplotlib = "^3.2.2"
