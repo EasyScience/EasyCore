@@ -293,11 +293,15 @@ class BaseObj(BasedBase):
         if (
             hasattr(self.__class__, "__annotations__")
             and key in self.__class__.__annotations__
+            and hasattr(self.__class__.__annotations__[key], "__args__")
             and issubclass(
                 getattr(value, "__old_class__", value.__class__),
                 self.__class__.__annotations__[key].__args__,
             )
         ):
+            if issubclass(type(getattr(self, key, None)), (BasedBase, Descriptor)):
+                old_obj = self.__getattribute__(key)
+                self._borg.map.prune_vertex_from_edge(self, old_obj)
             self._add_component(key, value)
             return
         if hasattr(self, key) and issubclass(type(value), (BasedBase, Descriptor)):
