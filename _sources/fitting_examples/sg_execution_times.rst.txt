@@ -5,8 +5,8 @@
 
 Computation times
 =================
-**00:00.004** total execution time for **fitting_examples** files:
+**00:00.006** total execution time for **fitting_examples** files:
 
 +--------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_fitting_examples_plot_constraints.py` (``plot_constraints.py``) | 00:00.004 | 0.0 MB |
+| :ref:`sphx_glr_fitting_examples_plot_constraints.py` (``plot_constraints.py``) | 00:00.006 | 0.0 MB |
 +--------------------------------------------------------------------------------+-----------+--------+
