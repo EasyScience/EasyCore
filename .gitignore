@@ -56,3 +56,5 @@ poetry.lock
 docs/src/base_examples/
 docs/src/fitting_examples/
 docs/src/gen_modules/
+
+get-pip.py

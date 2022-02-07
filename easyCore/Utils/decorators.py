@@ -7,8 +7,10 @@ __version__ = "0.1.0"
 
 import collections.abc
 import functools
-
+import sys
 from time import time
+import warnings
+from typing import Callable
 
 from easyCore import borg
 
@@ -81,3 +83,39 @@ def time_it(func):
             )
 
     return _time_it
+
+
+def minimum_version(
+    major: int = 3, minor: int = 7, fallback: Callable = None
+) -> Callable:
+    """
+    This decorator checks if the current python version is greater than or equal to the specified version. If not,
+    the decorated function is called with the specified fallback.
+
+    :param major: Major version to check (3)
+    :type major: int
+    :param minor: Minor version to check (7)
+    :type minor: int
+    :param fallback: Function which will be returned if version is not greater than or equal to the specified version.
+    :type fallback: typing.Callable
+    :return: Decorated function or fallback function
+    :rtype: typing.Callable
+    """
+
+    if sys.version_info < (major, minor):
+        if fallback is None:
+            raise RuntimeError(
+                f"This function requires Python {major}.{minor} or higher"
+            )
+        else:
+            warnings.warn(
+                f"This function requires Python {major}.{minor} or higher, using fallback function"
+            )
+            return fallback
+    else:
+
+        @functools.wraps
+        def wrapper(func):
+            return func
+
+        return wrapper

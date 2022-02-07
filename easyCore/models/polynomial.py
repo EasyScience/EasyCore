@@ -5,7 +5,6 @@
 __author__ = "github.com/wardsimon"
 __version__ = "0.0.1"
 
-
 import functools
 
 from easyCore import np
@@ -71,7 +70,7 @@ class Polynomial(BaseObj):
                 s += [f"{self.coefficients[1].raw_value}x"]
                 if len(self.coefficients) >= 3:
                     s += [
-                        f"{c.raw_value}x^{i+2}"
+                        f"{c.raw_value}x^{i + 2}"
                         for i, c in enumerate(self.coefficients[2:])
                         if c.raw_value != 0
                     ]
@@ -81,9 +80,8 @@ class Polynomial(BaseObj):
 
 
 class Line(BaseObjNew):
-
-    m: ClassVar[Parameter, ("m", 1.0)]
-    c: ClassVar[Parameter, ("c", 0.0)]
+    m: ClassVar[Parameter] = ("m", 1.0)  # , ("m", 1.0)]
+    c: ClassVar[Parameter] = ("c", 0.0)  # , ("c", 0.0)]
 
     def __init__(self, m: Parameter = None, c: Parameter = None):
         super(Line, self).__init__("line", m=m, c=c)

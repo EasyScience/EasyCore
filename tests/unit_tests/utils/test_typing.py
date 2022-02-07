@@ -68,7 +68,7 @@ def test_ClassVar_core():
     rum_value = 3
 
     class Foo(BaseObjNew):
-        bar: ClassVar[Parameter, (bar_name, bar_value)]
+        bar: ClassVar[Parameter] = (bar_name, bar_value)
         dum: ClassVar[int] = 1
         rum: ClassVar[int]
 
@@ -91,6 +91,49 @@ def test_ClassVar_core():
     assert f.bar.raw_value == bar_value
     assert f.dum == 1
     assert f.rum == rum_value
+
+    f.bar.value = bar_value_new
+    assert f.bar.raw_value == bar_value_new
+
+
+def test_ClassVar_core_MIX():
+
+    bar_name = "a"
+    bar_value = 1.1
+    bar_value_new = 2
+    rum_value = 3
+    np_values = (0, 100, 101)
+
+    class Foo(BaseObjNew):
+        bar: ClassVar[Parameter] = (bar_name, bar_value)
+        dum: ClassVar[int] = 1
+        rum: ClassVar[int]
+        tum: ClassVar[np.linspace] = np_values
+
+        AUTO_CREATE_PARAMETERS = True
+
+        def __init__(self, name, *args, **kwargs):
+
+            rum = None
+            if "rum" in kwargs.keys():
+                rum = kwargs.pop("rum")
+            super().__init__(name, *args, **kwargs)
+            if rum is not None:
+                self.rum = rum
+
+    # This should set 'bar' to a numpy array of size 100 with dtype float32
+    # This should set 'foo' to a numpy array of size (5, 6, 2) (not call our fancy logic)
+    # This should set 'dum' to 1, using usual logic
+    # This should set 'rum' to 3, using usual logic AFTER initialization
+    f = Foo("foo", rum=rum_value)
+    assert isinstance(f.bar, Parameter)
+    assert f.bar.name == bar_name
+    assert f.bar.raw_value == bar_value
+    assert f.dum == 1
+    assert f.rum == rum_value
+
+    assert isinstance(f.tum, np.ndarray)
+    assert f.tum.shape == (np_values[2],)
 
     f.bar.value = bar_value_new
     assert f.bar.raw_value == bar_value_new

@@ -6,7 +6,7 @@ __version__ = "0.1.0"
 #  SPDX-FileCopyrightText: 2022 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
-
+import inspect
 import numbers
 
 from typing import (
@@ -17,11 +17,12 @@ from typing import (
     Optional,
     Type,
     TYPE_CHECKING,
+    Callable,
 )
 
 from easyCore import borg
 from easyCore.Utils.json import MSONable
-from easyCore.Utils.classTools import addLoggedProp
+from easyCore.Utils.classTools import addLoggedProp, addProp
 from .Variable import Parameter, Descriptor
 
 if TYPE_CHECKING:
@@ -205,6 +206,9 @@ class BasedBase(MSONable):
         return sorted(new_class_objs)
 
 
+BASIC_CLASSES = (BasedBase, Descriptor)
+
+
 class BaseObj(BasedBase):
     """
     This is the base class for which all higher level classes are built off of.
@@ -229,7 +233,7 @@ class BaseObj(BasedBase):
         super(BaseObj, self).__init__(name)
         # If Parameter or Descriptor is given as arguments...
         for arg in args:
-            if issubclass(type(arg), (BaseObj, Descriptor)):
+            if issubclass(type(arg), BASIC_CLASSES):
                 kwargs[getattr(arg, "name")] = arg
         # Set kwargs, also useful for serialization
         known_keys = self.__dict__.keys()
@@ -237,9 +241,9 @@ class BaseObj(BasedBase):
         for key in kwargs.keys():
             if key in known_keys:
                 raise AttributeError
-            if issubclass(
-                type(kwargs[key]), (BasedBase, Descriptor)
-            ) or "BaseCollection" in [c.__name__ for c in type(kwargs[key]).__bases__]:
+            if issubclass(type(kwargs[key]), BASIC_CLASSES) or "BaseCollection" in [
+                c.__name__ for c in type(kwargs[key]).__bases__
+            ]:
                 self._borg.map.add_edge(self, kwargs[key])
                 self._borg.map.reset_type(kwargs[key], "created_internal")
             addLoggedProp(
@@ -289,7 +293,7 @@ class BaseObj(BasedBase):
         )
 
     def __setattr__(self, key: str, value):
-        if issubclass(type(value), (BasedBase, Descriptor)):
+        if issubclass(type(value), BASIC_CLASSES):
             if hasattr(self, key):
                 old_obj = self.__getattribute__(key)
                 self._borg.map.prune_vertex_from_edge(self, old_obj)
@@ -353,7 +357,7 @@ class BaseObjNew(BasedBase):
         super(BaseObjNew, self).__init__(name)
         # If Parameter or Descriptor is given as arguments...
         for arg in args:
-            if issubclass(type(arg), (BaseObj, Descriptor)):
+            if issubclass(type(arg), BASIC_CLASSES):
                 kwargs[getattr(arg, "name")] = arg
         # Automatically generate the default fields for this class
         a_keys = set(self.__class__.__annotations__.keys())
@@ -365,10 +369,22 @@ class BaseObjNew(BasedBase):
             cls = self.__class__.__annotations__[key].__args__[0]
             values = getattr(self, key, None)
             # If we can make it, try to make it, else.... it might be added later.
-            if values is None and not hasattr(
-                self.__class__.__annotations__[key], "__creation_vars__"
-            ):
-                continue
+            if not hasattr(self.__class__.__annotations__[key], "__creation_vars__"):
+                vals = getattr(self.__class__, key, None)
+                cls_check = inspect.isclass(cls)
+                if cls_check:
+                    cls_check = issubclass(cls, BASIC_CLASSES)
+                else:
+                    cls_check = isinstance(cls, Callable)
+                if (
+                    cls_check
+                    or getattr(self.__class__, "AUTO_CREATE_PARAMETERS", False)
+                ) and isinstance(vals, tuple):
+                    setattr(
+                        self.__class__.__annotations__[key], "__creation_vars__", vals
+                    )
+                else:
+                    continue
             if hasattr(self.__class__.__annotations__[key], "__creation_vars__"):
                 new_values = self.__class__.__annotations__[key].__creation_vars__
                 if len(new_values) > 0:
@@ -393,20 +409,20 @@ class BaseObjNew(BasedBase):
         for key in kwargs.keys():
             if key in known_keys:
                 raise AttributeError
-            if issubclass(
-                type(kwargs[key]), (BasedBase, Descriptor)
-            ) or "BaseCollection" in [c.__name__ for c in type(kwargs[key]).__bases__]:
+            if issubclass(type(kwargs[key]), BASIC_CLASSES):
                 self._borg.map.add_edge(self, kwargs[key])
                 self._borg.map.reset_type(kwargs[key], "created_internal")
-            addLoggedProp(
-                self,
-                key,
-                self.__getter(key),
-                self.__setter(key),
-                get_id=key,
-                my_self=self,
-                test_class=BaseObj,
-            )
+                addLoggedProp(
+                    self,
+                    key,
+                    self.__getter(key),
+                    self.__setter(key),
+                    get_id=key,
+                    my_self=self,
+                    test_class=BaseObj,
+                )
+            else:
+                setattr(self, key, kwargs[key])
 
     def _add_component(
         self, key: str, component: Union[Type[Descriptor], Type[BasedBase]]
@@ -445,7 +461,7 @@ class BaseObjNew(BasedBase):
         )
 
     def __setattr__(self, key: str, value):
-        if issubclass(type(value), (BasedBase, Descriptor)):
+        if issubclass(type(value), BASIC_CLASSES):
             if hasattr(self, key):
                 old_obj = self.__getattribute__(key)
                 self._borg.map.prune_vertex_from_edge(self, old_obj)
