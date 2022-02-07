@@ -363,6 +363,22 @@ def test_Base_GETSET():
     assert len(graph.get_edges(a)) == 1
 
 
+def test_Base_GETSET():
+    class A(BaseObj):
+        def __init__(self, a: Parameter):
+            super(A, self).__init__("a", a=a)
+            b = 0
+
+        @classmethod
+        def from_pars(cls, a: float):
+            return cls(a=Parameter("a", a))
+
+    a = A.from_pars(5)
+    b_new = 10
+    a.b = b_new
+    assert a.b == b_new
+
+
 def test_Base_GETSET_v2():
     class A(BaseObj):
 
