@@ -8,7 +8,7 @@ __version__ = "0.1.0"
 import pytest
 import numpy as np
 
-from typing import List, Type, Union
+from typing import List, Type, Union, ClassVar
 from contextlib import contextmanager
 
 import easyCore
@@ -339,3 +339,83 @@ def test_subclassing():
     y = l2.m.raw_value * x + l2.c.raw_value + l2.diff.raw_value
 
     assert np.allclose(l2(x), y)
+
+
+def test_Base_GETSET():
+    class A(BaseObj):
+        def __init__(self, a: Parameter):
+            super(A, self).__init__("a", a=a)
+
+        @classmethod
+        def from_pars(cls, a: float):
+            return cls(a=Parameter("a", a))
+
+    a_start = 5
+    a_end = 10
+    a = A.from_pars(a_start)
+    graph = a._borg.map
+
+    assert a.a.raw_value == a_start
+    assert len(graph.get_edges(a)) == 1
+
+    setattr(a, "a", a_end)
+    assert a.a.raw_value == a_end
+    assert len(graph.get_edges(a)) == 1
+
+
+def test_Base_GETSET_v2():
+    class A(BaseObj):
+
+        a: ClassVar[Parameter]
+
+        def __init__(self, a: Parameter):
+            super(A, self).__init__("a", a=a)
+
+        @classmethod
+        def from_pars(cls, a: float):
+            return cls(a=Parameter("a", a))
+
+    a_start = 5
+    a_end = 10
+    a = A.from_pars(a_start)
+    graph = a._borg.map
+
+    assert a.a.raw_value == a_start
+    assert len(graph.get_edges(a)) == 1
+
+    setattr(a, "a", a_end)
+    assert a.a.raw_value == a_end
+    assert len(graph.get_edges(a)) == 1
+
+
+def test_Base_GETSET_v3():
+    class A(BaseObj):
+
+        a: ClassVar[Parameter]
+
+        def __init__(self, a: Parameter):
+            super(A, self).__init__("a", a=a)
+
+        @classmethod
+        def from_pars(cls, a: float):
+            return cls(a=Parameter("a", a))
+
+    a_start = 5
+    a_end = 10
+    a = A.from_pars(a_start)
+    graph = a._borg.map
+
+    def get_key(obj):
+        return graph.convert_id_to_key(obj)
+
+    assert a.a.raw_value == a_start
+    assert len(graph.get_edges(a)) == 1
+    a_ = Parameter("a", a_end)
+    assert get_key(a.a) in graph.get_edges(a)
+    a__ = a.a
+
+    setattr(a, "a", a_)
+    assert a.a.raw_value == a_end
+    assert len(graph.get_edges(a)) == 1
+    assert get_key(a_) in graph.get_edges(a)
+    assert get_key(a__) not in graph.get_edges(a)
