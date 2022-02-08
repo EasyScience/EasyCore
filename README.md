@@ -1,6 +1,7 @@
 # [![License][50]][51] [![Release][32]][33] [![Downloads][70]][71] [![CI Build][20]][21] 
 
-[![CodeFactor][83]][84] [![Lines of code][81]](<>) [![Total lines][80]](<>) [![Files][82]](<>)
+[![CodeFactor][83]][84] [![Codecov][85]][86]
+[![Lines of code][81]](<>) [![Total lines][80]](<>) [![Files][82]](<>)
 
 
 <img height="80"><img src="https://raw.githubusercontent.com/easyScience/easyCore/master/resources/images/ec_logo.svg" height="65">
@@ -44,7 +45,7 @@ While **easyCore** is under the BSD-3 license, DFO_LS is subject to the GPL lice
 
 <!---Release--->
 
-[32]: https://img.shields.io/pypi/v/easyScienceCore.svg
+[32]: https://img.shields.io/pypi/v/easysciencecore?color=green
 
 [33]: https://pypi.org/project/easyScienceCore
 
@@ -73,3 +74,7 @@ While **easyCore** is under the BSD-3 license, DFO_LS is subject to the GPL lice
 [83]: https://www.codefactor.io/repository/github/easyscience/easycore/badge
 
 [84]: https://www.codefactor.io/repository/github/easyscience/easycore
+
+[85]: https://img.shields.io/codecov/c/github/easyScience/easyCore?color=green
+
+[86]: https://app.codecov.io/gh/easyScience/easyCore/
