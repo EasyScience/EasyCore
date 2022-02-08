@@ -256,7 +256,20 @@ class BaseObj(BasedBase):
         self, key: str, component: Union[Type[Descriptor], Type[BasedBase]]
     ):
         """
-        Dynamically add a component to the class.
+        Dynamically add a component to the class. This is an internal method, though can be called remotely.
+        The recommended alternative is to use typing, i.e.
+
+        class Foo(Bar):
+            def __init__(self, foo: Parameter, bar: Parameter):
+                super(Foo, self).__init__(bar=bar)
+                self._add_component("foo", foo)
+
+        Goes to:
+         class Foo(Bar):
+            foo: ClassVar[Parameter]
+            def __init__(self, foo: Parameter, bar: Parameter):
+                super(Foo, self).__init__(bar=bar)
+                self.foo = foo
 
         :param key: Name of component to be added
         :param component: Component to be added
@@ -275,7 +288,22 @@ class BaseObj(BasedBase):
             test_class=BaseObj,
         )
 
-    def __setattr__(self, key, value):
+    def __setattr__(self, key: str, value):
+        # Assume that the annotation is a ClassVar
+        if (
+            hasattr(self.__class__, "__annotations__")
+            and key in self.__class__.__annotations__
+            and hasattr(self.__class__.__annotations__[key], "__args__")
+            and issubclass(
+                getattr(value, "__old_class__", value.__class__),
+                self.__class__.__annotations__[key].__args__,
+            )
+        ):
+            if issubclass(type(getattr(self, key, None)), (BasedBase, Descriptor)):
+                old_obj = self.__getattribute__(key)
+                self._borg.map.prune_vertex_from_edge(self, old_obj)
+            self._add_component(key, value)
+            return
         if hasattr(self, key) and issubclass(type(value), (BasedBase, Descriptor)):
             old_obj = self.__getattribute__(key)
             self._borg.map.prune_vertex_from_edge(self, old_obj)

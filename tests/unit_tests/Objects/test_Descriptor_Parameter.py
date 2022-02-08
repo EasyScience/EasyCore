@@ -1,15 +1,16 @@
-__author__ = "github.com/wardsimon"
-__version__ = "0.1.0"
-
 #  SPDX-FileCopyrightText: 2022 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+
+__author__ = "github.com/wardsimon"
+__version__ = "0.1.0"
 
 from copy import deepcopy
 from typing import List
 
 import pytest
 import numpy as np
+import easyCore
 from easyCore.Objects.Variable import (
     Descriptor,
     Parameter,
@@ -177,27 +178,27 @@ def test_item_unit_set(instance):
 def test_item_convert_unit(instance):
     d = instance("test", 273, units="kelvin")
     d.convert_unit("degree_Celsius")
-    assert pytest.approx(d.raw_value, -0.149)
+    assert -0.15 == pytest.approx(d.raw_value)
 
 
 @pytest.mark.parametrize(
     "conv_unit, data_in, result",
     [
-        ("degree_Celsius", {"min": 0}, {"min": -273.149, "raw_value": -0.149}),
-        ("degree_Celsius", {"max": 500}, {"max": 773.149, "raw_value": -0.149}),
-        ("degree_Celsius", {"error": 0.1}, {"error": 0.1, "raw_value": -0.149}),
+        ("degree_Celsius", {"min": 0}, {"min": -273.150, "raw_value": -0.150}),
+        ("degree_Celsius", {"max": 500}, {"max": 226.85, "raw_value": -0.150}),
+        ("degree_Celsius", {"error": 0.1}, {"error": 0.1, "raw_value": -0.150}),
         (
             "degree_Celsius",
             {"min": 0, "max": 500, "error": 0.1},
-            {"min": -273.149, "max": 773.149, "error": 0.1, "raw_value": -0.149},
+            {"min": -273.150, "max": 226.85, "error": 0.1, "raw_value": -0.150},
         ),
-        ("degree_Fahrenheit", {"min": 0}, {"min": -459.67, "raw_value": 31.729}),
-        ("degree_Fahrenheit", {"max": 500}, {"max": 440.33, "raw_value": 31.729}),
-        ("degree_Fahrenheit", {"error": 0.1}, {"error": 0.18, "raw_value": 31.729}),
+        ("degree_Fahrenheit", {"min": 0}, {"min": -459.67, "raw_value": 31.730}),
+        ("degree_Fahrenheit", {"max": 500}, {"max": 440.33, "raw_value": 31.730}),
+        ("degree_Fahrenheit", {"error": 0.1}, {"error": 0.18, "raw_value": 31.730}),
         (
             "degree_Fahrenheit",
             {"min": 0, "max": 500, "error": 0.1},
-            {"min": -459.67, "max": 440.33, "error": 0.18, "raw_value": 31.729},
+            {"min": -459.67, "max": 440.33, "error": 0.18, "raw_value": 31.730},
         ),
     ],
     ids=[
@@ -215,7 +216,7 @@ def test_parameter_advanced_convert_unit(conv_unit: str, data_in: dict, result: 
     d = Parameter("test", 273, units="kelvin", **data_in)
     d.convert_unit(conv_unit)
     for key in result.keys():
-        assert pytest.approx(getattr(d, key), result[key])
+        assert result[key] == pytest.approx(getattr(d, key))
 
 
 @pytest.mark.parametrize("instance", (Descriptor, Parameter), indirect=True)
@@ -267,7 +268,7 @@ def test_descriptor_as_dict():
     expected = {
         "@module": "easyCore.Objects.Variable",
         "@class": "Descriptor",
-        "@version": "0.1.0",
+        "@version": easyCore.__version__,
         "name": "test",
         "value": 1,
         "units": "dimensionless",
@@ -288,7 +289,7 @@ def test_parameter_as_dict():
     expected = {
         "@module": "easyCore.Objects.Variable",
         "@class": "Parameter",
-        "@version": "0.1.0",
+        "@version": easyCore.__version__,
         "name": "test",
         "value": 1.0,
         "error": 0.0,
@@ -308,7 +309,7 @@ def test_parameter_as_dict():
     expected = {
         "@module": "easyCore.Objects.Variable",
         "@class": "Parameter",
-        "@version": "0.1.0",
+        "@version": easyCore.__version__,
         "name": "test",
         "units": "kilometer",
         "value": 1.0,
@@ -331,7 +332,7 @@ def test_parameter_as_dict():
             {
                 "@module": "easyCore.Objects.Variable",
                 "@class": "Descriptor",
-                "@version": "0.1.0",
+                "@version": easyCore.__version__,
                 "name": "test",
                 "value": 1,
                 "units": "dimensionless",
@@ -346,7 +347,7 @@ def test_parameter_as_dict():
             {
                 "@module": "easyCore.Objects.Variable",
                 "@class": "Parameter",
-                "@version": "0.1.0",
+                "@version": easyCore.__version__,
                 "name": "test",
                 "units": "kilometer",
                 "value": 1.0,
@@ -382,7 +383,7 @@ def test_item_from_dict(reference, constructor):
         {
             "@module": "easyCore.Objects.Variable",
             "@class": "Descriptor",
-            "@version": "0.1.0",
+            "@version": easyCore.__version__,
             "name": "test",
             "value": 1,
             "units": "dimensionless",
@@ -394,7 +395,7 @@ def test_item_from_dict(reference, constructor):
         {
             "@module": "easyCore.Objects.Variable",
             "@class": "Parameter",
-            "@version": "0.1.0",
+            "@version": easyCore.__version__,
             "name": "test",
             "units": "kilometer",
             "value": 1.0,
@@ -590,5 +591,3 @@ def test_parameter_bounds(value):
         assert p.bounds == (0, 2)
         assert p.enabled is True
         assert p.fixed is False
-
-

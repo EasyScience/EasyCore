@@ -23,7 +23,7 @@ repo = 'easyCore'
 
 [tool.poetry]
 name = "easyScienceCore"
-version = "0.2.0"
+version = "0.2.2"
 description = "Generic logic for easyScience libraries"
 license = "BSD-3-Clause"
 authors = ["Simon Ward"]
@@ -41,7 +41,7 @@ include = ["CHANGELOG.md"]
 packages = [ { include = "easyCore" } ]
 
 [tool.poetry.dependencies]
-python = "^3.7" # "^3.8" generates error when installing PySide2 in easyAppGui
+python = ">=3.7,<3.11" # "^3.8" generates error when installing PySide2 in easyAppGui
 numpy = "^1.19"
 pint = ">=0.17,<0.19"
 uncertainties = "^3.1"
@@ -50,13 +50,11 @@ bumps = "^0.8"
 asteval = "^0.9.23"
 xarray = ">=0.16,<0.21"
 DFO-LS = {version = "^1.2", optional = true}
-Theano-PyMC = {version = "^1.1", optional = true}
-pymc3 = {version = "^3.11.4", optional = true}
-# scipp = "^0.11"
+xarray = ">=0.16,<0.21"
 
 
 [tool.poetry.dev-dependencies]
-pytest = "^6.2.2"
+pytest = "^7.0.0"
 pytest-cov = "^3.0.0"
 codecov = "^2.1.11"
 matplotlib = "^3.2.2"
@@ -66,11 +64,6 @@ Sphinx = "^4.0.2"
 sphinx-rtd-theme = "^1.0.0"
 sphinx-autodoc-typehints = "^1.12.0"
 sphinx-gallery = "^0.10.0"
-
-[tool.dephell.main]
-from = {format = "poetry", path = "pyproject.toml"}
-to = {format = "setuppy", path = "setup.py"}
-envs = ["main"]
 
 [tool.tox]
 legacy_tox_ini = """
