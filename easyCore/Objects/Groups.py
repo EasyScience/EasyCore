@@ -8,7 +8,7 @@ __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
 from numbers import Number
-from typing import Union, Type, Optional, TYPE_CHECKING
+from typing import Union, Type, Optional, TYPE_CHECKING, Callable
 
 from easyCore import borg
 from easyCore.Objects.Base import BasedBase, Descriptor
@@ -242,3 +242,16 @@ class BaseCollection(BasedBase, MutableSequence):
         return (
             f"{self.__class__.__name__} `{getattr(self, 'name')}` of length {len(self)}"
         )
+
+    def sort(self, mapping: Callable, reverse: bool = False):
+        """
+        Sort the collection according to the given mapping.
+
+        :param mapping: mapping function to sort the collection. i.e. lambda parameter: parameter.raw_value
+        :type mapping: Callable
+        :param reverse: Reverse the sorting.
+        :type reverse: bool
+        """
+        i = list(self._kwargs.items())
+        i.sort(key=lambda x: mapping(x[1]), reverse=reverse)
+        self._kwargs.reorder(**{k[0]: k[1] for k in i})

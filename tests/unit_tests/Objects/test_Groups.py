@@ -301,7 +301,7 @@ def test_baseCollection_dir(cls):
     expected = {'generate_bindings', 'insert', 'name', 'reverse', 'append', 'to_data_dict', 'as_dict',
                 'REDIRECT', 'interface', 'clear', 'extend', 'pop', 'count', 'remove', 'user_data', 'index',
                 'constraints', 'to_json', 'from_dict', 'get_parameters', 'unsafe_hash', 'get_fit_parameters',
-                'switch_interface', 'data'}
+                'switch_interface', 'data', 'sort'}
     assert not d.difference(expected)
 
 
