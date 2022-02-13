@@ -16,16 +16,6 @@ from easyCore.Objects.Groups import BaseCollection
 from typing import ClassVar, Optional, List, Iterable
 
 
-def designate_calc_fn(func):
-    @functools.wraps(func)
-    def wrapper(obj, *args, **kwargs):
-        for name in list(obj.__annotations__.keys()):
-            func.__globals__["_" + name] = getattr(obj, name).raw_value
-        return func(obj, *args, **kwargs)
-
-    return wrapper
-
-
 class Polynomial(BaseObj):
     """
     A polynomial model.
@@ -76,7 +66,7 @@ class Polynomial(BaseObj):
                     ]
         s.reverse()
         s = " + ".join(s)
-        return "Polynomial({}, {})".format(self.name, s)
+        return "<Polynomial({}, {})>".format(self.name, s)
 
 
 class Line(BaseObj):
@@ -93,9 +83,8 @@ class Line(BaseObj):
         c = Parameter("c", c)
         return cls(m=m, c=c)
 
-    # @designate_calc_fn can be used to inject parameters into the calculation function. i.e. _m = m.raw_value
     def __call__(self, x: np.ndarray, *args, **kwargs) -> np.ndarray:
         return self.m.raw_value * x + self.c.raw_value
 
     def __repr__(self):
-        return "{}({}, {})".format(self.__class__.__name__, self.m, self.c)
+        return "<{}({}, {})>".format(self.__class__.__name__, self.m, self.c)

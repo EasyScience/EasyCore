@@ -42,6 +42,184 @@ Q_ = ureg.Quantity
 M_ = ureg.Measurement
 
 
+class PrimalValue(MSONable):
+        """
+        This is the base of all variable descriptions for models. It contains all information to describe a single
+        unique property of an object. This description includes a name and value as well as optionally a unit,
+        description
+        and url (for reference material). Also implemented is a callback so that the value can be read/set from a linked
+        library object.
+
+        A `Descriptor` is typically something which describes part of a model and is non-fittable and generally
+        changes the
+        state of an object.
+        """
+
+        def __init__(
+                self,
+                name: str,
+                value: Any,
+                description: Optional[str] = "",
+                url: Optional[str] = "",
+                display_name: Optional[str] = None,
+                enabled: Optional[bool] = True
+        ):  # noqa: S107
+            """
+            This is the base of all variable descriptions for models. It contains all information to describe a single
+            unique property of an object. This description includes a name and value as well as optionally a unit,
+            description and url (for reference material). Also implemented is a callback so that the value can be
+            read/set
+            from a linked library object.
+
+            A `Descriptor` is typically something which describes part of a model and is non-fittable and generally
+            changes
+            the state of an object.
+
+            Units are provided by pint: https://github.com/hgrecco/pint
+
+            :param name: Name of this object
+            :param value: Value of this object
+            :param units: This object can have a physical unit associated with it
+            :param description: A brief summary of what this object is
+            :param url: Lookup url for documentation/information
+            :param callback: The property which says how the object is linked to another one
+            :param parent: The object which is the parent to this one
+
+            .. code-block:: python
+
+                 from easyCore.Objects.Base import Descriptor
+                 # Describe a color by text
+                 color_text = Descriptor('fav_colour', 'red')
+                 # Describe a color by RGB
+                 color_num = Descriptor('fav_colour', [1, 0, 0])
+
+            .. note:: Undo/Redo functionality is implemented for the attributes `value`, `unit` and `display name`.
+            """
+            self.name: str = name
+            self._value = value
+            self._enabled = enabled
+            self.description: str = description
+            self._display_name: str = display_name
+            self.url: str = url
+            self.user_data: dict = {}
+
+        def __reduce__(self):
+            """
+            Make the class picklable. Due to the nature of the dynamic class definitions special measures need to be
+            taken.
+
+            :return: Tuple consisting of how to make the object
+            :rtype: tuple
+            """
+            state = self.as_dict()
+            cls = self.__class__
+            if hasattr(self, "__old_class__"):
+                cls = self.__old_class__
+            return cls.from_dict, (state,)
+
+        @property
+        def display_name(self) -> str:
+            """
+            Get a pretty display name.
+
+            :return: The pretty display name.
+            """
+            # TODO This might be better implementing fancy f-strings where we can return html,latex, markdown etc
+            display_name = self._display_name
+            if display_name is None:
+                display_name = self.name
+            return display_name
+
+        @display_name.setter
+        @property_stack_deco
+        def display_name(self, name_str: str):
+            """
+            Set the pretty display name.
+
+            :param name_str: Pretty display name of the object.
+            :return: None
+            """
+            self._display_name = name_str
+
+        @property
+        def value(self) -> Any:
+            """
+            Get the value of self as a pint. This is should be usable for most cases. If a pint
+            is not acceptable then the raw value can be obtained through `obj.raw_value`.
+
+            :return: Value of self with unit.
+            """
+            return self._value
+
+        @value.setter
+        def value(self, value: Any):
+            """
+            Set the value of self. This creates a pint with a unit.
+
+            :param value: New value of self
+            :return: None
+            """
+            if not self.enabled:
+                return
+            self._value = value
+
+        @property
+        def raw_value(self) -> Any:
+            """
+            Return the raw value of self without a unit.
+
+            :return: The raw value of self
+            """
+            value = self._value
+            return value
+
+        @property
+        def enabled(self) -> bool:
+            """
+            Logical property to see if the objects value can be directly set.
+
+            :return: Can the objects value be set
+            """
+            return self._enabled
+
+        @enabled.setter
+        def enabled(self, value: bool):
+            """
+            Enable and disable the direct setting of an objects value field.
+
+            :param value: True - objects value can be set, False - the opposite
+            """
+            self._enabled = value
+
+        def __repr__(self):
+            """Return printable representation of a Descriptor/Parameter object."""
+            class_name = self.__class__.__name__
+            obj_name = self.name
+            obj_value = self.raw_value
+            out_str = f"<{class_name} '{obj_name}': {obj_value}>"
+            return out_str
+
+        def as_dict(self, skip: List[str] = None) -> Dict[str, str]:
+            """
+            Convert ones self into a serialized form.
+
+            :return: dictionary of ones self
+            """
+            if skip is None:
+                skip = []
+            super_dict = super().as_dict(skip=skip + ["parent", "callback", "_finalizer"])
+            return super_dict
+
+        def __copy__(self):
+            return self.__class__.from_dict(self.as_dict())
+
+# register_pytree_node(
+#     PrimalValue,
+#     lambda pv: ((pv.value,), (pv.name, )),  # tell JAX how to unpack to an iterable
+#     lambda _, pv: PrimalValue(*_, *pv)  # tell JAX how to pack back into a Point
+# )
+
+
 class Descriptor(MSONable):
     """
     This is the base of all variable descriptions for models. It contains all information to describe a single

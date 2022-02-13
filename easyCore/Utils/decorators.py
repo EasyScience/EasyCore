@@ -81,3 +81,16 @@ def time_it(func):
             )
 
     return _time_it
+
+
+def designate_calc_fn(func):
+    """
+    @designate_calc_fn can be used to inject parameters into
+    the calculation function. i.e. _m = m.raw_value
+    """
+    @functools.wraps(func)
+    def wrapper(obj, *args, **kwargs):
+        for name in list(obj.__annotations__.keys()):
+            func.__globals__["_" + name] = getattr(obj, name).raw_value
+        return func(obj, *args, **kwargs)
+    return wrapper

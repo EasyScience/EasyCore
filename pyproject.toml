@@ -43,6 +43,7 @@ packages = [ { include = "easyCore" } ]
 [tool.poetry.dependencies]
 python = ">=3.7,<3.11" # "^3.8" generates error when installing PySide2 in easyAppGui
 numpy = "^1.19"
+jax = "^0.2.28"
 pint = ">=0.17,<0.19"
 uncertainties = "^3.1"
 lmfit = "^1.0"
@@ -50,6 +51,8 @@ bumps = "^0.8"
 asteval = "^0.9.23"
 DFO-LS = {version = "^1.2", optional = true}
 xarray = ">=0.16,<0.21"
+jaxlib = "^0.1.76"
+
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.0.0"
