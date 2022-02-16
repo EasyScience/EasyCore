@@ -14,7 +14,7 @@ from easyCore.Objects.jax.ObjectClasses import cls_converter
 @cls_converter
 class Gaussian(GaussianBase):
 
-    def __call__(self, x):
+    def __call__(self, x, *args, **kwargs):
         amplitude = self.amplitude.raw_value
         mean = np.array([mean.raw_value for mean in self.mean])
         conv = self.covariance.reshape([self.dimensionality]*self.dimensionality)

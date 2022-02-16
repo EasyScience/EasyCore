@@ -16,3 +16,5 @@ typing-extensions==4.0.1; python_version < "3.8" and python_version >= "3.7"
 uncertainties==3.1.6
 xarray==0.20.2; python_version >= "3.7"
 zipp==3.7.0; python_version < "3.8" and python_version >= "3.7"
+jax==0.2.28; python_version >= "3.7" and python_version < "3.11"
+jaxlib==0.1.76; python_version >= "3.7" and python_version < "3.11"

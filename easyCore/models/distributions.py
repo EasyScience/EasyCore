@@ -57,7 +57,7 @@ class Gaussian(BaseObj):
     def covariance(self) -> np.ndarray:
         return np.array([cov.raw_value for cov in self.cov_matrix]).reshape([self.dimensionality] * self.dimensionality)
 
-    def __call__(self, x):
+    def __call__(self, x, *args, **kwargs):
         return self.amplitude.raw_value * sc_stats.multivariate_normal.pdf(x,
                                                                            mean=[mean.raw_value for mean in self.mean],
                                                                            cov=self.covariance)
