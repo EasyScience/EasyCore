@@ -7,6 +7,7 @@ __version__ = '0.0.1'
 
 import abc
 import functools
+import inspect
 import warnings
 
 from easyCore.Objects.jax.Variable import BaseTree, Parameter, Descriptor, \
@@ -27,14 +28,14 @@ class ClassTree:
 
     @classmethod
     def tree_unflatten(cls, aux_data, children):
-        return cls(name=aux_data['name'], **dict(zip(aux_data['keys'], children)))
+        args = inspect.getargspec(cls.__init__).args
+        if 'name' in args:
+            return cls(name=aux_data['name'], **dict(zip(aux_data['keys'], children)))
+        else:
+            return cls(**dict(zip(aux_data['keys'], children)))
 
     def __repr__(self):
         return f"<Jax{super(self.__base_cls__, self).__repr__()[1:]}"
-
-    @abc.abstractmethod
-    def model(self, theta, x):
-        pass
 
 
 def cls_converter(cls):
@@ -63,13 +64,10 @@ def cls_converter(cls):
                         new_kwargs[key] = arg
                 else:
                     new_kwargs[key] = arg
-            return fn(self, *new_args, **new_kwargs)
+            fn(self, *new_args, **new_kwargs)
+            register_pytree_node_class(self.__class__)
 
         return init
-
-    options = {
-        # '__repr__':       re_repr,
-        '__base_cls__':   cls,
-        '__init__':       generate_init(cls.__init__)
-    }
-    return register_pytree_node_class(type(cls.__name__, (ClassTree, cls,), options))
+    setattr(cls, '__base_cls__', cls)
+    setattr(cls, '__init__', generate_init(cls.__init__))
+    return cls
