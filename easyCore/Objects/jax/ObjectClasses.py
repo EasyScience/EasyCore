@@ -7,6 +7,7 @@ __version__ = '0.0.1'
 
 import abc
 import functools
+import inspect
 import warnings
 
 from easyCore.Objects.jax.Variable import BaseTree, Parameter, Descriptor, \
@@ -18,23 +19,21 @@ unjaxed = [ParameterBase, DescriptorBase, PrimalValueBase]
 jax_conv = [(a, b) for a, b in zip(jaxed, unjaxed)]
 
 
-class ClassTree:
+def tree_flatten(self):
+    children = tuple(self._kwargs.values())
+    aux_data = {'name': self.name, 'keys': tuple(self._kwargs.keys())}
+    return (children, aux_data)
 
-    def tree_flatten(self):
-        children = tuple(self._kwargs.values())
-        aux_data = {'name': self.name, 'keys': tuple(self._kwargs.keys())}
-        return (children, aux_data)
 
-    @classmethod
-    def tree_unflatten(cls, aux_data, children):
+def tree_unflatten(cls, aux_data, children):
+    if 'name' in inspect.signature(cls).parameters.keys():
         return cls(name=aux_data['name'], **dict(zip(aux_data['keys'], children)))
+    else:
+        return cls(**dict(zip(aux_data['keys'], children)))
 
-    def __repr__(self):
-        return f"<Jax{super(self.__base_cls__, self).__repr__()[1:]}"
 
-    @abc.abstractmethod
-    def model(self, theta, x):
-        pass
+def new_repr(self):
+    return f"<Jax{self.__base_cls__.__base_repr__(self)[1:]}"
 
 
 def cls_converter(cls):
@@ -44,7 +43,7 @@ def cls_converter(cls):
             new_args = []
             for arg in args:
                 if not issubclass(arg.__class__, BaseTree):
-                    warnings.warn("Argument {} is not a BaseTree".format(arg))
+                    warnings.warn(f"Argument {arg} is not a BaseTree")
                     is_in = [ujax for ujax in unjaxed if isinstance(arg, ujax)]
                     if is_in:
                         new_args.append(jaxed[unjaxed.index(is_in[0])](arg.name, arg.raw_value))
@@ -55,7 +54,7 @@ def cls_converter(cls):
             new_kwargs = {}
             for key, arg in kwargs.items():
                 if not issubclass(arg.__class__, BaseTree):
-                    warnings.warn("Argument {} is not a BaseTree".format(arg))
+                    warnings.warn(f"Argument {arg} is not a BaseTree")
                     is_in = [ujax for ujax in unjaxed if isinstance(arg, ujax)]
                     if is_in:
                         new_kwargs[key] = jaxed[unjaxed.index(is_in[0])](arg.name, arg.raw_value)
@@ -63,13 +62,16 @@ def cls_converter(cls):
                         new_kwargs[key] = arg
                 else:
                     new_kwargs[key] = arg
-            return fn(self, *new_args, **new_kwargs)
-
+            fn(self, *new_args, **new_kwargs)
+            try:
+                register_pytree_node_class(self.__class__)
+            except ValueError:
+                pass
         return init
-
-    options = {
-        # '__repr__':       re_repr,
-        '__base_cls__':   cls,
-        '__init__':       generate_init(cls.__init__)
-    }
-    return register_pytree_node_class(type(cls.__name__, (ClassTree, cls,), options))
+    setattr(cls, '__base_cls__', cls)
+    setattr(cls, '__init__', generate_init(cls.__init__))
+    setattr(cls, 'tree_flatten', tree_flatten)
+    setattr(cls, 'tree_unflatten', classmethod(tree_unflatten))
+    setattr(cls, '__base_repr__', cls.__repr__)
+    setattr(cls, '__repr__', new_repr)
+    return cls
