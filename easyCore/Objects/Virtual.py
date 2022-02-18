@@ -32,6 +32,7 @@ def realizer(obj):
     if getattr(obj, "_is_virtual", False):
         klass = getattr(obj, "__non_virtual_class__")
         import easyCore.Objects.Variable as ec_var
+
         args = []
         if klass in ec_var.__dict__.values():  # is_variable check
             kwargs = obj.to_data_dict()
@@ -40,8 +41,10 @@ def realizer(obj):
             kwargs = {name: realizer(item) for name, item in obj._kwargs.items()}
             if isinstance(klass, Iterable) or issubclass(klass, MutableSequence):
                 for key, value in inspect.signature(klass).parameters.items():
-                    if value.kind in [inspect.Parameter.POSITIONAL_ONLY,
-                                      inspect.Parameter.POSITIONAL_OR_KEYWORD]:
+                    if value.kind in [
+                        inspect.Parameter.POSITIONAL_ONLY,
+                        inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                    ]:
                         args.append(getattr(obj, key))
             return klass(*args, **kwargs)
     else:
@@ -50,11 +53,12 @@ def realizer(obj):
 
 def component_realizer(obj, component, recursive=True):
     import easyCore.Objects.Variable as ec_var
+
     done_mapping = True
     if not isinstance(obj, Iterable) or not issubclass(obj.__class__, MutableSequence):
         old_component = obj._kwargs[component]
         new_components = realizer(obj._kwargs[component])
-        if hasattr(new_components,'enabled'):
+        if hasattr(new_components, "enabled"):
             new_components.enabled = True
     else:
         old_component = obj[component]
@@ -70,9 +74,14 @@ def component_realizer(obj, component, recursive=True):
             else:
                 value = key
                 key = value._borg.map.convert_id_to_key(value)
-            if getattr(value, '__old_class__', value.__class__) in ec_var.__dict__.values():
+            if (
+                getattr(value, "__old_class__", value.__class__)
+                in ec_var.__dict__.values()
+            ):
                 continue
-            component._borg.map.prune_vertex_from_edge(component, component._kwargs[key])
+            component._borg.map.prune_vertex_from_edge(
+                component, component._kwargs[key]
+            )
             component._borg.map.add_edge(component, old_component._kwargs[key])
             component._kwargs[key] = old_component._kwargs[key]
             done_mapping = False
@@ -102,7 +111,9 @@ def virtualizer(obj):
         old_obj = obj._borg.map.get_item_by_key(obj._derived_from)
         constraint = ObjConstraint(new_obj, "", old_obj)
         constraint.external = True
-        old_obj._constraints["virtual"][str(obj._borg.map.convert_id(new_obj).int)] = constraint
+        old_obj._constraints["virtual"][
+            str(obj._borg.map.convert_id(new_obj).int)
+        ] = constraint
         new_obj._constraints["builtin"] = dict()
         # setattr(new_obj, "__previous_set", getattr(olobj, "__previous_set", None))
         weakref.finalize(
@@ -116,12 +127,12 @@ def virtualizer(obj):
     # The supplied class
     klass = getattr(obj, "__old_class__", obj.__class__)
     virtual_options = {
-        "_is_virtual":           True,
-        "is_virtual":            property(fget=lambda self: self._is_virtual),
-        "_derived_from":         property(fget=lambda self: self._borg.map.convert_id(obj).int),
+        "_is_virtual": True,
+        "is_virtual": property(fget=lambda self: self._is_virtual),
+        "_derived_from": property(fget=lambda self: self._borg.map.convert_id(obj).int),
         "__non_virtual_class__": klass,
-        "realize":               realizer,
-        "relalize_component":    component_realizer,
+        "realize": realizer,
+        "relalize_component": component_realizer,
     }
 
     import easyCore.Objects.Variable as ec_var
@@ -145,24 +156,29 @@ def virtualizer(obj):
             d["fixed"] = True
         v_p = cls.from_dict(d)
         v_p._enabled = False
-        constraint = ObjConstraint(v_p, "", obj)
-        constraint.external = True
-        obj._constraints["virtual"][str(cls._borg.map.convert_id(v_p).int)] = constraint
-        v_p._constraints["builtin"] = dict()
-        setattr(v_p, "__previous_set", getattr(obj, "__previous_set", None))
-        weakref.finalize(
-            v_p,
-            _remover,
-            str(borg.map.convert_id(obj).int),
-            str(borg.map.convert_id(v_p).int),
-        )
+        if hasattr(obj, "_constraints"):
+            constraint = ObjConstraint(v_p, "", obj)
+            constraint.external = True
+            obj._constraints["virtual"][
+                str(cls._borg.map.convert_id(v_p).int)
+            ] = constraint
+            v_p._constraints["builtin"] = dict()
+            setattr(v_p, "__previous_set", getattr(obj, "__previous_set", None))
+            weakref.finalize(
+                v_p,
+                _remover,
+                str(borg.map.convert_id(obj).int),
+                str(borg.map.convert_id(v_p).int),
+            )
     else:
         # In this case, we need to be recursive.
         kwargs = {name: virtualizer(item) for name, item in obj._kwargs.items()}
         if isinstance(klass, Iterable) or issubclass(klass, MutableSequence):
             for key, value in inspect.signature(cls).parameters.items():
-                if value.kind in [inspect.Parameter.POSITIONAL_ONLY,
-                                  inspect.Parameter.POSITIONAL_OR_KEYWORD]:
+                if value.kind in [
+                    inspect.Parameter.POSITIONAL_ONLY,
+                    inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                ]:
                     args.append(getattr(obj, key))
         v_p = cls(*args, **kwargs)
     return v_p

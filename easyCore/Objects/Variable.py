@@ -23,7 +23,8 @@ from typing import (
     Optional,
     Type,
     TYPE_CHECKING,
-    Callable, Tuple,
+    Callable,
+    Tuple,
 )
 
 from easyCore import borg, ureg, np, pint
@@ -34,6 +35,11 @@ from easyCore.Utils.UndoRedo import property_stack_deco
 from easyCore.Utils.json import MSONable
 from easyCore.Fitting.Constraints import SelfConstraint
 
+try:
+    import jax
+except ImportError:
+    jax = None
+
 if TYPE_CHECKING:
     from easyCore.Fitting.Constraints import ConstraintBase as Constraint
     from easyCore.Objects.Inferface import InterfaceFactoryTemplate as Interface
@@ -42,182 +48,29 @@ Q_ = ureg.Quantity
 M_ = ureg.Measurement
 
 
-class PrimalValue(MSONable):
-        """
-        This is the base of all variable descriptions for models. It contains all information to describe a single
-        unique property of an object. This description includes a name and value as well as optionally a unit,
-        description
-        and url (for reference material). Also implemented is a callback so that the value can be read/set from a linked
-        library object.
+def tree_flatten(obj: Any) -> Tuple[List[Any], Tuple[str, Dict[str, Any]]]:
+    d = obj._args.copy()  # This has value, unit and maybe error
+    children = [d.pop("value")]
+    name = obj.name
+    aux_data = {
+        "description": obj.description,
+        "url": obj.url,
+    }
+    aux_data.update(d)
+    if "error" in d.keys():
+        aux_data["min"] = obj.min
+        aux_data["max"] = obj.max
+        aux_data["fixed"] = obj.fixed
+    return children, (name, aux_data)
 
-        A `Descriptor` is typically something which describes part of a model and is non-fittable and generally
-        changes the
-        state of an object.
-        """
 
-        def __init__(
-                self,
-                name: str,
-                value: Any,
-                description: Optional[str] = "",
-                url: Optional[str] = "",
-                display_name: Optional[str] = None,
-                enabled: Optional[bool] = True
-        ):  # noqa: S107
-            """
-            This is the base of all variable descriptions for models. It contains all information to describe a single
-            unique property of an object. This description includes a name and value as well as optionally a unit,
-            description and url (for reference material). Also implemented is a callback so that the value can be
-            read/set
-            from a linked library object.
+def tree_creator(klass):
+    def tree_unflatten(
+        aux_data: Tuple[str, Dict[str, Any]], children: List[Any]
+    ) -> klass:
+        return klass(aux_data[0], *children, **aux_data[1])
 
-            A `Descriptor` is typically something which describes part of a model and is non-fittable and generally
-            changes
-            the state of an object.
-
-            Units are provided by pint: https://github.com/hgrecco/pint
-
-            :param name: Name of this object
-            :param value: Value of this object
-            :param units: This object can have a physical unit associated with it
-            :param description: A brief summary of what this object is
-            :param url: Lookup url for documentation/information
-            :param callback: The property which says how the object is linked to another one
-            :param parent: The object which is the parent to this one
-
-            .. code-block:: python
-
-                 from easyCore.Objects.Base import Descriptor
-                 # Describe a color by text
-                 color_text = Descriptor('fav_colour', 'red')
-                 # Describe a color by RGB
-                 color_num = Descriptor('fav_colour', [1, 0, 0])
-
-            .. note:: Undo/Redo functionality is implemented for the attributes `value`, `unit` and `display name`.
-            """
-            self.name: str = name
-            self._value = value
-            self._enabled = enabled
-            self.description: str = description
-            self._display_name: str = display_name
-            self.url: str = url
-            self.user_data: dict = {}
-
-        def __reduce__(self):
-            """
-            Make the class picklable. Due to the nature of the dynamic class definitions special measures need to be
-            taken.
-
-            :return: Tuple consisting of how to make the object
-            :rtype: tuple
-            """
-            state = self.as_dict()
-            cls = self.__class__
-            if hasattr(self, "__old_class__"):
-                cls = self.__old_class__
-            return cls.from_dict, (state,)
-
-        @property
-        def display_name(self) -> str:
-            """
-            Get a pretty display name.
-
-            :return: The pretty display name.
-            """
-            # TODO This might be better implementing fancy f-strings where we can return html,latex, markdown etc
-            display_name = self._display_name
-            if display_name is None:
-                display_name = self.name
-            return display_name
-
-        @display_name.setter
-        @property_stack_deco
-        def display_name(self, name_str: str):
-            """
-            Set the pretty display name.
-
-            :param name_str: Pretty display name of the object.
-            :return: None
-            """
-            self._display_name = name_str
-
-        @property
-        def value(self) -> Any:
-            """
-            Get the value of self as a pint. This is should be usable for most cases. If a pint
-            is not acceptable then the raw value can be obtained through `obj.raw_value`.
-
-            :return: Value of self with unit.
-            """
-            return self._value
-
-        @value.setter
-        def value(self, value: Any):
-            """
-            Set the value of self. This creates a pint with a unit.
-
-            :param value: New value of self
-            :return: None
-            """
-            if not self.enabled:
-                return
-            self._value = value
-
-        @property
-        def raw_value(self) -> Any:
-            """
-            Return the raw value of self without a unit.
-
-            :return: The raw value of self
-            """
-            value = self._value
-            return value
-
-        @property
-        def enabled(self) -> bool:
-            """
-            Logical property to see if the objects value can be directly set.
-
-            :return: Can the objects value be set
-            """
-            return self._enabled
-
-        @enabled.setter
-        def enabled(self, value: bool):
-            """
-            Enable and disable the direct setting of an objects value field.
-
-            :param value: True - objects value can be set, False - the opposite
-            """
-            self._enabled = value
-
-        def __repr__(self):
-            """Return printable representation of a Descriptor/Parameter object."""
-            class_name = self.__class__.__name__
-            obj_name = self.name
-            obj_value = self.raw_value
-            out_str = f"<{class_name} '{obj_name}': {obj_value}>"
-            return out_str
-
-        def as_dict(self, skip: List[str] = None) -> Dict[str, str]:
-            """
-            Convert ones self into a serialized form.
-
-            :return: dictionary of ones self
-            """
-            if skip is None:
-                skip = []
-            super_dict = super().as_dict(skip=skip + ["parent", "callback", "_finalizer"])
-            return super_dict
-
-        def __copy__(self):
-            return self.__class__.from_dict(self.as_dict())
-
-# register_pytree_node(
-#     PrimalValue,
-#     lambda pv: ((pv.value,), (pv.name, )),  # tell JAX how to unpack to an iterable
-#     lambda _, pv: PrimalValue(*_, *pv)  # tell JAX how to pack back into a Point
-# )
+    return tree_unflatten
 
 
 class Descriptor(MSONable):
@@ -299,7 +152,7 @@ class Descriptor(MSONable):
             value = int(value)
         self._args["value"] = value
         self._args["units"] = str(self.unit)
-        self._value = self.__class__._constructor(**self._args)
+        # self._value = self.__class__._constructor(**self._args)
 
         self._enabled = enabled
 
@@ -310,6 +163,10 @@ class Descriptor(MSONable):
             callback = property()
         self._callback: property = callback
         self.user_data: dict = {}
+
+        self._constraints = {
+            "virtual": {},
+        }
 
         finalizer = None
         if self._callback.fdel is not None:
@@ -376,7 +233,7 @@ class Descriptor(MSONable):
         new_unit = ureg.parse_expression(unit_str)
         self._units = new_unit
         self._args["units"] = str(new_unit)
-        self._value = self.__class__._constructor(**self._args)
+        # self._value = self.__class__._constructor(**self._args)
 
     @property
     def value(self) -> Any:
@@ -391,13 +248,15 @@ class Descriptor(MSONable):
         if self._callback.fget is not None:
             try:
                 value = self._callback.fget()
-                if value != self._value:
+                if value != self._args["value"]:
                     self.__deepValueSetter(value)
             except Exception as e:
                 raise ValueError(f"Unable to return value:\n{e}")
-        r_value = self._value
+        r_value = self._args["value"]
         if self.__isBooleanValue:
-            r_value = bool(r_value)
+            return bool(r_value)
+        if isinstance(r_value, numbers.Number):
+            return self.__class__._constructor(**self._args)
         return r_value
 
     def __deepValueSetter(self, value: Any):
@@ -417,7 +276,7 @@ class Descriptor(MSONable):
         if self.__isBooleanValue:
             value = int(value)
         self._args["value"] = value
-        self._value = self.__class__._constructor(**self._args)
+        # self._value = self.__class__._constructor(**self._args)
 
     @value.setter
     @property_stack_deco
@@ -428,6 +287,10 @@ class Descriptor(MSONable):
         :param value: New value of self
         :return: None
         """
+        # And finally update any virtual constraints
+        constraint_type: dict = self._constraints["virtual"]
+        _ = self._constraint_runner(constraint_type, value)
+
         if not self.enabled:
             if borg.debug:
                 raise CoreSetException(f"{str(self)} is not enabled.")
@@ -446,11 +309,11 @@ class Descriptor(MSONable):
 
         :return: The raw value of self
         """
-        value = self._value
-        if hasattr(value, "magnitude"):
-            value = value.magnitude
-            if hasattr(value, "nominal_value"):
-                value = value.nominal_value
+        value = self._args["value"]
+        # if hasattr(value, "magnitude"):
+        #     value = value.magnitude
+        #     if hasattr(value, "nominal_value"):
+        #         value = value.nominal_value
         if self.__isBooleanValue:
             value = bool(value)
         return value
@@ -482,10 +345,16 @@ class Descriptor(MSONable):
         :param unit_str: New unit in string form
         """
         new_unit = ureg.parse_expression(unit_str)
-        self._value = self._value.to(new_unit)
+        _value = self.value.to(new_unit)
+        if hasattr(_value, "magnitude"):
+            value = _value.magnitude
+            if hasattr(value, "nominal_value"):
+                value = value.nominal_value
         self._units = new_unit
-        self._args["value"] = self.raw_value
+        self._args["value"] = value
         self._args["units"] = str(self.unit)
+        if hasattr(_value, "error"):
+            self._args["error"] = _value.error.magnitude
 
     # @cached_property
     @property
@@ -504,7 +373,7 @@ class Descriptor(MSONable):
         if self.__isBooleanValue:
             obj_value = self.raw_value
         else:
-            obj_value = self._value.magnitude
+            obj_value = self.value.magnitude
         if isinstance(obj_value, float):
             obj_value = "{:0.04f}".format(obj_value)
         obj_units = ""
@@ -541,8 +410,40 @@ class Descriptor(MSONable):
         pickled_obj.update(kwargs)
         return data_type.from_dict(pickled_obj)
 
+    def _constraint_runner(
+        self,
+        this_constraint_type: Union[dict, MappingProxyType],
+        newer_value: numbers.Number,
+    ):
+        # The original value is the value before the constraint was applied.
+        d = self._args.copy()
+        # Apply the new value
+        self._args["value"] = newer_value
+        for constraint in this_constraint_type.values():
+            # Run the constraint
+            if constraint.external:
+                constraint()
+                continue
+            this_new_value = constraint(no_set=True)
+            # If the new value is different from the old value, apply it.
+            if this_new_value != newer_value:
+                if borg.debug:
+                    print(f"Constraint `{constraint}` has been applied")
+                self._args["value"] = this_new_value
+                # self._value = self.__class__._constructor(**d)
+            newer_value = this_new_value
+
+        # self._args.update(d)
+        return newer_value
+
     def __copy__(self):
         return self.__class__.from_dict(self.as_dict())
+
+
+if jax is not None:
+    jax.tree_util.register_pytree_node(
+        Descriptor, tree_flatten, tree_creator(Descriptor)
+    )
 
 
 class ComboDescriptor(Descriptor):
@@ -575,6 +476,13 @@ class ComboDescriptor(Descriptor):
             fset=self.__class__._property_value.fset,
             fdel=self.__class__.value.fdel,
         )
+        try:
+            if jax is not None:
+                jax.tree_util.register_pytree_node(
+                    self.__class__, tree_flatten, tree_creator(self.__class__)
+                )
+        except ValueError:
+            pass
 
     @property
     def _property_value(self) -> Union[numbers.Number, np.ndarray]:
@@ -592,7 +500,7 @@ class ComboDescriptor(Descriptor):
         if isinstance(set_value, Q_):
             set_value = set_value.magnitude
         # Save the old state and create the new state
-        old_value = self._value
+        old_value = self._args["value"]
         state = self._borg.stack.enabled
         if state:
             self._borg.stack.force_state(False)
@@ -669,14 +577,14 @@ class Parameter(Descriptor):
         # Set the error
         self._args = {"value": value, "units": "", "error": error}
 
-        if not isinstance(value, numbers.Number):
-            raise ValueError("In a parameter the `value` must be numeric")
-        if value < min:
-            raise ValueError("`value` can not be less than `min`")
-        if value > max:
-            raise ValueError("`value` can not be greater than `max`")
-        if error < 0:
-            raise ValueError("Standard deviation `error` must be positive")
+        # if not isinstance(value, numbers.Number):
+        #     raise ValueError("In a parameter the `value` must be numeric")
+        # if value < min:
+        #     raise ValueError("`value` can not be less than `min`")
+        # if value > max:
+        #     raise ValueError("`value` can not be greater than `max`")
+        # if error < 0:
+        #     raise ValueError("Standard deviation `error` must be positive")
 
         super().__init__(name, value, **kwargs)
         self._args["units"] = str(self.unit)
@@ -694,7 +602,7 @@ class Parameter(Descriptor):
         self._fixed: bool = fixed
         self.initial_value = self.value
         self._constraints: dict = {
-            "user":    {},
+            "user": {},
             "builtin": {
                 "min": SelfConstraint(self, ">=", "_min"),
                 "max": SelfConstraint(self, "<=", "_max"),
@@ -722,6 +630,13 @@ class Parameter(Descriptor):
             fset=self.__class__._property_value.fset,
             fdel=self.__class__.value.fdel,
         )
+        try:
+            if jax is not None:
+                jax.tree_util.register_pytree_node(
+                    self.__class__, tree_flatten, tree_creator(self.__class__)
+                )
+        except ValueError:
+            pass
 
     @property
     def _property_value(self) -> Union[numbers.Number, np.ndarray]:
@@ -739,30 +654,30 @@ class Parameter(Descriptor):
         if isinstance(set_value, M_):
             set_value = set_value.magnitude.nominal_value
         # Save the old state and create the new state
-        old_value = self._value
-        self._value = self.__class__._constructor(
-            value=set_value, units=self._args["units"], error=self._args["error"]
-        )
+        old_value = self._args["value"]
+        # self._value = self.__class__._constructor(
+        #     value=set_value, units=self._args["units"], error=self._args["error"]
+        # )
 
         # First run the built in constraints. i.e. min/max
         constraint_type: MappingProxyType = self.builtin_constraints
-        new_value = self.__constraint_runner(constraint_type, set_value)
+        new_value = self._constraint_runner(constraint_type, set_value)
         # Then run any user constraints.
         constraint_type: dict = self.user_constraints
         state = self._borg.stack.enabled
         if state:
             self._borg.stack.force_state(False)
         try:
-            new_value = self.__constraint_runner(constraint_type, new_value)
+            new_value = self._constraint_runner(constraint_type, new_value)
         finally:
             self._borg.stack.force_state(state)
 
-        # And finally update any virtual constraints
-        constraint_type: dict = self._constraints["virtual"]
-        _ = self.__constraint_runner(constraint_type, new_value)
+        # # And finally update any virtual constraints
+        # constraint_type: dict = self._constraints["virtual"]
+        # _ = self._constraint_runner(constraint_type, new_value)
 
         # Restore to the old state
-        self._value = old_value
+        self._args["value"] = old_value
         self.__previous_set(self, new_value)
 
     def convert_unit(self, new_unit: str):  # noqa: S1144
@@ -778,8 +693,6 @@ class Parameter(Descriptor):
         if not self.value.unitless and old_unit != "dimensionless":
             self._min = Q_(self.min, old_unit).to(self._units).magnitude
             self._max = Q_(self.max, old_unit).to(self._units).magnitude
-        # Log the new converted error
-        self._args["error"] = self.value.error.magnitude
 
     @property
     def min(self) -> numbers.Number:
@@ -803,7 +716,9 @@ class Parameter(Descriptor):
         if value <= self.raw_value:
             self._min = value
         else:
-            raise ValueError(f"The current set value ({self.raw_value}) is less than the desired min value ({value}).")
+            raise ValueError(
+                f"The current set value ({self.raw_value}) is less than the desired min value ({value})."
+            )
 
     @property
     def max(self) -> numbers.Number:
@@ -827,7 +742,9 @@ class Parameter(Descriptor):
         if value >= self.raw_value:
             self._max = value
         else:
-            raise ValueError(f"The current set value ({self.raw_value}) is greater than the desired max value ({value}).")
+            raise ValueError(
+                f"The current set value ({self.raw_value}) is greater than the desired max value ({value})."
+            )
 
     @property
     def fixed(self) -> bool:
@@ -867,7 +784,7 @@ class Parameter(Descriptor):
 
         :return: Error associated with parameter
         """
-        return float(self._value.error.magnitude)
+        return float(self.value.error.magnitude)
 
     @error.setter
     @property_stack_deco
@@ -882,7 +799,7 @@ class Parameter(Descriptor):
         if value < 0:
             raise ValueError
         self._args["error"] = value
-        self._value = self.__class__._constructor(**self._args)
+        # self._value = self.__class__._constructor(**self._args)
 
     def __repr__(self) -> str:
         """
@@ -901,7 +818,7 @@ class Parameter(Descriptor):
         return float(self.raw_value)
 
     def as_dict(
-            self, skip: Optional[Union[List[str], None]] = None
+        self, skip: Optional[Union[List[str], None]] = None
     ) -> Dict[str, Union[str, bool, numbers.Number]]:
         """
         Include enabled in the dict output as it's unfortunately skipped
@@ -935,10 +852,13 @@ class Parameter(Descriptor):
     def user_constraints(self, constraints_dict: Dict[str, Type[Constraint]]):
         self._constraints["user"] = constraints_dict
 
-    def _quick_set(self, set_value,
-                   run_builtin_constraints=False,
-                   run_user_constraints=False,
-                   run_virtual_constraints=False):
+    def _quick_set(
+        self,
+        set_value,
+        run_builtin_constraints=False,
+        run_user_constraints=False,
+        run_virtual_constraints=False,
+    ):
         """
         This is a quick setter for the parameter. It bypasses all the checks and constraints,
         just setting the value and issuing the interface callbacks.
@@ -948,7 +868,7 @@ class Parameter(Descriptor):
         # First run the built-in constraints. i.e. min/max
         if run_builtin_constraints:
             constraint_type: MappingProxyType = self.builtin_constraints
-            set_value = self.__constraint_runner(constraint_type, set_value)
+            set_value = self._constraint_runner(constraint_type, set_value)
         # Then run any user constraints.
         if run_user_constraints:
             constraint_type: dict = self.user_constraints
@@ -956,40 +876,19 @@ class Parameter(Descriptor):
             if state:
                 self._borg.stack.force_state(False)
             try:
-                set_value = self.__constraint_runner(constraint_type, set_value)
+                set_value = self._constraint_runner(constraint_type, set_value)
             finally:
                 self._borg.stack.force_state(state)
         if run_virtual_constraints:
             # And finally update any virtual constraints
             constraint_type: dict = self._constraints["virtual"]
-            _ = self.__constraint_runner(constraint_type, set_value)
+            _ = self._constraint_runner(constraint_type, set_value)
 
         # Finally set the value
         self._property_value._magnitude._nominal_value = set_value
-        self._args['value'] = set_value
+        self._args["value"] = set_value
         if self._callback.fset is not None:
             self._callback.fset(set_value)
-
-    def __constraint_runner(
-            self,
-            this_constraint_type: Union[dict, MappingProxyType],
-            newer_value: numbers.Number,
-    ):
-        for constraint in this_constraint_type.values():
-            if constraint.external:
-                constraint()
-                continue
-            this_new_value = constraint(no_set=True)
-            if this_new_value != newer_value:
-                if borg.debug:
-                    print(f"Constraint `{constraint}` has been applied")
-                self._value = self.__class__._constructor(
-                    value=this_new_value,
-                    units=self._args["units"],
-                    error=self._args["error"],
-                )
-            newer_value = this_new_value
-        return newer_value
 
     @property
     def bounds(self) -> Tuple[numbers.Number, numbers.Number]:
@@ -1001,7 +900,9 @@ class Parameter(Descriptor):
         return self._min, self._max
 
     @bounds.setter
-    def bounds(self, new_bound: Union[Tuple[numbers.Number, numbers.Number], numbers.Number]) -> None:
+    def bounds(
+        self, new_bound: Union[Tuple[numbers.Number, numbers.Number], numbers.Number]
+    ) -> None:
         """
         Set the bounds of the parameter. *This will also enable the parameter*.
 

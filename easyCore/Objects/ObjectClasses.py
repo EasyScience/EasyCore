@@ -7,6 +7,7 @@ __version__ = "0.1.0"
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
+import inspect
 import numbers
 
 from typing import (
@@ -23,6 +24,11 @@ from easyCore import borg
 from easyCore.Utils.json import MSONable
 from easyCore.Utils.classTools import addLoggedProp
 from .Variable import Parameter, Descriptor
+
+try:
+    import jax
+except ImportError:
+    jax = None
 
 if TYPE_CHECKING:
     from easyCore.Fitting.Constraints import ConstraintBase as Constraint
@@ -205,6 +211,22 @@ class BasedBase(MSONable):
         return sorted(new_class_objs)
 
 
+def tree_flatten(self):
+    children = tuple(self._kwargs.values())
+    aux_data = {"name": self.name, "keys": tuple(self._kwargs.keys())}
+    return (children, aux_data)
+
+
+def tree_creator(cls):
+    def tree_unflatten(aux_data, children) -> cls:
+        if "name" in inspect.signature(cls).parameters.keys():
+            return cls(name=aux_data["name"], **dict(zip(aux_data["keys"], children)))
+        else:
+            return cls(**dict(zip(aux_data["keys"], children)))
+
+    return tree_unflatten
+
+
 class BaseObj(BasedBase):
     """
     This is the base class for which all higher level classes are built off of.
@@ -251,6 +273,14 @@ class BaseObj(BasedBase):
                 my_self=self,
                 test_class=BaseObj,
             )
+        if jax is not None:
+            try:
+                # The better way of doing this would be to use jax.tree_util._registry, but we can't query it
+                jax.tree_util.register_pytree_node(
+                    self.__class__, tree_flatten, tree_creator(self.__class__)
+                )
+            except ValueError:
+                pass
 
     def _add_component(
         self, key: str, component: Union[Type[Descriptor], Type[BasedBase]]
