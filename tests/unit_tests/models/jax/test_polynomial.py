@@ -7,18 +7,18 @@ __version__ = "0.0.1"
 
 import pytest
 from jax import numpy as np
-from easyCore.Objects.jax.Variable import Parameter
+from easyCore.Objects.Variable import Parameter
 from easyCore.models.jax.polynomial import Line, Polynomial
 
 line_test_cases = ((1, 2), (-1, -2), (0.72, 6.48))
 poly_test_cases = (
-    (1.,),
+    (1.0,),
     (
-        1.,
-        2.,
+        1.0,
+        2.0,
     ),
-    (1., 2., 3.),
-    (-1., -2., -3.),
+    (1.0, 2.0, 3.0),
+    (-1.0, -2.0, -3.0),
     (0.72, 6.48, -0.48),
 )
 

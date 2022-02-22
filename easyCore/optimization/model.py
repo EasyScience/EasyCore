@@ -52,20 +52,29 @@ def check_model(func: Callable) -> Callable:
 
 
 class Model:
-    def __init__(self, f: Optional[Callable] = None, parameters: Optional[dict] = None):
+    def __init__(
+        self,
+        f: Optional[Callable] = None,
+        parameters: Optional[dict] = None,
+        fn_kwargs: Optional[dict] = None,
+    ):
         if not hasattr(f, "__call__"):
             f = functools.partial(value_wrapper, f)
         self._function = f
         self._parameters = parameters
-        s = inspect.signature(f)
-        self._idx = sum(
-            [
-                isinstance(item.default, type(inspect._empty))
-                or item.kind == inspect.Parameter.POSITIONAL_ONLY
-                for n, item in s.parameters.items()
-            ]
-        )
-        if parameters is None and f is not None:
+        try:
+            s = inspect.signature(f)
+            self._idx = sum(
+                [
+                    isinstance(item.default, type(inspect._empty))
+                    or item.kind == inspect.Parameter.POSITIONAL_ONLY
+                    for n, item in s.parameters.items()
+                ]
+            )
+        except ValueError:
+            s = None
+            self._idx = 0
+        if parameters is None and f is not None and s is not None:
             if len(s.parameters) == self._idx:
                 self._parameters = {}
             else:
@@ -74,29 +83,43 @@ class Model:
                     p[name].name: p[name].default
                     for name in list(s.parameters.keys())[self._idx : :]
                 }
+        else:
+            if parameters is None:
+                self._parameters = {}
+            else:
+                self._parameters = parameters
         self._count = 0
         self._parameter_history = {}
         self._initialize_parameters()
         self._runtime = []
         self._input_dimensions = 1
+        if fn_kwargs is None:
+            fn_kwargs = {}
+        self._fn_kwargs = fn_kwargs
 
     def __call__(self, x, *args, **kwargs):
         self._count += 1
         if len(args) == len(self._parameters):
             for name, value in zip(self._parameters.keys(), args):
                 self._parameter_history[name].append(value)
+        for key, item in kwargs.items():
+            if key in self._parameter_history.keys():
+                self._parameter_history[key].append(item)
         fn = self._function
         if fn is None:
             return None
         start = perf_counter()
         try:
-            results = fn(x, *args, **kwargs)
+            results = fn(x, *args, **kwargs, **self._fn_kwargs)
         except Exception:
             warnings.warn("The fn evaluation has failed", ResourceWarning)
             results = np.zeros_like(x)
         finally:
             self._runtime.append(perf_counter() - start)
         return results
+
+    def model(self, theta: np.ndarray, x) -> np.ndarray:
+        return self(x, *theta)
 
     def _initialize_parameters(
         self, names: Optional[List[str]] = None, values: Optional[List[Any]] = None
@@ -170,8 +193,16 @@ class Model:
         self.reset_count()
 
     @property
+    def fn_kwargs(self) -> dict:
+        return self._fn_kwargs
+
+    @fn_kwargs.setter
+    def fn_kwargs(self, fn_kwargs: dict):
+        self._fn_kwargs = fn_kwargs
+
+    @property
     def runtime(self) -> float:
-        return np.sum(self._runtime, axis=0)
+        return np.sum(np.array(self._runtime), axis=0)
 
     @check_model
     def __add__(self, other: M) -> CM:
@@ -207,6 +238,9 @@ class EasyModel(Model):
         if len(args) == len(self._cached_parameters):
             for name, value in zip(self._cached_parameters.keys(), args):
                 self._cached_parameters[name].value = value
+        for key, item in kwargs.items():
+            if key in self._cached_parameters.keys():
+                self._cached_parameters[key].value = item
         return super(EasyModel, self).__call__(x, *args, **kwargs)
 
 
@@ -224,9 +258,9 @@ class CompositeModel(Model):
         self._right_model = right_model
         lp = left_model.parameters.copy()
         rp = right_model.parameters.copy()
-        super(CompositeModel, self).__init__(None, lp.update(rp))
+        lp.update(rp)
+        super(CompositeModel, self).__init__(f=None, parameters=lp, fn_kwargs=fn_kwargs)
         self._function = function
-        self._function_kwargs = fn_kwargs
 
     def _initialize_parameters(self) -> NoReturn:
         left_names = list(self._left_model.parameters.keys())
@@ -246,24 +280,26 @@ class CompositeModel(Model):
         super(CompositeModel, self)._initialize_parameters(names=names, values=values)
 
     def __call__(self, x, *args, **kwargs) -> Any:
-        left = dict.fromkeys(self._left_model.parameters.keys())
-        right = dict.fromkeys(self._right_model.parameters.keys())
+        left_keys = self._left_model.parameters.keys()
+        right_keys = self._right_model.parameters.keys()
 
-        if len(args) == len(left) + len(right):
-            for name, value in zip(left.keys(), args[: len(left)]):
-                left[name] = value
-            for name, value in zip(right.keys(), args[len(left) :]):
-                right[name] = value
-        else:
-            for key in left.keys():
-                if key in kwargs.keys():
-                    left[key] = kwargs[key]
-            for key in right.keys():
-                if key in kwargs.keys():
-                    right[key] = kwargs[key]
+        left_kwargs = {}
+        right_kwargs = {}
+
+        for arg in kwargs.keys():
+            if arg in left_keys:
+                left_kwargs[arg] = kwargs[arg]
+            elif arg in right_keys:
+                right_kwargs[arg] = kwargs[arg]
+            else:
+                raise ValueError(f"{arg} is not a parameter of the composite model")
+
+        if len(args) == len(left_keys) + len(right_keys):
+            for name, value in zip(left_keys, args[: len(left_keys)]):
+                left_kwargs[name] = value
+            for name, value in zip(right_keys, args[len(left_keys) :]):
+                right_kwargs[name] = value
 
         return super(CompositeModel, self).__call__(
-            self._left_model(x, **left),
-            self._right_model(x, **right),
-            **self._function_kwargs,
+            self._left_model(x, **left_kwargs), self._right_model(x, **right_kwargs)
         )
