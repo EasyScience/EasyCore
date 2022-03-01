@@ -7,6 +7,7 @@ asteval==0.9.24; python_version >= "3.6"
 bumps==0.8.0
 future==0.18.2; python_version >= "3.6" and python_full_version < "3.0.0" or python_full_version >= "3.3.0" and python_version >= "3.6"
 importlib-metadata==4.5.0; python_version < "3.8" and python_version >= "3.6"
+lazy_import == 0.2.2
 lmfit==1.0.2; python_version >= "3.6"
 numpy==1.21.0; python_version >= "3.7"
 packaging==20.9; python_version >= "3.6" and python_full_version < "3.0.0" or python_full_version >= "3.4.0" and python_version >= "3.6"

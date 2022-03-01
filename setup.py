@@ -17,6 +17,7 @@ package_data = {"": ["*"]}
 install_requires = [
     "asteval>=0.9.23,<0.10.0",
     "bumps>=0.8,<0.9",
+    "lazy_import >= "^0.2.2"
     "lmfit>=1.0,<2.0",
     "numpy>=1.19,<2.0",
     "pint>=0.17,<0.19",
