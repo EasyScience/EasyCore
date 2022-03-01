@@ -19,7 +19,10 @@ from easyCore.Fitting.fitting_template import (
     FitError,
 )
 
-# Import bumps specific objects
+import lazy_import
+
+bumps = lazy_import.lazy_module("bumps")
+
 from bumps.names import Curve, FitProblem
 from bumps.parameter import Parameter as bumpsParameter
 from bumps.fitters import fit as bumps_fit, FIT_AVAILABLE_IDS
@@ -50,7 +53,7 @@ class bumps(FittingTemplate):  # noqa: S101
         self.p_0 = {}
 
     def make_model(
-        self, pars: Union[noneType, List[bumpsParameter]] = None
+        self, pars = None
     ) -> Callable:
         """
         Generate a bumps model from the supplied `fit_function` and parameters in the base object.
@@ -219,7 +222,7 @@ class bumps(FittingTemplate):  # noqa: S101
 
     def convert_to_pars_obj(
         self, par_list: Union[list, noneType] = None
-    ) -> List[bumpsParameter]:
+    ):
         """
         Create a container with the `Parameters` converted from the base object.
 
