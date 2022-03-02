@@ -14,7 +14,10 @@ class Gaussian(GaussianBase):
     def __call__(self, x, *args, **kwargs):
         amplitude = self.amplitude.raw_value
         mean = np.array([mean.raw_value for mean in self.mean])
-        conv = self.covariance.reshape([self.dimensionality] * self.dimensionality)
+        conv = np.reshape(
+            np.array([cov.raw_value for cov in self.cov_matrix]),
+            [self.dimensionality] * self.dimensionality,
+        )
         if self.dimensionality == 1:
             return self._call1D(x, amplitude, mean, conv)
         return self._callND(x, amplitude, mean, conv)

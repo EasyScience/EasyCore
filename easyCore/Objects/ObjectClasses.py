@@ -213,16 +213,20 @@ class BasedBase(MSONable):
 
 def tree_flatten(self):
     children = tuple(self._kwargs.values())
-    aux_data = {"name": self.name, "keys": tuple(self._kwargs.keys())}
+    aux_data = {"name": self.name, "keys": tuple(self._kwargs.keys()), "aux": {}}
     return (children, aux_data)
 
 
 def tree_creator(cls):
     def tree_unflatten(aux_data, children) -> cls:
         if "name" in inspect.signature(cls).parameters.keys():
-            return cls(name=aux_data["name"], **dict(zip(aux_data["keys"], children)))
+            return cls(
+                name=aux_data["name"],
+                **dict(zip(aux_data["keys"], children)),
+                **aux_data["aux"],
+            )
         else:
-            return cls(**dict(zip(aux_data["keys"], children)))
+            return cls(**dict(zip(aux_data["keys"], children)), **aux_data["aux"])
 
     return tree_unflatten
 
@@ -239,6 +243,7 @@ class BaseObj(BasedBase):
         self,
         name: str,
         *args: Optional[Union[Type[Descriptor], Type[BasedBase]]],
+        register_jax: bool = True,
         **kwargs: Optional[Union[Type[Descriptor], Type[BasedBase]]],
     ):
         """
@@ -273,12 +278,14 @@ class BaseObj(BasedBase):
                 my_self=self,
                 test_class=BaseObj,
             )
-        if jax is not None:
+        self._jax_registered = False
+        if jax is not None and register_jax:
             try:
                 # The better way of doing this would be to use jax.tree_util._registry, but we can't query it
                 jax.tree_util.register_pytree_node(
                     self.__class__, tree_flatten, tree_creator(self.__class__)
                 )
+                self._jax_registered = True
             except ValueError:
                 pass
 

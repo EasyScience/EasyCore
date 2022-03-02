@@ -7,7 +7,7 @@ __version__ = "0.0.1"
 
 
 import numpy as np
-from easyCore.optimization.models import Model, EasyModel, CompositeModel
+from easyCore.optimization._model import Model, EasyModel, CompositeModel
 
 x = np.linspace(0, 1, 100)
 
@@ -18,12 +18,13 @@ def test_Model():
 
     m = Model(f)
     assert np.allclose(m(x), np.cos(x))
-    assert len(m.get_fit_parameters()) == 0
+    assert len(m.parameters) == 0
+    assert m.parameters == {}
     assert m.function == f
     assert m.count == 1
     assert m.runtime > 0
 
-    m.reset()
+    m.reset_count()
     assert m.count == 0
     assert m.runtime == 0
 
@@ -49,13 +50,13 @@ def test_easyModel():
 
     m = EasyModel(l)
     assert np.allclose(m(x), l(x))
-    assert len(m.get_fit_parameters()) == 2
-    # assert "m" in m.parameters.keys()
-    # assert "c" in m.parameters.keys()
+    assert len(m.parameters) == 2
+    assert "m" in m.parameters.keys()
+    assert "c" in m.parameters.keys()
     assert m.count == 1
     assert m.runtime > 0
 
-    m.reset()
+    m.reset_count()
     assert m.count == 0
     assert m.runtime == 0
 
@@ -69,59 +70,59 @@ def test_easyModel_model_functions():
 
     C = m + a
     assert np.allclose(C(x), np.sin(x) + l(x))
-    assert len(C.get_fit_parameters()) == 2
-    # assert "m" in C.parameters.keys()
-    # assert "c" in C.parameters.keys()
+    assert len(C.parameters) == 2
+    assert "m" in C.parameters.keys()
+    assert "c" in C.parameters.keys()
     assert C.count == 1
     assert C.runtime > 0
     C = m - a
     assert np.allclose(C(x), np.sin(x) - l(x))
-    assert len(C.get_fit_parameters()) == 2
-    # assert "m" in C.parameters.keys()
-    # assert "c" in C.parameters.keys()
+    assert len(C.parameters) == 2
+    assert "m" in C.parameters.keys()
+    assert "c" in C.parameters.keys()
     assert C.count == 1
     assert C.runtime > 0
     C = m * a
     assert np.allclose(C(x), np.sin(x) * l(x))
-    assert len(C.get_fit_parameters()) == 2
-    # assert "m" in C.parameters.keys()
-    # assert "c" in C.parameters.keys()
+    assert len(C.parameters) == 2
+    assert "m" in C.parameters.keys()
+    assert "c" in C.parameters.keys()
     assert C.count == 1
     assert C.runtime > 0
     C = m / a
     assert np.allclose(C(x), np.sin(x) / l(x))
-    assert len(C.get_fit_parameters()) == 2
-    # assert "m" in C.parameters.keys()
-    # assert "c" in C.parameters.keys()
+    assert len(C.parameters) == 2
+    assert "m" in C.parameters.keys()
+    assert "c" in C.parameters.keys()
     assert C.count == 1
     assert C.runtime > 0
 
     C = a + m
     assert np.allclose(C(x), l(x) + np.sin(x))
-    assert len(C.get_fit_parameters()) == 2
-    # assert "m" in C.parameters.keys()
-    # assert "c" in C.parameters.keys()
+    assert len(C.parameters) == 2
+    assert "m" in C.parameters.keys()
+    assert "c" in C.parameters.keys()
     assert C.count == 1
     assert C.runtime > 0
     C = a - m
     assert np.allclose(C(x), l(x) - np.sin(x))
-    assert len(C.get_fit_parameters()) == 2
-    # assert "m" in C.parameters.keys()
-    # assert "c" in C.parameters.keys()
+    assert len(C.parameters) == 2
+    assert "m" in C.parameters.keys()
+    assert "c" in C.parameters.keys()
     assert C.count == 1
     assert C.runtime > 0
     C = a * m
     assert np.allclose(C(x), l(x) * np.sin(x))
-    assert len(C.get_fit_parameters()) == 2
-    # assert "m" in C.parameters.keys()
-    # assert "c" in C.parameters.keys()
+    assert len(C.parameters) == 2
+    assert "m" in C.parameters.keys()
+    assert "c" in C.parameters.keys()
     assert C.count == 1
     assert C.runtime > 0
     C = a / m
     assert np.allclose(C(x), l(x) / np.sin(x))
-    assert len(C.get_fit_parameters()) == 2
-    # assert "m" in C.parameters.keys()
-    # assert "c" in C.parameters.keys()
+    assert len(C.parameters) == 2
+    assert "m" in C.parameters.keys()
+    assert "c" in C.parameters.keys()
     assert C.count == 1
     assert C.runtime > 0
 
@@ -136,15 +137,12 @@ def test_easyModel_model_functions():
 
     def do_test(C_, op_res):
         assert np.allclose(C_(x), op_res)
-        pars = C_.get_fit_parameters()
-        assert len(pars) == 5
-        names = [par.name for par in pars]
-
-        assert "m" in names
-        assert "c" in names
-        assert "c0" in names
-        assert "c1" in names
-        assert "c2" in names
+        assert len(C_.parameters) == 5
+        assert "m" in C_.parameters.keys()
+        assert "c" in C_.parameters.keys()
+        assert "c0" in C_.parameters.keys()
+        assert "c1" in C_.parameters.keys()
+        assert "c2" in C_.parameters.keys()
         assert C_.count == 1
         assert C_.runtime > 0
 
@@ -182,6 +180,6 @@ def test_model_kwargs():
     assert np.allclose(m(xx), np.sum(xx, axis=1))
     m.fn_kwargs = {"axis": 0}
     assert np.allclose(m(xx), np.sum(xx, axis=0))
-    assert len(m.get_fit_parameters()) == 0
+    assert len(m.parameters) == 0
     assert m.count == 2
     assert m.runtime > 0

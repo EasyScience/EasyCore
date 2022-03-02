@@ -9,7 +9,7 @@ from jax import numpy as np, scipy as sp
 import matplotlib.pyplot as plt
 from easyCore.models.jax.polynomial import Line
 from easyCore.models.jax.distributions import Gaussian
-from easyCore.optimization.model import EasyModel, CompositeModel, Model
+from easyCore.optimization.models import EasyModel, CompositeModel, Model
 
 line = EasyModel(Line.from_pars(1.1, 3.0))
 gauss = EasyModel(Gaussian.from_pars(15, 6.0, 0.8))

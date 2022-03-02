@@ -10,8 +10,13 @@ __version__ = "0.1.0"
 from numbers import Number
 from typing import Union, Type, Optional, TYPE_CHECKING, Callable
 
+try:
+    import jax
+except ImportError:
+    jax = None
+
 from easyCore import borg
-from easyCore.Objects.Base import BasedBase, Descriptor
+from easyCore.Objects.Base import BasedBase, Descriptor, tree_flatten, tree_creator
 from collections.abc import MutableSequence
 from easyCore.Utils.UndoRedo import NotarizedDict
 
@@ -32,6 +37,7 @@ class BaseCollection(BasedBase, MutableSequence):
         name: str,
         *args: Union[Descriptor, BasedBase],
         interface: Optional[Interface] = None,
+        register_jax: bool = True,
         **kwargs,
     ):
         """
@@ -73,6 +79,16 @@ class BaseCollection(BasedBase, MutableSequence):
             # TODO wrap getter and setter in Logger
         self.interface = interface
         self._kwargs._stack_enabled = True
+        self._jax_registered = False
+        if jax is not None and register_jax:
+            try:
+                # The better way of doing this would be to use jax.tree_util._registry, but we can't query it
+                jax.tree_util.register_pytree_node(
+                    self.__class__, tree_flatten, tree_creator(self.__class__)
+                )
+                self._jax_registered = True
+            except ValueError:
+                pass
 
     def insert(self, index: int, value: Union[Descriptor, BasedBase]) -> None:
         """

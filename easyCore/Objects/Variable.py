@@ -577,14 +577,13 @@ class Parameter(Descriptor):
         # Set the error
         self._args = {"value": value, "units": "", "error": error}
 
-        # if not isinstance(value, numbers.Number):
-        #     raise ValueError("In a parameter the `value` must be numeric")
-        # if value < min:
-        #     raise ValueError("`value` can not be less than `min`")
-        # if value > max:
-        #     raise ValueError("`value` can not be greater than `max`")
-        # if error < 0:
-        #     raise ValueError("Standard deviation `error` must be positive")
+        if isinstance(value, numbers.Number):
+            if value < min:
+                raise ValueError("`value` can not be less than `min`")
+            if value > max:
+                raise ValueError("`value` can not be greater than `max`")
+            if error < 0.0:
+                raise ValueError("Standard deviation `error` must be positive")
 
         super().__init__(name, value, **kwargs)
         self._args["units"] = str(self.unit)

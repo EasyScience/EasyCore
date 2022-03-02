@@ -5,48 +5,80 @@
 __author__ = "github.com/wardsimon"
 __version__ = "0.0.1"
 
-from jax import numpy as np, scipy as sp, grad, jit, vmap, random, jacfwd, jacrev
+from jax import numpy as np, scipy as sp, jit, random, tree_multimap, grad, jacfwd, vmap
 import matplotlib.pyplot as plt
 from easyCore.models.jax.polynomial import Line
 from easyCore.models.jax.distributions import Gaussian
-from easyCore.optimization.model import EasyModel, CompositeModel, Model
+from easyCore.optimization.models import EasyModel, CompositeModel, Model
+
+OPTIM = "grad"
+OPTIM = "newton"
+
 
 # Setup reference data
 line = EasyModel(Line.from_pars(1.1, 3.0))
-gauss = EasyModel(Gaussian.from_pars(15, 6.0, 0.8))
+gauss = EasyModel(Gaussian.from_pars(60.0, 6.0, 0.8))
 C = line + gauss
 
-x_min, x_max = 1, 9
+x_min, x_max = 1, 15
 x = np.linspace(x_min, x_max, 201)
 
-kernel = Model(lambda x: Gaussian.from_pars(1.0, x_min + (x_max - x_min) / 2, 0.4)(x))
+kernel = EasyModel(Gaussian.from_pars(1.0, x_min + (x_max - x_min) / 2, 0.4))
+kernel.easy_model.mean[0].fixed = True
+kernel.easy_model.amplitude.fixed = True
 C2 = CompositeModel(C, kernel, sp.signal.convolve, fn_kwargs={"mode": "same"})
 
 key = random.PRNGKey(42)
 y = C2(x) + 4 * random.normal(key, shape=x.shape)
-_ = C2(x, m=1.6, c=0.65, amplitude=5.0, mean=4.1, cov_matrix=0.5)
+
+# Set a new starting point
+pars = C2.get_fit_parameters()
+sp = [1.5, 1.5, 20.0, 5.0, 0.7, 4.0, 0.3]
+for p, s in zip(pars, sp):
+    p.value = s
+
+model_starting = C2(x)
+
+n_steps = 100
 
 
-Jacobian = jit(lambda x_, theta: jacrev(C2(x, *theta)))
-Hessian = jit(lambda x_, theta: jacfwd(Jacobian(x, *theta)))
-
-J = jit(lambda x_, theta: lambda xx: vmap(Jacobian(xx, theta))(x_))
-H = jit(lambda x_, theta: lambda xx: vmap(Hessian(xx, theta))(x_))
-
-
-def minHessian(x, theta):
-    return x - 0.1 * np.linalg.inv(H(x, theta)) @ J(x, theta)
+@jit
+def lagrangian1(theta, x_, y_):
+    prediction = theta(x_)
+    return np.mean((prediction - y_) ** 2)
 
 
-vfuncHS = lambda _x, th: lambda xx: vmap(minHessian(xx, th))(_x)
+if OPTIM == "grad":
 
-domain = [1.6, 0.65, 5.0, 4.1, 0.5]
-for epoch in range(150):
-    domain = vfuncHS(x, domain)
+    @jit
+    def update(theta, x_, y_, LEARNING_RATE=5e-6):
+        gradient = grad(lagrangian1)(theta, x_, y_)
+        return tree_multimap(
+            lambda param, g: param - g * LEARNING_RATE, theta, gradient
+        )
 
 
-plt.plot(x, y, label="test data")
-plt.plot(x, C2(x), label="test model")
-plt.plot(x, C2(x, *domain), label="optim model")
+elif OPTIM == "newton":
+
+    @jit
+    def update(theta, x_, y_):
+        G = grad(lagrangian1)
+        gradient = G(theta, x_, y_)
+        hessian = jacfwd(lambda l: grad(lagrangian1)(l, x_, y_))(theta)
+
+        return tree_multimap(
+            lambda param, g, g2: param - g / g2, theta, gradient, hessian
+        )
+
+
+else:
+    ValueError(f"Unknown optimizer {OPTIM}")
+
+for _ in range(n_steps):
+    C2 = update(C2, x, y)
+
+plt.plot(x, y, "k-", label="data")
+plt.plot(x, model_starting, "r-", label="model (Starting point)")
+plt.plot(x, C2(x), "b-", label="model (Optimized)")
 plt.legend()
 plt.show()
