@@ -7,11 +7,15 @@ __version__ = "0.0.1"
 
 from abc import ABCMeta
 from types import FunctionType
-from typing import List, Callable, TypeVar
+from typing import List, Callable, TypeVar, Union
+
+from pkg_resources import PathMetadata
 
 
-from easyCore import borg, default_fitting_engine
+from easyCore import borg, default_fitting_engine, np
+from easyCore.Objects.Groups import BaseCollection
 import easyCore.Fitting as Fitting
+from easyCore.Utils.typing import noneType
 
 _C = TypeVar("_C", bound=ABCMeta)
 _M = TypeVar("_M", bound=Fitting.FittingTemplate)
@@ -34,7 +38,7 @@ class Fitter:
         if (fit_object is not None) & (fit_function is not None):
             can_initialize = True
         else:
-            if (fit_object is not None) or (fit_function is not None):
+            if fit_function is not None:
                 raise AttributeError
 
         self._engines: List[_C] = Fitting.engines
@@ -151,3 +155,73 @@ class Fitter:
             return func(*args, **kwargs)
 
         return inner
+
+
+class MultiFitter(Fitter):
+    """
+    Extension of Fitter to enable multiple dataset/fit function fitting
+    """
+
+    def __init__(
+        self, fit_objects: List[object] = None, fit_functions: List[Callable] = None
+    ):
+
+        self._fit_objects = BaseCollection("multi", *fit_objects)
+        self._fit_functions = fit_functions
+        super().__init__(self._fit_objects, None)
+
+    def fit_lists(
+        self,
+        x_list: List[np.ndarray],
+        y_list: List[np.ndarray],
+        weights_list: List[Union[np.ndarray, noneType]] = None,
+        model=None,
+        parameters=None,
+        method: str = None,
+        **kwargs,
+    ):
+        """
+        Perform a fit using the  engine.
+
+        :param x: points to be calculated at
+        :param y: measured points
+        :param weights: Weights for supplied measured points
+        :param model: Optional Model which is being fitted to
+        :param parameters: Optional parameters for the fit
+        :param method: method for the minimizer to use.
+        :param kwargs: Additional arguments for the fitting function.
+        :return: Fit results
+        """
+        data_shape = [x.size for x in x_list]
+        def unpacked_fit_function(x: np.ndarray) -> np.ndarray:
+            """
+            Unpacked fitting
+            
+            :param x: Flattened x values
+            :return: Flat y values
+            """
+            y = np.zeros_like(x)
+            start = 0
+            for i, fit_function in enumerate(self._fit_functions):
+                end = data_shape[i] + start
+                y[start:end] = fit_function(x[start:end])
+                start = end
+            return y
+        self.initialize(self._fit_objects, unpacked_fit_function)
+        x = _flatten_list(x_list)
+        y = _flatten_list(y_list)
+        weights = None
+        if weights_list is not None:
+            weights = _flatten_list(weights_list)
+        return self.fit(x, y, weights=1/np.sqrt(weights), model=model, parameters=parameters, method=method, **kwargs)
+
+
+def _flatten_list(this_list: list) -> list:
+    """
+    Flatten nested lists.
+
+    :param this_list: List to be flattened
+
+    :return: Flattened list
+    """
+    return np.array([item for sublist in this_list for item in sublist])
