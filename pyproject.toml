@@ -51,6 +51,7 @@ bumps = "^0.8"
 asteval = "^0.9.23"
 DFO-LS = {version = "^1.2", optional = true}
 xarray = ">=0.16,<0.21"
+scipp = "^0.12.3"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.0.0"

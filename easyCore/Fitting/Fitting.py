@@ -6,8 +6,9 @@ __version__ = "0.0.1"
 #  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
 from abc import ABCMeta
+from collections.abc import Sequence as SequenceABC
 from types import FunctionType
-from typing import List, Callable, TypeVar
+from typing import List, Callable, TypeVar, Sequence
 
 
 from easyCore import borg, default_fitting_engine
@@ -151,3 +152,31 @@ class Fitter:
             return func(*args, **kwargs)
 
         return inner
+
+
+class MultiFitter(Fitter, SequenceABC):
+    def __init__(self, fit_objects: List, fit_functions: List[Callable]):
+        fit_object = self.__create_multi_obj(fit_objects)
+        super().__init__(fit_object, fit_functions[0])
+        self._fit_functions = fit_functions
+
+    def __getitem__(self, item: int) -> object:
+        self.initialize(self._fit_object, self._fit_functions[item])
+        return self
+
+    def __len__(self) -> int:
+        return len(self._fit_object)
+
+    @property
+    def fit_objects(self) -> List:
+        return [obj for obj in self._fit_object]
+
+    @fit_objects.setter
+    def fit_objects(self, value: List):
+        self.initialize(self.__create_multi_obj(value), self._fit_functions[0])
+
+    @staticmethod
+    def __create_multi_obj(objs: List):
+        from easyCore.Objects.Groups import BaseCollection
+
+        return BaseCollection("multi_fit_object", *objs)

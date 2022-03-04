@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 #  SPDX-FileCopyrightText: 2022 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
@@ -5,7 +7,7 @@
 __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
-from typing import Callable, Union, TypeVar, List, Tuple, Any, Iterable
+from typing import Callable, Union, TypeVar, List, Tuple, Any, Iterable, TYPE_CHECKING
 
 import weakref
 
@@ -16,6 +18,9 @@ from easyCore import np, ureg
 from easyCore.Fitting.fitting_template import FitResults
 
 T_ = TypeVar("T_")
+
+if TYPE_CHECKING:
+    from easyCore.Fitting.Fitting import Fitter
 
 
 @xr.register_dataset_accessor("easyCore")
@@ -362,8 +367,8 @@ class easyCoreDatasetAccessor:
 
     def fit(
         self,
-        fitter,
-        data_arrays: list,
+        fitter: Fitter,
+        data_arrays: List[str],
         *args,
         dask: str = "forbidden",
         fit_kwargs: dict = None,
@@ -421,6 +426,71 @@ class easyCoreDatasetAccessor:
                 vectorize=vectorized,
                 **kwargs,
             )
+        elif hasattr(fitter, "_fit_functions"):
+            # In this case we are fitting multiple datasets to the same fn!
+            bdim_f = [
+                self._obj[p].easyCore.fit_prep(f)
+                for f, p in zip(fitter._fit_functions, data_arrays)
+            ]
+            dim_names = [
+                list(self._obj[p].dims.keys())
+                if isinstance(self._obj[p].dims, dict)
+                else self._obj[p].dims
+                for p in data_arrays
+            ]
+            bdims = [bdim[0] for bdim in bdim_f]
+            fs = [bdim[1] for bdim in bdim_f]
+            old_fit_func = fitter._fit_function
+
+            fn_array = []
+            y_list = []
+            for _idx, d in enumerate(bdims):
+                dims = self._obj[data_arrays[_idx]].dims
+                if isinstance(dims, dict):
+                    dims = list(dims.keys())
+
+                def local_fit_func(x, *args, idx=None, **kwargs):
+                    kwargs["vectorize"] = vectorized
+                    res = xr.apply_ufunc(
+                        fs[idx],
+                        *bdims[idx],
+                        *args,
+                        dask=dask,
+                        kwargs=fn_kwargs,
+                        **kwargs,
+                    )
+                    if dask != "forbidden":
+                        res.compute()
+                    return res.stack(all_x=dim_names[idx])
+
+                y_list.append(self._obj[data_arrays[_idx]].stack(all_x=dims))
+                fn_array.append(local_fit_func)
+
+            def fit_func(x, *args, **kwargs):
+                res = []
+                for idx in range(len(fn_array)):
+                    res.append(fn_array[idx](x, *args, idx=idx, **kwargs))
+                return xr.DataArray(
+                    np.concatenate(res, axis=0), coords={"all_x": x}, dims="all_x"
+                )
+
+            fitter.initialize(fitter.fit_object, fit_func)
+            try:
+                if fit_kwargs.get("weights", None) is not None:
+                    del fit_kwargs["weights"]
+                x = xr.DataArray(
+                    np.arange(np.sum([y.size for y in y_list])), dims="all_x"
+                )
+                y = xr.DataArray(
+                    np.concatenate(y_list, axis=0), coords={"all_x": x}, dims="all_x"
+                )
+                f_res = fitter.fit(x, y, **fit_kwargs)
+                f_res = check_sanity_multiple(
+                    f_res, [self._obj[p] for p in data_arrays]
+                )
+            finally:
+                fitter.fit_function = old_fit_func
+            return f_res
         else:
             # In this case we are fitting multiple datasets to the same fn!
             bdim_f = [
@@ -691,7 +761,7 @@ class easyCoreDataarrayAccessor:
 
     def fit(
         self,
-        fitter,
+        fitter: Fitter,
         *args,
         fit_kwargs: dict = None,
         fn_kwargs: dict = None,
