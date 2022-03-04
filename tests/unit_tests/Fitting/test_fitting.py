@@ -246,10 +246,13 @@ def test_multi_fit(genObjs, genObjs2, fit_engine):
     assert result.goodness_of_fit == pytest.approx(0, abs=1.5e-3)
     assert result.reduced_chi == pytest.approx(0, abs=1.5e-3)
     assert result.success
-    assert np.all(result.x == _flatten_list([x1, x2]))
-    y_calc_ref = _flatten_list([ref_sin1(x1), ref_sin2(x2)])
-    assert result.y_calc == pytest.approx(y_calc_ref, abs=1e-2)
-    assert result.residual == pytest.approx(_flatten_list([sp_sin1(x1), sp_sin2(x2)]) - y_calc_ref, abs=1e-2)
+    assert np.all(result.x[0] == x1)
+    assert np.all(result.x[1] == x2)
+    y_calc_ref = [ref_sin1(x1), ref_sin2(x2)]
+    assert result.y_calc[0] == pytest.approx(y_calc_ref[0], abs=1e-2)
+    assert result.y_calc[1] == pytest.approx(y_calc_ref[1], abs=1e-2)
+    assert result.residual[0] == pytest.approx(sp_sin1(x1) - y_calc_ref[0], abs=1e-2)
+    assert result.residual[1] == pytest.approx(sp_sin2(x2) - y_calc_ref[1], abs=1e-2)
 
 
 def test_flatten_list():
