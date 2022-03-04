@@ -103,10 +103,10 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
         if self._enabled == enabled_value:
             return
         elif enabled_value:
-            self.get_obj(self.dependent_obj_ids).enabled = True
+            self.get_obj(self.dependent_obj_ids).enabled = False
             self()
         else:
-            self.get_obj(self.dependent_obj_ids).enabled = False
+            self.get_obj(self.dependent_obj_ids).enabled = True
         self._enabled = enabled_value
 
     def __call__(self, *args, no_set: bool = False, **kwargs):

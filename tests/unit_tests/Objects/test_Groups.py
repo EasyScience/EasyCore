@@ -301,7 +301,7 @@ def test_baseCollection_dir(cls):
     expected = {'generate_bindings', 'insert', 'name', 'reverse', 'append', 'to_data_dict', 'as_dict',
                 'REDIRECT', 'interface', 'clear', 'extend', 'pop', 'count', 'remove', 'user_data', 'index',
                 'constraints', 'to_json', 'from_dict', 'get_parameters', 'unsafe_hash', 'get_fit_parameters',
-                'switch_interface', 'data'}
+                'switch_interface', 'data', 'sort'}
     assert not d.difference(expected)
 
 
@@ -477,3 +477,26 @@ def test_baseCollection_set_index_based(cls):
     for item in obj:
         assert obj._borg.map.convert_id_to_key(item) in edges
     assert obj._borg.map.convert_id_to_key(p4) not in edges
+
+
+@pytest.mark.parametrize('cls', class_constructors)
+def test_baseCollection_sort(cls):
+    name = 'test'
+    v = [1, 4, 3, 2, 5]
+    expected = [1, 2, 3, 4, 5]
+    d = cls(name, *[Parameter(f'p{i}', v[i]) for i in range(len(v))])
+    d.sort(lambda x: x.raw_value)
+    for i, item in enumerate(d):
+        assert item.value == expected[i]
+
+
+@pytest.mark.parametrize('cls', class_constructors)
+def test_baseCollection_sort_reverse(cls):
+    name = 'test'
+    v = [1, 4, 3, 2, 5]
+    expected = [1, 2, 3, 4, 5]
+    expected.reverse()
+    d = cls(name, *[Parameter(f'p{i}', v[i]) for i in range(len(v))])
+    d.sort(lambda x: x.raw_value, reverse=True)
+    for i, item in enumerate(d):
+        assert item.raw_value == expected[i]
