@@ -180,7 +180,7 @@ class MultiFitter(Fitter):
         model=None,
         parameters=None,
         method: str = None,
-        **kwargs,
+        fitting_kwargs: dict = {},
     ):
         """
         Perform a fit using the  engine.
@@ -191,7 +191,7 @@ class MultiFitter(Fitter):
         :param model: Optional Model which is being fitted to
         :param parameters: Optional parameters for the fit
         :param method: method for the minimizer to use.
-        :param kwargs: Additional arguments for the fitting function.
+        :param fitting_kwargs: Additional arguments for the fitting function.
         :return: Fit results
         """
         data_shape = [x.size for x in x_list]
@@ -215,7 +215,7 @@ class MultiFitter(Fitter):
         weights = None
         if weights_list is not None:
             weights = 1/np.sqrt(_flatten_list(weights_list))
-        res = self.fit(x, y, weights=weights, model=model, parameters=parameters, method=method, **kwargs)
+        res = self.fit(x, y, weights=weights, model=model, parameters=parameters, method=method, **fitting_kwargs)
         return self.unflatten_results(res, data_shape)
 
     @staticmethod
