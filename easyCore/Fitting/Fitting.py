@@ -214,7 +214,7 @@ class MultiFitter(Fitter):
         y = _flatten_list(y_list)
         weights = None
         if weights_list is not None:
-            weights = 1/np.sqrt(_flatten_list(weights_list))
+            weights = _flatten_list(weights_list)
         res = self.fit(x, y, weights=weights, model=model, parameters=parameters, method=method, **fitting_kwargs)
         return self.unflatten_results(res, data_shape)
 
