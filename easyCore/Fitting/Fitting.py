@@ -38,7 +38,7 @@ class Fitter:
         if (fit_object is not None) & (fit_function is not None):
             can_initialize = True
         else:
-            if fit_function is not None:
+            if (fit_object is not None) or (fit_function is not None):
                 raise AttributeError
 
         self._engines: List[_C] = Fitting.engines
@@ -168,7 +168,9 @@ class MultiFitter(Fitter):
 
         self._fit_objects = BaseCollection("multi", *fit_objects)
         self._fit_functions = fit_functions
-        super().__init__(self._fit_objects, None)
+        # Initialize with the first of the fit_functions, without this it is 
+        # not possible to change the fitting engine
+        super().__init__(self._fit_objects, self._fit_functions[0])
 
     def fit_lists(
         self,
@@ -212,8 +214,8 @@ class MultiFitter(Fitter):
         y = _flatten_list(y_list)
         weights = None
         if weights_list is not None:
-            weights = _flatten_list(weights_list)
-        return self.fit(x, y, weights=1/np.sqrt(weights), model=model, parameters=parameters, method=method, **kwargs)
+            weights = 1/np.sqrt(_flatten_list(weights_list))
+        return self.fit(x, y, weights=weights, model=model, parameters=parameters, method=method, **kwargs)
 
 
 def _flatten_list(this_list: list) -> list:

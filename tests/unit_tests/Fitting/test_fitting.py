@@ -8,7 +8,7 @@ __version__ = "0.0.1"
 import pytest
 from easyCore import np
 from easyCore.Objects.Base import Parameter, BaseObj
-from easyCore.Fitting.Fitting import Fitter
+from easyCore.Fitting.Fitting import Fitter, MultiFitter, _flatten_list
 from easyCore.Fitting.Constraints import ObjConstraint
 
 
@@ -216,3 +216,44 @@ def test_fit_makeModel(genObjs):
     model = f.make_model()
     result = f.fit(x, y, model=model)
     check_fit_results(result, sp_sin, ref_sin, x)
+
+
+@pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "DFO_LS"])
+def test_multi_fit(genObjs, genObjs2, fit_engine):
+    ref_sin1 = genObjs[0]
+    sp_sin1 = genObjs[1]
+    ref_sin2 = genObjs2[0]
+    sp_sin2 = genObjs2[1]
+
+    x1 = np.linspace(0, 5, 200)
+    y1 = ref_sin1(x1)
+    x2 = np.copy(x1)
+    y2 = ref_sin2(x2)
+
+    sp_sin1.offset.fixed = False
+    sp_sin1.phase.fixed = False
+    sp_sin2.offset.fixed = False
+    sp_sin2.phase.fixed = False
+
+    f = MultiFitter([sp_sin1, sp_sin2], [sp_sin1, sp_sin2])
+    if fit_engine is not None:
+        f.switch_engine(fit_engine)
+        if f.engine.name != fit_engine:
+            # DFO_LS is not installed by default
+            pytest.skip(msg=f"{fit_engine} is not installed")
+    result = f.fit_lists([x1, x2], [y1, y2])
+    assert result.n_pars == len(sp_sin1.get_fit_parameters()) + len(sp_sin2.get_fit_parameters())
+    assert result.goodness_of_fit == pytest.approx(0, abs=1.5e-3)
+    assert result.reduced_chi == pytest.approx(0, abs=1.5e-3)
+    assert result.success
+    assert np.all(result.x == _flatten_list([x1, x2]))
+    y_calc_ref = _flatten_list([ref_sin1(x1), ref_sin2(x2)])
+    assert result.y_calc == pytest.approx(y_calc_ref, abs=1e-2)
+    assert result.residual == pytest.approx(_flatten_list([sp_sin1(x1), sp_sin2(x2)]) - y_calc_ref, abs=1e-2)
+
+
+def test_flatten_list():
+    input_list = [[1, 2], [2]]
+    expected_result = np.array([1, 2, 2])
+    actual_result = _flatten_list(input_list)
+    np.testing.assert_equal(expected_result, actual_result)
