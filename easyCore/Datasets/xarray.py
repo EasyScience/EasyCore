@@ -15,12 +15,12 @@ import weakref
 import xarray as xr
 
 from easyCore import np, ureg
-from easyCore.Fitting.fitting_template import FitResults
+from easyCore.optimization.engines.fitting_template import FitResults
 
 T_ = TypeVar("T_")
 
 if TYPE_CHECKING:
-    from easyCore.Fitting.Fitting import Fitter
+    from easyCore.optimization.fitting import Fitter
 
 
 @xr.register_dataset_accessor("easyCore")

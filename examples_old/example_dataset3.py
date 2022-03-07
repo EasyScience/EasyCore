@@ -7,7 +7,7 @@ from easyCore.Datasets.xarray import xr
 import time
 import matplotlib.pyplot as plt
 
-from easyCore.Fitting.Fitting import Fitter
+from easyCore.Fitting import Fitter
 from easyCore.Objects.Base import BaseObj, Parameter
 
 d = xr.Dataset()

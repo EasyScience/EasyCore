@@ -7,17 +7,17 @@ __version__ = "0.0.1"
 
 import scipp as sc
 
-from typing import Callable, Union, TypeVar, List, Tuple, Any, Iterable, TYPE_CHECKING
+from typing import Callable, TypeVar, Tuple, Any, TYPE_CHECKING
 
 import weakref
 from easyCore import np
 from .extensions.scipp_accessors import register_accessor
-from easyCore.Fitting.fitting_template import FitResults
+from easyCore.optimization.engines.fitting_template import FitResults
 
 T_ = TypeVar("T_")
 
 if TYPE_CHECKING:
-    from easyCore.Fitting.Fitting import Fitter
+    pass
 
 
 @register_accessor("easyCore", sc.DataArray)

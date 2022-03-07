@@ -8,11 +8,10 @@ __version__ = "0.0.1"
 from abc import ABCMeta
 from collections.abc import Sequence as SequenceABC
 from types import FunctionType
-from typing import List, Callable, TypeVar, Sequence
-
+from typing import List, Callable, TypeVar
 
 from easyCore import borg, default_fitting_engine
-import easyCore.Fitting as Fitting
+import easyCore.optimization.engines as Fitting
 
 _C = TypeVar("_C", bound=ABCMeta)
 _M = TypeVar("_M", bound=Fitting.FittingTemplate)

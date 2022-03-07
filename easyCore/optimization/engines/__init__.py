@@ -16,14 +16,14 @@ except ImportError:
     # TODO make this a proper message (use logging?)
     warnings.warn("lmfit has not been installed.", ImportWarning, stacklevel=2)
 try:
-    from easyCore.Fitting import bumps  # noqa: F401, E402
+    from easyCore.optimization.engines.bumps import bumps  # noqa: F401, E402
 
     imported += 1
 except ImportError:
     # TODO make this a proper message (use logging?)
     warnings.warn("bumps has not been installed.", ImportWarning, stacklevel=2)
 try:
-    from easyCore.Fitting import DFO  # noqa: F401, E402
+    from easyCore.optimization.engines.DFO_LS import DFO  # noqa: F401, E402
 
     imported += 1
 except ImportError:

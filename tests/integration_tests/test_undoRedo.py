@@ -2,8 +2,8 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
-__author__ = 'github.com/wardsimon'
-__version__ = '0.0.1'
+__author__ = "github.com/wardsimon"
+__version__ = "0.0.1"
 
 import pytest
 import math
@@ -15,7 +15,7 @@ from easyCore.Objects.Groups import BaseCollection
 
 
 def createSingleObjs(idx):
-    alphabet = 'abcdefghijklmnopqrstuvwxyz'
+    alphabet = "abcdefghijklmnopqrstuvwxyz"
     reps = math.floor(idx / len(alphabet)) + 1
     name = alphabet[idx % len(alphabet)] * reps
     if idx % 2:
@@ -28,7 +28,7 @@ def createParam(option):
     return pytest.param(option, id=option[0])
 
 
-def doUndoRedo(obj, attr, future, additional=''):
+def doUndoRedo(obj, attr, future, additional=""):
     from easyCore import borg
 
     borg.stack.enabled = True
@@ -57,25 +57,41 @@ def doUndoRedo(obj, attr, future, additional=''):
     return e
 
 
-@pytest.mark.parametrize('test', [createParam(option) for option in [('value', 500), ('error', 5), ('enabled', False),
-                                                                     ('unit', 'meter / second'),
-                                                                     ('display_name', 'boom'),
-                                                                     ('fixed', False), ('max', 505), ('min', -1)]])
-@pytest.mark.parametrize('idx', [pytest.param(0, id='Descriptor'), pytest.param(1, id='Parameter')])
+@pytest.mark.parametrize(
+    "test",
+    [
+        createParam(option)
+        for option in [
+            ("value", 500),
+            ("error", 5),
+            ("enabled", False),
+            ("unit", "meter / second"),
+            ("display_name", "boom"),
+            ("fixed", False),
+            ("max", 505),
+            ("min", -1),
+        ]
+    ],
+)
+@pytest.mark.parametrize(
+    "idx", [pytest.param(0, id="Descriptor"), pytest.param(1, id="Parameter")]
+)
 def test_SinglesUndoRedo(idx, test):
     obj = createSingleObjs(idx)
     attr = test[0]
     value = test[1]
 
     if not hasattr(obj, attr):
-        pytest.skip(f'Not applicable: {obj} does not have field {attr}')
+        pytest.skip(f"Not applicable: {obj} does not have field {attr}")
     e = doUndoRedo(obj, attr, value)
     if e:
         raise e
 
+
 @pytest.mark.parametrize("value", (True, False))
 def test_Parameter_Bounds_UndoRedo(value):
     from easyCore import borg
+
     borg.stack.enabled = True
     p = Parameter("test", 1, enabled=value)
     assert p.min == -np.inf
@@ -97,33 +113,34 @@ def test_Parameter_Bounds_UndoRedo(value):
 
 def test_BaseObjUndoRedo():
     objs = {obj.name: obj for obj in [createSingleObjs(idx) for idx in range(5)]}
-    name = 'test'
+    name = "test"
     obj = BaseObj(name, **objs)
-    name2 = 'best'
+    name2 = "best"
 
     # Test name
     # assert not doUndoRedo(obj, 'name', name2)
 
     # Test setting value
     for b_obj in objs.values():
-        e = doUndoRedo(obj, b_obj.name, b_obj.raw_value + 1, 'raw_value')
+        e = doUndoRedo(obj, b_obj.name, b_obj.raw_value + 1, "raw_value")
         if e:
             raise e
 
 
 def test_BaseCollectionUndoRedo():
     objs = [createSingleObjs(idx) for idx in range(5)]
-    name = 'test'
+    name = "test"
     obj = BaseCollection(name, *objs)
-    name2 = 'best'
+    name2 = "best"
 
     # assert not doUndoRedo(obj, 'name', name2)
 
     from easyCore import borg
+
     borg.stack.enabled = True
 
     original_length = len(obj)
-    p = Parameter('slip_in', 50)
+    p = Parameter("slip_in", 50)
     idx = 2
     obj.insert(idx, p)
     assert len(obj) == original_length + 1
@@ -184,8 +201,9 @@ def test_BaseCollectionUndoRedo():
 def test_UndoRedoMacros():
     items = [createSingleObjs(idx) for idx in range(5)]
     offset = 5
-    undo_text = 'test_macro'
+    undo_text = "test_macro"
     from easyCore import borg
+
     borg.stack.enabled = True
     borg.stack.beginMacro(undo_text)
     values = [item.raw_value for item in items]
@@ -217,18 +235,18 @@ def test_fittingUndoRedo():
 
     class Line(BaseObj):
         def __init__(self, m: Parameter, c: Parameter):
-            super(Line, self).__init__('basic_line', m=m, c=c)
+            super(Line, self).__init__("basic_line", m=m, c=c)
 
         @classmethod
         def default(cls):
-            m = Parameter('m', m_value)
-            c = Parameter('c', c_value)
+            m = Parameter("m", m_value)
+            c = Parameter("c", c_value)
             return cls(m=m, c=c)
 
         @classmethod
         def from_pars(cls, m_value: float, c_value: float):
-            m = Parameter('m', m_value)
-            c = Parameter('c', c_value)
+            m = Parameter("m", m_value)
+            c = Parameter("c", c_value)
             return cls(m=m, c=c)
 
         def __call__(self, x: np.ndarray) -> np.ndarray:
@@ -244,24 +262,26 @@ def test_fittingUndoRedo():
 
     y = l1(x) + 0.125 * (dy - 0.5)
 
-    from easyCore.Fitting.Fitting import Fitter
+    from easyCore.optimization.fitting import Fitter
+
     f = Fitter(l2, l2)
     from easyCore import borg
+
     borg.stack.enabled = True
     res = f.fit(x, y)
 
-    assert l1.c.raw_value == pytest.approx(l2.c.raw_value, rel=l2.c.error*2)
-    assert l1.m.raw_value == pytest.approx(l2.m.raw_value, rel=l2.m.error*2)
-    assert borg.stack.undoText() == 'Fitting routine'
+    assert l1.c.raw_value == pytest.approx(l2.c.raw_value, rel=l2.c.error * 2)
+    assert l1.m.raw_value == pytest.approx(l2.m.raw_value, rel=l2.m.error * 2)
+    assert borg.stack.undoText() == "Fitting routine"
 
     borg.stack.undo()
     assert l2.m.raw_value == m_sp
     assert l2.c.raw_value == c_sp
-    assert borg.stack.redoText() == 'Fitting routine'
+    assert borg.stack.redoText() == "Fitting routine"
 
     borg.stack.redo()
-    assert l2.m.raw_value == res.p[f'p{borg.map.convert_id_to_key(l2.m)}']
-    assert l2.c.raw_value == res.p[f'p{borg.map.convert_id_to_key(l2.c)}']
+    assert l2.m.raw_value == res.p[f"p{borg.map.convert_id_to_key(l2.m)}"]
+    assert l2.c.raw_value == res.p[f"p{borg.map.convert_id_to_key(l2.c)}"]
 
 
 # @pytest.mark.parametrize('math_funcs', [pytest.param([Parameter.__iadd__, float.__add__], id='Addition'),

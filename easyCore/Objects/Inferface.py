@@ -7,7 +7,7 @@ from __future__ import annotations
 __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
 from typing import TypeVar, List, NamedTuple, Callable, TYPE_CHECKING, Optional, Type
 
 from easyCore import np
@@ -16,7 +16,7 @@ from easyCore import np
 _C = TypeVar("_C", bound=ABCMeta)
 _M = TypeVar("_M")
 if TYPE_CHECKING:
-    from easyCore.Fitting.Fitting import Fitter
+    from easyCore.optimization.fitting import Fitter
 
 
 class InterfaceFactoryTemplate:
@@ -135,6 +135,7 @@ class InterfaceFactoryTemplate:
 
         def __fit_func(*args, **kwargs):
             return self.__interface_obj.fit_func(*args, **kwargs)
+
         return __fit_func
 
     def generate_bindings(self, model, *args, ifun=None, **kwargs):

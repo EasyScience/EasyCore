@@ -69,9 +69,11 @@ class BaseCollection(BasedBase, MutableSequence):
                 )
             self._borg.map.add_edge(self, kwargs[key])
             self._borg.map.reset_type(kwargs[key], "created_internal")
-            kwargs[key].interface = interface
+            if interface is not None:
+                kwargs[key].interface = interface
             # TODO wrap getter and setter in Logger
-        self.interface = interface
+        if interface is not None:
+            self.interface = interface
         self._kwargs._stack_enabled = True
 
     def insert(self, index: int, value: Union[Descriptor, BasedBase]) -> None:

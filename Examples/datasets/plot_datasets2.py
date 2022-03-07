@@ -12,7 +12,7 @@ saving time from multiple imports.
 from easyCore import np
 from easyCore.models.polynomial import Line
 from easyCore.Datasets.xarray import xr
-from easyCore.Fitting.Fitting import Fitter
+from easyCore.Fitting import Fitter
 import matplotlib.pyplot as plt
 
 d = xr.Dataset()

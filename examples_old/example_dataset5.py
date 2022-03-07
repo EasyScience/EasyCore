@@ -4,8 +4,8 @@ __version__ = "0.1.0"
 from easyCore import np
 from easyCore.Datasets.xarray import xr
 from easyCore.Objects.Base import Parameter, BaseObj
-from easyCore.Fitting.Fitting import MultiFitter
-from easyCore.Fitting.Constraints import ObjConstraint
+from easyCore.Fitting import MultiFitter
+from easyCore.Fitting import ObjConstraint
 
 import matplotlib.pyplot as plt
 

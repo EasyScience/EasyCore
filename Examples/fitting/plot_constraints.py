@@ -4,16 +4,16 @@ Constraints example
 This  example shows the usages of the different constraints.
 """
 
-from easyCore.Fitting import Constraints
+from easyCore.optimization import constraints
 from easyCore.Objects.Base import Parameter
 
-p1 = Parameter('p1', 1)
-constraint = Constraints.NumericConstraint(p1, '<', 5)
-p1.user_constraints['c1'] = constraint
+p1 = Parameter("p1", 1)
+constraint = Constraints.NumericConstraint(p1, "<", 5)
+p1.user_constraints["c1"] = constraint
 
 for value in range(4, 7):
     p1.value = value
-    print(f'Set Value: {value}, Parameter Value: {p1}')
+    print(f"Set Value: {value}, Parameter Value: {p1}")
 
 #%%
 # To include embedded rST, use a line of >= 20 ``#``'s or ``#%%`` between your

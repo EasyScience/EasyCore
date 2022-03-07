@@ -1,5 +1,5 @@
-__author__ = 'github.com/wardsimon'
-__version__ = '0.1.0'
+__author__ = "github.com/wardsimon"
+__version__ = "0.1.0"
 
 
 #  SPDX-FileCopyrightText: 2022 easyCore contributors  <core@easyscience.software>
@@ -20,14 +20,14 @@ class FittingTemplate(metaclass=ABCMeta):
 
     _engines = []
     property_type = None
-    name: str = ''
+    name: str = ""
 
     def __init_subclass__(cls, is_abstract: bool = False, **kwargs):
         super().__init_subclass__(**kwargs)
         if not is_abstract:
             # Deal with the issue of people not reading the schema.
-            if not hasattr(cls, 'name'):
-                setattr(cls, 'name', cls.__class__.__name__)
+            if not hasattr(cls, "name"):
+                setattr(cls, "name", cls.__class__.__name__)
             cls._engines.append(cls)
 
     def __init__(self, obj, fit_function: Callable):
@@ -68,8 +68,16 @@ class FittingTemplate(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def fit(self, x: np.ndarray, y: np.ndarray,
-            weights: Union[np.ndarray, noneType] = None, model=None, parameters=None, method=None, **kwargs):
+    def fit(
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        weights: Union[np.ndarray, noneType] = None,
+        model=None,
+        parameters=None,
+        method=None,
+        **kwargs,
+    ):
         """
         Perform a fit using the  engine.
 
@@ -113,7 +121,7 @@ class FittingTemplate(metaclass=ABCMeta):
         if new_parameters is None:
             new_parameters = {}
         for name, item in pars.items():
-            fit_name = 'p' + str(name)
+            fit_name = "p" + str(name)
             if fit_name not in new_parameters.keys():
                 new_parameters[fit_name] = item.raw_value
 
@@ -147,7 +155,7 @@ class FittingTemplate(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def _gen_fit_results(self, fit_results, **kwargs) -> 'FitResults':
+    def _gen_fit_results(self, fit_results, **kwargs) -> "FitResults":
         """
         Convert fit results into the unified `FitResults` format.
 
@@ -166,12 +174,17 @@ class FittingTemplate(metaclass=ABCMeta):
         """
 
     @staticmethod
-    def _error_from_jacobian(jacobian: np.ndarray, residuals: np.ndarray, confidence: float = 0.95) -> np.ndarray:
+    def _error_from_jacobian(
+        jacobian: np.ndarray, residuals: np.ndarray, confidence: float = 0.95
+    ) -> np.ndarray:
         from scipy import stats
+
         JtJi = np.linalg.inv(np.dot(jacobian.T, jacobian))
         # 1.96 is a 95% confidence value
-        error_matrix = np.dot(JtJi, np.dot(jacobian.T,
-                                  np.dot(np.diag(residuals ** 2), np.dot(jacobian, JtJi))))
+        error_matrix = np.dot(
+            JtJi,
+            np.dot(jacobian.T, np.dot(np.diag(residuals ** 2), np.dot(jacobian, JtJi))),
+        )
 
         z = 1 - ((1 - confidence) / 2)
         z = stats.norm.pdf(z)
@@ -184,10 +197,20 @@ class FitResults:
     At the moment this is just a dummy way of unifying the returned fit parameters.
     """
 
-    __slots__ = ['success', 'fitting_engine', 'fit_args',
-                 'p', 'p0',
-                 'x', 'x_matrices', 'y_obs', 'y_calc', 'residual',
-                 'goodness_of_fit', 'engine_result']
+    __slots__ = [
+        "success",
+        "fitting_engine",
+        "fit_args",
+        "p",
+        "p0",
+        "x",
+        "x_matrices",
+        "y_obs",
+        "y_calc",
+        "residual",
+        "goodness_of_fit",
+        "engine_result",
+    ]
 
     def __init__(self):
         self.success = False
@@ -209,19 +232,19 @@ class FitResults:
 
     @property
     def reduced_chi(self):
-        return self.goodness_of_fit/(len(self.x) - self.n_pars)
+        return self.goodness_of_fit / (len(self.x) - self.n_pars)
 
     # def plot(self):
 
 
 class NameConverter:
-
     def __init__(self):
         from easyCore import borg
+
         self._borg = borg
 
     def get_name_from_key(self, item_key: int) -> str:
-        return getattr(self._borg.map.get_item_by_key(item_key), 'name', '')
+        return getattr(self._borg.map.get_item_by_key(item_key), "name", "")
 
     def get_item_from_key(self, item_key: int) -> object:
         return self._borg.map.get_item_by_key(item_key)
@@ -231,12 +254,11 @@ class NameConverter:
 
 
 class FitError(Exception):
-
     def __init__(self, e: Exception = None):
         self.e = e
 
     def __str__(self) -> str:
-        s = ''
+        s = ""
         if self.e is not None:
-            s = f'{self.e}\n'
-        return s + 'Something has gone wrong with the fit'
+            s = f"{self.e}\n"
+        return s + "Something has gone wrong with the fit"

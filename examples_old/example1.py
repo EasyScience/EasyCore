@@ -1,15 +1,13 @@
-__author__ = 'github.com/wardsimon'
-__version__ = '0.1.0'
+__author__ = "github.com/wardsimon"
+__version__ = "0.1.0"
 
 import numpy as np
 from easyCore.Objects.Base import Parameter, BaseObj
-from easyCore.Fitting.Fitting import Fitter
+from easyCore.Fitting import Fitter
 
 # This is a simple example of creating an object which has fitable parameters
 
-b = BaseObj('line',
-            m=Parameter('m', 1),
-            c=Parameter('c', 1))
+b = BaseObj("line", m=Parameter("m", 1), c=Parameter("c", 1))
 
 
 def fit_fun(x):

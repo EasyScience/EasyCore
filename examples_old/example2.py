@@ -1,9 +1,9 @@
-__author__ = 'github.com/wardsimon'
-__version__ = '0.1.0'
+__author__ = "github.com/wardsimon"
+__version__ = "0.1.0"
 
 import numpy as np
 from easyCore.Objects.Base import Parameter, BaseObj
-from easyCore.Fitting.Fitting import Fitter
+from easyCore.Fitting import Fitter
 
 # In this case we have inherited from `BaseObj` to create a class which has fitable attributes.
 
@@ -17,12 +17,11 @@ class Line(BaseObj):
     _c = 0
 
     def __init__(self):
-        super().__init__(self.__class__.__name__,
-                         *self._defaults)
+        super().__init__(self.__class__.__name__, *self._defaults)
 
     @property
     def _defaults(self):
-        return [Parameter('m', self._m), Parameter('c', self._c)]
+        return [Parameter("m", self._m), Parameter("c", self._c)]
 
     @property
     def gradient(self):
@@ -36,7 +35,7 @@ class Line(BaseObj):
         return self.gradient * x + self.intercept
 
     def __repr__(self):
-        return f'Line: m={self.m}, c={self.c}'
+        return f"Line: m={self.m}, c={self.c}"
 
 
 l = Line()

@@ -25,7 +25,7 @@ from easyCore.Utils.classTools import addLoggedProp
 from .Variable import Parameter, Descriptor
 
 if TYPE_CHECKING:
-    from easyCore.Fitting.Constraints import ConstraintBase as Constraint
+    from easyCore.optimization.constraints import ConstraintBase as Constraint
     from easyCore.Objects.Inferface import InterfaceFactoryTemplate as Interface
 
 

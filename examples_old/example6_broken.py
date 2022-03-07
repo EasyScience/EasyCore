@@ -1,8 +1,8 @@
-__author__ = 'github.com/wardsimon'
-__version__ = '0.1.0'
+__author__ = "github.com/wardsimon"
+__version__ = "0.1.0"
 
 import json
-from typing import Callable, List, TypeVar, Type, Union
+from typing import Callable
 from easyCore.Utils.json import MSONable
 
 import numpy as np
@@ -10,7 +10,7 @@ import numpy as np
 from easyCore import borg
 from easyCore.Objects.Base import Parameter, BaseObj
 from easyCore.Objects.Inferface import InterfaceFactoryTemplate
-from easyCore.Fitting.Fitting import Fitter
+from easyCore.Fitting import Fitter
 
 from abc import ABCMeta, abstractmethod
 
@@ -90,6 +90,7 @@ class InterfaceTemplate(MSONable, metaclass=ABCMeta):
     """
     This class is a template and defines all properties that an interface should have.
     """
+
     _interfaces = []
     _borg = borg
 
@@ -183,7 +184,7 @@ class Interface1(InterfaceTemplate):
         :rtype: noneType
         """
         if self._borg.debug:
-            print(f'Interface1: Value of {value_label} set to {value}')
+            print(f"Interface1: Value of {value_label} set to {value}")
         setattr(self.calculator, value_label, value)
 
     def fit_func(self, x_array: np.ndarray) -> np.ndarray:
@@ -197,16 +198,16 @@ class Interface1(InterfaceTemplate):
         """
         return self.calculator.calculate(x_array)
 
+
 class Calculator2:
     """
     Isolated calculator. This calculator can't have values set, it can
     only load/save data and calculate from it. i.e in the style of crysfml
     """
+
     def __init__(self):
-        """
-        """
-        self._data = {'m': 0,
-                      'c': 0}
+        """ """
+        self._data = {"m": 0, "c": 0}
 
     def calculate(self, x_array: np.ndarray) -> np.ndarray:
         """
@@ -217,7 +218,7 @@ class Calculator2:
         :return: points calculated at `x`
         :rtype: np.ndarray
         """
-        return self._data['m'] * x_array + self._data['c']
+        return self._data["m"] * x_array + self._data["c"]
 
     def export_data(self) -> str:
         return json.dumps(self._data)
@@ -264,7 +265,7 @@ class Interface2(InterfaceTemplate):
         :rtype: noneType
         """
         if self._borg.debug:
-            print(f'Interface2: Value of {value_label} set to {value}')
+            print(f"Interface2: Value of {value_label} set to {value}")
         self._data = json.loads(self.calculator.export_data())
         if value_label in self._data.keys():
             self._data[value_label] = value
@@ -336,8 +337,8 @@ class Line(BaseObj):
     """
     Simple descriptor of a line.
     """
-    _defaults = [Parameter('m', 1),
-                 Parameter('c', 0)]
+
+    _defaults = [Parameter("m", 1), Parameter("c", 0)]
 
     def __init__(self, interface_factory: InterfaceFactory = None):
         """
@@ -347,8 +348,7 @@ class Line(BaseObj):
         :type interface_factory: InterfaceFactory
         """
         self.interface = interface_factory
-        super().__init__(self.__class__.__name__,
-                         *self._defaults)
+        super().__init__(self.__class__.__name__, *self._defaults)
         self._set_interface()
 
     def _set_interface(self):
@@ -359,17 +359,15 @@ class Line(BaseObj):
                 self.set_binding(name, self.interface.generate_bindings)
 
     def __repr__(self):
-        return f'Line: m={self.m}, c={self.c}'
+        return f"Line: m={self.m}, c={self.c}"
 
 
 class Curve(BaseObj):
     """
     Simple descriptor of a line.
     """
-    _defaults = [Parameter('A', 1.0),
-                 Parameter('p', np.pi),
-                 Parameter('x_shift', 0.0)
-                 ]
+
+    _defaults = [Parameter("A", 1.0), Parameter("p", np.pi), Parameter("x_shift", 0.0)]
 
     def __init__(self, interface_factory: InterfaceFactory = None):
         """
@@ -379,8 +377,7 @@ class Curve(BaseObj):
         :type interface_factory: InterfaceFactory
         """
         self.interface = interface_factory
-        super().__init__(self.__class__.__name__,
-                         *self._defaults)
+        super().__init__(self.__class__.__name__, *self._defaults)
         self._set_interface()
 
     def _set_interface(self):
@@ -391,15 +388,15 @@ class Curve(BaseObj):
                 self.set_binding(name, self.interface.generate_bindings)
 
     def __repr__(self):
-        return f'Curve: A={self.A}, p={self.p}, x_shift={self.x_shift}'
+        return f"Curve: A={self.A}, p={self.p}, x_shift={self.x_shift}"
 
 
 class Model(BaseObj):
     """
     Simple descriptor of a line.
     """
-    _defaults = [Line,
-                 Curve]
+
+    _defaults = [Line, Curve]
 
     def __init__(self, interface_factory: InterfaceFactory = None):
         """
@@ -409,16 +406,17 @@ class Model(BaseObj):
         :type interface_factory: InterfaceFactory
         """
         self.interface = interface_factory
-        super().__init__(self.__class__.__name__,
-                         *[default(interface) for default in self._defaults])
+        super().__init__(
+            self.__class__.__name__, *[default(interface) for default in self._defaults]
+        )
 
     def __repr__(self):
-        this_str = 'Hybrid Model:\n'
+        this_str = "Hybrid Model:\n"
         for name, item in self._kwargs.items():
-            this_str += f'{name}: '
+            this_str += f"{name}: "
             for par in item._defaults:
-                this_str += f'{par.name} = {par.value}, '
-            this_str = this_str[:-2] + '\n'
+                this_str += f"{par.name} = {par.value}, "
+            this_str = this_str[:-2] + "\n"
         return this_str
 
 
@@ -433,16 +431,16 @@ y = 2 * x - 1
 
 f_res = f.fit(x, y)
 
-print('\n######### Interface 1 #########\n')
+print("\n######### Interface 1 #########\n")
 print(f_res)
 print(hybrid)
 
 # Now lets change fitting engine
-f.switch_engine('bumps')
+f.switch_engine("bumps")
 # Reset the values so we don't cheat
 hybrid.m = 1
 hybrid.c = 0
 f_res = f.fit(x, y, weights=0.1 * np.ones_like(x))
-print('\n######### bumps fitting #########\n')
+print("\n######### bumps fitting #########\n")
 print(f_res)
 print(hybrid)

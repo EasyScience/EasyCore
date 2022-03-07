@@ -12,18 +12,17 @@ import weakref
 import warnings
 
 from copy import deepcopy
-from functools import wraps
 from types import MappingProxyType
 from typing import (
     List,
     Union,
     Any,
-    Iterable,
     Dict,
     Optional,
     Type,
     TYPE_CHECKING,
-    Callable, Tuple,
+    Callable,
+    Tuple,
 )
 
 from easyCore import borg, ureg, np, pint
@@ -32,11 +31,10 @@ from easyCore.Utils.Exceptions import CoreSetException
 from easyCore.Utils.typing import noneType
 from easyCore.Utils.UndoRedo import property_stack_deco
 from easyCore.Utils.json import MSONable
-from easyCore.Fitting.Constraints import SelfConstraint
+from easyCore.optimization.constraints import SelfConstraint
 
 if TYPE_CHECKING:
-    from easyCore.Fitting.Constraints import ConstraintBase as Constraint
-    from easyCore.Objects.Inferface import InterfaceFactoryTemplate as Interface
+    from easyCore.optimization.constraints import ConstraintBase as Constraint
 
 Q_ = ureg.Quantity
 M_ = ureg.Measurement
@@ -516,7 +514,7 @@ class Parameter(Descriptor):
         self._fixed: bool = fixed
         self.initial_value = self.value
         self._constraints: dict = {
-            "user":    {},
+            "user": {},
             "builtin": {
                 "min": SelfConstraint(self, ">=", "_min"),
                 "max": SelfConstraint(self, "<=", "_max"),
@@ -625,7 +623,9 @@ class Parameter(Descriptor):
         if value <= self.raw_value:
             self._min = value
         else:
-            raise ValueError(f"The current set value ({self.raw_value}) is less than the desired min value ({value}).")
+            raise ValueError(
+                f"The current set value ({self.raw_value}) is less than the desired min value ({value})."
+            )
 
     @property
     def max(self) -> numbers.Number:
@@ -649,7 +649,9 @@ class Parameter(Descriptor):
         if value >= self.raw_value:
             self._max = value
         else:
-            raise ValueError(f"The current set value ({self.raw_value}) is greater than the desired max value ({value}).")
+            raise ValueError(
+                f"The current set value ({self.raw_value}) is greater than the desired max value ({value})."
+            )
 
     @property
     def fixed(self) -> bool:
@@ -723,7 +725,7 @@ class Parameter(Descriptor):
         return float(self.raw_value)
 
     def as_dict(
-            self, skip: Optional[Union[List[str], None]] = None
+        self, skip: Optional[Union[List[str], None]] = None
     ) -> Dict[str, Union[str, bool, numbers.Number]]:
         """
         Include enabled in the dict output as it's unfortunately skipped
@@ -757,10 +759,13 @@ class Parameter(Descriptor):
     def user_constraints(self, constraints_dict: Dict[str, Type[Constraint]]):
         self._constraints["user"] = constraints_dict
 
-    def _quick_set(self, set_value,
-                   run_builtin_constraints=False,
-                   run_user_constraints=False,
-                   run_virtual_constraints=False):
+    def _quick_set(
+        self,
+        set_value,
+        run_builtin_constraints=False,
+        run_user_constraints=False,
+        run_virtual_constraints=False,
+    ):
         """
         This is a quick setter for the parameter. It bypasses all the checks and constraints,
         just setting the value and issuing the interface callbacks.
@@ -788,14 +793,14 @@ class Parameter(Descriptor):
 
         # Finally set the value
         self._property_value._magnitude._nominal_value = set_value
-        self._args['value'] = set_value
+        self._args["value"] = set_value
         if self._callback.fset is not None:
             self._callback.fset(set_value)
 
     def __constraint_runner(
-            self,
-            this_constraint_type: Union[dict, MappingProxyType],
-            newer_value: numbers.Number,
+        self,
+        this_constraint_type: Union[dict, MappingProxyType],
+        newer_value: numbers.Number,
     ):
         for constraint in this_constraint_type.values():
             if constraint.external:
@@ -823,7 +828,9 @@ class Parameter(Descriptor):
         return self._min, self._max
 
     @bounds.setter
-    def bounds(self, new_bound: Union[Tuple[numbers.Number, numbers.Number], numbers.Number]) -> None:
+    def bounds(
+        self, new_bound: Union[Tuple[numbers.Number, numbers.Number], numbers.Number]
+    ) -> None:
         """
         Set the bounds of the parameter. *This will also enable the parameter*.
 

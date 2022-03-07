@@ -4,7 +4,7 @@ __version__ = "0.1.0"
 from easyCore import np
 from easyCore.Datasets.scipp import sc
 from easyCore.Objects.Base import Parameter, BaseObj
-from easyCore.Fitting.Fitting import Fitter
+from easyCore.Fitting import Fitter
 
 import matplotlib.pyplot as plt
 
