@@ -15,9 +15,9 @@ from easyCore.optimization.engines.fitting_template import (
     FittingTemplate,
     np,
     FitResults,
-    NameConverter,
     FitError,
 )
+from easyCore.optimization.tools import NameConverter
 
 # Import dfols specific objects
 import dfols
@@ -53,7 +53,15 @@ class DFO(FittingTemplate):  # noqa: S101
         :return: Callable model which returns residuals
         :rtype: Callable
         """
-        fit_func = self._generate_fit_function()
+        from easyCore.optimization.models import Model
+
+        if issubclass(self._original_fit_function.__class__, Model):
+            self._original_fit_function._recache_pars()
+            pars = self._original_fit_function._cached_pars
+            self._cached_pars = pars
+            fit_func = self._original_fit_function
+        else:
+            fit_func = self._generate_fit_function()
 
         def outer(obj):
             def make_func(x, y, weights):

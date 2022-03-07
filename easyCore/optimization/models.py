@@ -8,10 +8,10 @@ __version__ = "0.0.1"
 try:
     import jax
     import jax.numpy as np
+    from easyCore.Objects.ObjectClasses import tree_creator
 except ImportError:
     jax = None
     from easyCore import np
-    from easyCore.Objects.ObjectClasses import tree_creator
 
 
 import inspect
@@ -27,7 +27,7 @@ from typing import (
     Dict,
     ClassVar,
 )
-from easyCore.optimization.engines.fitting_template import NameConverter
+from easyCore.optimization.tools import NameConverter
 from easyCore.Objects.ObjectClasses import BaseObj, BasedBase
 from easyCore.Objects.Variable import Descriptor, Parameter
 
@@ -120,11 +120,11 @@ class Model(BaseObj):
                 pass
         self._cached_pars = {}
         self._recache_pars()
-        self._sign_function()
 
     def _recache_pars(self):
         for parameter in self.get_fit_parameters():
             self._cached_pars[NameConverter().get_key(parameter)] = parameter
+        self._sign_function()
 
     @property
     def _encoded_parameter_names(self):
@@ -132,7 +132,7 @@ class Model(BaseObj):
 
     def __call__(self, x, *args, **kwargs):
         self._count += 1
-        pars = self._cached_pars
+        pars = self._cached_pars.values()
         generic_names = [par.name for par in pars]
         possible_names = self._encoded_parameter_names
 
@@ -242,10 +242,10 @@ class Model(BaseObj):
                     annotation=inspect._empty,
                     default=parameter.raw_value,
                 )
-                for name, parameter in self.get_fit_parameters().items()
+                for name, parameter in self._cached_pars.items()
             ],
         ]
-        self.__call__.__signature__ = inspect.Signature(params)
+        self.__call__.__func__.__signature__ = inspect.Signature(params)
 
 
 def tree_flatten_easyModel(self):

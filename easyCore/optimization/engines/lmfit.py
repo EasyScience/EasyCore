@@ -15,9 +15,9 @@ from easyCore.optimization.engines.fitting_template import (
     FittingTemplate,
     np,
     FitResults,
-    NameConverter,
     FitError,
 )
+from easyCore.optimization.tools import NameConverter
 
 # Import lmfit specific objects
 from lmfit import Parameter as lmParameter, Parameters as lmParameters, Model as lmModel
@@ -54,9 +54,18 @@ class lmfit(FittingTemplate):  # noqa: S101
         :rtype: lmModel
         """
         # Generate the fitting function
-        fit_func = self._generate_fit_function()
-        if pars is None:
-            pars = self._cached_pars
+        from easyCore.optimization.models import Model
+
+        if issubclass(self._original_fit_function.__class__, Model):
+            self._original_fit_function._recache_pars()
+            pars = self._original_fit_function._cached_pars
+            self._cached_pars = pars
+            fit_func = self._original_fit_function
+        else:
+
+            fit_func = self._generate_fit_function()
+            if pars is None:
+                pars = self._cached_pars
         # Create the model
         model = lmModel(
             fit_func,

@@ -11,6 +11,7 @@ from types import FunctionType
 from typing import List, Callable, TypeVar
 
 from easyCore import borg, default_fitting_engine
+from easyCore.optimization.models import Model
 import easyCore.optimization.engines as Fitting
 
 _C = TypeVar("_C", bound=ABCMeta)
@@ -27,6 +28,8 @@ class Fitter:
     def __init__(self, fit_object: object = None, fit_function: Callable = None):
 
         self._fit_object = fit_object
+        if issubclass(type(fit_object), Model):
+            fit_function = fit_object.__call__
         self._fit_function = fit_function
 
         can_initialize = False
