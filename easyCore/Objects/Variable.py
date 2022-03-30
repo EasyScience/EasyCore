@@ -12,18 +12,17 @@ import weakref
 import warnings
 
 from copy import deepcopy
-from functools import wraps
 from types import MappingProxyType
 from typing import (
     List,
     Union,
     Any,
-    Iterable,
     Dict,
     Optional,
-    Type,
     TYPE_CHECKING,
-    Callable, Tuple,
+    Callable,
+    Tuple,
+    TypeVar,
 )
 
 from easyCore import borg, ureg, np, pint
@@ -35,8 +34,9 @@ from easyCore.Utils.json import MSONable
 from easyCore.Fitting.Constraints import SelfConstraint
 
 if TYPE_CHECKING:
-    from easyCore.Fitting.Constraints import ConstraintBase as Constraint
-    from easyCore.Objects.Inferface import InterfaceFactoryTemplate as Interface
+    from easyCore.Fitting.Constraints import ConstraintBase
+
+    C = TypeVar("C", bound=ConstraintBase)
 
 Q_ = ureg.Quantity
 M_ = ureg.Measurement
@@ -367,6 +367,10 @@ class Descriptor(MSONable):
         return self.__class__.from_dict(self.as_dict())
 
 
+if TYPE_CHECKING:
+    V = TypeVar("V", bound=Descriptor)
+
+
 class ComboDescriptor(Descriptor):
     """
     This class is an extension of a ``easyCore.Object.Base.Descriptor``. This class has a selection of values which can
@@ -385,8 +389,7 @@ class ComboDescriptor(Descriptor):
         if hasattr(fun, "func"):
             fun = getattr(fun, "func")
         self.__previous_set: Callable[
-            [Type[Descriptor], Union[numbers.Number, np.ndarray]],
-            Union[numbers.Number, np.ndarray],
+            [V, Union[numbers.Number, np.ndarray]], Union[numbers.Number, np.ndarray]
         ] = fun
 
         # Monkey patch the unit and the value to take into account the new max/min situation
@@ -404,7 +407,7 @@ class ComboDescriptor(Descriptor):
 
     @_property_value.setter
     @property_stack_deco
-    def _property_value(self, set_value: Union[numbers.Number, np.ndarray]):
+    def _property_value(self, set_value: Union[numbers.Number, np.ndarray, Q_]):
         """
         Verify value against constraints. This hasn't really been implemented as fitting is tricky.
 
@@ -429,18 +432,21 @@ class ComboDescriptor(Descriptor):
         self.__previous_set(self, new_value)
 
     @property
-    def available_options(self):
+    def available_options(self) -> List[Union[numbers.Number, np.ndarray, Q_]]:
         return self._available_options
 
     @available_options.setter
     @property_stack_deco
-    def available_options(self, available_options: list):
+    def available_options(
+        self, available_options: List[Union[numbers.Number, np.ndarray, Q_]]
+    ) -> None:
         self._available_options = available_options
 
-    def as_dict(self, **kwargs):
+    def as_dict(self, **kwargs) -> Dict[str, Any]:
         import json
 
         d = super().as_dict(**kwargs)
+        d["name"] = self.name
         d["available_options"] = json.dumps(self.available_options)
         return d
 
@@ -516,7 +522,7 @@ class Parameter(Descriptor):
         self._fixed: bool = fixed
         self.initial_value = self.value
         self._constraints: dict = {
-            "user":    {},
+            "user": {},
             "builtin": {
                 "min": SelfConstraint(self, ">=", "_min"),
                 "max": SelfConstraint(self, "<=", "_max"),
@@ -532,7 +538,7 @@ class Parameter(Descriptor):
         if hasattr(fun, "func"):
             fun = getattr(fun, "func")
         self.__previous_set: Callable[
-            [Type[Descriptor], Union[numbers.Number, np.ndarray]],
+            [V, Union[numbers.Number, np.ndarray]],
             Union[numbers.Number, np.ndarray],
         ] = fun
 
@@ -546,12 +552,12 @@ class Parameter(Descriptor):
         )
 
     @property
-    def _property_value(self) -> Union[numbers.Number, np.ndarray]:
+    def _property_value(self) -> Union[numbers.Number, np.ndarray, M_]:
         return self.value
 
     @_property_value.setter
     @property_stack_deco
-    def _property_value(self, set_value: Union[numbers.Number, np.ndarray]):
+    def _property_value(self, set_value: Union[numbers.Number, np.ndarray, M_]) -> None:
         """
         Verify value against constraints. This hasn't really been implemented as fitting is tricky.
 
@@ -567,7 +573,7 @@ class Parameter(Descriptor):
         )
 
         # First run the built in constraints. i.e. min/max
-        constraint_type: MappingProxyType = self.builtin_constraints
+        constraint_type: MappingProxyType[str, C] = self.builtin_constraints
         new_value = self.__constraint_runner(constraint_type, set_value)
         # Then run any user constraints.
         constraint_type: dict = self.user_constraints
@@ -625,7 +631,9 @@ class Parameter(Descriptor):
         if value <= self.raw_value:
             self._min = value
         else:
-            raise ValueError(f"The current set value ({self.raw_value}) is less than the desired min value ({value}).")
+            raise ValueError(
+                f"The current set value ({self.raw_value}) is less than the desired min value ({value})."
+            )
 
     @property
     def max(self) -> numbers.Number:
@@ -649,7 +657,9 @@ class Parameter(Descriptor):
         if value >= self.raw_value:
             self._max = value
         else:
-            raise ValueError(f"The current set value ({self.raw_value}) is greater than the desired max value ({value}).")
+            raise ValueError(
+                f"The current set value ({self.raw_value}) is greater than the desired max value ({value})."
+            )
 
     @property
     def fixed(self) -> bool:
@@ -722,9 +732,7 @@ class Parameter(Descriptor):
     def __float__(self) -> float:
         return float(self.raw_value)
 
-    def as_dict(
-            self, skip: Optional[Union[List[str], None]] = None
-    ) -> Dict[str, Union[str, bool, numbers.Number]]:
+    def as_dict(self, skip: Optional[Union[List[str], None]] = None) -> Dict[str, Any]:
         """
         Include enabled in the dict output as it's unfortunately skipped
 
@@ -736,7 +744,7 @@ class Parameter(Descriptor):
         return new_dict
 
     @property
-    def builtin_constraints(self) -> MappingProxyType[Any, Any]:
+    def builtin_constraints(self) -> MappingProxyType[str, C]:
         """
         Get the built in constrains of the object. Typically these are the min/max
 
@@ -745,7 +753,7 @@ class Parameter(Descriptor):
         return MappingProxyType(self._constraints["builtin"])
 
     @property
-    def user_constraints(self) -> Dict[str, Type[Constraint]]:
+    def user_constraints(self) -> Dict[str, C]:
         """
         Get the user specified constrains of the object.
 
@@ -754,13 +762,16 @@ class Parameter(Descriptor):
         return self._constraints["user"]
 
     @user_constraints.setter
-    def user_constraints(self, constraints_dict: Dict[str, Type[Constraint]]):
+    def user_constraints(self, constraints_dict: Dict[str, C]) -> None:
         self._constraints["user"] = constraints_dict
 
-    def _quick_set(self, set_value,
-                   run_builtin_constraints=False,
-                   run_user_constraints=False,
-                   run_virtual_constraints=False):
+    def _quick_set(
+        self,
+        set_value: float,
+        run_builtin_constraints: bool = False,
+        run_user_constraints: bool = False,
+        run_virtual_constraints: bool = False,
+    ) -> None:
         """
         This is a quick setter for the parameter. It bypasses all the checks and constraints,
         just setting the value and issuing the interface callbacks.
@@ -788,15 +799,15 @@ class Parameter(Descriptor):
 
         # Finally set the value
         self._property_value._magnitude._nominal_value = set_value
-        self._args['value'] = set_value
+        self._args["value"] = set_value
         if self._callback.fset is not None:
             self._callback.fset(set_value)
 
     def __constraint_runner(
-            self,
-            this_constraint_type: Union[dict, MappingProxyType],
-            newer_value: numbers.Number,
-    ):
+        self,
+        this_constraint_type: Union[dict, MappingProxyType[str, C]],
+        newer_value: numbers.Number,
+    ) -> float:
         for constraint in this_constraint_type.values():
             if constraint.external:
                 constraint()
@@ -823,7 +834,9 @@ class Parameter(Descriptor):
         return self._min, self._max
 
     @bounds.setter
-    def bounds(self, new_bound: Union[Tuple[numbers.Number, numbers.Number], numbers.Number]) -> None:
+    def bounds(
+        self, new_bound: Union[Tuple[numbers.Number, numbers.Number], numbers.Number]
+    ) -> None:
         """
         Set the bounds of the parameter. *This will also enable the parameter*.
 
