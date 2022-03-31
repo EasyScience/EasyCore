@@ -28,15 +28,12 @@ from typing import (
 from easyCore import borg, ureg, np, pint
 from easyCore.Utils.classTools import addProp
 from easyCore.Utils.Exceptions import CoreSetException
-from easyCore.Utils.typing import noneType
 from easyCore.Utils.UndoRedo import property_stack_deco
 from easyCore.Utils.json import MSONable
 from easyCore.Fitting.Constraints import SelfConstraint
 
 if TYPE_CHECKING:
-    from easyCore.Fitting.Constraints import ConstraintBase
-
-    C = TypeVar("C", bound=ConstraintBase)
+    from easyCore.Utils.typing import C
 
 Q_ = ureg.Quantity
 M_ = ureg.Measurement
@@ -60,7 +57,7 @@ class Descriptor(MSONable):
         self,
         name: str,
         value: Any,
-        units: Optional[Union[noneType, str, ureg.Unit]] = None,
+        units: Optional[Union[str, ureg.Unit]] = None,
         description: Optional[str] = "",
         url: Optional[str] = "",
         display_name: Optional[str] = None,
@@ -110,7 +107,7 @@ class Descriptor(MSONable):
         # Attach units if necessary
         if isinstance(units, ureg.Unit):
             self._units = ureg.Quantity(1, units=deepcopy(units))
-        elif isinstance(units, (str, noneType)):
+        elif isinstance(units, (str, type(None))):
             self._units = ureg.parse_expression(units)
         else:
             raise AttributeError
@@ -367,8 +364,7 @@ class Descriptor(MSONable):
         return self.__class__.from_dict(self.as_dict())
 
 
-if TYPE_CHECKING:
-    V = TypeVar("V", bound=Descriptor)
+V = TypeVar("V", bound=Descriptor)
 
 
 class ComboDescriptor(Descriptor):

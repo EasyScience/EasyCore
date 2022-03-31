@@ -196,7 +196,7 @@ class UndoStack:
 
     def pop(self) -> T_:
         """
-        !! WARNING - TO BE USED WITH EMINENCE CAUTION !!
+        !! WARNING - TO BE USED WITH EXTREME CAUTION !!
         !! THIS IS PROBABLY NOT THE FN YOU'RE LOOKING FOR, IT CAN BREAK A LOT OF STUFF !!
         Sometimes you really don't want the last command. Remove it from the stack
 
@@ -262,7 +262,7 @@ class UndoStack:
         Start a bulk update i.e. multiple commands under one undo/redo command
         """
         if self._macro_running:
-            raise AssertionError
+            raise AssertionError("Cannot start a macro when one is already running")
         com = CommandHolder(text)
         self.history.appendleft(com)
         self._macro_running = True
@@ -272,7 +272,7 @@ class UndoStack:
         End a bulk update i.e. multiple commands under one undo/redo command
         """
         if not self._macro_running:
-            raise AssertionError
+            raise AssertionError("Cannot end a macro when one is not running")
         self._macro_running = False
 
     def canUndo(self) -> bool:
@@ -422,7 +422,7 @@ class DictStackReCreate(UndoCommand):
         self._parent.data = self._new_value
 
 
-def property_stack_deco(arg: Union[str, Callable], begin_macro=False) -> Callable:
+def property_stack_deco(arg: Union[str, Callable], begin_macro: bool = False) -> Callable:
     """
     Decorate a `property` setter with undo/redo functionality
     This decorator can be used as:

@@ -6,10 +6,9 @@ __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
 import inspect
-from typing import List
+from typing import List, Optional
 
 from easyCore.Fitting.fitting_template import (
-    noneType,
     Union,
     Callable,
     FittingTemplate,
@@ -46,7 +45,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         """
         super().__init__(obj, fit_function)
 
-    def make_model(self, pars: Union[noneType, lmParameters] = None) -> lmModel:
+    def make_model(self, pars: Optional[lmParameters] = None) -> lmModel:
         """
         Generate a lmfit model from the supplied `fit_function` and parameters in the base object.
 
@@ -145,12 +144,12 @@ class lmfit(FittingTemplate):  # noqa: S101
         self,
         x: np.ndarray,
         y: np.ndarray,
-        weights: Union[np.ndarray, noneType] = None,
-        model: Union[lmModel, noneType] = None,
-        parameters: Union[lmParameters, noneType] = None,
-        method: str = None,
-        minimizer_kwargs: dict = None,
-        engine_kwargs: dict = None,
+        weights: Optional[np.ndarray] = None,
+        model: Optional[lmModel] = None,
+        parameters: Optional[lmParameters] = None,
+        method: Optional[str] = None,
+        minimizer_kwargs: Optional[dict] = None,
+        engine_kwargs: Optional[dict] = None,
         **kwargs,
     ) -> FitResults:
         """
@@ -210,7 +209,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         return results
 
     def convert_to_pars_obj(
-        self, par_list: Union[list, noneType] = None
+        self, par_list: Optional[List] = None
     ) -> lmParameters:
         """
         Create an lmfit compatible container with the `Parameters` converted from the base object.

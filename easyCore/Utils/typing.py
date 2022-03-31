@@ -5,8 +5,7 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.1.0'
 
-from easyCore import np
-from typing import Union, List
-
-noneType = type(None)
-Vector3Like = Union[List[float], np.ndarray]
+from easyCore.Objects.Inferface import iF
+from easyCore.Fitting.Constraints import C
+from easyCore.Objects.Variable import V
+from easyCore.Objects.ObjectClasses import B

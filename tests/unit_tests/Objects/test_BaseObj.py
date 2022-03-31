@@ -12,7 +12,7 @@ from typing import List, Type, Union, ClassVar
 from contextlib import contextmanager
 
 import easyCore
-from easyCore.Objects.Base import Descriptor, Parameter, BaseObj
+from easyCore.Objects.ObjectClasses import Descriptor, Parameter, BaseObj
 from easyCore.Utils.json import MontyDecoder
 
 

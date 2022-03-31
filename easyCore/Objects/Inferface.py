@@ -216,3 +216,5 @@ class ItemContainer(NamedTuple):
             self.setter_fn(self.link_name, **{inner_key: value})
 
         return set_value
+
+iF = TypeVar("iF", bound=InterfaceFactoryTemplate)

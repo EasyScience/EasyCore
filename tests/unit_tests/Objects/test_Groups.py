@@ -10,7 +10,7 @@ from typing import List
 import pytest
 
 from easyCore.Objects.Groups import BaseCollection
-from easyCore.Objects.Base import Descriptor, Parameter, BaseObj
+from easyCore.Objects.ObjectClasses import Descriptor, Parameter, BaseObj
 
 test_dict = {
     '@module':  'easyCore.Objects.Groups',
@@ -19,7 +19,7 @@ test_dict = {
     'name':     'testing',
     'data':     [
         {
-            '@module': 'easyCore.Objects.Base',
+            '@module': 'easyCore.Objects.Variable',
             '@class': 'Descriptor',
             '@version': '0.1.0',
             'name': 'par1',

@@ -26,19 +26,13 @@ from easyCore.Utils.classTools import addLoggedProp
 from .Variable import Parameter, Descriptor
 
 if TYPE_CHECKING:
-    from easyCore.Fitting.Constraints import ConstraintBase
-
-    C = TypeVar("C", bound=ConstraintBase)
-    from easyCore.Objects.Inferface import InterfaceFactoryTemplate
-
-    iF = TypeVar("iF", bound=InterfaceFactoryTemplate)
-    V = TypeVar("V", bound=Descriptor)
+    from easyCore.Utils.typing import C, V, iF
 
 
 class BasedBase(MSONable):
     __slots__ = ["_name", "_borg", "user_data", "_kwargs"]
 
-    def __init__(self, name: str, interface: Optional[Union[iF, None]] = None):
+    def __init__(self, name: str, interface: Optional[iF] = None):
         self._borg = borg
         self._borg.map.add_vertex(self, obj_type="created")
         self.interface = interface
@@ -171,7 +165,7 @@ class BasedBase(MSONable):
                 par_list.append(item)
         return par_list
 
-    def _get_linkable_attributes(self) -> List[Union[Descriptor, Parameter]]:
+    def _get_linkable_attributes(self) -> List[V]:
         """
         Get all objects which can be linked against as a list.
 
