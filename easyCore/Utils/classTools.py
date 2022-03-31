@@ -7,16 +7,15 @@ from __future__ import annotations
 __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
-from typing import List, Tuple, TYPE_CHECKING, TypeVar
+from typing import List, Tuple, TYPE_CHECKING, TypeVar, Union
 
 from easyCore import borg
 from easyCore.Utils.Hugger.Property import LoggedProperty
 
 if TYPE_CHECKING:
-    from easyCore.Utils.typing import B
+    from easyCore.Utils.typing import B, BV
 
-
-def addLoggedProp(inst: B, name: str, *args, **kwargs) -> None:
+def addLoggedProp(inst: BV, name: str, *args, **kwargs) -> None:
     cls = type(inst)
     annotations = getattr(cls, "__annotations__", False)
     if not hasattr(cls, "__perinstance"):
@@ -29,7 +28,7 @@ def addLoggedProp(inst: B, name: str, *args, **kwargs) -> None:
     setattr(cls, name, LoggedProperty(*args, **kwargs))
 
 
-def addProp(inst: B, name: str, *args, **kwargs) -> None:
+def addProp(inst: BV, name: str, *args, **kwargs) -> None:
     cls = type(inst)
     annotations = getattr(cls, "__annotations__", False)
     if not hasattr(cls, "__perinstance"):
@@ -43,7 +42,7 @@ def addProp(inst: B, name: str, *args, **kwargs) -> None:
     setattr(cls, name, property(*args, **kwargs))
 
 
-def removeProp(inst: B, name: str) ->None:
+def removeProp(inst: BV, name: str) ->None:
     cls = type(inst)
     if not hasattr(cls, "__perinstance"):
         cls = type(cls.__name__, (cls,), {"__module__": __name__})

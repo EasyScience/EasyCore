@@ -728,14 +728,14 @@ class Parameter(Descriptor):
     def __float__(self) -> float:
         return float(self.raw_value)
 
-    def as_dict(self, skip: Optional[Union[List[str], None]] = None) -> Dict[str, Any]:
+    def as_dict(self, skip: Optional[List[str]] = None) -> Dict[str, Any]:
         """
         Include enabled in the dict output as it's unfortunately skipped
 
         :param skip: Which items to skip when serializing
         :return: Serialized dictionary
         """
-        new_dict = super(Parameter, self).as_dict()
+        new_dict = super(Parameter, self).as_dict(skip=skip)
         new_dict["enabled"] = self.enabled
         return new_dict
 

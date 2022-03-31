@@ -205,6 +205,7 @@ class BasedBase(MSONable):
 
 if TYPE_CHECKING:
     B = TypeVar("B", bound=BasedBase)
+    BV = TypeVar("BV", bound=Union[BasedBase, Descriptor])
 
 
 class BaseObj(BasedBase):

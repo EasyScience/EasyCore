@@ -8,4 +8,4 @@ __version__ = '0.1.0'
 from easyCore.Objects.Inferface import iF
 from easyCore.Fitting.Constraints import C
 from easyCore.Objects.Variable import V
-from easyCore.Objects.ObjectClasses import B
+from easyCore.Objects.ObjectClasses import B, BV
