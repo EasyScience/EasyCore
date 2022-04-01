@@ -7,7 +7,7 @@ __version__ = "0.0.1"
 
 from abc import ABCMeta
 from types import FunctionType
-from typing import List, Callable, TypeVar, Union
+from typing import List, Callable, TypeVar, Optional
 
 from pkg_resources import PathMetadata
 
@@ -15,7 +15,6 @@ from pkg_resources import PathMetadata
 from easyCore import borg, default_fitting_engine, np
 from easyCore.Objects.Groups import BaseCollection
 import easyCore.Fitting as Fitting
-from easyCore.Utils.typing import noneType
 
 _C = TypeVar("_C", bound=ABCMeta)
 _M = TypeVar("_M", bound=Fitting.FittingTemplate)
@@ -176,7 +175,7 @@ class MultiFitter(Fitter):
         self,
         x_list: List[np.ndarray],
         y_list: List[np.ndarray],
-        weights_list: List[Union[np.ndarray, noneType]] = None,
+        weights_list: Optional[List[np.ndarray]] = None,
         model=None,
         parameters=None,
         method: str = None,
