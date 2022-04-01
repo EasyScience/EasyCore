@@ -5,10 +5,10 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.1.0'
 
-from typing import List
+from typing import List, Optional
 from numbers import Number
 
-from easyCore.Fitting.fitting_template import noneType, Union, Callable, \
+from easyCore.Fitting.fitting_template import Union, Callable, \
     FittingTemplate, np, FitResults, NameConverter, FitError
 
 # Import dfols specific objects
@@ -37,7 +37,7 @@ class DFO(FittingTemplate):  # noqa: S101
         super().__init__(obj, fit_function)
         self.p_0 = {}
 
-    def make_model(self, pars: Union[noneType, list] = None) -> Callable:
+    def make_model(self, pars: Optional[List] = None) -> Callable:
         """
         Generate a model from the supplied `fit_function` and parameters in the base object.
         Note that this makes a callable as it needs to be initialized with *x*, *y*, *weights*
@@ -114,7 +114,7 @@ class DFO(FittingTemplate):  # noqa: S101
         self._fit_function = fit_function
         return fit_function
 
-    def fit(self, x: np.ndarray, y: np.ndarray, weights: Union[np.ndarray, noneType] = None,
+    def fit(self, x: np.ndarray, y: np.ndarray, weights: Optional[np.ndarray] = None,
             model=None, parameters=None, method: str = None, xtol: float = 1e-6, ftol: float = 1e-8,
             **kwargs) -> FitResults:
         """
@@ -163,7 +163,7 @@ class DFO(FittingTemplate):  # noqa: S101
             borg.stack.endMacro()
         return results
 
-    def convert_to_pars_obj(self, par_list: Union[list, noneType] = None):
+    def convert_to_pars_obj(self, par_list: Optional[list] = None):
         """
         NOTE THAT THIS IS NOT NEEDED FOR DFO-LS
         """

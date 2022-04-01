@@ -8,11 +8,11 @@ __version__ = "0.1.0"
 import pytest
 import numpy as np
 
-from typing import List, Type, Union, ClassVar
+from typing import List, Type, Union, ClassVar, Optional
 from contextlib import contextmanager
 
 import easyCore
-from easyCore.Objects.Base import Descriptor, Parameter, BaseObj
+from easyCore.Objects.ObjectClasses import Descriptor, Parameter, BaseObj
 from easyCore.Utils.json import MontyDecoder
 
 
@@ -435,3 +435,38 @@ def test_Base_GETSET_v3():
     assert len(graph.get_edges(a)) == 1
     assert get_key(a_) in graph.get_edges(a)
     assert get_key(a__) not in graph.get_edges(a)
+
+
+def test_BaseCreation():
+
+    class A(BaseObj):
+        def __init__(self, a: Optional[Union[Parameter, float]] = None):
+            super(A, self).__init__("A", a=Parameter("a", 1.))
+            if a is not None:
+                self.a = a
+
+    a = A()
+    assert a.a.raw_value == 1.
+    a = A(2.)
+    assert a.a.raw_value == 2.
+    a = A(Parameter("a", 3.))
+    assert a.a.raw_value == 3.
+    a.a = 4.
+    assert a.a.raw_value == 4.
+
+    class B(BaseObj):
+        def __init__(self, b: Optional[Union[A, Parameter, float]] = None):
+            super(B, self).__init__("B", b=A())
+            if b is not None:
+                if isinstance(b, (float, Parameter)):
+                    b = A(b)
+                self.b = b
+
+    b = B()
+    assert b.b.a.raw_value == 1.
+    b = B(2.)
+    assert b.b.a.raw_value == 2.
+    b = B(A(3.))
+    assert b.b.a.raw_value == 3.
+    b.b.a = 4.
+    assert b.b.a.raw_value == 4.

@@ -8,7 +8,7 @@ from easyCore.Utils.json import MSONable
 import numpy as np
 
 from easyCore import borg
-from easyCore.Objects.Base import Parameter, BaseObj
+from easyCore.Objects.ObjectClasses import Parameter, BaseObj
 from easyCore.Fitting.Fitting import Fitter
 
 from abc import ABCMeta, abstractmethod

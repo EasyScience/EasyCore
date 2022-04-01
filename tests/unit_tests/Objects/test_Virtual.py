@@ -45,7 +45,7 @@ def test_virtual_variable_modify(cls):
     # assert id_vobj not in list(obj._constraints["virtual"].keys())
 
 def test_Base_obj():
-    l = Line.from_pars(2, 1)
+    l = Line(2, 1)
     v_l = Virtual.virtualizer(l)
     assert l.name == v_l.name
     assert l.m.raw_value == v_l.m.raw_value
@@ -61,7 +61,7 @@ def test_Base_obj():
 
 def test_Base_obj():
     old_m = 2.
-    l = Line.from_pars(old_m, 1)
+    l = Line(old_m, 1)
     v_l = Virtual.virtualizer(l)
     assert l.name == v_l.name
     assert l.m.raw_value == v_l.m.raw_value

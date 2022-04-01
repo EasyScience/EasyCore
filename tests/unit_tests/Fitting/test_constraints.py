@@ -9,7 +9,7 @@ import pytest
 
 from typing import List, Tuple
 from easyCore.Fitting.Constraints import NumericConstraint, ObjConstraint, SelfConstraint
-from easyCore.Objects.Base import Parameter
+from easyCore.Objects.Variable import Parameter
 
 
 @pytest.fixture

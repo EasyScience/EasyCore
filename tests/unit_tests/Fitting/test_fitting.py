@@ -7,8 +7,8 @@ __version__ = "0.0.1"
 
 import pytest
 from easyCore import np
-from easyCore.Objects.Base import Parameter, BaseObj
-from easyCore.Fitting.Fitting import Fitter, MultiFitter, _flatten_list
+from easyCore.Objects.ObjectClasses import Parameter, BaseObj
+from easyCore.Fitting.Fitting import Fitter
 from easyCore.Fitting.Constraints import ObjConstraint
 
 

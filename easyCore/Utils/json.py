@@ -205,11 +205,11 @@ class MSONable:
                 d[c] = recursive_as_dict(a)
         if hasattr(self, "kwargs"):
             # type: ignore
-            d.update(**getattr(self, "kwargs"))  # pylint: disable=E1101
+            d.update({k: v for k, v in getattr(self, "kwargs").items() if k not in skip})  # pylint: disable=E1101
         if spec.varargs is not None and getattr(self, spec.varargs, None) is not None:
             d.update({spec.varargs: getattr(self, spec.varargs)})
         if hasattr(self, "_kwargs"):
-            d.update(**getattr(self, "_kwargs"))  # pylint: disable=E1101
+            d.update({k: v for k, v in getattr(self, "_kwargs").items() if k not in skip})  # pylint: disable=E1101
         if isinstance(self, Enum):
             d.update({"value": self.value})  # pylint: disable=E1101
         return d

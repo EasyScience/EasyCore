@@ -15,8 +15,9 @@ from typing import (
     Iterable,
     Dict,
     Optional,
-    Type,
+    TypeVar,
     TYPE_CHECKING,
+    Callable,
 )
 
 from easyCore import borg
@@ -25,16 +26,13 @@ from easyCore.Utils.classTools import addLoggedProp
 from .Variable import Parameter, Descriptor
 
 if TYPE_CHECKING:
-    from easyCore.Fitting.Constraints import ConstraintBase as Constraint
-    from easyCore.Objects.Inferface import InterfaceFactoryTemplate as Interface
+    from easyCore.Utils.typing import C, V, iF
 
 
 class BasedBase(MSONable):
     __slots__ = ["_name", "_borg", "user_data", "_kwargs"]
 
-    def __init__(
-        self, name: str, interface: Optional[Union[Type[Interface, None]]] = None
-    ):
+    def __init__(self, name: str, interface: Optional[iF] = None):
         self._borg = borg
         self._borg.map.add_vertex(self, obj_type="created")
         self.interface = interface
@@ -72,16 +70,16 @@ class BasedBase(MSONable):
         self._name = new_name
 
     @property
-    def interface(self) -> Type[Interface]:
+    def interface(self) -> iF:
         """
         Get the current interface of the object
         """
         return self._interface
 
     @interface.setter
-    def interface(self, value: Type[Interface]):
+    def interface(self, new_interface: iF):
         """
-        Set the current interface to the object and generate bindings if possible. I.e.
+        Set the current interface to the object and generate bindings if possible. iF.e.
         ```
         def __init__(self, bar, interface=None, **kwargs):
             super().__init__(self, **kwargs)
@@ -89,8 +87,8 @@ class BasedBase(MSONable):
             self.interface = interface # As final step after initialization to set correct bindings.
         ```
         """
-        self._interface = value
-        if value is not None:
+        self._interface = new_interface
+        if new_interface is not None:
             self.generate_bindings()
 
     def generate_bindings(self):
@@ -125,11 +123,11 @@ class BasedBase(MSONable):
         self.generate_bindings()
 
     @property
-    def constraints(self) -> List[Type[Constraint]]:
+    def constraints(self) -> List[C]:
         pars = self.get_parameters()
         constraints = []
         for par in pars:
-            con: Dict[str, Type[Constraint]] = par.user_constraints
+            con: Dict[str, C] = par.user_constraints
             for key in con.keys():
                 constraints.append(con[key])
         return constraints
@@ -167,7 +165,7 @@ class BasedBase(MSONable):
                 par_list.append(item)
         return par_list
 
-    def _get_linkable_attributes(self) -> List[Union[Descriptor, Parameter]]:
+    def _get_linkable_attributes(self) -> List[V]:
         """
         Get all objects which can be linked against as a list.
 
@@ -205,6 +203,11 @@ class BasedBase(MSONable):
         return sorted(new_class_objs)
 
 
+if TYPE_CHECKING:
+    B = TypeVar("B", bound=BasedBase)
+    BV = TypeVar("BV", bound=Union[BasedBase, Descriptor])
+
+
 class BaseObj(BasedBase):
     """
     This is the base class for which all higher level classes are built off of.
@@ -216,8 +219,8 @@ class BaseObj(BasedBase):
     def __init__(
         self,
         name: str,
-        *args: Optional[Union[Type[Descriptor], Type[BasedBase]]],
-        **kwargs: Optional[Union[Type[Descriptor], Type[BasedBase]]],
+        *args: Optional[Union[V, B]],
+        **kwargs: Optional[Union[V, B]],
     ):
         """
         Set up the base class.
@@ -252,9 +255,7 @@ class BaseObj(BasedBase):
                 test_class=BaseObj,
             )
 
-    def _add_component(
-        self, key: str, component: Union[Type[Descriptor], Type[BasedBase]]
-    ):
+    def _add_component(self, key: str, component: Union[V, B]) -> None:
         """
         Dynamically add a component to the class. This is an internal method, though can be called remotely.
         The recommended alternative is to use typing, i.e.
@@ -288,7 +289,7 @@ class BaseObj(BasedBase):
             test_class=BaseObj,
         )
 
-    def __setattr__(self, key: str, value):
+    def __setattr__(self, key: str, value: Union[V, B]) -> None:
         # Assume that the annotation is a ClassVar
         if (
             hasattr(self.__class__, "__annotations__")
@@ -314,18 +315,30 @@ class BaseObj(BasedBase):
         return f"{self.__class__.__name__} `{getattr(self, 'name')}`"
 
     @staticmethod
-    def __getter(key: str):
-        def getter(obj: Union[Type[Descriptor], Type[BasedBase]]):
+    def __getter(key: str) -> Callable[[Union[V, B]], Union[V, B]]:
+        def getter(obj: Union[V, B]) -> Union[V, B]:
             return obj._kwargs[key]
 
         return getter
 
     @staticmethod
-    def __setter(key: str):
-        def setter(obj: Union[Type[Descriptor], Type[BasedBase]], value: float):
-            if issubclass(obj._kwargs[key].__class__, Descriptor):
+    def __setter(key: str) -> Callable[[Union[B, V]], None]:
+        def setter(obj: Union[V, B], value: float) -> None:
+            if issubclass(obj._kwargs[key].__class__, Descriptor) and not issubclass(value.__class__, Descriptor):
                 obj._kwargs[key].value = value
             else:
                 obj._kwargs[key] = value
-
         return setter
+
+    # @staticmethod
+    # def __setter(key: str) -> Callable[[Union[B, V]], None]:
+    #     def setter(obj: Union[V, B], value: float) -> None:
+    #         if issubclass(obj._kwargs[key].__class__, Descriptor):
+    #             if issubclass(obj._kwargs[key].__class__, Descriptor):
+    #                 obj._kwargs[key] = value
+    #             else:
+    #                 obj._kwargs[key].value = value
+    #         else:
+    #             obj._kwargs[key] = value
+    #
+    #     return setter
