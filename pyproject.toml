@@ -46,7 +46,7 @@ numpy = "^1.19"
 pint = ">=0.17,<0.19"
 uncertainties = "^3.1"
 lmfit = "^1.0"
-bumps = "^0.8"
+bumps = ">=0.8,<0.10"
 asteval = "^0.9.23"
 DFO-LS = {version = "^1.2", optional = true}
 xarray = ">=0.16,<0.21"
