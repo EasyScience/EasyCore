@@ -1,6 +1,8 @@
 __author__ = "https://github.com/materialsvirtuallab/monty/blob/master/monty/json.py"
 __version__ = "3.0.0"
 
+from typing import List, Optional, Dict, Any
+
 """
 This code has been taken and modified from https://guide.materialsvirtuallab.org/monty/index.html
 Many thanks to the original authors, the source and contributors can be found at __author__
@@ -233,7 +235,11 @@ class MSONable:
         """
         return json.dumps(self, cls=MontyEncoder)
 
-    def to_data_dict(self, skip: list = []) -> dict:
+    def to_data_dict(self, skip: Optional[List[str]] = None) -> Dict[str, Any]:
+        if skip is None:
+            skip = []
+        if isinstance(skip, str):
+            skip = [skip]
         d = self.as_dict(skip=skip)
 
         def parse_dict(in_dict) -> dict:
