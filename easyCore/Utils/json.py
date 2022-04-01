@@ -246,6 +246,8 @@ class MSONable:
                 out_dict[key] = in_dict[key]
                 if isinstance(in_dict[key], dict):
                     out_dict[key] = parse_dict(in_dict[key])
+                elif isinstance(in_dict[key], list):
+                    out_dict[key] = [parse_dict(x) if isinstance(x, dict) else x for x in in_dict[key]]
             return out_dict
 
         return parse_dict(d)
