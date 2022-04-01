@@ -324,9 +324,21 @@ class BaseObj(BasedBase):
     @staticmethod
     def __setter(key: str) -> Callable[[Union[B, V]], None]:
         def setter(obj: Union[V, B], value: float) -> None:
-            if issubclass(obj._kwargs[key].__class__, Descriptor):
+            if issubclass(obj._kwargs[key].__class__, Descriptor) and not issubclass(value.__class__, Descriptor):
                 obj._kwargs[key].value = value
             else:
                 obj._kwargs[key] = value
-
         return setter
+
+    # @staticmethod
+    # def __setter(key: str) -> Callable[[Union[B, V]], None]:
+    #     def setter(obj: Union[V, B], value: float) -> None:
+    #         if issubclass(obj._kwargs[key].__class__, Descriptor):
+    #             if issubclass(obj._kwargs[key].__class__, Descriptor):
+    #                 obj._kwargs[key] = value
+    #             else:
+    #                 obj._kwargs[key].value = value
+    #         else:
+    #             obj._kwargs[key] = value
+    #
+    #     return setter
