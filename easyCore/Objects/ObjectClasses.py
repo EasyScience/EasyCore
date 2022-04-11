@@ -310,6 +310,9 @@ class BaseObj(BasedBase):
             old_obj = self.__getattribute__(key)
             self._borg.map.prune_vertex_from_edge(self, old_obj)
             self._borg.map.add_edge(self, value)
+            old_interface = getattr(old_obj, "interface", None)
+            if hasattr(value, "interface") and old_interface != value.interface:
+                setattr(value, "interface", old_interface)
         super(BaseObj, self).__setattr__(key, value)
 
     def __repr__(self) -> str:
