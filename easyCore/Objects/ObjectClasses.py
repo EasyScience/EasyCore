@@ -41,7 +41,8 @@ class BasedBase(MSONable):
 
     def __reduce__(self):
         """
-        Make the class picklable. Due to the nature of the dynamic class definitions special measures need to be taken.
+        Make the class picklable.
+        Due to the nature of the dynamic class definitions special measures need to be taken.
 
         :return: Tuple consisting of how to make the object
         :rtype: tuple
@@ -219,8 +220,8 @@ class BaseObj(BasedBase):
     def __init__(
         self,
         name: str,
-        *args: Optional[Union[V, B]],
-        **kwargs: Optional[Union[V, B]],
+        *args: Optional[BV],
+        **kwargs: Optional[BV],
     ):
         """
         Set up the base class.
@@ -255,7 +256,7 @@ class BaseObj(BasedBase):
                 test_class=BaseObj,
             )
 
-    def _add_component(self, key: str, component: Union[V, B]) -> None:
+    def _add_component(self, key: str, component: BV) -> None:
         """
         Dynamically add a component to the class. This is an internal method, though can be called remotely.
         The recommended alternative is to use typing, i.e.
@@ -289,7 +290,7 @@ class BaseObj(BasedBase):
             test_class=BaseObj,
         )
 
-    def __setattr__(self, key: str, value: Union[V, B]) -> None:
+    def __setattr__(self, key: str, value: BV) -> None:
         # Assume that the annotation is a ClassVar
         if (
             hasattr(self.__class__, "__annotations__")
@@ -309,21 +310,24 @@ class BaseObj(BasedBase):
             old_obj = self.__getattribute__(key)
             self._borg.map.prune_vertex_from_edge(self, old_obj)
             self._borg.map.add_edge(self, value)
+            old_interface = getattr(old_obj, "interface", None)
+            if hasattr(value, "interface") and old_interface != value.interface:
+                setattr(value, "interface", old_interface)
         super(BaseObj, self).__setattr__(key, value)
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__} `{getattr(self, 'name')}`"
 
     @staticmethod
-    def __getter(key: str) -> Callable[[Union[V, B]], Union[V, B]]:
-        def getter(obj: Union[V, B]) -> Union[V, B]:
+    def __getter(key: str) -> Callable[[BV], BV]:
+        def getter(obj: BV) -> BV:
             return obj._kwargs[key]
 
         return getter
 
     @staticmethod
-    def __setter(key: str) -> Callable[[Union[B, V]], None]:
-        def setter(obj: Union[V, B], value: float) -> None:
+    def __setter(key: str) -> Callable[[BV], None]:
+        def setter(obj: BV, value: float) -> None:
             if issubclass(obj._kwargs[key].__class__, Descriptor) and not issubclass(value.__class__, Descriptor):
                 obj._kwargs[key].value = value
             else:
