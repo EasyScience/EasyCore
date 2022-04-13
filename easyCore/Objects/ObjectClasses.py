@@ -292,6 +292,7 @@ class BaseObj(BasedBase):
 
     def __setattr__(self, key: str, value: BV) -> None:
         # Assume that the annotation is a ClassVar
+        old_obj = None
         if (
             hasattr(self.__class__, "__annotations__")
             and key in self.__class__.__annotations__
@@ -305,15 +306,17 @@ class BaseObj(BasedBase):
                 old_obj = self.__getattribute__(key)
                 self._borg.map.prune_vertex_from_edge(self, old_obj)
             self._add_component(key, value)
-            return
-        if hasattr(self, key) and issubclass(type(value), (BasedBase, Descriptor)):
-            old_obj = self.__getattribute__(key)
-            self._borg.map.prune_vertex_from_edge(self, old_obj)
-            self._borg.map.add_edge(self, value)
-            old_interface = getattr(old_obj, "interface", None)
-            if hasattr(value, "interface") and old_interface != value.interface:
-                setattr(value, "interface", old_interface)
+        else:
+            if hasattr(self, key) and issubclass(type(value), (BasedBase, Descriptor)):
+                old_obj = self.__getattribute__(key)
+                self._borg.map.prune_vertex_from_edge(self, old_obj)
+                self._borg.map.add_edge(self, value)
         super(BaseObj, self).__setattr__(key, value)
+        # Update the interface bindings if something changed (BasedBase and Descriptor)
+        if old_obj is not None:
+            old_interface = getattr(self, "interface", None)
+            if old_interface is not None:
+                self.generate_bindings()
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__} `{getattr(self, 'name')}`"
@@ -328,10 +331,13 @@ class BaseObj(BasedBase):
     @staticmethod
     def __setter(key: str) -> Callable[[BV], None]:
         def setter(obj: BV, value: float) -> None:
-            if issubclass(obj._kwargs[key].__class__, Descriptor) and not issubclass(value.__class__, Descriptor):
+            if issubclass(obj._kwargs[key].__class__, Descriptor) and not issubclass(
+                value.__class__, Descriptor
+            ):
                 obj._kwargs[key].value = value
             else:
                 obj._kwargs[key] = value
+
         return setter
 
     # @staticmethod

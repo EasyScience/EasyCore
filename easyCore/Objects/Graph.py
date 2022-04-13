@@ -2,8 +2,8 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
-__author__ = 'github.com/wardsimon'
-__version__ = '0.1.0'
+__author__ = "github.com/wardsimon"
+__version__ = "0.1.0"
 
 import weakref
 import sys
@@ -16,22 +16,22 @@ from uuid import uuid4, UUID
 class _EntryList(list):
     def __init__(self, *args, my_type=None, **kwargs):
         super(_EntryList, self).__init__(*args, **kwargs)
-        self.__known_types = {'argument', 'created', 'created_internal', 'returned'}
+        self.__known_types = {"argument", "created", "created_internal", "returned"}
         self.finalizer = None
         self._type = []
         if my_type in self.__known_types:
             self._type.append(my_type)
 
     def __repr__(self) -> str:
-        s = 'Graph entry of type: '
+        s = "Graph entry of type: "
         if self._type:
-            s += ', '.join(self._type)
+            s += ", ".join(self._type)
         else:
-            s += 'Undefined'
-        s += '. With'
+            s += "Undefined"
+        s += ". With"
         if self.finalizer is None:
-            s += 'out'
-        s += 'a finalizer.'
+            s += "out"
+        s += "a finalizer."
         return s
 
     def __delitem__(self, key):
@@ -56,19 +56,19 @@ class _EntryList(list):
 
     @property
     def is_argument(self) -> bool:
-        return 'argument' in self._type
+        return "argument" in self._type
 
     @property
     def is_created(self) -> bool:
-        return 'created' in self._type
+        return "created" in self._type
 
     @property
     def is_created_internal(self) -> bool:
-        return 'created_internal' in self._type
+        return "created_internal" in self._type
 
     @property
     def is_returned(self) -> bool:
-        return 'returned' in self._type
+        return "returned" in self._type
 
 
 class UniqueIdMap(WeakKeyDictionary):
@@ -84,34 +84,33 @@ uniqueidmap = UniqueIdMap()
 
 
 class Graph:
-
     def __init__(self):
         self._store = weakref.WeakValueDictionary()
         self.__graph_dict = {}
 
     def vertices(self) -> List[int]:
-        """ returns the vertices of a graph """
+        """returns the vertices of a graph"""
         return list(self._store.keys())
 
     def edges(self):
-        """ returns the edges of a graph """
+        """returns the edges of a graph"""
         return self.__generate_edges()
 
     @property
     def argument_objs(self) -> List[int]:
-        return self._nested_get('argument')
+        return self._nested_get("argument")
 
     @property
     def created_objs(self) -> List[int]:
-        return self._nested_get('created')
+        return self._nested_get("created")
 
     @property
     def created_internal(self) -> List[int]:
-        return self._nested_get('created_internal')
+        return self._nested_get("created_internal")
 
     @property
     def returned_objs(self) -> List[int]:
-        return self._nested_get('returned')
+        return self._nested_get("returned")
 
     def get_item_by_key(self, item_id: int) -> object:
         if item_id in self._store.keys():
@@ -138,7 +137,9 @@ class Graph:
         oid = self.convert_id(obj).int
         self._store[oid] = obj
         self.__graph_dict[oid] = _EntryList()  # Enhanced list of keys
-        self.__graph_dict[oid].finalizer = weakref.finalize(self._store[oid], self.prune, oid)
+        self.__graph_dict[oid].finalizer = weakref.finalize(
+            self._store[oid], self.prune, oid
+        )
         self.__graph_dict[oid].type = obj_type
 
     def add_edge(self, start_obj: object, end_obj: object):
@@ -157,10 +158,10 @@ class Graph:
             raise AttributeError
 
     def __generate_edges(self) -> list:
-        """ A static method generating the edges of the
-            graph "graph". Edges are represented as sets
-            with one (a loop back to the vertex) or two
-            vertices
+        """A static method generating the edges of the
+        graph "graph". Edges are represented as sets
+        with one (a loop back to the vertex) or two
+        vertices
         """
         edges = []
         for vertex in self.__graph_dict:
@@ -171,9 +172,14 @@ class Graph:
 
     def prune_vertex_from_edge(self, parent_obj, child_obj):
         vertex1 = self.convert_id(parent_obj).int
+        if child_obj is None:
+            return
         vertex2 = self.convert_id(child_obj).int
 
-        if vertex1 in self.__graph_dict.keys() and vertex2 in self.__graph_dict[vertex1]:
+        if (
+            vertex1 in self.__graph_dict.keys()
+            and vertex2 in self.__graph_dict[vertex1]
+        ):
             del self.__graph_dict[vertex1][self.__graph_dict[vertex1].index(vertex2)]
 
     def prune(self, key: int):
@@ -181,7 +187,7 @@ class Graph:
             del self.__graph_dict[key]
 
     def find_isolated_vertices(self) -> list:
-        """ returns a list of isolated vertices. """
+        """returns a list of isolated vertices."""
         graph = self.__graph_dict
         isolated = []
         for vertex in graph:
@@ -191,8 +197,8 @@ class Graph:
         return isolated
 
     def find_path(self, start_obj, end_obj, path=[]) -> list:
-        """ find a path from start_vertex to end_vertex
-            in graph """
+        """find a path from start_vertex to end_vertex
+        in graph"""
 
         try:
             start_vertex = self.convert_id(start_obj).int
@@ -209,16 +215,14 @@ class Graph:
             return []
         for vertex in graph[start_vertex]:
             if vertex not in path:
-                extended_path = self.find_path(vertex,
-                                               end_vertex,
-                                               path)
+                extended_path = self.find_path(vertex, end_vertex, path)
                 if extended_path:
                     return extended_path
         return []
 
     def find_all_paths(self, start_obj, end_obj, path=[]) -> list:
-        """ find all paths from start_vertex to
-            end_vertex in graph """
+        """find all paths from start_vertex to
+        end_vertex in graph"""
 
         start_vertex = self.convert_id(start_obj).int
         end_vertex = self.convert_id(end_obj).int
@@ -232,9 +236,7 @@ class Graph:
         paths = []
         for vertex in graph[start_vertex]:
             if vertex not in path:
-                extended_paths = self.find_all_paths(vertex,
-                                                     end_vertex,
-                                                     path)
+                extended_paths = self.find_all_paths(vertex, end_vertex, path)
                 for p in extended_paths:
                     paths.append(p)
         return paths
@@ -267,10 +269,8 @@ class Graph:
         optimum_path.reverse()
         return optimum_path
 
-    def is_connected(self,
-                     vertices_encountered=None,
-                     start_vertex=None) -> bool:
-        """ determines if the graph is connected """
+    def is_connected(self, vertices_encountered=None, start_vertex=None) -> bool:
+        """determines if the graph is connected"""
         if vertices_encountered is None:
             vertices_encountered = set()
         graph = self.__graph_dict
@@ -281,7 +281,9 @@ class Graph:
         vertices_encountered.add(start_vertex)
         if len(vertices_encountered) != len(vertices):
             for vertex in graph[start_vertex]:
-                if vertex not in vertices_encountered and self.is_connected(vertices_encountered, vertex):
+                if vertex not in vertices_encountered and self.is_connected(
+                    vertices_encountered, vertex
+                ):
                     return True
         else:
             return True
@@ -297,14 +299,14 @@ class Graph:
 
     @staticmethod
     def convert_id(input_value) -> UUID:
-        """ Sometimes we're dopy and """
+        """Sometimes we're dopy and"""
         if not validate_id(input_value):
             input_value = unique_id(input_value)
         return input_value
 
     @staticmethod
     def convert_id_to_key(input_value: Union[object, UUID]) -> int:
-        """ Sometimes we're dopy and """
+        """Sometimes we're dopy and"""
         if not validate_id(input_value):
             input_value: UUID = unique_id(input_value)
         return input_value.int
