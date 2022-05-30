@@ -60,7 +60,11 @@ class Fitter:
     def initialize(self, fit_object: object, fit_function: Callable):
         self._fit_object = fit_object
         self._fit_function = fit_function
+        constraints = []
+        if getattr(self, '__engine_obj', False):
+            constraints = self.__engine_obj._constraints
         self.__initialize()
+        self.__engine_obj._constraints = constraints
 
     def __initialize(self):
         self.__engine_obj = self._current_engine(self._fit_object, self._fit_function)
@@ -76,10 +80,10 @@ class Fitter:
         if not self._is_initialized:
             print("The fitting engine must first be initialized")
             raise ReferenceError
-        constraints = self.__engine_obj._constraints
+        # constraints = self.__engine_obj._constraints
         self.create(engine_name)
         self.__initialize()
-        self.__engine_obj._constraints = constraints
+        # self.__engine_obj._constraints = constraints
 
     @property
     def available_engines(self) -> List[str]:
