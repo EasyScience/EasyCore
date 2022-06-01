@@ -209,7 +209,7 @@ class MultiFitter(Fitter):
             start = 0
             for i, fit_function in enumerate(self._fit_functions):
                 end = data_shape[i] + start
-                y[start:end] = fit_function(x[start:end])
+                y[start:end] = fit_function(x[start:end], self._fit_objects[i].uid)
                 start = end
             return y
         self.initialize(self._fit_objects, unpacked_fit_function)
