@@ -21,7 +21,7 @@ from typing import (
 )
 
 from easyCore import borg
-from easyCore.Utils.json import MSONable
+from .core import ComponentSerializer
 from easyCore.Utils.classTools import addLoggedProp
 from .Variable import Parameter, Descriptor
 
@@ -29,8 +29,10 @@ if TYPE_CHECKING:
     from easyCore.Utils.typing import C, V, iF
 
 
-class BasedBase(MSONable):
+class BasedBase(ComponentSerializer):
     __slots__ = ["_name", "_borg", "user_data", "_kwargs"]
+
+    _REDIRECT = {}
 
     def __init__(self, name: str, interface: Optional[iF] = None):
         self._borg = borg
@@ -143,7 +145,7 @@ class BasedBase(MSONable):
         """
         if skip is None:
             skip = []
-        d = MSONable.as_dict(self, skip=skip)
+        d = ComponentSerializer.as_dict(self, skip=skip)
         for key, item in d.items():
             if hasattr(item, "as_dict"):
                 d[key] = item.as_dict(skip=skip)

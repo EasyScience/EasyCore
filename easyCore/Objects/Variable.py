@@ -29,7 +29,7 @@ from easyCore import borg, ureg, np, pint
 from easyCore.Utils.classTools import addProp
 from easyCore.Utils.Exceptions import CoreSetException
 from easyCore.Utils.UndoRedo import property_stack_deco
-from easyCore.Utils.json import MSONable
+from easyCore.Objects.core import ComponentSerializer
 from easyCore.Fitting.Constraints import SelfConstraint
 
 if TYPE_CHECKING:
@@ -39,7 +39,7 @@ Q_ = ureg.Quantity
 M_ = ureg.Measurement
 
 
-class Descriptor(MSONable):
+class Descriptor(ComponentSerializer):
     """
     This is the base of all variable descriptions for models. It contains all information to describe a single
     unique property of an object. This description includes a name and value as well as optionally a unit, description
@@ -52,6 +52,10 @@ class Descriptor(MSONable):
 
     _constructor = Q_
     _borg = borg
+    _REDIRECT = {
+        "value": lambda obj: obj.raw_value,
+        "units": lambda obj: obj._args["units"],
+    }
 
     def __init__(
         self,
