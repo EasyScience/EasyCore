@@ -409,7 +409,7 @@ def test_item_from_dict(reference, constructor):
     ids=["Descriptor", "Parameter"],
 )
 def test_item_from_MontyDecoder(construct):
-    from easyCore.Utils.json import MontyDecoder
+    from easyCore.Utils.io.json import MontyDecoder
 
     d = MontyDecoder().process_decoded(construct)
     assert d.__class__.__name__ == construct["@class"]

@@ -8,7 +8,17 @@ __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
 from numbers import Number
-from typing import Union, TypeVar, Optional, TYPE_CHECKING, Callable, List, Dict, Any, Tuple
+from typing import (
+    Union,
+    TypeVar,
+    Optional,
+    TYPE_CHECKING,
+    Callable,
+    List,
+    Dict,
+    Any,
+    Tuple,
+)
 
 from easyCore import borg
 from easyCore.Objects.ObjectClasses import BasedBase, Descriptor
@@ -45,13 +55,25 @@ class BaseCollection(BasedBase, MutableSequence):
         """
         BasedBase.__init__(self, name)
         kwargs = {key: kwargs[key] for key in kwargs.keys() if kwargs[key] is not None}
-
-        for item in [*kwargs.values(), *args]:
+        _args = []
+        for item in args:
+            if not isinstance(item, list):
+                _args.append(item)
+            else:
+                _args += item
+        _kwargs = {}
+        for key, item in kwargs.items():
+            if isinstance(item, list):
+                _args += item
+            else:
+                _kwargs[key] = item
+        kwargs = _kwargs
+        for item in list(kwargs.values()) + _args:
             if not issubclass(type(item), (Descriptor, BasedBase)):
                 raise AttributeError(
                     "A collection can only be formed from easyCore objects."
                 )
-
+        args = _args
         _kwargs = {}
         for key, item in kwargs.items():
             _kwargs[key] = item
@@ -196,28 +218,33 @@ class BaseCollection(BasedBase, MutableSequence):
         """
         return len(self._kwargs.keys())
 
-    def as_dict(self, skip: Optional[List[str]] = None) -> Dict[str, Any]:
+    def _convert_to_dict(
+        self, in_dict, encoder, skip: List[str] = [], **kwargs
+    ) -> dict:
         """
         Convert ones self into a serialized form.
 
         :return: dictionary of ones self
         :rtype: dict
         """
-        d = super(BaseCollection, self).as_dict(skip=skip)
-        data = []
-        dd = {}
-        for key in d.keys():
-            if key == "@id":
-                continue
-            if isinstance(d[key], dict):
-                data.append(d[key])
-            else:
-                dd[key] = d[key]
-        dd["data"] = data
-        # Attach the id. This might be useful in connected applications.
-        # Note that it is converted to int and then str because javascript....
-        dd["@id"] = d["@id"]
-        return dd
+        in_dict["data"] = [
+            encoder._convert_to_dict(item, skip=skip, **kwargs) for item in self
+        ]
+        return in_dict
+        # data = []
+        # dd = {}
+        # for key in d.keys():
+        #     if key == "@id":
+        #         continue
+        #     if isinstance(d[key], dict):
+        #         data.append(d[key])
+        #     else:
+        #         dd[key] = d[key]
+        # dd["data"] = data
+        # # Attach the id. This might be useful in connected applications.
+        # # Note that it is converted to int and then str because javascript....
+        # dd["@id"] = d["@id"]
+        # return dd
 
     @property
     def data(self) -> Tuple:
@@ -245,7 +272,9 @@ class BaseCollection(BasedBase, MutableSequence):
             f"{self.__class__.__name__} `{getattr(self, 'name')}` of length {len(self)}"
         )
 
-    def sort(self, mapping: Callable[[Union[B, V]], Any], reverse: bool = False) -> None:
+    def sort(
+        self, mapping: Callable[[Union[B, V]], Any], reverse: bool = False
+    ) -> None:
         """
         Sort the collection according to the given mapping.
 
