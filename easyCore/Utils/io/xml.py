@@ -6,6 +6,7 @@ __version__ = "0.0.1"
 import xml.etree.ElementTree as ET
 
 from numbers import Number
+import sys
 from typing import List, TYPE_CHECKING, Any, Optional
 
 from easyCore.Utils.io.template import BaseEncoderDecoder
@@ -13,6 +14,9 @@ from easyCore.Utils.io.dict import DictSerializer, DataDictSerializer
 
 if TYPE_CHECKING:
     from easyCore.Utils.typing import BV
+
+
+can_intent = (sys.version_info.major > 2) & (sys.version_info.minor > 8)
 
 
 class XMLSerializer(BaseEncoderDecoder):
@@ -53,7 +57,7 @@ class XMLSerializer(BaseEncoderDecoder):
         header = ""
         if use_header:
             header = '?xml version="1.0"  encoding="UTF-8"?'
-        if not fast:
+        if not fast and can_intent:
             ET.indent(block)
             if use_header:
                 header += "\n"
