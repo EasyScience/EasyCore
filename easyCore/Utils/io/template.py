@@ -18,6 +18,7 @@ from typing import (
     Optional,
     Dict,
     MutableSequence,
+    TypeVar,
 )
 
 from easyCore import np
@@ -27,26 +28,62 @@ if TYPE_CHECKING:
 
 
 class BaseEncoderDecoder:
+    """
+    This is the base class for creating an encoder/decoder which can convert easyCore objects. `encode` and `decode` are
+    abstract methods to be implemented for each serializer. It is expected that the helper function `_convert_to_dict`
+    will be used as a base for encoding (or the `DictSerializer` as it's more flexible).
+    """
+
     @abstractmethod
-    def encode(self, obj: BV, skip: List[str] = []):
+    def encode(self, obj: BV, skip: Optional[List[str]] = None, **kwargs) -> any:
+        """
+        Abstract implementation of an encoder.
+
+        :param obj: Object to be encoded.
+        :param skip: List of field names as strings to skip when forming the encoded object
+        :param kwargs: Any additional key word arguments to be passed to the encoder
+        :return: encoded object containing all information to reform an easyCore object.
+        """
+
         pass
 
     @classmethod
     @abstractmethod
-    def decode(cls, data) -> BV:
+    def decode(cls, obj: Any) -> Any:
+        """
+        Re-create an easyCore object from the output of an encoder. The default decoder is `DictSerializer`.
+
+        :param obj: encoded easyCore object
+        :return: Reformed easyCore object
+        """
         pass
 
     @staticmethod
     def get_arg_spec(func: Callable) -> Tuple[Any, List[str]]:
+        """
+        Get the full argument specification of a function (typically `__init__`)
+
+        :param func: Function to be inspected
+        :return: Tuple of argument spec and arguments
+        """
+
         spec = getfullargspec(func)
         args = spec.args[1:]
         return spec, args
 
     @staticmethod
-    def _encode_objs(obj, skip: Optional[List[str]] = None, **kwargs) -> Dict[str, Any]:
+    def _encode_objs(
+        obj: Any, skip: Optional[List[str]] = None, **kwargs
+    ) -> Dict[str, Any]:
         """
         A JSON serializable dict representation of an object.
+
+        :param obj: any object to be encoded
+        :param skip: List of field names as strings to skip when forming the encoded object
+        :param kwargs: Key-words to pass to `BaseEncoderDecoder`
+        :return: JSON encoded dictionary
         """
+
         if skip is None:
             skip = []
         elif isinstance(skip, str):
@@ -116,6 +153,15 @@ class BaseEncoderDecoder:
 
     @staticmethod
     def _convert_to_dict(obj: BV, skip: List[str] = [], **kwargs) -> dict:
+        """
+        Convert an object to a dictionary.
+
+        :param obj: any object to be encoded
+        :param skip: List of field names as strings to skip when forming the encoded object
+        :param kwargs: Key-words to pass to `BaseEncoderDecoder`
+        :return: JSON encoded dictionary
+        """
+
         if isinstance(obj, datetime.datetime):
             return {
                 "@module": "datetime",
@@ -162,8 +208,11 @@ class BaseEncoderDecoder:
     @staticmethod
     def _convert_from_dict(d):
         """
-        Recursive method to support decoding dicts and lists containing
-        pymatgen objects.
+        Recursive method to support decoding dicts and lists containing easyCore objects
+
+        :param d: Dictionary containing JSONed easyCore objects
+        :return: Reformed easyCore object
+
         """
         T_ = type(d)
         if isinstance(d, dict):
@@ -209,7 +258,14 @@ class BaseEncoderDecoder:
         return d
 
 
+if TYPE_CHECKING:
+    EC = TypeVar("EC", bound=BaseEncoderDecoder)
+
+
 def recursive_encoder(obj, skip: List[str] = [], **kwargs):
+    """
+    Walk through an object encoding it
+    """
     T_ = type(obj)
     if issubclass(T_, (list, tuple, MutableSequence)):
         return [recursive_encoder(it, skip, **kwargs) for it in obj]

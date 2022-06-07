@@ -3,32 +3,45 @@ from __future__ import annotations
 __author__ = "github.com/wardsimon"
 __version__ = "0.0.1"
 
-import textwrap
-
-from collections.abc import MutableMapping
 import xml.etree.ElementTree as ET
-from math import floor, log10
-from numbers import Number
-from typing import List, TYPE_CHECKING, Any, Optional, Dict, Union
 
-from easyCore import np
+from numbers import Number
+from typing import List, TYPE_CHECKING, Any, Optional
+
 from easyCore.Utils.io.template import BaseEncoderDecoder
 from easyCore.Utils.io.dict import DictSerializer, DataDictSerializer
 
 if TYPE_CHECKING:
-    from easyCore.Utils.typing import B, V, BV
+    from easyCore.Utils.typing import BV
 
 
 class XMLSerializer(BaseEncoderDecoder):
+    """
+    This is a serializer that can encode and decode easyCore objects to a basic xml format.
+    """
+
     def encode(
         self,
         obj: BV,
         skip: Optional[List[str]] = None,
         data_only: bool = False,
         fast: bool = False,
-        header: bool = False,
+        use_header: bool = False,
         **kwargs,
     ) -> str:
+        """
+        Convert an easyCore object to an XML encoded string. Note that for speed the `fast` setting can be changed to
+        `True`. An XML document with initial block *data* is returned.
+
+        :param obj: Object to be encoded.
+        :param skip: List of field names as strings to skip when forming the encoded object
+        :param data_only: Should only the object's data be encoded.
+        :param fast: Should the returned string be pretty? This can be turned off for speed.
+        :param use_header: Should a header of `'?xml version="1.0"  encoding="UTF-8"?'` be included?
+        :param kwargs: Any additional key-words to pass to the Dictionary Serializer.
+        :return: string containing the XML encoded object
+        """
+
         if skip is None:
             skip = []
         encoder = DictSerializer
@@ -38,16 +51,23 @@ class XMLSerializer(BaseEncoderDecoder):
         block = ET.Element("data")
         self._check_class(block, None, obj_dict)
         header = ""
-        if header:
+        if use_header:
             header = '?xml version="1.0"  encoding="UTF-8"?'
         if not fast:
             ET.indent(block)
-            if header:
+            if use_header:
                 header += "\n"
         return header + ET.tostring(block, encoding="unicode")
 
     @classmethod
-    def decode(cls, data) -> BV:
+    def decode(cls, data: str) -> BV:
+        """
+        Decode an easyCore object which has been encoded in XML format.
+
+        :param data: String containing XML encoded data.
+        :return: Reformed easyCore object.
+        """
+
         data_xml = ET.XML(data)
         out_dict = {}
         for element in data_xml:
@@ -56,6 +76,10 @@ class XMLSerializer(BaseEncoderDecoder):
 
     @staticmethod
     def _element_to_dict(element, out_dict):
+        """
+        Convert an XML element to a dictionary recursively.
+        """
+
         label = element.tag
         if label[0] == "_":
             label = "@" + label[2:]
@@ -66,6 +90,7 @@ class XMLSerializer(BaseEncoderDecoder):
             for el in element:
                 XMLSerializer._element_to_dict(el, this_dict)
             if label in out_dict.keys():
+                # This object is a list. Create a list.
                 old_value = out_dict[label]
                 if not isinstance(old_value, list):
                     old_value = [old_value]
@@ -75,6 +100,10 @@ class XMLSerializer(BaseEncoderDecoder):
 
     @staticmethod
     def string_to_variable(in_string: str):
+        """
+        Convert an XML encoded string to JSON form.
+        """
+
         in_string = in_string.strip()
         if "'" in in_string:
             in_string = in_string.replace("'", "")
@@ -94,6 +123,9 @@ class XMLSerializer(BaseEncoderDecoder):
         return value
 
     def _check_class(self, element, key: str, value: Any):
+        """
+        Add a value to an element or create a new element based on input type.
+        """
         T_ = type(value)
         if isinstance(value, dict):
             for k, v in value.items():
