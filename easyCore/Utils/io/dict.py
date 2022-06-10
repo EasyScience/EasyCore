@@ -9,11 +9,7 @@ __version__ = "3.0.0"
 
 from typing import Optional, List, Dict, Any, TYPE_CHECKING
 
-from easyCore.Utils.io.template import (
-    BaseEncoderDecoder,
-    recursive_encoder,
-    get_class_module,
-)
+from easyCore.Utils.io.template import BaseEncoderDecoder
 
 if TYPE_CHECKING:
     from easyCore.Objects.ObjectClasses import BV
@@ -26,17 +22,24 @@ class DictSerializer(BaseEncoderDecoder):
     This is a serializer that can encode and decode easyCore objects to a JSON encoded dictionary.
     """
 
-    def encode(self, obj: BV, skip: Optional[List[str]] = None, **kwargs):
+    def encode(
+        self,
+        obj: BV,
+        skip: Optional[List[str]] = None,
+        full_encode: bool = False,
+        **kwargs,
+    ):
         """
         Convert an easyCore object to a JSON encoded dictionary
 
         :param obj: Object to be encoded.
         :param skip: List of field names as strings to skip when forming the encoded object
+        :param full_encode: Should the data also be JSON encoded (default False)
         :param kwargs: Any additional key word arguments to be passed to the encoder
         :return: object encoded to dictionary containing all information to reform an easyCore object.
         """
 
-        return self._convert_to_dict(obj, skip=skip, **kwargs)
+        return self._convert_to_dict(obj, skip=skip, full_encode=full_encode, **kwargs)
 
     @classmethod
     def decode(cls, d: Dict) -> BV:
@@ -62,13 +65,18 @@ class DataDictSerializer(DictSerializer):
     """
 
     def encode(
-        self, obj: BV, skip: Optional[List[str]] = None, **kwargs
+        self,
+        obj: BV,
+        skip: Optional[List[str]] = None,
+        full_encode: bool = False,
+        **kwargs,
     ) -> Dict[str, Any]:
         """
         Convert an easyCore object to a JSON encoded data dictionary
 
         :param obj: Object to be encoded.
         :param skip: List of field names as strings to skip when forming the encoded object
+        :param full_encode: Should the data also be JSON encoded (default False)
         :param kwargs: Any additional key word arguments to be passed to the encoder
         :return: object encoded to data dictionary.
         """
@@ -79,7 +87,7 @@ class DataDictSerializer(DictSerializer):
             skip = [skip]
         if not isinstance(skip, list):
             raise ValueError("Skip must be a list of strings.")
-        encoded = super().encode(obj, skip=skip, **kwargs)
+        encoded = super().encode(obj, skip=skip, full_encode=full_encode, **kwargs)
         return self._parse_dict(encoded)
 
     @classmethod

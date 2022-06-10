@@ -9,6 +9,8 @@ from numbers import Number
 import sys
 from typing import List, TYPE_CHECKING, Any, Optional
 
+import numpy as np
+
 from easyCore.Utils.io.template import BaseEncoderDecoder
 from easyCore.Utils.io.dict import DictSerializer, DataDictSerializer
 
@@ -51,7 +53,10 @@ class XMLSerializer(BaseEncoderDecoder):
         encoder = DictSerializer
         if data_only:
             encoder = DataDictSerializer
-        obj_dict = obj.encode(encoder=encoder, skip=skip, **kwargs)
+        if isinstance(obj, dict):
+            obj_dict = obj
+        else:
+            obj_dict = encoder().encode(obj, skip=skip, full_encode=True, **kwargs)
         block = ET.Element("data")
         self._check_class(block, None, obj_dict)
         header = ""
@@ -107,7 +112,8 @@ class XMLSerializer(BaseEncoderDecoder):
         """
         Convert an XML encoded string to JSON form.
         """
-
+        if in_string is None:
+            return in_string
         in_string = in_string.strip()
         if "'" in in_string:
             in_string = in_string.replace("'", "")
@@ -153,5 +159,7 @@ class XMLSerializer(BaseEncoderDecoder):
             element.text = "None"
         elif issubclass(T_, Number):
             element.text = str(value)
+        elif issubclass(T_, np.ndarray):
+            element.text = str(value.tolist())
         else:
             raise NotImplementedError

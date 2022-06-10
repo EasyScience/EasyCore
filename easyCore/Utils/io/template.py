@@ -7,6 +7,7 @@ import datetime
 import json
 
 from abc import abstractmethod
+from enum import Enum
 from importlib import import_module
 from inspect import getfullargspec
 from typing import (
@@ -21,10 +22,12 @@ from typing import (
     TypeVar,
 )
 
-from easyCore import np
+from easyCore import np, _REDIRECT as GLOBAL_REDIRECT
 
 if TYPE_CHECKING:
     from easyCore.Utils.typing import BV
+
+_e = json.JSONEncoder()
 
 
 class BaseEncoderDecoder:
@@ -72,89 +75,9 @@ class BaseEncoderDecoder:
         return spec, args
 
     @staticmethod
-    def _encode_objs(
-        obj: Any, skip: Optional[List[str]] = None, **kwargs
-    ) -> Dict[str, Any]:
+    def _encode_objs(obj: Any) -> Dict[str, Any]:
         """
         A JSON serializable dict representation of an object.
-
-        :param obj: any object to be encoded
-        :param skip: List of field names as strings to skip when forming the encoded object
-        :param kwargs: Key-words to pass to `BaseEncoderDecoder`
-        :return: JSON encoded dictionary
-        """
-
-        if skip is None:
-            skip = []
-        elif isinstance(skip, str):
-            skip = [skip]
-        if not isinstance(skip, list):
-            raise ValueError("Skip must be a list of strings.")
-
-        d = {"@module": get_class_module(obj), "@class": obj.__class__.__name__}
-        if kwargs.get("include_id", False):
-            d["@id"] = obj._borg.map.convert_id_to_key(obj)
-        try:
-            parent_module = get_class_module(obj).split(".")[0]
-            module_version = import_module(parent_module).__version__  # type: ignore
-            d["@version"] = "{}".format(module_version)
-        except (AttributeError, ImportError):
-            d["@version"] = None  # type: ignore
-
-        spec, args = BaseEncoderDecoder.get_arg_spec(obj.__class__.__init__)
-        redirect = getattr(obj, "_REDIRECT", {})
-
-        if hasattr(obj, "_convert_to_dict"):
-            d = obj._convert_to_dict(d, BaseEncoderDecoder, skip=skip, **kwargs)
-
-        for c in args:
-            if c not in skip:
-                try:
-                    if c in redirect.keys():
-                        a = redirect[c](obj)
-                    else:
-                        a = obj.__getattribute__(c)
-                except AttributeError:
-                    try:
-                        a = obj.__getattribute__("_" + c)
-                    except AttributeError:
-                        err = True
-                        if hasattr(obj, "kwargs"):
-                            # type: ignore
-                            option = getattr(obj, "kwargs")
-                            if hasattr(option, c):
-                                v = getattr(option, c)
-                                delattr(option, c)
-                                d.update(v)  # pylint: disable=E1101
-                                err = False
-                        if hasattr(obj, "_kwargs"):
-                            # type: ignore
-                            option = getattr(obj, "_kwargs")
-                            if hasattr(option, c):
-                                v = getattr(option, c)
-                                delattr(option, c)
-                                d.update(v)  # pylint: disable=E1101
-                                err = False
-                        if err:
-                            raise NotImplementedError(
-                                "Unable to automatically determine as_dict "
-                                "format from class. MSONAble requires all "
-                                "args to be present as either self.argname or "
-                                "self._argname, and kwargs to be present under"
-                                "a self.kwargs variable to automatically "
-                                "determine the dict format. Alternatively, "
-                                "you can implement both as_dict and from_dict."
-                            )
-                if a.__class__.__module__ != "builtins":  # strings have encode
-                    d[c] = recursive_encoder(a, skip=skip, **kwargs)
-                else:
-                    d[c] = a
-        return d
-
-    @staticmethod
-    def _convert_to_dict(obj: BV, skip: List[str] = [], **kwargs) -> dict:
-        """
-        Convert an object to a dictionary.
 
         :param obj: any object to be encoded
         :param skip: List of field names as strings to skip when forming the encoded object
@@ -186,24 +109,105 @@ class BaseEncoderDecoder:
             if isinstance(obj, np.generic):
                 return obj.item()
         try:
-            json.JSONEncoder().default(obj)
+            return _e.default(obj)
         except TypeError:
-            try:
-                d = BaseEncoderDecoder._encode_objs(obj, skip, **kwargs)
-                if "@module" not in d:
-                    d["@module"] = "{}".format(obj.__class__.__module__)
-                if "@class" not in d:
-                    d["@class"] = "{}".format(obj.__class__.__name__)
-                if "@version" not in d:
+            return obj
+
+    def _convert_to_dict(
+        self,
+        obj: BV,
+        skip: Optional[List[str]] = None,
+        full_encode: bool = False,
+        **kwargs,
+    ) -> dict:
+        """
+        A JSON serializable dict representation of an object.
+        """
+        if skip is None:
+            skip = []
+
+        if full_encode:
+            new_obj = BaseEncoderDecoder._encode_objs(obj)
+            if new_obj is not obj:
+                return new_obj
+
+        d = {"@module": get_class_module(obj), "@class": obj.__class__.__name__}
+
+        try:
+            parent_module = get_class_module(obj).split(".")[0]
+            module_version = import_module(parent_module).__version__  # type: ignore
+            d["@version"] = "{}".format(module_version)
+        except (AttributeError, ImportError):
+            d["@version"] = None  # type: ignore
+
+        spec, args = BaseEncoderDecoder.get_arg_spec(obj.__class__.__init__)
+        if hasattr(obj, "_arg_spec"):
+            args = obj._arg_spec
+
+        redirect = getattr(obj, "_REDIRECT", {})
+
+        def runner(o):
+            if full_encode:
+                return BaseEncoderDecoder._encode_objs(o)
+            else:
+                return o
+
+        for c in args:
+            if c not in skip:
+                if c in redirect.keys():
+                    if redirect[c] is None:
+                        continue
+                    a = runner(redirect[c](obj))
+                else:
                     try:
-                        parent_module = obj.__class__.__module__.split(".")[0]
-                        module_version = import_module(parent_module).__version__  # type: ignore
-                        d["@version"] = "{}".format(module_version)
-                    except (AttributeError, ImportError):
-                        d["@version"] = None
-                return d
-            except AttributeError:
-                return obj
+                        a = runner(obj.__getattribute__(c))
+                    except AttributeError:
+                        try:
+                            a = runner(obj.__getattribute__("_" + c))
+                        except AttributeError:
+                            err = True
+                            if hasattr(obj, "kwargs"):
+                                # type: ignore
+                                option = getattr(obj, "kwargs")
+                                if hasattr(option, c):
+                                    v = getattr(option, c)
+                                    delattr(option, c)
+                                    d.update(runner(v))  # pylint: disable=E1101
+                                    err = False
+                            if hasattr(obj, "_kwargs"):
+                                # type: ignore
+                                option = getattr(obj, "_kwargs")
+                                if hasattr(option, c):
+                                    v = getattr(option, c)
+                                    delattr(option, c)
+                                    d.update(runner(v))  # pylint: disable=E1101
+                                    err = False
+                            if err:
+                                raise NotImplementedError(
+                                    "Unable to automatically determine as_dict "
+                                    "format from class. MSONAble requires all "
+                                    "args to be present as either self.argname or "
+                                    "self._argname, and kwargs to be present under"
+                                    "a self.kwargs variable to automatically "
+                                    "determine the dict format. Alternatively, "
+                                    "you can implement both as_dict and from_dict."
+                                )
+                d[c] = recursive_encoder(
+                    a, skip=skip, encoder=self, full_encode=full_encode, **kwargs
+                )
+        # if hasattr(obj, "kwargs"):
+        #     # type: ignore
+        #     d.update(**recursive_encoder(getattr(obj, "kwargs"), skip=skip, encoder=self, full_encode=full_encode, **kwargs))  # pylint: disable=E1101
+        if spec.varargs is not None and getattr(obj, spec.varargs, None) is not None:
+            d.update({spec.varargs: getattr(obj, spec.varargs)})
+        # if hasattr(obj, "_kwargs"):
+        #     if not issubclass(type(obj), MutableSequence):
+        #         d.update(**recursive_encoder(getattr(obj, "_kwargs"), skip=skip, encoder=self, full_encode=full_encode, **kwargs))  # pylint: disable=E1101
+        if isinstance(obj, Enum):
+            d.update({"value": runner(obj.value)})  # pylint: disable=E1101
+        if hasattr(obj, "_convert_to_dict"):
+            d = obj._convert_to_dict(d, self)
+        return d
 
     @staticmethod
     def _convert_from_dict(d):
@@ -262,19 +266,28 @@ if TYPE_CHECKING:
     EC = TypeVar("EC", bound=BaseEncoderDecoder)
 
 
-def recursive_encoder(obj, skip: List[str] = [], **kwargs):
+def recursive_encoder(
+    obj, skip: List[str] = [], encoder=None, full_encode=False, **kwargs
+):
     """
     Walk through an object encoding it
     """
+    if encoder is None:
+        encoder = BaseEncoderDecoder()
     T_ = type(obj)
     if issubclass(T_, (list, tuple, MutableSequence)):
-        return [recursive_encoder(it, skip, **kwargs) for it in obj]
+        return [
+            recursive_encoder(it, skip, encoder, full_encode, **kwargs) for it in obj
+        ]
     if isinstance(obj, dict):
-        return {kk: recursive_encoder(vv, skip, **kwargs) for kk, vv in obj.items()}
+        return {
+            kk: recursive_encoder(vv, skip, encoder, full_encode, **kwargs)
+            for kk, vv in obj.items()
+        }
     if (
         hasattr(obj, "encode") and obj.__class__.__module__ != "builtins"
     ):  # strings have encode
-        return BaseEncoderDecoder._convert_to_dict(obj, skip, **kwargs)
+        return encoder._convert_to_dict(obj, skip, full_encode, **kwargs)
     return obj
 
 

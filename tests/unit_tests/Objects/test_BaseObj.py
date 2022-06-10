@@ -13,7 +13,7 @@ from contextlib import contextmanager
 
 import easyCore
 from easyCore.Objects.ObjectClasses import Descriptor, Parameter, BaseObj
-from easyCore.Utils.io.json import MontyDecoder
+from easyCore.Utils.io.dict import DictSerializer
 
 
 @pytest.fixture
@@ -188,7 +188,7 @@ def test_baseobj_as_dict(setup_pars: dict):
         if isinstance(check, dict) and isinstance(item, dict):
             if "@module" in item.keys():
                 with not_raises([ValueError, AttributeError]):
-                    this_obj = MontyDecoder().process_decoded(item)
+                    this_obj = DictSerializer().decode(item)
             for this_check_key, this_item_key in zip(check.keys(), item.keys()):
                 check_dict(check[this_check_key], item[this_item_key])
         else:
@@ -203,7 +203,8 @@ def test_baseobj_dir(setup_pars):
     del setup_pars["name"]
     obj = BaseObj(name, **setup_pars)
     expected = [
-        "REDIRECT",
+        "encode",
+        "decode",
         "as_dict",
         "constraints",
         "des1",
@@ -218,16 +219,15 @@ def test_baseobj_dir(setup_pars):
         "par2",
         "par3",
         "switch_interface",
-        "to_data_dict",
-        "to_json",
+        "as_data_dict",
+        "as_dict",
         "unsafe_hash",
         "user_data",
     ]
     obtained = dir(obj)
     assert len(obtained) == len(expected)
     assert obtained == sorted(obtained)
-    for this_item, this_expect in zip(obtained, expected):
-        assert this_item == this_expect
+    assert len(set(expected).difference(set(obtained))) == 0
 
 
 def test_baseobj_get_parameters(setup_pars):

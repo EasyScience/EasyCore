@@ -63,7 +63,7 @@ class MontyEncoder(json.JSONEncoder):
         Return:
             Python dict representation.
         """
-        return self._converter(o, self.skip)
+        return self._converter(o, self.skip, full_encode=True)
 
 
 class MontyDecoder(json.JSONDecoder):
