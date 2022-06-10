@@ -9,6 +9,7 @@ import numpy as np
 
 from easyCore.Objects.Borg import Borg
 import pint
+from .REDIRECT import _REDIRECT
 
 default_fitting_engine = "lmfit"
 

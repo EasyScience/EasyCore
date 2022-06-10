@@ -63,7 +63,7 @@ class BaseCollection(BasedBase, MutableSequence):
                 _args += item
         _kwargs = {}
         for key, item in kwargs.items():
-            if isinstance(item, list):
+            if isinstance(item, list) and len(item) > 0:
                 _args += item
             else:
                 _kwargs[key] = item
@@ -249,23 +249,6 @@ class BaseCollection(BasedBase, MutableSequence):
     @property
     def data(self) -> Tuple:
         return tuple(self._kwargs.values())
-
-    @classmethod
-    def from_dict(cls, input_dict: Dict[str, Any]) -> "BaseCollection":
-        """
-        De-serialise the data and try to recreate the object.
-
-        :param input_dict: serialised dictionary of an object. Usually generated from `obj.as_dict()`
-        :type input_dict: dict
-        :return: Class constructed from the input_dict
-        """
-
-        d = input_dict.copy()
-        if len(d["data"]) > 0:
-            for idx, item in enumerate(d["data"]):
-                d[item["@id"]] = item
-        del d["data"]
-        return super(BaseCollection, cls).from_dict(d)
 
     def __repr__(self) -> str:
         return (

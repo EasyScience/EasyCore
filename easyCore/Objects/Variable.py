@@ -12,6 +12,7 @@ import weakref
 import warnings
 
 from copy import deepcopy
+from inspect import getfullargspec
 from types import MappingProxyType
 from typing import (
     List,
@@ -23,6 +24,8 @@ from typing import (
     Callable,
     Tuple,
     TypeVar,
+    Type,
+    Set,
 )
 
 from easyCore import borg, ureg, np, pint
@@ -55,6 +58,9 @@ class Descriptor(ComponentSerializer):
     _REDIRECT = {
         "value": lambda obj: obj.raw_value,
         "units": lambda obj: obj._args["units"],
+        "parent": None,
+        "callback": None,
+        "_finalizer": None,
     }
 
     def __init__(
@@ -139,6 +145,19 @@ class Descriptor(ComponentSerializer):
             weakref.finalize(self, self._callback.fdel)
         self._finalizer = finalizer
 
+    @property
+    def _arg_spec(self) -> Set[str]:
+        base_cls = getattr(self, "__old_class__", self.__class__)
+        mro = base_cls.__mro__
+        idx = mro.index(ComponentSerializer)
+        names = set()
+        for i in range(idx):
+            cls = mro[i]
+            if hasattr(cls, "_CORE"):
+                spec = getfullargspec(cls.__init__)
+                names = names.union(set(spec.args[1:]))
+        return names
+
     def __reduce__(self):
         """
         Make the class picklable. Due to the nature of the dynamic class definitions special measures need to be taken.
@@ -146,7 +165,7 @@ class Descriptor(ComponentSerializer):
         :return: Tuple consisting of how to make the object
         :rtype: tuple
         """
-        state = self.as_dict()
+        state = self.encode()
         cls = self.__class__
         if hasattr(self, "__old_class__"):
             cls = self.__old_class__
@@ -336,23 +355,7 @@ class Descriptor(ComponentSerializer):
         out_str = f"<{class_name} '{obj_name}': {obj_value}{obj_units}>"
         return out_str
 
-    def as_dict(self, skip: List[str] = None) -> Dict[str, str]:
-        """
-        Convert ones self into a serialized form.
-
-        :return: dictionary of ones self
-        """
-        if skip is None:
-            skip = []
-        super_dict = super().as_dict(skip=skip + ["parent", "callback", "_finalizer"])
-        super_dict["value"] = self.raw_value
-        super_dict["units"] = self._args["units"]
-        # Attach the id. This might be useful in connected applications.
-        # Note that it is converted to int and then str because javascript....
-        super_dict["@id"] = str(self._borg.map.convert_id(self).int)
-        return super_dict
-
-    def to_obj_type(self, data_type: Parameter, *kwargs):
+    def to_obj_type(self, data_type: Type[Parameter], *kwargs):
         """
         Convert between a `Parameter` and a `Descriptor`.
 
@@ -360,8 +363,10 @@ class Descriptor(ComponentSerializer):
         :param kwargs: Additional keyword/value pairs for conversion
         :return: self as a new type
         """
-        pickled_obj = self.as_dict()
+        pickled_obj = self.encode()
         pickled_obj.update(kwargs)
+        if "@class" in pickled_obj.keys():
+            pickled_obj["@class"] = data_type.__name__
         return data_type.from_dict(pickled_obj)
 
     def __copy__(self):
@@ -731,17 +736,6 @@ class Parameter(Descriptor):
 
     def __float__(self) -> float:
         return float(self.raw_value)
-
-    def as_dict(self, skip: Optional[List[str]] = None) -> Dict[str, Any]:
-        """
-        Include enabled in the dict output as it's unfortunately skipped
-
-        :param skip: Which items to skip when serializing
-        :return: Serialized dictionary
-        """
-        new_dict = super(Parameter, self).as_dict(skip=skip)
-        new_dict["enabled"] = self.enabled
-        return new_dict
 
     @property
     def builtin_constraints(self) -> MappingProxyType[str, C]:

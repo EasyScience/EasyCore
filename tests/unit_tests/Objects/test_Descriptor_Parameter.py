@@ -408,10 +408,10 @@ def test_item_from_dict(reference, constructor):
     ),
     ids=["Descriptor", "Parameter"],
 )
-def test_item_from_MontyDecoder(construct):
-    from easyCore.Utils.io.json import MontyDecoder
+def test_item_from_Decoder(construct):
+    from easyCore.Utils.io.dict import DictSerializer
 
-    d = MontyDecoder().process_decoded(construct)
+    d = DictSerializer().decode(construct)
     assert d.__class__.__name__ == construct["@class"]
     for key, item in construct.items():
         if key == "callback" or key.startswith("@"):

@@ -3,7 +3,7 @@ from __future__ import annotations
 __author__ = "github.com/wardsimon"
 __version__ = "0.0.1"
 
-from typing import Optional, List, Dict, Any, TYPE_CHECKING
+from typing import Optional, List, Dict, Any, TYPE_CHECKING, Set
 from hashlib import sha1
 import json
 from easyCore.Utils.io.dict import DictSerializer, DataDictSerializer
@@ -19,6 +19,8 @@ class ComponentSerializer:
     This is the base class for all easyCore objects and deals with the data conversion to other formats via the `encode`
     and `decode` functions. Shortcuts for dictionary and data dictionary encoding is also present.
     """
+
+    _CORE = True
 
     def encode(
         self, skip: Optional[List[str]] = None, encoder: Optional[EC] = None, **kwargs
