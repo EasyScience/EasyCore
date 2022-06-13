@@ -463,7 +463,7 @@ class Parameter(Descriptor):
         error: Optional[Union[numbers.Number, np.ndarray]] = 0.0,
         min: Optional[numbers.Number] = -np.Inf,
         max: Optional[numbers.Number] = np.Inf,
-        fixed: Optional[bool] = True,
+        fixed: Optional[bool] = False,
         **kwargs,
     ):
         """
