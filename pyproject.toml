@@ -23,7 +23,7 @@ repo = 'easyCore'
 
 [tool.poetry]
 name = "easyScienceCore"
-version = "0.2.2"
+version = "0.2.3"
 description = "Generic logic for easyScience libraries"
 license = "BSD-3-Clause"
 authors = ["Simon Ward"]
@@ -41,13 +41,13 @@ include = ["CHANGELOG.md"]
 packages = [ { include = "easyCore" } ]
 
 [tool.poetry.dependencies]
-python = ">=3.7,<3.11" # "^3.8" generates error when installing PySide2 in easyAppGui
+python = ">=3.8,<3.11"
 numpy = "^1.19"
 pint = ">=0.17,<0.19"
 uncertainties = "^3.1"
 lmfit = "^1.0"
 bumps = ">=0.8,<0.10"
-asteval = "^0.9.23"
+asteval = "^0.9.27"
 DFO-LS = {version = "^1.2", optional = true}
 xarray = ">=0.16,<0.21"
 
@@ -57,7 +57,7 @@ pytest-cov = "^3.0.0"
 codecov = "^2.1.11"
 matplotlib = "^3.2.2"
 doc8 = "^0.11.0"
-readme-renderer = "^34.0"
+readme-renderer = "^35.0"
 Sphinx = "^4.0.2"
 sphinx-rtd-theme = "^1.0.0"
 sphinx-autodoc-typehints = "^1.12.0"
