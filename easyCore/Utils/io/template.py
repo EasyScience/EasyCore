@@ -200,8 +200,12 @@ class BaseEncoderDecoder:
             d.update({spec.varargs: getattr(obj, spec.varargs)})
         if hasattr(obj, "_kwargs"):
             if not issubclass(type(obj), MutableSequence):
+                d_k = list(d.keys())
                 for k, v in getattr(obj, "_kwargs").items():
-                    if k not in skip and k not in d.keys():
+                    # We should have already obtained `key` and `_key`
+                    if k not in skip and k not in d_k:
+                        if k[0] == "_" and k[1:] in d_k:
+                            continue
                         vv = v
                         if k in redirect.keys():
                             if redirect[k] is None:
