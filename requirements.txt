@@ -13,6 +13,6 @@ pytz==2022.1; python_full_version >= "3.6.1" and python_version >= "3.7"
 scipy==1.7.3; python_version >= "3.7" and python_version < "3.11"
 six==1.16.0; python_full_version >= "3.6.1" and python_version >= "3.7"
 typing-extensions==4.0.1; python_version < "3.8" and python_version >= "3.7"
-uncertainties==3.1.6
+uncertainties==3.1.7
 xarray==0.20.2; python_version >= "3.7"
 zipp==3.7.0; python_version < "3.8" and python_version >= "3.7"
