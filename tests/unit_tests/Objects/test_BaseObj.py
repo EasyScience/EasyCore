@@ -125,8 +125,8 @@ def test_baseobj_as_dict(setup_pars: dict):
         "@version": easyCore.__version__,
         "name": "test",
         "par1": {
-            "@module": "easyCore.Objects.Variable",
-            "@class": "Parameter",
+            "@module": Parameter.__module__,
+            "@class": Parameter.__name__,
             "@version": easyCore.__version__,
             "name": "p1",
             "value": 0.1,
@@ -137,8 +137,8 @@ def test_baseobj_as_dict(setup_pars: dict):
             "units": "dimensionless",
         },
         "des1": {
-            "@module": "easyCore.Objects.Variable",
-            "@class": "Descriptor",
+            "@module": Descriptor.__module__,
+            "@class": Descriptor.__name__,
             "@version": easyCore.__version__,
             "name": "d1",
             "value": 0.1,
@@ -148,8 +148,8 @@ def test_baseobj_as_dict(setup_pars: dict):
             "display_name": "d1",
         },
         "par2": {
-            "@module": "easyCore.Objects.Variable",
-            "@class": "Parameter",
+            "@module": Parameter.__module__,
+            "@class": Parameter.__name__,
             "@version": easyCore.__version__,
             "name": "p2",
             "value": 0.1,
@@ -160,8 +160,8 @@ def test_baseobj_as_dict(setup_pars: dict):
             "units": "dimensionless",
         },
         "des2": {
-            "@module": "easyCore.Objects.Variable",
-            "@class": "Descriptor",
+            "@module": Descriptor.__module__,
+            "@class": Descriptor.__name__,
             "@version": easyCore.__version__,
             "name": "d2",
             "value": 0.1,
@@ -171,8 +171,8 @@ def test_baseobj_as_dict(setup_pars: dict):
             "display_name": "d2",
         },
         "par3": {
-            "@module": "easyCore.Objects.Variable",
-            "@class": "Parameter",
+            "@module": Parameter.__module__,
+            "@class": Parameter.__name__,
             "@version": easyCore.__version__,
             "name": "p3",
             "value": 0.1,
@@ -189,8 +189,10 @@ def test_baseobj_as_dict(setup_pars: dict):
             if "@module" in item.keys():
                 with not_raises([ValueError, AttributeError]):
                     this_obj = DictSerializer().decode(item)
-            for this_check_key, this_item_key in zip(check.keys(), item.keys()):
-                check_dict(check[this_check_key], item[this_item_key])
+
+            for key in check.keys():
+                assert key in item.keys()
+                check_dict(check[key], item[key])
         else:
             assert isinstance(item, type(check))
             assert item == check

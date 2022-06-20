@@ -198,7 +198,7 @@ class BasedBase(ComponentSerializer):
 
 if TYPE_CHECKING:
     B = TypeVar("B", bound=BasedBase)
-    BV = TypeVar("BV", bound=Union[BasedBase, Descriptor])
+    BV = TypeVar("BV", bound=ComponentSerializer)
 
 
 class BaseObj(BasedBase):

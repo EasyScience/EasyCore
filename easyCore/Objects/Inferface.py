@@ -138,6 +138,9 @@ class InterfaceFactoryTemplate:
 
         return __fit_func
 
+    def call(self, *args, **kwargs):
+        return self.fit_func(*args, **kwargs)
+
     def generate_bindings(self, model, *args, ifun=None, **kwargs):
         """
         Automatically bind a `Parameter` to the corresponding interface.

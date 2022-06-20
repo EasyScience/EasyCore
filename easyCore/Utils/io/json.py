@@ -35,6 +35,21 @@ class JsonSerializer(BaseEncoderDecoder):
         return json.loads(data, cls=MontyDecoder)
 
 
+class JsonDataSerializer(BaseEncoderDecoder):
+    def encode(self, obj: BV, skip: List[str] = []) -> str:
+        """
+        Returns a json string representation of the ComponentSerializer object.
+        """
+        ENCODER = type(MontyEncoder.__name__, (MontyEncoder,), {"skip": skip})
+        from easyCore.Utils.io.dict import DataDictSerializer
+
+        return json.dumps(obj, cls=ENCODER)
+
+    @classmethod
+    def decode(cls, data: str) -> BV:
+        return json.loads(data, cls=MontyDecoder)
+
+
 class MontyEncoder(json.JSONEncoder):
     """
     A Json Encoder which supports the ComponentSerializer API, plus adds support for
