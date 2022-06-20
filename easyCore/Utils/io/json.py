@@ -27,12 +27,16 @@ class JsonSerializer(BaseEncoderDecoder):
         """
         Returns a json string representation of the ComponentSerializer object.
         """
-        ENCODER = type(MontyEncoder.__name__, (MontyEncoder,), {"skip": skip})
+        ENCODER = type(
+            JsonEncoderTemplate.__name__,
+            (JsonEncoderTemplate, BaseEncoderDecoder),
+            {"skip": skip},
+        )
         return json.dumps(obj, cls=ENCODER)
 
     @classmethod
     def decode(cls, data: str) -> BV:
-        return json.loads(data, cls=MontyDecoder)
+        return json.loads(data, cls=JsonDecoderTemplate)
 
 
 class JsonDataSerializer(BaseEncoderDecoder):
@@ -40,17 +44,29 @@ class JsonDataSerializer(BaseEncoderDecoder):
         """
         Returns a json string representation of the ComponentSerializer object.
         """
-        ENCODER = type(MontyEncoder.__name__, (MontyEncoder,), {"skip": skip})
         from easyCore.Utils.io.dict import DataDictSerializer
+
+        ENCODER = type(
+            JsonEncoderTemplate.__name__,
+            (JsonEncoderTemplate, BaseEncoderDecoder),
+            {
+                "skip": skip,
+                "_converter": lambda *args, **kwargs: DataDictSerializer._parse_dict(
+                    DataDictSerializer._convert_to_dict(*args, **kwargs)
+                ),
+            },
+        )
 
         return json.dumps(obj, cls=ENCODER)
 
     @classmethod
     def decode(cls, data: str) -> BV:
-        return json.loads(data, cls=MontyDecoder)
+        raise NotImplementedError(
+            "It is not possible to reconstitute objects from data only objects."
+        )
 
 
-class MontyEncoder(json.JSONEncoder):
+class JsonEncoderTemplate(json.JSONEncoder):
     """
     A Json Encoder which supports the ComponentSerializer API, plus adds support for
     numpy arrays, datetime objects, bson ObjectIds (requires bson).
@@ -81,7 +97,7 @@ class MontyEncoder(json.JSONEncoder):
         return self._converter(o, self.skip, full_encode=True)
 
 
-class MontyDecoder(json.JSONDecoder):
+class JsonDecoderTemplate(json.JSONDecoder):
     """
     A Json Decoder which supports the ComponentSerializer API. By default, the
     decoder attempts to find a module and name associated with a dict. If
@@ -106,7 +122,7 @@ class MontyDecoder(json.JSONDecoder):
         :return: Object.
         """
         d = json.JSONDecoder.decode(self, s)
-        return self._converter(d)
+        return self.__class__._converter(d)
 
 
 def jsanitize(obj, strict=False, allow_bson=False):
