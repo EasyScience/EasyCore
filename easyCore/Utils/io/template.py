@@ -20,6 +20,7 @@ from typing import (
     Dict,
     MutableSequence,
     TypeVar,
+    Type,
 )
 
 from easyCore import np, _REDIRECT as GLOBAL_REDIRECT
@@ -195,14 +196,25 @@ class BaseEncoderDecoder:
                 d[c] = recursive_encoder(
                     a, skip=skip, encoder=self, full_encode=full_encode, **kwargs
                 )
-        # if hasattr(obj, "kwargs"):
-        #     # type: ignore
-        #     d.update(**recursive_encoder(getattr(obj, "kwargs"), skip=skip, encoder=self, full_encode=full_encode, **kwargs))  # pylint: disable=E1101
         if spec.varargs is not None and getattr(obj, spec.varargs, None) is not None:
             d.update({spec.varargs: getattr(obj, spec.varargs)})
-        # if hasattr(obj, "_kwargs"):
-        #     if not issubclass(type(obj), MutableSequence):
-        #         d.update(**recursive_encoder(getattr(obj, "_kwargs"), skip=skip, encoder=self, full_encode=full_encode, **kwargs))  # pylint: disable=E1101
+        if hasattr(obj, "_kwargs"):
+            if not issubclass(type(obj), MutableSequence):
+                for k, v in getattr(obj, "_kwargs").items():
+                    if k not in skip and k not in d.keys():
+                        vv = v
+                        if k in redirect.keys():
+                            if redirect[k] is None:
+                                continue
+                            vv = redirect[k](obj)
+                        v_ = runner(vv)
+                        d[k] = recursive_encoder(
+                            v_,
+                            skip=skip,
+                            encoder=self,
+                            full_encode=full_encode,
+                            **kwargs,
+                        )
         if isinstance(obj, Enum):
             d.update({"value": runner(obj.value)})  # pylint: disable=E1101
         if hasattr(obj, "_convert_to_dict"):
@@ -263,7 +275,8 @@ class BaseEncoderDecoder:
 
 
 if TYPE_CHECKING:
-    EC = TypeVar("EC", bound=BaseEncoderDecoder)
+    _ = TypeVar("EC", bound=BaseEncoderDecoder)
+    EC = Type[_]
 
 
 def recursive_encoder(

@@ -8,6 +8,7 @@ __version__ = "0.1.0"
 from typing import List
 
 import pytest
+import easyCore
 
 from easyCore.Objects.Groups import BaseCollection
 from easyCore.Objects.ObjectClasses import Descriptor, Parameter, BaseObj
@@ -19,9 +20,9 @@ test_dict = {
     "name": "testing",
     "data": [
         {
-            "@module": "easyCore.Objects.Variable",
-            "@class": "Descriptor",
-            "@version": "0.1.0",
+            "@module": Descriptor.__module__,
+            "@class": Descriptor.__name__,
+            "@version": easyCore.__version__,
             "name": "par1",
             "value": 1,
             "units": "dimensionless",
