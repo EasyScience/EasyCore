@@ -1,6 +1,7 @@
 __author__ = "github.com/wardsimon"
 __version__ = "0.0.1"
 
+import json
 from copy import deepcopy
 from typing import Type
 
@@ -43,16 +44,19 @@ def test_variable_DictSerializer(dp_kwargs: dict, dp_cls: Type[Descriptor], skip
     if not isinstance(skip, list):
         skip = [skip]
 
-    enc = obj.encode(skip=skip, encoder=DictSerializer)
+    enc = obj.encode(skip=skip, encoder=JsonSerializer)
+    assert isinstance(enc, str)
 
+    # We can test like this as we don't have "complex" objects yet
+    dec = json.loads(enc)
     expected_keys = set(dp_kwargs.keys())
-    obtained_keys = set(enc.keys())
+    obtained_keys = set(dec.keys())
 
     dif = expected_keys.difference(obtained_keys)
 
     assert len(dif) == 0
 
-    check_dict(dp_kwargs, enc)
+    check_dict(dp_kwargs, dec)
 
 
 @pytest.mark.parametrize(**skip_dict)
@@ -68,35 +72,9 @@ def test_variable_DataDictSerializer(dp_kwargs: dict, dp_cls: Type[Descriptor], 
     if not isinstance(skip, list):
         skip = [skip]
 
-    enc_d = obj.encode(skip=skip, encoder=DataDictSerializer)
-
-    expected_keys = set(data_dict.keys())
-    obtained_keys = set(enc_d.keys())
-
-    dif = expected_keys.difference(obtained_keys)
-
-    assert len(dif) == 0
-
-    check_dict(data_dict, enc_d)
-
-
-@pytest.mark.parametrize(
-    "encoder", [None, DataDictSerializer], ids=["Default", "DataDictSerializer"]
-)
-@pytest.mark.parametrize(**skip_dict)
-@pytest.mark.parametrize(**dp_param_dict)
-def test_variable_encode_data(dp_kwargs: dict, dp_cls: Type[Descriptor], skip, encoder):
-    data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != "@"}
-
-    obj = dp_cls(**data_dict)
-
-    if isinstance(skip, str):
-        del data_dict[skip]
-
-    if not isinstance(skip, list):
-        skip = [skip]
-
-    enc_d = obj.encode_data(skip=skip, encoder=encoder)
+    enc = obj.encode(skip=skip, encoder=JsonDataSerializer)
+    assert isinstance(enc, str)
+    enc_d = json.loads(enc)
 
     expected_keys = set(data_dict.keys())
     obtained_keys = set(enc_d.keys())
@@ -132,15 +110,20 @@ def test_custom_class_DictSerializer_encode(
 
     obj = A(**a_kw)
 
-    enc = obj.encode(skip=skip, encoder=DictSerializer)
+    enc = obj.encode(skip=skip, encoder=JsonSerializer)
+    assert isinstance(enc, str)
+
+    # We can test like this as we don't have "complex" objects yet
+    dec = json.loads(enc)
+
     expected_keys = set(full_d.keys())
-    obtained_keys = set(enc.keys())
+    obtained_keys = set(dec.keys())
 
     dif = expected_keys.difference(obtained_keys)
 
     assert len(dif) == 0
 
-    check_dict(full_d, enc)
+    check_dict(full_d, dec)
 
 
 @pytest.mark.parametrize(**skip_dict)
@@ -154,48 +137,29 @@ def test_custom_class_DataDictSerializer(
 
     full_d = {"name": "A", dp_kwargs["name"]: data_dict}
 
+    if not isinstance(skip, list):
+        skip = [skip]
+
     full_d = recursive_remove(full_d, skip)
 
     obj = A(**a_kw)
 
-    enc = obj.encode(skip=skip, encoder=DataDictSerializer)
+    enc = obj.encode(skip=skip, encoder=JsonDataSerializer)
+    dec = json.loads(enc)
+
     expected_keys = set(full_d.keys())
-    obtained_keys = set(enc.keys())
+    obtained_keys = set(dec.keys())
 
     dif = expected_keys.difference(obtained_keys)
 
     assert len(dif) == 0
 
-    check_dict(full_d, enc)
+    check_dict(full_d, dec)
 
 
-@pytest.mark.parametrize(
-    "encoder", [None, DataDictSerializer], ids=["Default", "DataDictSerializer"]
-)
-@pytest.mark.parametrize(**dp_param_dict)
-def test_custom_class_encode_data(dp_kwargs: dict, dp_cls: Type[Descriptor], encoder):
-    data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != "@"}
-
-    a_kw = {data_dict["name"]: dp_cls(**data_dict)}
-
-    full_d = {"name": "A", dp_kwargs["name"]: data_dict}
-
-    obj = A(**a_kw)
-
-    enc = obj.encode_data(encoder=encoder)
-    expected_keys = set(full_d.keys())
-    obtained_keys = set(enc.keys())
-
-    dif = expected_keys.difference(obtained_keys)
-
-    assert len(dif) == 0
-
-    check_dict(full_d, enc)
-
-
-########################################################################################################################
-# TESTING DECODING
-########################################################################################################################
+# ########################################################################################################################
+# # TESTING DECODING
+# ########################################################################################################################
 @pytest.mark.parametrize(**dp_param_dict)
 def test_variable_DictSerializer_decode(dp_kwargs: dict, dp_cls: Type[Descriptor]):
     data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != "@"}
@@ -206,8 +170,9 @@ def test_variable_DictSerializer_decode(dp_kwargs: dict, dp_cls: Type[Descriptor
     if "value" in data_dict.keys():
         data_dict["raw_value"] = data_dict.pop("value")
 
-    enc = obj.encode(encoder=DictSerializer)
-    dec = obj.decode(enc, decoder=DictSerializer)
+    enc = obj.encode(encoder=JsonSerializer)
+    assert isinstance(enc, str)
+    dec = obj.decode(enc, decoder=JsonSerializer)
 
     for k in data_dict.keys():
         if hasattr(obj, k) and hasattr(dec, k):
@@ -226,6 +191,6 @@ def test_variable_DataDictSerializer_decode(dp_kwargs: dict, dp_cls: Type[Descri
     if "value" in data_dict.keys():
         data_dict["raw_value"] = data_dict.pop("value")
 
-    enc = obj.encode(encoder=DataDictSerializer)
+    enc = obj.encode(encoder=JsonDataSerializer)
     with pytest.raises(NotImplementedError):
-        dec = obj.decode(enc, decoder=DataDictSerializer)
+        dec = obj.decode(enc, decoder=JsonDataSerializer)
