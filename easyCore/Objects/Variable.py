@@ -68,8 +68,8 @@ class Descriptor(ComponentSerializer):
         name: str,
         value: Any,
         units: Optional[Union[str, ureg.Unit]] = None,
-        description: Optional[str] = "",
-        url: Optional[str] = "",
+        description: Optional[str] = None,
+        url: Optional[str] = None,
         display_name: Optional[str] = None,
         callback: Optional[property] = property(),
         enabled: Optional[bool] = True,
@@ -132,8 +132,15 @@ class Descriptor(ComponentSerializer):
 
         self._enabled = enabled
 
+        if description is None:
+            description = ""
         self.description: str = description
+
         self._display_name: str = display_name
+
+        if url is None:
+            url = ""
+
         self.url: str = url
         if callback is None:
             callback = property()
