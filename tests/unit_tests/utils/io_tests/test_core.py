@@ -130,6 +130,12 @@ class A(BaseObj):
         super().__init__(name=name, **kwargs)
 
 
+class B(BaseObj):
+    def __init__(self, a, b):
+        super(B, self).__init__("B", a=a)
+        self.b = b
+
+
 @pytest.mark.parametrize(**dp_param_dict)
 def test_custom_class_as_dict_methods(dp_kwargs: dict, dp_cls: Type[Descriptor]):
     data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != "@"}
