@@ -20,7 +20,7 @@ from typing import (
     Tuple,
 )
 
-from easyCore import borg
+from easyCore import borg, np
 from easyCore.Objects.ObjectClasses import BasedBase, Descriptor
 from collections.abc import MutableSequence
 from easyCore.Utils.UndoRedo import NotarizedDict
@@ -28,14 +28,27 @@ from easyCore.Utils.UndoRedo import NotarizedDict
 if TYPE_CHECKING:
     from easyCore.Utils.typing import B, iF, V
 
+HANDLED_FUNCTIONS = {}
 
-class BaseCollection(BasedBase, MutableSequence):
+
+def implements(np_function):
+   "Register an __array_function__ implementation for DiagonalArray objects."
+   def decorator(func):
+       HANDLED_FUNCTIONS[np_function] = func
+       return func
+   return decorator
+
+
+class BaseCollection(BasedBase, MutableSequence, np.lib.mixins.NDArrayOperatorsMixin):
     """
     This is the base class for which all higher level classes are built off of.
     NOTE: This object is serializable only if parameters are supplied as:
     `BaseObj(a=value, b=value)`. For `Parameter` or `Descriptor` objects we can
     cheat with `BaseObj(*[Descriptor(...), Parameter(...), ...])`.
     """
+
+    def __hash__(self):
+        return BasedBase.__hash__(self)
 
     def __init__(
         self,
@@ -269,3 +282,71 @@ class BaseCollection(BasedBase, MutableSequence):
         i = list(self._kwargs.items())
         i.sort(key=lambda x: mapping(x[1]), reverse=reverse)
         self._kwargs.reorder(**{k[0]: k[1] for k in i})
+
+    def __array__(self, dtype=None):
+        _v = [item.raw_value for item in self if hasattr(item, "raw_value")]
+        return np.array(_v, dtype=dtype)
+
+    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+        if method == '__call__':
+            values = []
+            for input in inputs:
+                if isinstance(input, Number):
+                    values.append(input)
+                elif isinstance(input, list):
+                    values.append(np.array(input))
+                elif isinstance(input, self.__class__):
+                    values.append([item.raw_value for item in self if hasattr(item, "raw_value")])
+                else:
+                    return NotImplemented
+            new_values = ufunc(*values, **kwargs)
+            new_obj = self.__class__(getattr(self, "name"), *[self[i] for i in range(len(self))])
+            for old_value, value in zip([item for item in new_obj if hasattr(item, "raw_value")], new_values):
+                old_value.value = value
+            return new_obj
+        else:
+            return NotImplemented
+
+    def __array_function__(self, func, types, args, kwargs):
+        if func not in HANDLED_FUNCTIONS:
+            return NotImplemented
+        # Note: this allows subclasses that don't override
+        # __array_function__ to handle DiagonalArray objects.
+        if not all(issubclass(t, self.__class__) for t in types):
+            return NotImplemented
+        return HANDLED_FUNCTIONS[func](*args, **kwargs)
+
+
+class easyArray(np.ndarray):
+    def __new__(cls, *args, **kwargs):
+        dtype = kwargs.get("dtype", None)
+        copy = kwargs.get("copy", False)
+        if 'dtype' in kwargs:
+            del kwargs['dtype']
+        if 'copy' in kwargs:
+            del kwargs['copy']
+        obj = np.array(*args, dtype=dtype, copy=copy, **kwargs).view(cls)
+        obj._parent = args[0]
+        return obj
+
+    def __array_finalize__(self, obj):
+        self._parent = getattr(obj, '_parent', None)
+        self.synchronize()
+
+    def synchronize(self):
+        if self._parent is not None and len(self.shape) > 0:
+            for i, v in enumerate(self):
+                self._parent[i].value = v
+
+    def __getitem__(self, key):
+        v = super().__getitem__(key)
+        if isinstance(v, self.__class__):
+            print(getattr(v, '_parent', None))
+        return v
+
+@implements(np.sum)
+def sum(arr):
+    _v = arr.__array__()
+    return np.sum(_v)
+
+

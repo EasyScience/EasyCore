@@ -332,6 +332,6 @@ def validate_id(potential_id) -> bool:
             UUID(str(potential_id), version=4)
         else:
             UUID(potential_id, version=4)
-    except (ValueError, AttributeError):
+    except (ValueError, AttributeError, TypeError):
         test = False
     return test
