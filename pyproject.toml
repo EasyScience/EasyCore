@@ -1,8 +1,8 @@
 # POETRY CONFIG
 
 [build-system]
-requires = ["poetry>=1.0"]
-build-backend = "poetry.masonry.api"
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.black]
 line-length = 88
@@ -94,6 +94,7 @@ passenv =
 deps = coverage
 whitelist_externals = poetry
 commands =
-    poetry install -vvv
-    poetry run pytest --cov --cov-report=xml
+    pip install ./
+    pip install pytest-cov codecov pytest
+    pytest --cov --cov-report=xml
 """
