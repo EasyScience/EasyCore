@@ -71,15 +71,15 @@ def test_ItemHolder_str(cls):
 
 
 def test_StarSection():
-    l = Line.from_pars(2, 3)
+    l = Line(2, 3)
     s = StarSection(l)
     expected = "_m   2.00000000()\n_c   3.00000000()\n"
     assert str(s) == expected
 
 
 def test_StarLoop():
-    l1 = Line.from_pars(2, 3)
-    l2 = Line.from_pars(4, 5)
+    l1 = Line(2, 3)
+    l2 = Line(4, 5)
 
     ps = BaseCollection("LineCollection", l1, l2)
     s = StarLoop(ps)

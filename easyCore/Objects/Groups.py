@@ -8,15 +8,15 @@ __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
 from numbers import Number
-from typing import Union, Type, Optional, TYPE_CHECKING
+from typing import Union, TypeVar, Optional, TYPE_CHECKING, Callable, List, Dict, Any, Tuple
 
 from easyCore import borg
-from easyCore.Objects.Base import BasedBase, Descriptor
+from easyCore.Objects.ObjectClasses import BasedBase, Descriptor
 from collections.abc import MutableSequence
 from easyCore.Utils.UndoRedo import NotarizedDict
 
 if TYPE_CHECKING:
-    from easyCore.Objects.Inferface import InterfaceFactoryTemplate as Interface
+    from easyCore.Utils.typing import B, iF, V
 
 
 class BaseCollection(BasedBase, MutableSequence):
@@ -30,8 +30,8 @@ class BaseCollection(BasedBase, MutableSequence):
     def __init__(
         self,
         name: str,
-        *args: Union[Descriptor, BasedBase],
-        interface: Optional[Interface] = None,
+        *args: Union[B, V],
+        interface: Optional[iF] = None,
         **kwargs,
     ):
         """
@@ -69,12 +69,14 @@ class BaseCollection(BasedBase, MutableSequence):
                 )
             self._borg.map.add_edge(self, kwargs[key])
             self._borg.map.reset_type(kwargs[key], "created_internal")
-            kwargs[key].interface = interface
+            if interface is not None:
+                kwargs[key].interface = interface
             # TODO wrap getter and setter in Logger
-        self.interface = interface
+        if interface is not None:
+            self.interface = interface
         self._kwargs._stack_enabled = True
 
-    def insert(self, index: int, value: Union[Descriptor, BasedBase]) -> None:
+    def insert(self, index: int, value: Union[V, B]) -> None:
         """
         Insert an object into the collection at an index.
 
@@ -103,7 +105,7 @@ class BaseCollection(BasedBase, MutableSequence):
                 "Only easyCore objects can be put into an easyCore group"
             )
 
-    def __getitem__(self, idx: Union[int, slice]) -> Union[Descriptor, BasedBase]:
+    def __getitem__(self, idx: Union[int, slice]) -> Union[V, B]:
         """
         Get an item in the collection based on it's index.
 
@@ -141,7 +143,7 @@ class BaseCollection(BasedBase, MutableSequence):
         keys = list(self._kwargs.keys())
         return self._kwargs[keys[idx]]
 
-    def __setitem__(self, key: int, value: Union[Descriptor, BasedBase]):
+    def __setitem__(self, key: int, value: Union[B, V]) -> None:
         """
         Set an item via it's index.
 
@@ -171,7 +173,7 @@ class BaseCollection(BasedBase, MutableSequence):
                 "At the moment only numerical values or easyCore objects can be set."
             )
 
-    def __delitem__(self, key: int):
+    def __delitem__(self, key: int) -> None:
         """
         Try to delete  an idem by key.
 
@@ -194,7 +196,7 @@ class BaseCollection(BasedBase, MutableSequence):
         """
         return len(self._kwargs.keys())
 
-    def as_dict(self, skip: list = None) -> dict:
+    def as_dict(self, skip: Optional[List[str]] = None) -> Dict[str, Any]:
         """
         Convert ones self into a serialized form.
 
@@ -218,11 +220,11 @@ class BaseCollection(BasedBase, MutableSequence):
         return dd
 
     @property
-    def data(self) -> tuple:
+    def data(self) -> Tuple:
         return tuple(self._kwargs.values())
 
     @classmethod
-    def from_dict(cls, input_dict: dict):
+    def from_dict(cls, input_dict: Dict[str, Any]) -> "BaseCollection":
         """
         De-serialise the data and try to recreate the object.
 
@@ -242,3 +244,16 @@ class BaseCollection(BasedBase, MutableSequence):
         return (
             f"{self.__class__.__name__} `{getattr(self, 'name')}` of length {len(self)}"
         )
+
+    def sort(self, mapping: Callable[[Union[B, V]], Any], reverse: bool = False) -> None:
+        """
+        Sort the collection according to the given mapping.
+
+        :param mapping: mapping function to sort the collection. i.e. lambda parameter: parameter.raw_value
+        :type mapping: Callable
+        :param reverse: Reverse the sorting.
+        :type reverse: bool
+        """
+        i = list(self._kwargs.items())
+        i.sort(key=lambda x: mapping(x[1]), reverse=reverse)
+        self._kwargs.reorder(**{k[0]: k[1] for k in i})

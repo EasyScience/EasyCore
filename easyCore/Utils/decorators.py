@@ -7,6 +7,7 @@ __version__ = "0.1.0"
 
 import collections.abc
 import functools
+import warnings
 
 from time import time
 
@@ -35,7 +36,7 @@ class memoized:
         self.cache[args] = value
         return value
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return the function's docstring."""
         return self.func.__doc__
 
@@ -81,3 +82,22 @@ def time_it(func):
             )
 
     return _time_it
+
+
+def deprecated(func):
+    """
+    This is a decorator which can be used to mark functions
+    as deprecated. It will result in a warning being emitted
+    when the function is used.
+    """
+
+    @functools.wraps(func)
+    def new_func(*args, **kwargs):
+        warnings.warn_explicit(
+            "Call to deprecated function {}.".format(func.__name__),
+            category=DeprecationWarning,
+            filename=func.__code__.co_filename,
+            lineno=func.__code__.co_firstlineno + 1,
+        )
+        return func(*args, **kwargs)
+    return new_func

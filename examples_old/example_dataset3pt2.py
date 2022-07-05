@@ -7,7 +7,7 @@ from easyCore.Datasets.xarray import xr
 import matplotlib.pyplot as plt
 
 from easyCore.Fitting.Fitting import Fitter
-from easyCore.Objects.Base import BaseObj, Parameter
+from easyCore.Objects.ObjectClasses import BaseObj, Parameter
 d = xr.Dataset()
 
 nx = 5E2

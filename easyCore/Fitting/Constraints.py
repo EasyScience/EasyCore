@@ -12,14 +12,13 @@ from abc import abstractmethod, ABCMeta
 import weakref
 from asteval import Interpreter
 from numbers import Number
-from typing import List, Union, Callable, TYPE_CHECKING, Optional
+from typing import List, Union, Callable, TYPE_CHECKING, Optional, TypeVar
 
 from easyCore import borg, np
 from easyCore.Utils.json import MSONable
-from easyCore.Utils.typing import noneType
 
 if TYPE_CHECKING:
-    from easyCore.Objects.Base import Descriptor, Parameter
+    from easyCore.Objects.Variable import V
 
 
 class ConstraintBase(MSONable, metaclass=ABCMeta):
@@ -31,12 +30,10 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
 
     def __init__(
         self,
-        dependent_obj: Union[Descriptor, Parameter],
-        independent_obj: Union[
-            Parameter, Descriptor, List[Union[Descriptor, Parameter]], noneType
-        ] = None,
-        operator=None,
-        value=None,
+        dependent_obj: V,
+        independent_obj: Optional[Union[V, List[V]]] = None,
+        operator: Optional[Union[str, List[str]]] = None,
+        value: Optional[Number] = None,
     ):
         self.aeval = Interpreter()
         self.dependent_obj_ids = self.get_key(dependent_obj)
@@ -103,10 +100,10 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
         if self._enabled == enabled_value:
             return
         elif enabled_value:
-            self.get_obj(self.dependent_obj_ids).enabled = True
+            self.get_obj(self.dependent_obj_ids).enabled = False
             self()
         else:
-            self.get_obj(self.dependent_obj_ids).enabled = False
+            self.get_obj(self.dependent_obj_ids).enabled = True
         self._enabled = enabled_value
 
     def __call__(self, *args, no_set: bool = False, **kwargs):
@@ -146,9 +143,7 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
         return value
 
     @abstractmethod
-    def _parse_operator(
-        self, obj: Union[Descriptor, Parameter], *args, **kwargs
-    ) -> Number:
+    def _parse_operator(self, obj: V, *args, **kwargs) -> Number:
         """
         Abstract method which contains the constraint logic
 
@@ -169,7 +164,7 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
         """
         return self._borg.map.convert_id_to_key(obj)
 
-    def get_obj(self, key: int) -> Union[Descriptor, Parameter]:
+    def get_obj(self, key: int) -> V:
         """
         Get an easyCore object from its unique key
 
@@ -179,6 +174,9 @@ class ConstraintBase(MSONable, metaclass=ABCMeta):
         return self._borg.map.get_item_by_key(key)
 
 
+C = TypeVar("C", bound=ConstraintBase)
+
+
 class NumericConstraint(ConstraintBase):
     """
     A `NumericConstraint` is a constraint whereby a dependent parameters value is something of an independent parameters
@@ -186,7 +184,7 @@ class NumericConstraint(ConstraintBase):
     """
 
     def __init__(
-        self, dependent_obj: Union[Descriptor, Parameter], operator: str, value: Number
+        self, dependent_obj: V, operator: str, value: Number
     ):
         """
         A `NumericConstraint` is a constraint whereby a dependent parameters value is something of an independent
@@ -216,7 +214,7 @@ class NumericConstraint(ConstraintBase):
         )
 
     def _parse_operator(
-        self, obj: Union[Descriptor, Parameter], *args, **kwargs
+        self, obj: V, *args, **kwargs
     ) -> Number:
         value = obj.raw_value
         if isinstance(value, list):
@@ -248,7 +246,7 @@ class SelfConstraint(ConstraintBase):
     """
 
     def __init__(
-        self, dependent_obj: Union[Descriptor, Parameter], operator: str, value: str
+        self, dependent_obj: V, operator: str, value: str
     ):
         """
         A `SelfConstraint` is a constraint which tests a logical constraint on a property of itself, similar to
@@ -278,7 +276,7 @@ class SelfConstraint(ConstraintBase):
         )
 
     def _parse_operator(
-        self, obj: Union[Descriptor, Parameter], *args, **kwargs
+        self, obj: V, *args, **kwargs
     ) -> Number:
         value = obj.raw_value
         self.aeval.symtable["value1"] = value
@@ -310,7 +308,7 @@ class ObjConstraint(ConstraintBase):
     """
 
     def __init__(
-        self, dependent_obj: Parameter, operator: str, independent_obj: Parameter
+        self, dependent_obj: V, operator: str, independent_obj: V
     ):
         """
         A `ObjConstraint` is a constraint whereby a dependent parameter is something of an independent parameter
@@ -342,7 +340,7 @@ class ObjConstraint(ConstraintBase):
         self.external = True
 
     def _parse_operator(
-        self, obj: Union[Descriptor, Parameter], *args, **kwargs
+        self, obj: V, *args, **kwargs
     ) -> Number:
         value = obj.raw_value
         self.aeval.symtable["value1"] = value
@@ -367,9 +365,9 @@ class MultiObjConstraint(ConstraintBase):
 
     def __init__(
         self,
-        independent_objs: List[Union[Descriptor, Parameter]],
+        independent_objs: List[V],
         operator: List[str],
-        dependent_obj: Union[Descriptor, Parameter],
+        dependent_obj: V,
         value: Number,
     ):
         """
@@ -431,7 +429,7 @@ class MultiObjConstraint(ConstraintBase):
         self.external = True
 
     def _parse_operator(
-        self, independent_objs: List[Union[Descriptor, Parameter]], *args, **kwargs
+        self, independent_objs: List[V], *args, **kwargs
     ) -> Number:
         in_str = ""
         value = None
@@ -462,9 +460,9 @@ class FunctionalConstraint(ConstraintBase):
 
     def __init__(
         self,
-        dependent_obj: Union[Descriptor, Parameter],
+        dependent_obj: V,
         func: Callable,
-        independent_objs: Optional[List[Union[Descriptor, Parameter]]] = None,
+        independent_objs: Optional[List[V]] = None,
     ):
         """
         Functional constraints do not depend on other parameters and as such can be more complex.
@@ -497,7 +495,7 @@ class FunctionalConstraint(ConstraintBase):
             self.external = True
 
     def _parse_operator(
-        self, obj: Union[Descriptor, Parameter], *args, **kwargs
+        self, obj: V, *args, **kwargs
     ) -> Number:
         self.aeval.symtable[f"f{id(self.function)}"] = self.function
         value_str = f"r_value = f{id(self.function)}("

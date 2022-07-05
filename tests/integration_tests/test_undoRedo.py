@@ -10,7 +10,8 @@ import math
 
 import numpy as np
 
-from easyCore.Objects.Base import Descriptor, Parameter, BaseObj
+from easyCore.Objects.Variable import Descriptor, Parameter
+from easyCore.Objects.ObjectClasses import BaseObj
 from easyCore.Objects.Groups import BaseCollection
 
 

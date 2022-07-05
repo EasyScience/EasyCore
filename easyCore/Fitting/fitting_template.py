@@ -7,11 +7,9 @@ __version__ = '0.1.0'
 #  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
 from abc import ABCMeta, abstractmethod
-from typing import Union, Callable, List
+from typing import Union, Callable, List, Optional
 
 from easyCore import np
-from easyCore.Utils.typing import noneType
-
 from scipy import stats
 
 
@@ -71,7 +69,9 @@ class FittingTemplate(metaclass=ABCMeta):
 
     @abstractmethod
     def fit(self, x: np.ndarray, y: np.ndarray,
-            weights: Union[np.ndarray, noneType] = None, model=None, parameters=None, method=None, **kwargs):
+            weights: Optional[Union[np.ndarray]] = None,
+            model: Optional = None, parameters: Optional = None,
+            method: Optional = None, **kwargs):
         """
         Perform a fit using the  engine.
 
@@ -107,7 +107,7 @@ class FittingTemplate(metaclass=ABCMeta):
             # This will also generate self._cached_pars
             self._fit_function = self._generate_fit_function()
 
-        if not isinstance(parameters, (dict, noneType)):
+        if not isinstance(parameters, (dict, type(None))):
             raise AttributeError
 
         pars = self._cached_pars
@@ -122,7 +122,7 @@ class FittingTemplate(metaclass=ABCMeta):
         return self._fit_function(x, **new_parameters, **kwargs)
 
     @abstractmethod
-    def convert_to_pars_obj(self, par_list: Union[list, noneType] = None):
+    def convert_to_pars_obj(self, par_list: Optional[Union[list]] = None):
         """
         Create an engine compatible container with the `Parameters` converted from the base object.
 

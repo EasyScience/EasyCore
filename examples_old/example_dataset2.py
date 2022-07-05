@@ -4,7 +4,7 @@ __version__ = '0.1.0'
 from easyCore import np
 from easyCore.Datasets.xarray import xr
 import matplotlib.pyplot as plt
-from easyCore.Objects.Base import Parameter, BaseObj
+from easyCore.Objects.ObjectClasses import Parameter, BaseObj
 from easyCore.Fitting.Fitting import Fitter
 
 d = xr.Dataset()

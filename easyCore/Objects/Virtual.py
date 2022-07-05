@@ -2,13 +2,15 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
+from __future__ import annotations
+
 __author__ = "github.com/wardsimon"
 __version__ = "0.0.1"
 
 import inspect
 import weakref
 from copy import deepcopy
-from typing import Iterable, MutableSequence
+from typing import Iterable, MutableSequence, TYPE_CHECKING, TypeVar
 
 from easyCore import borg
 from easyCore.Fitting.Constraints import ObjConstraint

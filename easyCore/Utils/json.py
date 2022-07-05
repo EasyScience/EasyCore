@@ -1,6 +1,8 @@
 __author__ = "https://github.com/materialsvirtuallab/monty/blob/master/monty/json.py"
 __version__ = "3.0.0"
 
+from typing import Optional, List, Dict, Any
+
 """
 This code has been taken and modified from https://guide.materialsvirtuallab.org/monty/index.html
 Many thanks to the original authors, the source and contributors can be found at __author__
@@ -92,10 +94,10 @@ def _load_redirect(redirect_file):
 
 
 def get_class_module(obj):
-    if hasattr(obj, "__old_class__"):
-        c = getattr(obj, "__old_class__")
-    else:
-        c = obj.__class__
+    """
+    Returns the REAL module of the class of the object.
+    """
+    c = getattr(obj, "__old_class__", obj.__class__)
     return c.__module__
 
 
@@ -142,10 +144,17 @@ class MSONable:
 
     REDIRECT = _load_redirect(os.path.join(os.path.expanduser("~"), ".monty.yaml"))
 
-    def as_dict(self, skip: list = []) -> dict:
+    def as_dict(self, skip: Optional[List[str]] = None) -> Dict[str, Any]:
         """
         A JSON serializable dict representation of an object.
         """
+        if skip is None:
+            skip = []
+        elif isinstance(skip, str):
+            skip = [skip]
+        if not isinstance(skip, list):
+            raise ValueError("Skip must be a list of strings.")
+
         d = {"@module": get_class_module(self), "@class": self.__class__.__name__}
 
         try:
@@ -205,17 +214,21 @@ class MSONable:
                 d[c] = recursive_as_dict(a)
         if hasattr(self, "kwargs"):
             # type: ignore
-            d.update(**getattr(self, "kwargs"))  # pylint: disable=E1101
+            d.update(
+                {k: v for k, v in getattr(self, "kwargs").items() if k not in skip}
+            )  # pylint: disable=E1101
         if spec.varargs is not None and getattr(self, spec.varargs, None) is not None:
             d.update({spec.varargs: getattr(self, spec.varargs)})
         if hasattr(self, "_kwargs"):
-            d.update(**getattr(self, "_kwargs"))  # pylint: disable=E1101
+            d.update(
+                {k: v for k, v in getattr(self, "_kwargs").items() if k not in skip}
+            )  # pylint: disable=E1101
         if isinstance(self, Enum):
             d.update({"value": self.value})  # pylint: disable=E1101
         return d
 
     @classmethod
-    def from_dict(cls, d):
+    def from_dict(cls, d: Dict[str, Any]) -> "MSONable":
         """
         :param d: Dict representation.
         :return: MSONable class.
@@ -233,24 +246,42 @@ class MSONable:
         """
         return json.dumps(self, cls=MontyEncoder)
 
-    def to_data_dict(self, skip: list = []) -> dict:
+    @staticmethod
+    def __parse_dict(in_dict: Dict[str, Any]) -> Dict[str, Any]:
+        out_dict = dict()
+        for key in in_dict.keys():
+            if key[0] == "@":
+                if key == "@class" and in_dict[key] not in _KNOWN_CORE_TYPES:
+                    out_dict["name"] = in_dict[key]
+                continue
+            out_dict[key] = in_dict[key]
+            if isinstance(in_dict[key], dict):
+                out_dict[key] = MSONable.__parse_dict(in_dict[key])
+            elif isinstance(in_dict[key], list):
+                out_dict[key] = [
+                    MSONable.__parse_dict(x) if isinstance(x, dict) else x
+                    for x in in_dict[key]
+                ]
+        return out_dict
+
+    def to_data_dict(self, skip: Optional[List[str]] = None) -> Dict[str, Any]:
+        """
+        Convert the object to a reduced dictionary only containing data.
+
+        :param skip: Which items should be skipped.
+        :return: Dictionary representation of the object.
+        """
+        if skip is None:
+            skip = []
+        elif isinstance(skip, str):
+            skip = [skip]
+        if not isinstance(skip, list):
+            raise ValueError("Skip must be a list of strings.")
+
         d = self.as_dict(skip=skip)
+        return self.__parse_dict(d)
 
-        def parse_dict(in_dict) -> dict:
-            out_dict = dict()
-            for key in in_dict.keys():
-                if key[0] == "@":
-                    if key == "@class" and in_dict[key] not in _KNOWN_CORE_TYPES:
-                        out_dict["name"] = in_dict[key]
-                    continue
-                out_dict[key] = in_dict[key]
-                if isinstance(in_dict[key], dict):
-                    out_dict[key] = parse_dict(in_dict[key])
-            return out_dict
-
-        return parse_dict(d)
-
-    def unsafe_hash(self):
+    def unsafe_hash(self) -> sha1:
         """
         Returns an hash of the current object. This uses a generic but low
         performance method of converting the object to a dictionary, flattening
