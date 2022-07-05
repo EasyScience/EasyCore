@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Subclassing BaseObj - Simple Pendulum &mdash; easyCore 0.2.2 documentation</title>
+  <title>Subclassing BaseObj - Simple Pendulum &mdash; easyCore 0.2.3 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/sg_gallery.css" type="text/css" />
@@ -19,6 +19,7 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
@@ -106,23 +107,23 @@
 to download the full example code</p>
 </div>
 <section class="sphx-glr-example-title" id="subclassing-baseobj-simple-pendulum">
-<span id="sphx-glr-base-examples-plot-baseclass1-py"></span><h1>Subclassing BaseObj - Simple Pendulum<a class="headerlink" href="#subclassing-baseobj-simple-pendulum" title="Permalink to this headline"></a></h1>
-<p>This  example shows how to subclass <a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.BaseObj" title="easyCore.Objects.Base.BaseObj"><code class="xref py py-class docutils literal notranslate"><span class="pre">easyCore.Objects.Base.BaseObj</span></code></a> with parameters from
-<a class="reference internal" href="../reference/base.html#easyCore.Objects.Base.Parameter" title="easyCore.Objects.Base.Parameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">easyCore.Objects.Base.Parameter</span></code></a>. For this example a simple pendulum will be modeled.</p>
+<span id="sphx-glr-base-examples-plot-baseclass1-py"></span><h1>Subclassing BaseObj - Simple Pendulum<a class="headerlink" href="#subclassing-baseobj-simple-pendulum" title="Permalink to this heading"></a></h1>
+<p>This  example shows how to subclass <code class="xref py py-class docutils literal notranslate"><span class="pre">easyCore.Objects.Base.BaseObj</span></code> with parameters from
+<code class="xref py py-class docutils literal notranslate"><span class="pre">easyCore.Objects.Base.Parameter</span></code>. For this example a simple pendulum will be modeled.</p>
 <div class="math notranslate nohighlight">
 \[y = A \sin (2 \pi f t + \phi )\]</div>
 <section id="imports">
-<h2>Imports<a class="headerlink" href="#imports" title="Permalink to this headline"></a></h2>
+<h2>Imports<a class="headerlink" href="#imports" title="Permalink to this heading"></a></h2>
 <p>Firstly the necessary imports. Notice that we import numpy from easyCore. This is not done for any reason other than
 saving time from multiple imports.</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">easyCore</span> <span class="k">import</span> <span class="n">np</span>
-<span class="kn">from</span> <span class="nn">easyCore.Objects.Base</span> <span class="k">import</span> <span class="n">BaseObj</span><span class="p">,</span> <span class="n">Parameter</span>
+<span class="kn">from</span> <span class="nn">easyCore.Objects.ObjectClasses</span> <span class="k">import</span> <span class="n">BaseObj</span><span class="p">,</span> <span class="n">Parameter</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 </pre></div>
 </div>
 </section>
 <section id="subclassing">
-<h2>Subclassing<a class="headerlink" href="#subclassing" title="Permalink to this headline"></a></h2>
+<h2>Subclassing<a class="headerlink" href="#subclassing" title="Permalink to this heading"></a></h2>
 <p>To include embedded rST, use a line of &gt;= 20 <code class="docutils literal notranslate"><span class="pre">#</span></code>’s or <code class="docutils literal notranslate"><span class="pre">#%%</span></code> between your
 rST and your code. This separates your example
 into distinct text and code blocks. You can continue writing code below the
@@ -152,7 +153,7 @@ embedded rST text block:</p>
 </div>
 </section>
 <section id="single-example">
-<h2>Single Example<a class="headerlink" href="#single-example" title="Permalink to this headline"></a></h2>
+<h2>Single Example<a class="headerlink" href="#single-example" title="Permalink to this heading"></a></h2>
 <p>To include embedded rST, use a line of &gt;= 20 <code class="docutils literal notranslate"><span class="pre">#</span></code>’s or <code class="docutils literal notranslate"><span class="pre">#%%</span></code> between your
 rST and your code. This separates your example
 into distinct text and code blocks. You can continue writing code below the
@@ -180,7 +181,7 @@ embedded rST text block:</p>
 </div>
 <img src="../_images/sphx_glr_plot_baseclass1_001.png" srcset="../_images/sphx_glr_plot_baseclass1_001.png" alt="A=1.0, F=1.0, P=0.0, A=5.0, F=1.0, P=0.0, A=5.0, F=4.0, P=0.0, A=5.0, F=4.0, P=1.5707963267948966" class = "sphx-glr-single-img"/></section>
 <section id="multiple-examples">
-<h2>Multiple Examples<a class="headerlink" href="#multiple-examples" title="Permalink to this headline"></a></h2>
+<h2>Multiple Examples<a class="headerlink" href="#multiple-examples" title="Permalink to this heading"></a></h2>
 <p>To include embedded rST, use a line of &gt;= 20 <code class="docutils literal notranslate"><span class="pre">#</span></code>’s or <code class="docutils literal notranslate"><span class="pre">#%%</span></code> between your
 rST and your code. This separates your example
 into distinct text and code blocks. You can continue writing code below the
@@ -193,7 +194,7 @@ embedded rST text block:</p>
 <span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<img src="../_images/sphx_glr_plot_baseclass1_002.png" srcset="../_images/sphx_glr_plot_baseclass1_002.png" alt="plot baseclass1" class = "sphx-glr-single-img"/><p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  1.244 seconds)</p>
+<img src="../_images/sphx_glr_plot_baseclass1_002.png" srcset="../_images/sphx_glr_plot_baseclass1_002.png" alt="plot baseclass1" class = "sphx-glr-single-img"/><p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  0.941 seconds)</p>
 <div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-base-examples-plot-baseclass1-py">
 <div class="sphx-glr-download sphx-glr-download-python docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/19d97d4ef0598c7f65692ad9583b7bb5/plot_baseclass1.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_baseclass1.py</span></code></a></p>

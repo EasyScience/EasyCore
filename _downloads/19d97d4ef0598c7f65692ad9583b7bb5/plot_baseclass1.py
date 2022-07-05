@@ -14,7 +14,7 @@ Firstly the necessary imports. Notice that we import numpy from easyCore. This i
 saving time from multiple imports.
 """
 from easyCore import np
-from easyCore.Objects.Base import BaseObj, Parameter
+from easyCore.Objects.ObjectClasses import BaseObj, Parameter
 import matplotlib.pyplot as plt
 
 #%%
