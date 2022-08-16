@@ -493,3 +493,48 @@ def property_stack_deco(
             return inner_wrapper
 
     return wrapper
+
+def param_stack_callback(event) -> None:
+    """
+    Decorate a `property` setter with undo/redo functionality
+    This decorator can be used as:
+
+    @property_stack_deco
+    def func()
+    ....
+
+    or
+
+    @property_stack_deco("This is the undo/redo text)
+    def func()
+    ....
+
+    In the latter case the argument is a string which might be evaluated.
+    The possible markups for this string are;
+
+    `obj` - The thing being operated on
+    `func` - The function being called
+    `name` - The name of the function being called.
+    `old_value` - The pre-set value
+    `new_value` - The post-set value
+
+    An example would be `Function {name}: Set from {old_value} to {new_value}`
+
+    """
+    old_value = event.old
+    new_value = event.new
+    param_name = event.name
+    obj = event.obj
+    if issubclass(type(old_value), Iterable) or issubclass(
+        type(new_value), Iterable
+    ):
+        ret = np.all(old_value == new_value)
+    else:
+        ret = old_value == new_value
+    if ret:
+        return
+
+    if borg.debug:
+        print(f"I'm {obj} and have been set from {old_value} to {new_value}!")
+
+    borg.stack.push(PropertyStack(obj, lambda this_obj, value: setattr(this_obj, param_name, value), old_value, new_value))

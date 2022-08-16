@@ -113,7 +113,7 @@ class XMLSerializer(BaseEncoderDecoder):
         Convert an XML encoded string to JSON form.
         """
         if in_string is None:
-            return in_string
+            return ""
         in_string = in_string.strip()
         if "'" in in_string:
             in_string = in_string.replace("'", "")

@@ -26,17 +26,19 @@ from easyCore import borg
 from .core import ComponentSerializer
 from easyCore.Utils.classTools import addLoggedProp
 from .Variable import Parameter, Descriptor
+import param
 
 if TYPE_CHECKING:
     from easyCore.Utils.typing import C, V, iF
 
 
-class BasedBase(ComponentSerializer):
+class BasedBase(ComponentSerializer, param.Parameterized):
     __slots__ = ["_name", "_borg", "user_data", "_kwargs"]
 
     _REDIRECT = {}
 
     def __init__(self, name: str, interface: Optional[iF] = None):
+        param.Parameterized.__init__(self)
         self._borg = borg
         self._borg.map.add_vertex(self, obj_type="created")
         self.interface = interface
@@ -317,7 +319,6 @@ class BaseObj(BasedBase):
     def __getter(key: str) -> Callable[[BV], BV]:
         def getter(obj: BV) -> BV:
             return obj._kwargs[key]
-
         return getter
 
     @staticmethod

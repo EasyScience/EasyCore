@@ -9,23 +9,37 @@ __version__ = "0.1.0"
 
 from typing import List, Tuple, TYPE_CHECKING, TypeVar, Union
 
+import param
+
 from easyCore import borg
-from easyCore.Utils.Hugger.Property import LoggedProperty
+from easyCore.Utils.Hugger.Property import LoggedParamProperty
 
 if TYPE_CHECKING:
     from easyCore.Utils.typing import B, BV
 
+
 def addLoggedProp(inst: BV, name: str, *args, **kwargs) -> None:
-    cls = type(inst)
-    annotations = getattr(cls, "__annotations__", False)
-    if not hasattr(cls, "__perinstance"):
-        cls = type(cls.__name__, (cls,), {"__module__": inst.__module__})
-        cls.__perinstance = True
-        if annotations:
-            cls.__annotations__ = annotations
-        inst.__old_class__ = inst.__class__
-        inst.__class__ = cls
-    setattr(cls, name, LoggedProperty(*args, **kwargs))
+    # cls = type(inst)
+    # annotations = getattr(cls, "__annotations__", False)
+    # if not hasattr(cls, "__perinstance"):
+    #     cls = type(cls.__name__, (cls,), {"__module__": inst.__module__})
+    #     cls.__perinstance = True
+    #     if annotations:
+    #         cls.__annotations__ = annotations
+    #     inst.__old_class__ = inst.__class__
+    #     inst.__class__ = cls
+    pp = LoggedParamProperty(*args, **kwargs)
+    # par = param.Parameter(pp)
+    # setattr(cls, name, pp)
+    # # type.__setattr__(cls, name, par)
+    # param.parameterized.ParameterizedMetaclass._initialize_parameter(cls, name, par)
+    # # delete cached params()
+    # try:
+    #     delattr(cls, '_%s__params' % cls.__name__)
+    # except AttributeError:
+    #     pass
+    inst.param.add_parameter(name, pp)
+    # setattr(cls, name, LoggedProperty(*args, **kwargs))
 
 
 def addProp(inst: BV, name: str, *args, **kwargs) -> None:

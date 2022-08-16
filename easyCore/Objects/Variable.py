@@ -28,10 +28,12 @@ from typing import (
     Set,
 )
 
+import param
+
 from easyCore import borg, ureg, np, pint
 from easyCore.Utils.classTools import addProp
 from easyCore.Utils.Exceptions import CoreSetException
-from easyCore.Utils.UndoRedo import property_stack_deco
+from easyCore.Utils.UndoRedo import property_stack_deco, param_stack_callback
 from easyCore.Objects.core import ComponentSerializer
 from easyCore.Fitting.Constraints import SelfConstraint
 
@@ -42,7 +44,17 @@ Q_ = ureg.Quantity
 M_ = ureg.Measurement
 
 
-class Descriptor(ComponentSerializer):
+class FloatNumber(param.Parameter):
+    """FLoat Parameter that must be a bool"""
+
+    def _validate_value(self, val, allow_None):
+        super(FloatNumber, self)._validate_value(val, allow_None)
+        if not isinstance(val, numbers.Number) or isinstance(val, bool):
+            raise ValueError("FloatNumber parameter %r must be a number, "
+                             "not %r." % (self.name, val))
+
+
+class Descriptor(ComponentSerializer, param.Parameterized):
     """
     This is the base of all variable descriptions for models. It contains all information to describe a single
     unique property of an object. This description includes a name and value as well as optionally a unit, description
@@ -62,18 +74,25 @@ class Descriptor(ComponentSerializer):
         "callback": None,
         "_finalizer": None,
     }
+    value_changed = param.Event()
+    enabled = param.Boolean(default=True, doc="Whether this object is enabled")
+    description = param.String(default="", doc="A brief summary of what this object is")
+    url = param.String(default="", doc="Lookup url for documentation/information")
+    _args = param.Dict(default={"value": None, "units": ""}, doc="Arguments for the constructor")
+    __isBooleanValue = param.Boolean(default=False, doc="Whether this object is a boolean value")
 
     def __init__(
         self,
         name: str,
         value: Any,
         units: Optional[Union[str, ureg.Unit]] = None,
-        description: Optional[str] = None,
-        url: Optional[str] = None,
+        description: Optional[str] = "",
+        url: Optional[str] = "",
         display_name: Optional[str] = None,
         callback: Optional[property] = property(),
         enabled: Optional[bool] = True,
         parent: Optional[Union[Any, None]] = None,
+        **kwargs,
     ):  # noqa: S107
         """
         This is the base of all variable descriptions for models. It contains all information to describe a single
@@ -104,8 +123,12 @@ class Descriptor(ComponentSerializer):
 
         .. note:: Undo/Redo functionality is implemented for the attributes `value`, `unit` and `display name`.
         """
-        if not hasattr(self, "_args"):
-            self._args = {"value": None, "units": ""}
+
+        param.Parameterized.__init__(self, name=name,
+                                     enabled=enabled,
+                                     description=description,
+                                     url=url, **kwargs)
+        self.param.watch(param_stack_callback, ['enabled', 'description', 'url'])
 
         # Let the collective know we've been assimilated
         self._borg.map.add_vertex(self, obj_type="created")
@@ -113,7 +136,6 @@ class Descriptor(ComponentSerializer):
         if parent is not None:
             self._borg.map.add_edge(parent, self)
 
-        self.name: str = name
         # Attach units if necessary
         if isinstance(units, ureg.Unit):
             self._units = ureg.Quantity(1, units=deepcopy(units))
@@ -130,18 +152,8 @@ class Descriptor(ComponentSerializer):
         self._args["units"] = str(self.unit)
         self._value = self.__class__._constructor(**self._args)
 
-        self._enabled = enabled
-
-        if description is None:
-            description = ""
-        self.description: str = description
-
         self._display_name: str = display_name
 
-        if url is None:
-            url = ""
-
-        self.url: str = url
         if callback is None:
             callback = property()
         self._callback: property = callback
@@ -267,6 +279,7 @@ class Descriptor(ComponentSerializer):
             value = int(value)
         self._args["value"] = value
         self._value = self.__class__._constructor(**self._args)
+        self.param.trigger('value_changed')
 
     @value.setter
     @property_stack_deco
@@ -304,25 +317,6 @@ class Descriptor(ComponentSerializer):
             value = bool(value)
         return value
 
-    @property
-    def enabled(self) -> bool:
-        """
-        Logical property to see if the objects value can be directly set.
-
-        :return: Can the objects value be set
-        """
-        return self._enabled
-
-    @enabled.setter
-    @property_stack_deco
-    def enabled(self, value: bool):
-        """
-        Enable and disable the direct setting of an objects value field.
-
-        :param value: True - objects value can be set, False - the opposite
-        """
-        self._enabled = value
-
     def convert_unit(self, unit_str: str):
         """
         Convert the value from one unit system to another. You will should use
@@ -335,6 +329,7 @@ class Descriptor(ComponentSerializer):
         self._units = new_unit
         self._args["value"] = self.raw_value
         self._args["units"] = str(self.unit)
+        self.param.trigger('value_changed')
 
     # @cached_property
     @property
@@ -471,6 +466,11 @@ class Parameter(Descriptor):
     """
 
     _constructor = M_
+    _args = param.Dict(default={"value": None, "units": "", 'error':  None}, doc="Arguments for the constructor")
+    min = FloatNumber(default=-np.Inf, doc="Minimum value of the parameter")
+    max = FloatNumber(default=np.Inf, doc="Maximum value of the parameter")
+    fixed = param.Boolean(default=False, doc="Whether the parameter is fixed or not")
+    initial_value = param.Number(default=None, readonly=False, doc="Initial value of the parameter")
 
     def __init__(
         self,
@@ -507,7 +507,7 @@ class Parameter(Descriptor):
             Undo/Redo functionality is implemented for the attributes `value`, `error`, `min`, `max`, `fixed`
         """
         # Set the error
-        self._args = {"value": value, "units": "", "error": error}
+        self._args["error"] = error
 
         if not isinstance(value, numbers.Number):
             raise ValueError("In a parameter the `value` must be numeric")
@@ -518,8 +518,11 @@ class Parameter(Descriptor):
         if error < 0:
             raise ValueError("Standard deviation `error` must be positive")
 
-        super().__init__(name, value, **kwargs)
-        self._args["units"] = str(self.unit)
+        super().__init__(name, value, min=min, max=max, fixed=fixed, initial_value=value, **kwargs)
+        self.param.initial_value.readonly = True
+        self.param.watch(param_stack_callback, ['min', 'max', 'fixed'])
+        self.param.watch(self._validate_min_max, ['min', 'max'])
+
 
         # Warnings if we are given a boolean
         if self._type == bool:
@@ -527,17 +530,11 @@ class Parameter(Descriptor):
                 "Boolean values are not officially supported in Parameter. Use a Descriptor instead",
                 UserWarning,
             )
-
-        # Create additional fitting elements
-        self._min: numbers.Number = min
-        self._max: numbers.Number = max
-        self._fixed: bool = fixed
-        self.initial_value = self.value
         self._constraints: dict = {
             "user": {},
             "builtin": {
-                "min": SelfConstraint(self, ">=", "_min"),
-                "max": SelfConstraint(self, "<=", "_max"),
+                "min": SelfConstraint(self, ">=", "min"),
+                "max": SelfConstraint(self, "<=", "max"),
             },
             "virtual": {},
         }
@@ -616,23 +613,23 @@ class Parameter(Descriptor):
         super().convert_unit(new_unit)
         # Deal with min/max. Error is auto corrected
         if not self.value.unitless and old_unit != "dimensionless":
-            self._min = Q_(self.min, old_unit).to(self._units).magnitude
-            self._max = Q_(self.max, old_unit).to(self._units).magnitude
+            self.min = Q_(self.min, old_unit).to(self._units).magnitude
+            self.max = Q_(self.max, old_unit).to(self._units).magnitude
         # Log the new converted error
         self._args["error"] = self.value.error.magnitude
 
-    @property
-    def min(self) -> numbers.Number:
-        """
-        Get the minimum value for fitting.
-
-        :return: minimum value
-        """
-        return self._min
-
-    @min.setter
-    @property_stack_deco
-    def min(self, value: numbers.Number):
+    # @property
+    # def min(self) -> numbers.Number:
+    #     """
+    #     Get the minimum value for fitting.
+    #
+    #     :return: minimum value
+    #     """
+    #     return self._min
+    #
+    # @min.setter
+    # @property_stack_deco
+    def _validate_min_max(self, event: param.Event) -> None:
         """
         Set the minimum value for fitting.
         - implements undo/redo functionality.
@@ -640,52 +637,74 @@ class Parameter(Descriptor):
         :param value: new minimum value
         :return: None
         """
-        if value <= self.raw_value:
-            self._min = value
-        else:
-            raise ValueError(
-                f"The current set value ({self.raw_value}) is less than the desired min value ({value})."
-            )
+        value = event.new
+        if event.name == "min" and value >= self.raw_value:
+                raise ValueError(
+                    f"The current set value ({self.raw_value}) is less than the desired min value ({value})."
+                )
+        elif event.name == "max" and value <= self.raw_value:
+                raise ValueError(
+                    f"The current set value ({self.raw_value}) is greater than the desired max value ({value})."
+                )
 
-    @property
-    def max(self) -> numbers.Number:
-        """
-        Get the maximum value for fitting.
+    # @property
+    # def max(self) -> numbers.Number:
+    #     """
+    #     Get the maximum value for fitting.
+    #
+    #     :return: maximum value
+    #     """
+    #     return self._max
+    #
+    # @max.setter
+    # @property_stack_deco
+    # def max(self, value: numbers.Number):
+    #     """
+    #     Get the maximum value for fitting.
+    #     - implements undo/redo functionality.
+    #
+    #     :param value: new maximum value
+    #     :return: None
+    #     """
+    #     if value >= self.raw_value:
+    #         self._max = value
+    #     else:
+    #         raise ValueError(
+    #             f"The current set value ({self.raw_value}) is greater than the desired max value ({value})."
+    #         )
 
-        :return: maximum value
-        """
-        return self._max
+    # @property
+    # def fixed(self) -> bool:
+    #     """
+    #     Can the parameter vary while fitting?
+    #
+    #     :return: True = fixed, False = can vary
+    #     :rtype: bool
+    #     """
+    #     return self._fixed
+    # @fixed.setter
+    # @property_stack_deco
+    # def fixed(self, value: bool):
+    #     """
+    #     Change the parameter vary while fitting state.
+    #     - implements undo/redo functionality.
+    #
+    #     :param value: True = fixed, False = can vary
+    #     :return: None
+    #     """
+    #     if not self.enabled:
+    #         if self._borg.stack.enabled:
+    #             self._borg.stack.pop()
+    #         if borg.debug:
+    #             raise CoreSetException(f"{str(self)} is not enabled.")
+    #         return
+    #     # TODO Should we try and cast value to bool rather than throw ValueError?
+    #     if not isinstance(value, bool):
+    #         raise ValueError
+    #     self._fixed = value
 
-    @max.setter
-    @property_stack_deco
-    def max(self, value: numbers.Number):
-        """
-        Get the maximum value for fitting.
-        - implements undo/redo functionality.
-
-        :param value: new maximum value
-        :return: None
-        """
-        if value >= self.raw_value:
-            self._max = value
-        else:
-            raise ValueError(
-                f"The current set value ({self.raw_value}) is greater than the desired max value ({value})."
-            )
-
-    @property
-    def fixed(self) -> bool:
-        """
-        Can the parameter vary while fitting?
-
-        :return: True = fixed, False = can vary
-        :rtype: bool
-        """
-        return self._fixed
-
-    @fixed.setter
-    @property_stack_deco
-    def fixed(self, value: bool):
+    @param.depends("fixed", watch=True)
+    def _fixed_callback(self):
         """
         Change the parameter vary while fitting state.
         - implements undo/redo functionality.
@@ -698,11 +717,6 @@ class Parameter(Descriptor):
                 self._borg.stack.pop()
             if borg.debug:
                 raise CoreSetException(f"{str(self)} is not enabled.")
-            return
-        # TODO Should we try and cast value to bool rather than throw ValueError?
-        if not isinstance(value, bool):
-            raise ValueError
-        self._fixed = value
 
     @property
     def error(self) -> float:
@@ -832,7 +846,7 @@ class Parameter(Descriptor):
 
         :return: Tuple of the parameters minimum and maximum values
         """
-        return self._min, self._max
+        return self.min, self.max
 
     @bounds.setter
     def bounds(
