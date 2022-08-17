@@ -50,8 +50,10 @@ class FloatNumber(param.Parameter):
     def _validate_value(self, val, allow_None):
         super(FloatNumber, self)._validate_value(val, allow_None)
         if not isinstance(val, numbers.Number) or isinstance(val, bool):
-            raise ValueError("FloatNumber parameter %r must be a number, "
-                             "not %r." % (self.name, val))
+            raise ValueError(
+                "FloatNumber parameter %r must be a number, "
+                "not %r." % (self.name, val)
+            )
 
 
 class Descriptor(ComponentSerializer, param.Parameterized):
@@ -78,12 +80,17 @@ class Descriptor(ComponentSerializer, param.Parameterized):
     enabled = param.Boolean(default=True, doc="Whether this object is enabled")
     description = param.String(default="", doc="A brief summary of what this object is")
     url = param.String(default="", doc="Lookup url for documentation/information")
-    _args = param.Dict(default={"value": None, "units": ""}, doc="Arguments for the constructor")
-    __isBooleanValue = param.Boolean(default=False, doc="Whether this object is a boolean value")
+    _args = param.Dict(
+        default={"value": None, "units": ""}, doc="Arguments for the constructor"
+    )
+    __isBooleanValue = param.Boolean(
+        default=False, doc="Whether this object is a boolean value"
+    )
+    label = param.String(default="", doc="A label for the object")
 
     def __init__(
         self,
-        name: str,
+        label: str,
         value: Any,
         units: Optional[Union[str, ureg.Unit]] = None,
         description: Optional[str] = "",
@@ -124,11 +131,15 @@ class Descriptor(ComponentSerializer, param.Parameterized):
         .. note:: Undo/Redo functionality is implemented for the attributes `value`, `unit` and `display name`.
         """
 
-        param.Parameterized.__init__(self, name=name,
-                                     enabled=enabled,
-                                     description=description,
-                                     url=url, **kwargs)
-        self.param.watch(param_stack_callback, ['enabled', 'description', 'url'])
+        param.Parameterized.__init__(
+            self,
+            label=label,
+            enabled=enabled,
+            description=description,
+            url=url,
+            **kwargs,
+        )
+        self.param.watch(param_stack_callback, ["enabled", "description", "url"])
 
         # Let the collective know we've been assimilated
         self._borg.map.add_vertex(self, obj_type="created")
@@ -200,7 +211,7 @@ class Descriptor(ComponentSerializer, param.Parameterized):
         # TODO This might be better implementing fancy f-strings where we can return html,latex, markdown etc
         display_name = self._display_name
         if display_name is None:
-            display_name = self.name
+            display_name = self.label
         return display_name
 
     @display_name.setter
@@ -279,7 +290,7 @@ class Descriptor(ComponentSerializer, param.Parameterized):
             value = int(value)
         self._args["value"] = value
         self._value = self.__class__._constructor(**self._args)
-        self.param.trigger('value_changed')
+        self.param.trigger("value_changed")
 
     @value.setter
     @property_stack_deco
@@ -329,7 +340,7 @@ class Descriptor(ComponentSerializer, param.Parameterized):
         self._units = new_unit
         self._args["value"] = self.raw_value
         self._args["units"] = str(self.unit)
-        self.param.trigger('value_changed')
+        self.param.trigger("value_changed")
 
     # @cached_property
     @property
@@ -344,7 +355,7 @@ class Descriptor(ComponentSerializer, param.Parameterized):
     def __repr__(self):
         """Return printable representation of a Descriptor/Parameter object."""
         class_name = self.__class__.__name__
-        obj_name = self.name
+        obj_name = self.label
         if self.__isBooleanValue:
             obj_value = self.raw_value
         else:
@@ -453,7 +464,7 @@ class ComboDescriptor(Descriptor):
         import json
 
         d = super().as_dict(**kwargs)
-        d["name"] = self.name
+        d["label"] = self.label
         d["available_options"] = json.dumps(self.available_options)
         return d
 
@@ -466,15 +477,20 @@ class Parameter(Descriptor):
     """
 
     _constructor = M_
-    _args = param.Dict(default={"value": None, "units": "", 'error':  None}, doc="Arguments for the constructor")
+    _args = param.Dict(
+        default={"value": None, "units": "", "error": None},
+        doc="Arguments for the constructor",
+    )
     min = FloatNumber(default=-np.Inf, doc="Minimum value of the parameter")
     max = FloatNumber(default=np.Inf, doc="Maximum value of the parameter")
     fixed = param.Boolean(default=False, doc="Whether the parameter is fixed or not")
-    initial_value = param.Number(default=None, readonly=False, doc="Initial value of the parameter")
+    initial_value = param.Number(
+        default=None, readonly=False, doc="Initial value of the parameter"
+    )
 
     def __init__(
         self,
-        name: str,
+        label: str,
         value: Union[numbers.Number, np.ndarray],
         error: Optional[Union[numbers.Number, np.ndarray]] = 0.0,
         min: Optional[numbers.Number] = -np.Inf,
@@ -518,11 +534,12 @@ class Parameter(Descriptor):
         if error < 0:
             raise ValueError("Standard deviation `error` must be positive")
 
-        super().__init__(name, value, min=min, max=max, fixed=fixed, initial_value=value, **kwargs)
+        super().__init__(
+            label, value, min=min, max=max, fixed=fixed, initial_value=value, **kwargs
+        )
         self.param.initial_value.readonly = True
-        self.param.watch(param_stack_callback, ['min', 'max', 'fixed'])
-        self.param.watch(self._validate_min_max, ['min', 'max'])
-
+        self.param.watch(param_stack_callback, ["min", "max", "fixed"])
+        self.param.watch(self._validate_min_max, ["min", "max"])
 
         # Warnings if we are given a boolean
         if self._type == bool:
@@ -639,13 +656,13 @@ class Parameter(Descriptor):
         """
         value = event.new
         if event.name == "min" and value >= self.raw_value:
-                raise ValueError(
-                    f"The current set value ({self.raw_value}) is less than the desired min value ({value})."
-                )
+            raise ValueError(
+                f"The current set value ({self.raw_value}) is less than the desired min value ({value})."
+            )
         elif event.name == "max" and value <= self.raw_value:
-                raise ValueError(
-                    f"The current set value ({self.raw_value}) is greater than the desired max value ({value})."
-                )
+            raise ValueError(
+                f"The current set value ({self.raw_value}) is greater than the desired max value ({value})."
+            )
 
     # @property
     # def max(self) -> numbers.Number:

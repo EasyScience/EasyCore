@@ -33,17 +33,17 @@ if TYPE_CHECKING:
 
 
 class BasedBase(ComponentSerializer, param.Parameterized):
-    __slots__ = ["_name", "_borg", "user_data", "_kwargs"]
+    __slots__ = ["_borg", "user_data", "_kwargs"]
 
+    label = param.String(default="", doc="Label for the object.")
     _REDIRECT = {}
 
-    def __init__(self, name: str, interface: Optional[iF] = None):
-        param.Parameterized.__init__(self)
+    def __init__(self, label: str, interface: Optional[iF] = None):
+        param.Parameterized.__init__(self, label=label)
         self._borg = borg
         self._borg.map.add_vertex(self, obj_type="created")
         self.interface = interface
         self.user_data: dict = {}
-        self._name: str = name
 
     @property
     def _arg_spec(self) -> Set[str]:
@@ -63,25 +63,6 @@ class BasedBase(ComponentSerializer, param.Parameterized):
         state = self.encode()
         cls = getattr(self, "__old_class__", self.__class__)
         return cls.from_dict, (state,)
-
-    @property
-    def name(self) -> str:
-        """
-        Get the common name of the object.
-
-        :return: Common name of the object
-        """
-        return self._name
-
-    @name.setter
-    def name(self, new_name: str):
-        """
-        Set a new common name for the object.
-
-        :param new_name: New name for the object
-        :return: None
-        """
-        self._name = new_name
 
     @property
     def interface(self) -> iF:
@@ -213,7 +194,7 @@ class BaseObj(BasedBase):
 
     def __init__(
         self,
-        name: str,
+        label: str,
         *args: Optional[BV],
         **kwargs: Optional[BV],
     ):
@@ -224,7 +205,7 @@ class BaseObj(BasedBase):
         :param args: Any arguments?
         :param kwargs: Fields which this class should contain
         """
-        super(BaseObj, self).__init__(name)
+        super(BaseObj, self).__init__(label)
         # If Parameter or Descriptor is given as arguments...
         for arg in args:
             if issubclass(type(arg), (BaseObj, Descriptor)):
@@ -319,6 +300,7 @@ class BaseObj(BasedBase):
     def __getter(key: str) -> Callable[[BV], BV]:
         def getter(obj: BV) -> BV:
             return obj._kwargs[key]
+
         return getter
 
     @staticmethod

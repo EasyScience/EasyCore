@@ -29,7 +29,13 @@ if TYPE_CHECKING:
     from easyCore.Utils.typing import B, iF, V
 
 
-class BaseCollection(BasedBase, MutableSequence):
+# This is a hack to get around metaclass conflicts. This may not be the best solution.
+# See: https://stackoverflow.com/questions/28720217/multiple-inheritance-metaclass-conflict
+class collectionMeta(type(BasedBase), type(MutableSequence)):
+    pass
+
+
+class BaseCollection(BasedBase, MutableSequence, metaclass=collectionMeta):
     """
     This is the base class for which all higher level classes are built off of.
     NOTE: This object is serializable only if parameters are supplied as:
@@ -39,7 +45,7 @@ class BaseCollection(BasedBase, MutableSequence):
 
     def __init__(
         self,
-        name: str,
+        label: str,
         *args: Union[B, V],
         interface: Optional[iF] = None,
         **kwargs,
@@ -53,7 +59,7 @@ class BaseCollection(BasedBase, MutableSequence):
         :param _kwargs: Fields which this class should contain
         :type _kwargs: dict
         """
-        BasedBase.__init__(self, name)
+        BasedBase.__init__(self, label)
         kwargs = {key: kwargs[key] for key in kwargs.keys() if kwargs[key] is not None}
         _args = []
         for item in args:
