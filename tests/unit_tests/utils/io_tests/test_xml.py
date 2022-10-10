@@ -67,14 +67,14 @@ def test_custom_class_XMLDictSerializer_encode(
 ):
     data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != "@"}
 
-    a_kw = {data_dict["name"]: dp_cls(**data_dict)}
+    a_kw = {data_dict["label"]: dp_cls(**data_dict)}
 
     full_d = {
         "@module": A.__module__,
         "@class": A.__name__,
         "@version": None,
-        "name": "A",
-        dp_kwargs["name"]: deepcopy(dp_kwargs),
+        "label": "A",
+        dp_kwargs["label"]: deepcopy(dp_kwargs),
     }
 
     if not isinstance(skip, list):

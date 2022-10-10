@@ -28,6 +28,15 @@ def addLoggedProp(inst: BV, name: str, *args, **kwargs) -> None:
     #         cls.__annotations__ = annotations
     #     inst.__old_class__ = inst.__class__
     #     inst.__class__ = cls
+    cls = type(inst)
+    annotations = getattr(cls, "__annotations__", False)
+    if not hasattr(cls, "__perinstance"):
+        cls = type(cls.__name__, (cls,), {"__module__": inst.__module__})
+        cls.__perinstance = True
+        if annotations:
+            cls.__annotations__ = annotations
+        inst.__old_class__ = inst.__class__
+        inst.__class__ = cls
     pp = LoggedParamProperty(*args, **kwargs)
     # par = param.Parameter(pp)
     # setattr(cls, name, pp)
@@ -56,7 +65,7 @@ def addProp(inst: BV, name: str, *args, **kwargs) -> None:
     setattr(cls, name, property(*args, **kwargs))
 
 
-def removeProp(inst: BV, name: str) ->None:
+def removeProp(inst: BV, name: str) -> None:
     cls = type(inst)
     if not hasattr(cls, "__perinstance"):
         cls = type(cls.__name__, (cls,), {"__module__": __name__})

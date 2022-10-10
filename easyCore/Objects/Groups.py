@@ -145,19 +145,19 @@ class BaseCollection(BasedBase, MutableSequence, metaclass=collectionMeta):
         if isinstance(idx, slice):
             start, stop, step = idx.indices(len(self))
             return self.__class__(
-                getattr(self, "name"), *[self[i] for i in range(start, stop, step)]
+                getattr(self, "label"), *[self[i] for i in range(start, stop, step)]
             )
         if str(idx) in self._kwargs.keys():
             return self._kwargs[str(idx)]
         if isinstance(idx, str):
-            idx = [index for index, item in enumerate(self) if item.name == idx]
+            idx = [index for index, item in enumerate(self) if item.label == idx]
             l = len(idx)
             if l == 0:
                 raise IndexError(f"Given index does not exist")
             elif l == 1:
                 idx = idx[0]
             else:
-                return self.__class__(getattr(self, "name"), *[self[i] for i in idx])
+                return self.__class__(getattr(self, "label"), *[self[i] for i in idx])
         elif not isinstance(idx, int) or isinstance(idx, bool):
             if isinstance(idx, bool):
                 raise TypeError("Boolean indexing is not supported at the moment")
@@ -257,9 +257,7 @@ class BaseCollection(BasedBase, MutableSequence, metaclass=collectionMeta):
         return tuple(self._kwargs.values())
 
     def __repr__(self) -> str:
-        return (
-            f"{self.__class__.__name__} `{getattr(self, 'name')}` of length {len(self)}"
-        )
+        return f"{self.__class__.__name__} `{getattr(self, 'label')}` of length {len(self)}"
 
     def sort(
         self, mapping: Callable[[Union[B, V]], Any], reverse: bool = False

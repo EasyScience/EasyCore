@@ -209,7 +209,7 @@ class BaseObj(BasedBase):
         # If Parameter or Descriptor is given as arguments...
         for arg in args:
             if issubclass(type(arg), (BaseObj, Descriptor)):
-                kwargs[getattr(arg, "name")] = arg
+                kwargs[getattr(arg, "label")] = arg
         # Set kwargs, also useful for serialization
         known_keys = self.__dict__.keys()
         self._kwargs = kwargs
@@ -294,7 +294,7 @@ class BaseObj(BasedBase):
                 self.generate_bindings()
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__} `{getattr(self, 'name')}`"
+        return f"{self.__class__.__name__} `{getattr(self, 'label')}`"
 
     @staticmethod
     def __getter(key: str) -> Callable[[BV], BV]:

@@ -31,9 +31,11 @@ def instance(request):
 
 def _generate_inputs():
     # These are the parameters which will always be present
-    basic = {"name": "test", "value": 1}
+
+    # Note that `name` is now `label`
+    basic = {"label": "test", "value": 1}
     basic_result = {
-        "name": basic["name"],
+        "label": basic["label"],
         "raw_value": basic["value"],
     }
     # These will be the optional parameters
@@ -51,7 +53,7 @@ def _generate_inputs():
     }
 
     temp = [
-        ([[basic["name"], basic["value"]], {}], basic_result),
+        ([[basic["label"], basic["value"]], {}], basic_result),
         ([[], basic], basic_result),
     ]
 
@@ -269,7 +271,7 @@ def test_descriptor_as_dict():
         "@module": Descriptor.__module__,
         "@class": Descriptor.__name__,
         "@version": easyCore.__version__,
-        "name": "test",
+        "label": "test",
         "value": 1,
         "units": "dimensionless",
         "description": "",
@@ -290,7 +292,7 @@ def test_parameter_as_dict():
         "@module": Parameter.__module__,
         "@class": Parameter.__name__,
         "@version": easyCore.__version__,
-        "name": "test",
+        "label": "test",
         "value": 1.0,
         "error": 0.0,
         "min": -np.inf,
@@ -310,7 +312,7 @@ def test_parameter_as_dict():
         "@module": Parameter.__module__,
         "@class": Parameter.__name__,
         "@version": easyCore.__version__,
-        "name": "test",
+        "label": "test",
         "units": "kilometer",
         "value": 1.0,
         "error": 0.0,
@@ -333,7 +335,7 @@ def test_parameter_as_dict():
                 "@module": Descriptor.__module__,
                 "@class": Descriptor.__name__,
                 "@version": easyCore.__version__,
-                "name": "test",
+                "label": "test",
                 "value": 1,
                 "units": "dimensionless",
                 "description": "",
@@ -348,7 +350,7 @@ def test_parameter_as_dict():
                 "@module": Parameter.__module__,
                 "@class": Parameter.__name__,
                 "@version": easyCore.__version__,
-                "name": "test",
+                "label": "test",
                 "units": "kilometer",
                 "value": 1.0,
                 "error": 0.0,
@@ -384,7 +386,7 @@ def test_item_from_dict(reference, constructor):
             "@module": Descriptor.__module__,
             "@class": Descriptor.__name__,
             "@version": easyCore.__version__,
-            "name": "test",
+            "label": "test",
             "value": 1,
             "units": "dimensionless",
             "description": "",
@@ -396,7 +398,7 @@ def test_item_from_dict(reference, constructor):
             "@module": Parameter.__module__,
             "@class": Parameter.__name__,
             "@version": easyCore.__version__,
-            "name": "test",
+            "label": "test",
             "units": "kilometer",
             "value": 1.0,
             "error": 0.0,

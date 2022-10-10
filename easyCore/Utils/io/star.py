@@ -151,7 +151,7 @@ class StarEntry(ItemHolder):
     def __init__(self, item, entry_name: str = None, prefix="_"):
 
         if entry_name is None:
-            entry_name = item.name
+            entry_name = item.label
 
         if len(entry_name) > _MAX_LABEL_LEN:
             raise AttributeError(f"Max label length is {int(_MAX_LABEL_LEN)}")
@@ -429,7 +429,7 @@ class StarLoop(StarBase):
         for idx, kw in enumerate(keys):
             label = kw
             if not isinstance(self.data[0]._kwargs[kw], FakeItem):
-                label = self.data[0]._kwargs[kw].name
+                label = self.data[0]._kwargs[kw].label
             if self.labels[idx] is not None:
                 label = self.labels[idx]
             s += "\n {}".format(self.prefix) + label

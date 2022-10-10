@@ -20,7 +20,7 @@ dp_param_dict = {
                 "@module": Descriptor.__module__,
                 "@class": Descriptor.__name__,
                 "@version": easyCore.__version__,
-                "name": "test",
+                "label": "test",
                 "value": 1,
                 "units": "dimensionless",
                 "description": "",
@@ -35,7 +35,7 @@ dp_param_dict = {
                 "@module": Parameter.__module__,
                 "@class": Parameter.__name__,
                 "@version": easyCore.__version__,
-                "name": "test",
+                "label": "test",
                 "units": "kilometer",
                 "value": 1.0,
                 "error": 0.0,
@@ -126,8 +126,8 @@ def test_variable_as_data_dict_methods(dp_kwargs: dict, dp_cls: Type[Descriptor]
 
 
 class A(BaseObj):
-    def __init__(self, name: str = "A", **kwargs):
-        super().__init__(name=name, **kwargs)
+    def __init__(self, label: str = "A", **kwargs):
+        super().__init__(label=label, **kwargs)
 
 
 class B(BaseObj):
@@ -140,14 +140,14 @@ class B(BaseObj):
 def test_custom_class_as_dict_methods(dp_kwargs: dict, dp_cls: Type[Descriptor]):
     data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != "@"}
 
-    a_kw = {data_dict["name"]: dp_cls(**data_dict)}
+    a_kw = {data_dict["label"]: dp_cls(**data_dict)}
 
     full_d = {
         "@module": A.__module__,
         "@class": A.__name__,
         "@version": None,
-        "name": "A",
-        dp_kwargs["name"]: dp_kwargs,
+        "label": "A",
+        dp_kwargs["label"]: dp_kwargs,
     }
 
     obj = A(**a_kw)
@@ -167,9 +167,9 @@ def test_custom_class_as_dict_methods(dp_kwargs: dict, dp_cls: Type[Descriptor])
 def test_custom_class_as_data_dict_methods(dp_kwargs: dict, dp_cls: Type[Descriptor]):
     data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != "@"}
 
-    a_kw = {data_dict["name"]: dp_cls(**data_dict)}
+    a_kw = {data_dict["label"]: dp_cls(**data_dict)}
 
-    full_d = {"name": "A", dp_kwargs["name"]: data_dict}
+    full_d = {"label": "A", dp_kwargs["label"]: data_dict}
 
     obj = A(**a_kw)
 

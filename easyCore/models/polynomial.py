@@ -39,9 +39,16 @@ class Polynomial(BaseObj):
 
     coefficients: ClassVar[BaseCollection]
 
-    def __init__(self, name: str = "polynomial",
-                 coefficients: Optional[Union[Iterable[Union[float, Parameter]], BaseCollection]] = None):
-        super(Polynomial, self).__init__(name, coefficients=BaseCollection("coefficients"))
+    def __init__(
+        self,
+        label: str = "polynomial",
+        coefficients: Optional[
+            Union[Iterable[Union[float, Parameter]], BaseCollection]
+        ] = None,
+    ):
+        super(Polynomial, self).__init__(
+            label, coefficients=BaseCollection("coefficients")
+        )
         if coefficients is not None:
             if issubclass(type(coefficients), BaseCollection):
                 self.coefficients = coefficients
@@ -50,7 +57,9 @@ class Polynomial(BaseObj):
                     if issubclass(type(item), Parameter):
                         self.coefficients.append(item)
                     elif isinstance(item, float):
-                        self.coefficients.append(Parameter(name="c{}".format(index), value=item))
+                        self.coefficients.append(
+                            Parameter(label="c{}".format(index), value=item)
+                        )
                     else:
                         raise TypeError("Coefficients must be floats or Parameters")
             else:
@@ -81,11 +90,12 @@ class Line(BaseObj):
     m: ClassVar[Parameter]
     c: ClassVar[Parameter]
 
-    def __init__(self, m: Optional[Union[Parameter, float]] = None,
-                 c: Optional[Union[Parameter, float]] = None):
-        super(Line, self).__init__("line",
-                                   m=Parameter("m", 1.),
-                                   c=Parameter("c", 0.))
+    def __init__(
+        self,
+        m: Optional[Union[Parameter, float]] = None,
+        c: Optional[Union[Parameter, float]] = None,
+    ):
+        super(Line, self).__init__("line", m=Parameter("m", 1.0), c=Parameter("c", 0.0))
         if m is not None:
             self.m = m
         if c is not None:

@@ -65,7 +65,7 @@ def test_baseobj_create(setup_pars: dict, a: List[str], kw: List[str]):
     base = BaseObj(name, *args, **kwargs)
     assert base.label == name
     for key in a:
-        item = getattr(base, setup_pars[key].name)
+        item = getattr(base, setup_pars[key].label)
         assert isinstance(item, setup_pars[key].__class__)
 
 
@@ -123,7 +123,7 @@ def test_baseobj_as_dict(setup_pars: dict):
         "@module": "easyCore.Objects.ObjectClasses",
         "@class": "BaseObj",
         "@version": easyCore.__version__,
-        "name": "test",
+        "label": "test",
         "par1": {
             "@module": Parameter.__module__,
             "@class": Parameter.__name__,

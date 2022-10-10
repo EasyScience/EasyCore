@@ -45,7 +45,7 @@ class_constructors = [BaseCollection, Alpha]
 @pytest.fixture
 def setup_pars():
     d = {
-        "name": "test",
+        "label": "test",
         "par1": Parameter("p1", 0.1, fixed=True),
         "des1": Descriptor("d1", 0.1),
         "par2": Parameter("p2", 0.1),
@@ -57,24 +57,24 @@ def setup_pars():
 
 @pytest.mark.parametrize("cls", class_constructors)
 def test_baseCollection_from_base(cls, setup_pars):
-    name = setup_pars["name"]
-    del setup_pars["name"]
+    name = setup_pars["label"]
+    del setup_pars["label"]
     coll = cls(name, **setup_pars)
 
-    assert coll.name == name
+    assert coll.label == name
     assert len(coll) == 5
     assert coll.user_data == {}
 
     for item, key in zip(coll, setup_pars.keys()):
-        assert item.name == setup_pars[key].name
+        assert item.label == setup_pars[key].label
         assert item.value == setup_pars[key].value
 
 
 @pytest.mark.parametrize("cls", class_constructors)
 @pytest.mark.parametrize("value", range(1, 11))
 def test_baseCollection_from_baseObj(cls, setup_pars: dict, value: int):
-    name = setup_pars["name"]
-    del setup_pars["name"]
+    name = setup_pars["label"]
+    del setup_pars["label"]
     objs = {}
 
     prefix = "obj"
@@ -83,13 +83,13 @@ def test_baseCollection_from_baseObj(cls, setup_pars: dict, value: int):
 
     coll = cls(name, **objs)
 
-    assert coll.name == name
+    assert coll.label == name
     assert len(coll) == value
     assert coll.user_data == {}
 
     idx = 0
     for item, key in zip(coll, objs.keys()):
-        assert item.name == prefix + str(idx)
+        assert item.label == prefix + str(idx)
         assert isinstance(item, objs[key].__class__)
         idx += 1
 
@@ -97,8 +97,8 @@ def test_baseCollection_from_baseObj(cls, setup_pars: dict, value: int):
 @pytest.mark.parametrize("cls", class_constructors)
 @pytest.mark.parametrize("value", ("abc", False, (), []))
 def test_baseCollection_create_fail(cls, setup_pars, value):
-    name = setup_pars["name"]
-    del setup_pars["name"]
+    name = setup_pars["label"]
+    del setup_pars["label"]
     setup_pars["to_fail"] = value
 
     with pytest.raises(AttributeError):
@@ -108,8 +108,8 @@ def test_baseCollection_create_fail(cls, setup_pars, value):
 @pytest.mark.parametrize("cls", class_constructors)
 @pytest.mark.parametrize("key", ("user_data", "_kwargs", "interface"))
 def test_baseCollection_create_fail2(cls, setup_pars, key):
-    name = setup_pars["name"]
-    del setup_pars["name"]
+    name = setup_pars["label"]
+    del setup_pars["label"]
     setup_pars[key] = Descriptor("fail_name", 0)
 
     with pytest.raises(AttributeError):
@@ -118,8 +118,8 @@ def test_baseCollection_create_fail2(cls, setup_pars, key):
 
 @pytest.mark.parametrize("cls", class_constructors)
 def test_baseCollection_append_base(cls, setup_pars):
-    name = setup_pars["name"]
-    del setup_pars["name"]
+    name = setup_pars["label"]
+    del setup_pars["label"]
 
     new_item_name = "boo"
     new_item_value = 100
@@ -130,15 +130,15 @@ def test_baseCollection_append_base(cls, setup_pars):
 
     coll.append(new_item)
     assert len(coll) == n_before + 1
-    assert coll[-1].name == new_item_name
+    assert coll[-1].label == new_item_name
     assert coll[-1].value == new_item_value
 
 
 @pytest.mark.parametrize("cls", class_constructors)
 @pytest.mark.parametrize("value", ("abc", False, (), []))
 def test_baseCollection_append_fail(cls, setup_pars, value):
-    name = setup_pars["name"]
-    del setup_pars["name"]
+    name = setup_pars["label"]
+    del setup_pars["label"]
 
     coll = cls(name, **setup_pars)
     with pytest.raises(AttributeError):
@@ -148,8 +148,8 @@ def test_baseCollection_append_fail(cls, setup_pars, value):
 @pytest.mark.parametrize("cls", class_constructors)
 @pytest.mark.parametrize("value", (0, 1, 3, "par1", "des1"))
 def test_baseCollection_getItem(cls, setup_pars, value):
-    name = setup_pars["name"]
-    del setup_pars["name"]
+    name = setup_pars["label"]
+    del setup_pars["label"]
 
     coll = cls(name, **setup_pars)
 
@@ -158,14 +158,14 @@ def test_baseCollection_getItem(cls, setup_pars, value):
         key = value
     else:
         key = list(setup_pars.keys())[value]
-    assert get_item.name == setup_pars[key].name
+    assert get_item.label == setup_pars[key].label
 
 
 @pytest.mark.parametrize("cls", class_constructors)
 @pytest.mark.parametrize("value", (False, [], (), 100, 100.4))
 def test_baseCollection_getItem_type_fail(cls, setup_pars, value):
-    name = setup_pars["name"]
-    del setup_pars["name"]
+    name = setup_pars["label"]
+    del setup_pars["label"]
 
     coll = cls(name, **setup_pars)
 
@@ -175,8 +175,8 @@ def test_baseCollection_getItem_type_fail(cls, setup_pars, value):
 
 @pytest.mark.parametrize("cls", class_constructors)
 def test_baseCollection_getItem_slice(cls, setup_pars):
-    name = setup_pars["name"]
-    del setup_pars["name"]
+    name = setup_pars["label"]
+    del setup_pars["label"]
 
     coll = cls(name, **setup_pars)
 
@@ -187,27 +187,27 @@ def test_baseCollection_getItem_slice(cls, setup_pars):
 @pytest.mark.parametrize("cls", class_constructors)
 @pytest.mark.parametrize("value", (0, 1, 3))
 def test_baseCollection_setItem(cls, setup_pars, value):
-    name = setup_pars["name"]
-    del setup_pars["name"]
+    name = setup_pars["label"]
+    del setup_pars["label"]
 
     coll = cls(name, **setup_pars)
     n_coll = len(coll)
-    name_coll_idx = coll[value].name
+    name_coll_idx = coll[value].label
 
     new_item_value = 100
 
     coll[value] = new_item_value
 
     assert len(coll) == n_coll
-    assert coll[value].name == name_coll_idx
+    assert coll[value].label == name_coll_idx
     assert coll[value].value == new_item_value
 
 
 @pytest.mark.parametrize("cls", class_constructors)
 @pytest.mark.parametrize("value", ("abc", (), []))
 def test_baseCollection_setItem_fail(cls, setup_pars, value):
-    name = setup_pars["name"]
-    del setup_pars["name"]
+    name = setup_pars["label"]
+    del setup_pars["label"]
 
     coll = cls(name, **setup_pars)
 
@@ -219,27 +219,27 @@ def test_baseCollection_setItem_fail(cls, setup_pars, value):
 @pytest.mark.parametrize("cls", class_constructors)
 @pytest.mark.parametrize("value", (0, 1, 3))
 def test_baseCollection_delItem(cls, setup_pars, value):
-    name = setup_pars["name"]
-    del setup_pars["name"]
+    name = setup_pars["label"]
+    del setup_pars["label"]
 
     coll = cls(name, **setup_pars)
     n_coll = len(coll)
     # On del we should shift left
-    name_coll_idx = coll[value].name
-    name_coll_idxp = coll[value + 1].name
+    name_coll_idx = coll[value].label
+    name_coll_idxp = coll[value + 1].label
 
     del coll[value]
 
     assert len(coll) == n_coll - 1
-    assert coll[value].name == name_coll_idxp
-    assert name_coll_idx not in [col.name for col in coll]
+    assert coll[value].label == name_coll_idxp
+    assert name_coll_idx not in [col.label for col in coll]
 
 
 @pytest.mark.parametrize("cls", class_constructors)
 @pytest.mark.parametrize("value", (0, 1, 3))
 def test_baseCollection_len(cls, setup_pars, value):
-    name = setup_pars["name"]
-    del setup_pars["name"]
+    name = setup_pars["label"]
+    del setup_pars["label"]
 
     keys = list(setup_pars.keys())
     keys = keys[0 : (value + 1)]
@@ -250,8 +250,8 @@ def test_baseCollection_len(cls, setup_pars, value):
 
 @pytest.mark.parametrize("cls", class_constructors)
 def test_baseCollection_get_parameters(cls, setup_pars):
-    name = setup_pars["name"]
-    del setup_pars["name"]
+    name = setup_pars["label"]
+    del setup_pars["label"]
     obj = cls(name, **setup_pars)
     pars = obj.get_parameters()
     assert len(pars) == 3
@@ -259,8 +259,8 @@ def test_baseCollection_get_parameters(cls, setup_pars):
 
 @pytest.mark.parametrize("cls", class_constructors)
 def test_baseCollection_get_parameters_nested(cls, setup_pars):
-    name = setup_pars["name"]
-    del setup_pars["name"]
+    name = setup_pars["label"]
+    del setup_pars["label"]
     obj = BaseObj(name, **setup_pars)
 
     name2 = name + "_2"
@@ -272,8 +272,8 @@ def test_baseCollection_get_parameters_nested(cls, setup_pars):
 
 @pytest.mark.parametrize("cls", class_constructors)
 def test_baseCollection_get_fit_parameters(cls, setup_pars):
-    name = setup_pars["name"]
-    del setup_pars["name"]
+    name = setup_pars["label"]
+    del setup_pars["label"]
     obj = cls(name, **setup_pars)
     pars = obj.get_fit_parameters()
     assert len(pars) == 2
@@ -281,8 +281,8 @@ def test_baseCollection_get_fit_parameters(cls, setup_pars):
 
 @pytest.mark.parametrize("cls", class_constructors)
 def test_baseCollection_get_fit_parameters_nested(cls, setup_pars):
-    name = setup_pars["name"]
-    del setup_pars["name"]
+    name = setup_pars["label"]
+    del setup_pars["label"]
     obj = BaseObj(name, **setup_pars)
 
     name2 = name + "_2"
@@ -314,7 +314,7 @@ def test_baseCollection_dir(cls):
         "as_data_dict",
         "interface",
         "from_dict",
-        "name",
+        "label",
         "switch_interface",
         "get_parameters",
         "insert",
@@ -374,10 +374,10 @@ def test_baseCollection_from_dict(cls):
     ref = cls(name, **kwargs)
     expected = cls.from_dict(test_dict)
 
-    assert ref.name == expected.name
+    assert ref.name == expected.label
     assert len(ref) == len(expected)
     for item1, item2 in zip(ref, expected):
-        assert item1.name == item2.name
+        assert item1.label == item2.label
         assert item1.value == item2.value
 
 

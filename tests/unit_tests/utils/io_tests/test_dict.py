@@ -116,14 +116,14 @@ def test_custom_class_DictSerializer_encode(
 ):
     data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != "@"}
 
-    a_kw = {data_dict["name"]: dp_cls(**data_dict)}
+    a_kw = {data_dict["label"]: dp_cls(**data_dict)}
 
     full_d = {
         "@module": A.__module__,
         "@class": A.__name__,
         "@version": None,
-        "name": "A",
-        dp_kwargs["name"]: deepcopy(dp_kwargs),
+        "label": "A",
+        dp_kwargs["label"]: deepcopy(dp_kwargs),
     }
 
     if not isinstance(skip, list):
@@ -151,9 +151,9 @@ def test_custom_class_DataDictSerializer(
 ):
     data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != "@"}
 
-    a_kw = {data_dict["name"]: dp_cls(**data_dict)}
+    a_kw = {data_dict["label"]: dp_cls(**data_dict)}
 
-    full_d = {"name": "A", dp_kwargs["name"]: data_dict}
+    full_d = {"label": "A", dp_kwargs["label"]: data_dict}
 
     full_d = recursive_remove(full_d, skip)
 
@@ -177,9 +177,9 @@ def test_custom_class_DataDictSerializer(
 def test_custom_class_encode_data(dp_kwargs: dict, dp_cls: Type[Descriptor], encoder):
     data_dict = {k: v for k, v in dp_kwargs.items() if k[0] != "@"}
 
-    a_kw = {data_dict["name"]: dp_cls(**data_dict)}
+    a_kw = {data_dict["label"]: dp_cls(**data_dict)}
 
-    full_d = {"name": "A", dp_kwargs["name"]: data_dict}
+    full_d = {"label": "A", dp_kwargs["label"]: data_dict}
 
     obj = A(**a_kw)
 
@@ -219,7 +219,7 @@ def test_custom_class_full_encode_with_numpy():
             "description": "",
             "units": "dimensionless",
             "display_name": "a",
-            "name": "a",
+            "label": "a",
             "enabled": True,
             "value": 1.0,
             "url": "",
@@ -233,7 +233,7 @@ def test_custom_class_full_decode_with_numpy():
     obj = B(Descriptor("a", 1.0), np.array([1.0, 2.0, 3.0]))
     full_enc = obj.encode(encoder=DictSerializer, full_encode=True)
     obj2 = B.decode(full_enc, decoder=DictSerializer)
-    assert obj.name == obj2.name
+    assert obj.label == obj2.label
     assert obj.a.raw_value == obj2.a.raw_value
     assert np.all(obj.b == obj2.b)
 
