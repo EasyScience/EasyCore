@@ -232,7 +232,8 @@ class NumericConstraint(ConstraintBase):
         except Exception as e:
             raise e
         finally:
-            self.aeval.symtable.clear()
+            # self.aeval.symtable.clear()
+            self.aeval = Interpreter()
         return value
 
     def __repr__(self) -> str:
@@ -292,7 +293,8 @@ class SelfConstraint(ConstraintBase):
         except Exception as e:
             raise e
         finally:
-            self.aeval.symtable.clear()
+            # self.aeval.symtable.clear()
+            self.aeval = Interpreter()
         return value
 
     def __repr__(self) -> str:
@@ -350,7 +352,8 @@ class ObjConstraint(ConstraintBase):
         except Exception as e:
             raise e
         finally:
-            self.aeval.symtable.clear()
+            # self.aeval.symtable.clear()
+            self.aeval = Interpreter()
         return value
 
     def __repr__(self) -> str:
@@ -446,7 +449,8 @@ class MultiObjConstraint(ConstraintBase):
         except Exception as e:
             raise e
         finally:
-            self.aeval.symtable.clear()
+            # self.aeval.symtable.clear()
+            self.aeval = Interpreter()
         return value
 
     def __repr__(self) -> str:
@@ -512,7 +516,8 @@ class FunctionalConstraint(ConstraintBase):
         except Exception as e:
             raise e
         finally:
-            self.aeval.symtable.clear()
+            # self.aeval.symtable.clear()
+            self.aeval = Interpreter()
         return value
 
     def __repr__(self) -> str:
