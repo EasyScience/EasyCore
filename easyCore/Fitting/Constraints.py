@@ -183,9 +183,7 @@ class NumericConstraint(ConstraintBase):
     value. I.e. a < 1, a > 5
     """
 
-    def __init__(
-        self, dependent_obj: V, operator: str, value: Number
-    ):
+    def __init__(self, dependent_obj: V, operator: str, value: Number):
         """
         A `NumericConstraint` is a constraint whereby a dependent parameters value is something of an independent
         parameters value. I.e. a < 1, a > 5
@@ -213,9 +211,7 @@ class NumericConstraint(ConstraintBase):
             dependent_obj, operator=operator, value=value
         )
 
-    def _parse_operator(
-        self, obj: V, *args, **kwargs
-    ) -> Number:
+    def _parse_operator(self, obj: V, *args, **kwargs) -> Number:
         value = obj.raw_value
         if isinstance(value, list):
             value = np.array(value)
@@ -232,7 +228,7 @@ class NumericConstraint(ConstraintBase):
         except Exception as e:
             raise e
         finally:
-            self.aeval.symtable.clear()
+            self.aeval = Interpreter()
         return value
 
     def __repr__(self) -> str:
@@ -245,9 +241,7 @@ class SelfConstraint(ConstraintBase):
     `NumericConstraint`. i.e. a > a.min. These constraints are usually used in the internal easyCore logic.
     """
 
-    def __init__(
-        self, dependent_obj: V, operator: str, value: str
-    ):
+    def __init__(self, dependent_obj: V, operator: str, value: str):
         """
         A `SelfConstraint` is a constraint which tests a logical constraint on a property of itself, similar to
         a `NumericConstraint`. i.e. a > a.min.
@@ -275,9 +269,7 @@ class SelfConstraint(ConstraintBase):
             dependent_obj, operator=operator, value=value
         )
 
-    def _parse_operator(
-        self, obj: V, *args, **kwargs
-    ) -> Number:
+    def _parse_operator(self, obj: V, *args, **kwargs) -> Number:
         value = obj.raw_value
         self.aeval.symtable["value1"] = value
         self.aeval.symtable["value2"] = getattr(obj, self.value)
@@ -292,7 +284,7 @@ class SelfConstraint(ConstraintBase):
         except Exception as e:
             raise e
         finally:
-            self.aeval.symtable.clear()
+            self.aeval = Interpreter()
         return value
 
     def __repr__(self) -> str:
@@ -307,9 +299,7 @@ class ObjConstraint(ConstraintBase):
     value. E.g. a (Dependent Parameter) = 2* b (Independent Parameter)
     """
 
-    def __init__(
-        self, dependent_obj: V, operator: str, independent_obj: V
-    ):
+    def __init__(self, dependent_obj: V, operator: str, independent_obj: V):
         """
         A `ObjConstraint` is a constraint whereby a dependent parameter is something of an independent parameter
         value. E.g. a (Dependent Parameter) < b (Independent Parameter)
@@ -339,9 +329,7 @@ class ObjConstraint(ConstraintBase):
         )
         self.external = True
 
-    def _parse_operator(
-        self, obj: V, *args, **kwargs
-    ) -> Number:
+    def _parse_operator(self, obj: V, *args, **kwargs) -> Number:
         value = obj.raw_value
         self.aeval.symtable["value1"] = value
         try:
@@ -350,7 +338,7 @@ class ObjConstraint(ConstraintBase):
         except Exception as e:
             raise e
         finally:
-            self.aeval.symtable.clear()
+            self.aeval = Interpreter()
         return value
 
     def __repr__(self) -> str:
@@ -428,9 +416,7 @@ class MultiObjConstraint(ConstraintBase):
         )
         self.external = True
 
-    def _parse_operator(
-        self, independent_objs: List[V], *args, **kwargs
-    ) -> Number:
+    def _parse_operator(self, independent_objs: List[V], *args, **kwargs) -> Number:
         in_str = ""
         value = None
         for idx, obj in enumerate(independent_objs):
@@ -446,7 +432,7 @@ class MultiObjConstraint(ConstraintBase):
         except Exception as e:
             raise e
         finally:
-            self.aeval.symtable.clear()
+            self.aeval = Interpreter()
         return value
 
     def __repr__(self) -> str:
@@ -494,9 +480,7 @@ class FunctionalConstraint(ConstraintBase):
         if independent_objs is not None:
             self.external = True
 
-    def _parse_operator(
-        self, obj: V, *args, **kwargs
-    ) -> Number:
+    def _parse_operator(self, obj: V, *args, **kwargs) -> Number:
         self.aeval.symtable[f"f{id(self.function)}"] = self.function
         value_str = f"r_value = f{id(self.function)}("
         if isinstance(obj, list):
@@ -512,7 +496,7 @@ class FunctionalConstraint(ConstraintBase):
         except Exception as e:
             raise e
         finally:
-            self.aeval.symtable.clear()
+            self.aeval = Interpreter()
         return value
 
     def __repr__(self) -> str:

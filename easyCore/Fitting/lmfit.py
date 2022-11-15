@@ -208,9 +208,7 @@ class lmfit(FittingTemplate):  # noqa: S101
             borg.stack.endMacro()
         return results
 
-    def convert_to_pars_obj(
-        self, par_list: Optional[List] = None
-    ) -> lmParameters:
+    def convert_to_pars_obj(self, par_list: Optional[List] = None) -> lmParameters:
         """
         Create an lmfit compatible container with the `Parameters` converted from the base object.
 
@@ -282,7 +280,7 @@ class lmfit(FittingTemplate):  # noqa: S101
         results.x = fit_results.userkws["x"]
         results.p = fit_results.values
         results.p0 = fit_results.init_values
-        results.goodness_of_fit = fit_results.chisqr
+        results.goodness_of_fit = fit_results.redchi
         results.y_calc = fit_results.best_fit
 
         results.fitting_engine = self.__class__

@@ -1,5 +1,9 @@
+from __future__ import annotations
+
 __author__ = "github.com/wardsimon"
 __version__ = "0.0.1"
+
+import functools
 
 #  SPDX-FileCopyrightText: 2022 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
@@ -7,14 +11,19 @@ __version__ = "0.0.1"
 
 from abc import ABCMeta
 from types import FunctionType
-from typing import List, Callable, TypeVar
+from typing import List, Callable, TypeVar, Optional, TYPE_CHECKING
 
-
-from easyCore import borg, default_fitting_engine
+from easyCore import borg, default_fitting_engine, np
 import easyCore.Fitting as Fitting
+from easyCore.Objects.Groups import BaseCollection
+
 
 _C = TypeVar("_C", bound=ABCMeta)
 _M = TypeVar("_M", bound=Fitting.FittingTemplate)
+
+if TYPE_CHECKING:
+    from easyCore.Utils.typing import B
+    from easyCore.Fitting.fitting_template import FitResults as FR
 
 
 class Fitter:
@@ -24,10 +33,13 @@ class Fitter:
 
     _borg = borg
 
-    def __init__(self, fit_object: object = None, fit_function: Callable = None):
+    def __init__(
+        self, fit_object: Optional[B] = None, fit_function: Optional[Callable] = None
+    ):
 
         self._fit_object = fit_object
         self._fit_function = fit_function
+        self._dependent_dims = None
 
         can_initialize = False
         # We can only proceed if both obj and func are not None
@@ -46,7 +58,7 @@ class Fitter:
         fit_methods = [
             x
             for x, y in Fitting.FittingTemplate.__dict__.items()
-            if isinstance(y, FunctionType) and not x.startswith("_")
+            if (isinstance(y, FunctionType) and not x.startswith("_")) and x != "fit"
         ]
         for method_name in fit_methods:
             setattr(self, method_name, self.__pass_through_generator(method_name))
@@ -54,13 +66,27 @@ class Fitter:
         if can_initialize:
             self.__initialize()
 
-    def initialize(self, fit_object: object, fit_function: Callable):
+    def _fit_function_wrapper(self, real_x=None, flatten: bool = True) -> Callable:
+        fun = self._fit_function
+
+        @functools.wraps(fun)
+        def wrapped_fit_function(x, **kwargs):
+            if real_x is not None:
+                x = real_x
+            dependent = fun(x, **kwargs)
+            if flatten:
+                dependent = dependent.flatten()
+            return dependent
+
+        return wrapped_fit_function
+
+    def initialize(self, fit_object: B, fit_function: Callable):
         self._fit_object = fit_object
-        self._fit_function = fit_function
+        self._fit = fit_function
         self.__initialize()
 
     def __initialize(self):
-        self.__engine_obj = self._current_engine(self._fit_object, self._fit_function)
+        self.__engine_obj = self._current_engine(self._fit_object, self.fit_function)
         self._is_initialized = True
 
     def create(self, engine_name: str = default_fitting_engine):
@@ -131,11 +157,11 @@ class Fitter:
         self.__initialize()
 
     @property
-    def fit_object(self) -> object:
+    def fit_object(self) -> B:
         return self._fit_object
 
     @fit_object.setter
-    def fit_object(self, fit_object: object):
+    def fit_object(self, fit_object: B):
         self._fit_object = fit_object
         self.__initialize()
 
@@ -151,3 +177,234 @@ class Fitter:
             return func(*args, **kwargs)
 
         return inner
+
+    @property
+    def fit(self) -> Callable:
+        """ "
+        Property which wraps the current `fit` function from the fitting interface. This property return a wrapped fit
+        function which converts the input data into the correct shape for the optimizer, wraps the fit function to
+        re-constitute the independent variables and once the fit is completed, reshape the inputs to those expected.
+        """
+
+        @functools.wraps(self.engine.fit)
+        def inner_fit_callable(
+            x: np.ndarray, y: np.ndarray, vectorized: bool = False, **kwargs
+        ) -> FR:
+            if not self.can_fit:
+                raise ReferenceError("The fitting engine must first be initialized")
+            # Precompute - Reshape all independents into the correct dimensionality
+            x_fit, x_new, y_new, dims, kwargs = self._precompute_reshaping(
+                x, y, vectorized, kwargs
+            )
+            self._dependent_dims = dims
+
+            # Fit
+            fit_fun = self._fit_function
+            fit_fun_wrap = self._fit_function_wrapper(
+                x_new, flatten=True
+            )  # This should be wrapped.
+
+            # We change the  fit function, so have to  reset constraints
+            constraints = self.__engine_obj._constraints
+            self.fit_function = fit_fun_wrap
+            self.__engine_obj._constraints = constraints
+            f_res = self.engine.fit(x_fit, y_new, **kwargs)
+
+            # Postcompute
+            fit_result = self._post_compute_reshaping(f_res, x, y)
+            # Reset the function and constrains
+            self.fit_function = fit_fun
+            self.__engine_obj._constraints = constraints
+            return fit_result
+
+        return inner_fit_callable
+
+    @staticmethod
+    def _precompute_reshaping(x: np.ndarray, y: np.ndarray, vectorized: bool, kwargs):
+        """
+        Check the dimensions of the inputs and reshape if necessary
+        :param x:
+        :type x:
+        :param y:
+        :type y:
+        :param kwargs:
+        :type kwargs:
+        :return:
+        :rtype:
+        """
+        # Make sure that they are np arrays
+        x_new = np.array(x)
+        y_new = np.array(y)
+        # Get the shape
+        x_shape = x_new.shape
+        # Check if the x data is 1D
+        if len(x_shape) > 1:
+            # It is ND data
+            # Check if the data is vectorized. i.e. should x be [NxMx...x Ndims]
+            if vectorized:
+                # Assert that the shapes are the same
+                if np.all(x_shape[:-1] != y_new.shape):
+                    raise ValueError("The shape of the x and y data must be the same")
+                # If so do nothing but note that the data is vectorized
+                x_shape = (-1,)
+            else:
+                # Assert that the shapes are the same
+                if np.prod(x_new.shape[:-1]) != y_new.size:
+                    raise ValueError(
+                        "The number of elements in x and y data must be the same"
+                    )
+                # Reshape the data to be [len(NxMx..), Ndims] i.e. flatten to columns
+                x_new = x_new.reshape(x_shape[-1], -1)
+        else:
+            # Assert that the shapes are the same
+            if np.all(x_shape != y_new.shape):
+                raise ValueError("The shape of the x and y data must be the same")
+            # It is 1D data
+            x_new = x.flatten()
+        # The optimizer needs a 1D array, flatten the y data
+        y_new = y_new.flatten()
+        # Make a 'dummy' x array for the fit function
+        x_for_fit = np.array(range(y_new.size))
+        return x_for_fit, x_new, y_new, x_shape, kwargs
+
+    @staticmethod
+    def _post_compute_reshaping(fit_result: FR, x: np.ndarray, y: np.ndarray) -> FR:
+        setattr(fit_result, "x", x)
+        setattr(fit_result, "y_obs", y)
+        setattr(fit_result, "y_calc", np.reshape(fit_result.y_calc, y.shape))
+        setattr(fit_result, "residual", np.reshape(fit_result.residual, y.shape))
+        return fit_result
+
+
+# Fitting FN, is it vectorized?
+class MultiFitter(Fitter):
+    """
+    Extension of Fitter to enable multiple dataset/fit function fitting. We can fit these types of data simultaneously:
+    - Multiple models on multiple datasets.
+    """
+
+    def __init__(
+        self,
+        fit_objects: Optional[List[B]] = None,
+        fit_functions: Optional[List[Callable]] = None,
+    ):
+
+        # Create a dummy core object to hold all the fit objects.
+        self._fit_objects = BaseCollection("multi", *fit_objects)
+        self._fit_functions = fit_functions
+        # Initialize with the first of the fit_functions, without this it is
+        # not possible to change the fitting engine.
+        super().__init__(self._fit_objects, self._fit_functions[0])
+
+    def _fit_function_wrapper(self, real_x=None, flatten: bool = True) -> Callable:
+        # Extract of a list of callable functions
+        wrapped_fns = []
+        for this_x, this_fun in zip(real_x, self._fit_functions):
+            self._fit_function = this_fun
+            wrapped_fns.append(
+                Fitter._fit_function_wrapper(self, this_x, flatten=flatten)
+            )
+
+        def wrapped_fun(x, **kwargs):
+            # Generate an empty Y based on x
+            y = np.zeros_like(x)
+            i = 0
+            # Iterate through wrapped functions, passing the WRONG x, the correct
+            # x was injected in the step above.
+            for idx, dim in enumerate(self._dependent_dims):
+                ep = i + np.prod(dim)
+                y[i:ep] = wrapped_fns[idx](x, **kwargs)
+                i = ep
+            return y
+
+        return wrapped_fun
+
+    @staticmethod
+    def _precompute_reshaping(
+        x: List[np.ndarray], y: List[np.ndarray], vectorized: bool, kwargs
+    ):
+        """
+        Convert an array of X's and Y's  to an acceptable shape for fitting.
+        :param x:
+        :param y:
+        :param vectorized:
+        :param kwargs:
+        :return:
+        """
+        _, _x_new, _y_new, _dims, kwargs = Fitter._precompute_reshaping(
+            x[0], y[0], vectorized, kwargs
+        )
+        x_new = [_x_new]
+        y_new = [_y_new]
+        dims = [_dims]
+        for _x, _y in zip(x[1::], y[1::]):
+            _, _x_new, _y_new, _dims, _ = Fitter._precompute_reshaping(
+                _x, _y, vectorized, kwargs
+            )
+            x_new.append(_x_new)
+            y_new.append(_y_new)
+            dims.append(_dims)
+        x_fit = np.array(range(np.array(dims).flatten().sum()))
+        y_new = np.array(y_new).flatten()
+        return x_fit, x_new, y_new, dims, kwargs
+
+    def _post_compute_reshaping(
+        self, fit_result_obj: FR, x: List[np.ndarray], y: List[np.ndarray]
+    ) -> List[FR]:
+        """
+        Take a fit results object and split it into n chuncks based on the size of the x, y inputs
+        :param fit_result_obj: Result from a multifit
+        :param x: List of X co-ords
+        :param y: List of Y co-ords
+        :return: List of fit results
+        """
+
+        cls = fit_result_obj.__class__
+        sp = 0
+        fit_results_list = []
+        for idx, this_x in enumerate(x):
+            # Create a new Results obj
+            current_results = cls()
+            ep = sp + int(np.array(self._dependent_dims[idx]).prod())
+
+            #  Fill out  the new results obj (see easyCore.Fitting.Fitting_template.FitResults)
+            current_results.success = fit_result_obj.success
+            current_results.fitting_engine = fit_result_obj.fitting_engine
+            current_results.p = fit_result_obj.p
+            current_results.p0 = fit_result_obj.p0
+            current_results.x = this_x
+            current_results.y_obs = y[idx]
+            current_results.y_calc = np.reshape(
+                fit_result_obj.y_calc[sp:ep], self._dependent_dims[idx]
+            )
+            current_results.goodness_of_fit = fit_result_obj.goodness_of_fit
+            current_results.residual = np.reshape(
+                fit_result_obj.residual[sp:ep], self._dependent_dims[idx]
+            )
+            current_results.engine_result = fit_result_obj.engine_result
+
+            # Attach an additional field for the un-modified results
+            current_results.total_results = fit_result_obj
+
+            sp = ep
+        return fit_results_list
+
+    @staticmethod
+    def unflatten_results(res, data_shape):
+        x = []
+        y_calc = []
+        y_obs = []
+        residual = []
+        start = 0
+        for i in data_shape:
+            end = i + start
+            x.append(res.x[start:end])
+            y_calc.append(res.y_calc[start:end])
+            y_obs.append(res.y_obs[start:end])
+            residual.append(res.residual[start:end])
+            start = end
+        res.x = x
+        res.y_calc = y_calc
+        res.y_obs = y_obs
+        res.residual = residual
+        return res
