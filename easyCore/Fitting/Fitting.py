@@ -334,6 +334,8 @@ class Fitter:
             x_new = x.flatten()
         # The optimizer needs a 1D array, flatten the y data
         y_new = y_new.flatten()
+        if weights is not None:
+            weights = np.array(weights).flatten()
         # Make a 'dummy' x array for the fit function
         x_for_fit = np.array(range(y_new.size))
         return x_for_fit, x_new, y_new, weights, x_shape, kwargs
@@ -405,7 +407,11 @@ class MultiFitter(Fitter):
 
     @staticmethod
     def _precompute_reshaping(
-        x: List[np.ndarray], y: List[np.ndarray], weights, vectorized: bool, kwargs
+        x: List[np.ndarray],
+        y: List[np.ndarray],
+        weights: Optional[List[np.ndarray]],
+        vectorized: bool,
+        kwargs,
     ):
         """
         Convert an array of X's and Y's  to an acceptable shape for fitting.
@@ -415,22 +421,27 @@ class MultiFitter(Fitter):
         :param kwargs: Additional kwy words.
         :return: Variables for optimization
         """
-        _, _x_new, _y_new, weights, _dims, kwargs = Fitter._precompute_reshaping(
-            x[0], y[0], weights, vectorized, kwargs
+        if weights is None:
+            weights = [None] * len(x)
+        _, _x_new, _y_new, _weights, _dims, kwargs = Fitter._precompute_reshaping(
+            x[0], y[0], weights[0], vectorized, kwargs
         )
         x_new = [_x_new]
         y_new = [_y_new]
+        w_new = [_weights]
         dims = [_dims]
-        for _x, _y in zip(x[1::], y[1::]):
-            _, _x_new, _y_new, weights, _dims, _ = Fitter._precompute_reshaping(
-                _x, _y, weights, vectorized, kwargs
+        for _x, _y, _w in zip(x[1::], y[1::], weights[1::]):
+            _, _x_new, _y_new, _weights, _dims, _ = Fitter._precompute_reshaping(
+                _x, _y, _w, vectorized, kwargs
             )
             x_new.append(_x_new)
             y_new.append(_y_new)
+            w_new.append(_weights)
             dims.append(_dims)
         x_fit = np.array(range(np.array(dims).flatten().sum()))
         y_new = np.array(y_new).flatten()
-        return x_fit, x_new, y_new, weights, dims, kwargs
+        w_new = np.array(w_new).flatten()
+        return x_fit, x_new, y_new, w_new, dims, kwargs
 
     def _post_compute_reshaping(
         self, fit_result_obj: FR, x: List[np.ndarray], y: List[np.ndarray]
@@ -461,10 +472,10 @@ class MultiFitter(Fitter):
             current_results.y_calc = np.reshape(
                 fit_result_obj.y_calc[sp:ep], self._dependent_dims[idx]
             )
-            current_results.goodness_of_fit = fit_result_obj.goodness_of_fit
             current_results.residual = np.reshape(
                 fit_result_obj.residual[sp:ep], self._dependent_dims[idx]
             )
+            current_results.goodness_of_fit = np.sum(current_results.residual**2)
             current_results.engine_result = fit_result_obj.engine_result
 
             # Attach an additional field for the un-modified results
