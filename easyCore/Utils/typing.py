@@ -14,5 +14,5 @@ from easyCore.Fitting.Constraints import C
 # Variable such as Descriptor, Parameter
 from easyCore.Objects.Variable import V
 
-# Base object from BaseObj (B) a BaseObject OR Varialbe (BV)
+# Base object from BaseObj (B) a BaseObject OR Variable (BV)
 from easyCore.Objects.ObjectClasses import B, BV
