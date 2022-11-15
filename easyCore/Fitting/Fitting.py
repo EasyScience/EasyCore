@@ -67,6 +67,13 @@ class Fitter:
             self.__initialize()
 
     def _fit_function_wrapper(self, real_x=None, flatten: bool = True) -> Callable:
+        """
+        Simple fit function which injects the real X (independent) values into the
+        optimizer function. This will also flatten the results if needed.
+        :param real_x: Independent x parameters to be injected
+        :param flatten: Should the result be a flat 1D array?
+        :return: Wrapped optimizer function.
+        """
         fun = self._fit_function
 
         @functools.wraps(fun)
@@ -81,24 +88,50 @@ class Fitter:
         return wrapped_fit_function
 
     def initialize(self, fit_object: B, fit_function: Callable):
+        """
+        Set the model and callable in the calculator interface.
+
+        :param fit_object: The easyCore model object
+        :param fit_function: The function to be optimized against.
+        :return: None
+        """
         self._fit_object = fit_object
         self._fit = fit_function
         self.__initialize()
 
     def __initialize(self):
+        """
+        The real initialization. Setting the optimizer object properly
+        :return: None
+        """
         self.__engine_obj = self._current_engine(self._fit_object, self.fit_function)
         self._is_initialized = True
 
     def create(self, engine_name: str = default_fitting_engine):
+        """
+        Create a backend optimization engine.
+        :param engine_name: The label of the optimization engine to create.
+        :return: None
+        """
         engines = self.available_engines
         if engine_name in engines:
             self._current_engine = self._engines[engines.index(engine_name)]
+            self._is_initialized = False
+        else:
+            raise AttributeError(
+                f"The supplied optimizer engine '{engine_name}' is unknown."
+            )
 
     def switch_engine(self, engine_name: str):
+        """
+        Switch backend optimization engines and initialize.
+        :param engine_name: The label of the optimization engine to create and instantiate.
+        :return: None
+        """
         # There isn't any state to carry over
         if not self._is_initialized:
-            print("The fitting engine must first be initialized")
-            raise ReferenceError
+            raise ReferenceError("The fitting engine must first be initialized")
+        # Constrains are not carried over. Do it manually.
         constraints = self.__engine_obj._constraints
         self.create(engine_name)
         self.__initialize()
@@ -149,23 +182,46 @@ class Fitter:
 
     @property
     def fit_function(self) -> Callable:
+        """
+        The raw fit function that the  optimizer will call (no wrapping)
+        :return: Raw fit function
+        """
         return self._fit_function
 
     @fit_function.setter
     def fit_function(self, fit_function: Callable):
+        """
+        Set the raw fit function to a new one.
+        :param fit_function: New fit function
+        :return: None
+        """
         self._fit_function = fit_function
         self.__initialize()
 
     @property
     def fit_object(self) -> B:
+        """
+        The easyCore object which will be used as a model
+        :return: easyCore Model
+        """
         return self._fit_object
 
     @fit_object.setter
     def fit_object(self, fit_object: B):
+        """
+        Set the easyCore object which wil be used as a model
+        :param fit_object: New easyCore object
+        :return: None
+        """
         self._fit_object = fit_object
         self.__initialize()
 
     def __pass_through_generator(self, name: str):
+        """
+        Attach the attributes of the calculator template to the current fitter instance.
+        :param name: Attribute name to attach
+        :return: Wrapped calculator interface object.
+        """
         obj = self
 
         def inner(*args, **kwargs):
@@ -180,7 +236,7 @@ class Fitter:
 
     @property
     def fit(self) -> Callable:
-        """ "
+        """
         Property which wraps the current `fit` function from the fitting interface. This property return a wrapped fit
         function which converts the input data into the correct shape for the optimizer, wraps the fit function to
         re-constitute the independent variables and once the fit is completed, reshape the inputs to those expected.
@@ -188,13 +244,26 @@ class Fitter:
 
         @functools.wraps(self.engine.fit)
         def inner_fit_callable(
-            x: np.ndarray, y: np.ndarray, vectorized: bool = False, **kwargs
+            x: np.ndarray,
+            y: np.ndarray,
+            weights: Optional[np.ndarray] = None,
+            vectorized: bool = False,
+            **kwargs,
         ) -> FR:
+            """
+            This is a wrapped callable which performs the actual fitting. It is split into
+            3 sections, PRE/ FIT/ POST.
+            - PRE = Reshaping the input data into the correct dimensions for the optimizer
+            - FIT = Wrapping the fit function and performing the fit
+            - POST = Reshaping the outputs so it is coherent with the inputs.
+            """
+            # Check to see if we can perform a fit
             if not self.can_fit:
                 raise ReferenceError("The fitting engine must first be initialized")
+
             # Precompute - Reshape all independents into the correct dimensionality
-            x_fit, x_new, y_new, dims, kwargs = self._precompute_reshaping(
-                x, y, vectorized, kwargs
+            x_fit, x_new, y_new, weights, dims, kwargs = self._precompute_reshaping(
+                x, y, weights, vectorized, kwargs
             )
             self._dependent_dims = dims
 
@@ -220,17 +289,19 @@ class Fitter:
         return inner_fit_callable
 
     @staticmethod
-    def _precompute_reshaping(x: np.ndarray, y: np.ndarray, vectorized: bool, kwargs):
+    def _precompute_reshaping(
+        x: np.ndarray,
+        y: np.ndarray,
+        weights: Optional[np.ndarray],
+        vectorized: bool,
+        kwargs,
+    ):
         """
-        Check the dimensions of the inputs and reshape if necessary
-        :param x:
-        :type x:
-        :param y:
-        :type y:
-        :param kwargs:
-        :type kwargs:
+        Check the dimensions of the inputs and reshape if necessary.
+        :param x: ND matrix of dependent points
+        :param y: N-1D matrix of independent points
+        :param kwargs: Additional key-word arguments
         :return:
-        :rtype:
         """
         # Make sure that they are np arrays
         x_new = np.array(x)
@@ -265,10 +336,17 @@ class Fitter:
         y_new = y_new.flatten()
         # Make a 'dummy' x array for the fit function
         x_for_fit = np.array(range(y_new.size))
-        return x_for_fit, x_new, y_new, x_shape, kwargs
+        return x_for_fit, x_new, y_new, weights, x_shape, kwargs
 
     @staticmethod
     def _post_compute_reshaping(fit_result: FR, x: np.ndarray, y: np.ndarray) -> FR:
+        """
+        Reshape the output of the fitter into the correct dimensions.
+        :param fit_result: Output from the fitter
+        :param x: Input x independent
+        :param y: Input y dependent
+        :return: Reshaped Fit Results
+        """
         setattr(fit_result, "x", x)
         setattr(fit_result, "y_obs", y)
         setattr(fit_result, "y_calc", np.reshape(fit_result.y_calc, y.shape))
@@ -276,7 +354,6 @@ class Fitter:
         return fit_result
 
 
-# Fitting FN, is it vectorized?
 class MultiFitter(Fitter):
     """
     Extension of Fitter to enable multiple dataset/fit function fitting. We can fit these types of data simultaneously:
@@ -297,6 +374,13 @@ class MultiFitter(Fitter):
         super().__init__(self._fit_objects, self._fit_functions[0])
 
     def _fit_function_wrapper(self, real_x=None, flatten: bool = True) -> Callable:
+        """
+        Simple fit function which injects the N real X (independent) values into the
+        optimizer function. This will also flatten the results if needed.
+        :param real_x: List of independent x parameters to be injected
+        :param flatten: Should the result be a flat 1D array?
+        :return: Wrapped optimizer function.
+        """
         # Extract of a list of callable functions
         wrapped_fns = []
         for this_x, this_fun in zip(real_x, self._fit_functions):
@@ -321,32 +405,32 @@ class MultiFitter(Fitter):
 
     @staticmethod
     def _precompute_reshaping(
-        x: List[np.ndarray], y: List[np.ndarray], vectorized: bool, kwargs
+        x: List[np.ndarray], y: List[np.ndarray], weights, vectorized: bool, kwargs
     ):
         """
         Convert an array of X's and Y's  to an acceptable shape for fitting.
-        :param x:
-        :param y:
-        :param vectorized:
-        :param kwargs:
-        :return:
+        :param x: List of independent variables.
+        :param y: List of dependent variables.
+        :param vectorized: Is the fn input vectorized or point based?
+        :param kwargs: Additional kwy words.
+        :return: Variables for optimization
         """
-        _, _x_new, _y_new, _dims, kwargs = Fitter._precompute_reshaping(
-            x[0], y[0], vectorized, kwargs
+        _, _x_new, _y_new, weights, _dims, kwargs = Fitter._precompute_reshaping(
+            x[0], y[0], weights, vectorized, kwargs
         )
         x_new = [_x_new]
         y_new = [_y_new]
         dims = [_dims]
         for _x, _y in zip(x[1::], y[1::]):
-            _, _x_new, _y_new, _dims, _ = Fitter._precompute_reshaping(
-                _x, _y, vectorized, kwargs
+            _, _x_new, _y_new, weights, _dims, _ = Fitter._precompute_reshaping(
+                _x, _y, weights, vectorized, kwargs
             )
             x_new.append(_x_new)
             y_new.append(_y_new)
             dims.append(_dims)
         x_fit = np.array(range(np.array(dims).flatten().sum()))
         y_new = np.array(y_new).flatten()
-        return x_fit, x_new, y_new, dims, kwargs
+        return x_fit, x_new, y_new, weights, dims, kwargs
 
     def _post_compute_reshaping(
         self, fit_result_obj: FR, x: List[np.ndarray], y: List[np.ndarray]
@@ -367,7 +451,7 @@ class MultiFitter(Fitter):
             current_results = cls()
             ep = sp + int(np.array(self._dependent_dims[idx]).prod())
 
-            #  Fill out  the new results obj (see easyCore.Fitting.Fitting_template.FitResults)
+            #  Fill out the new result obj (see easyCore.Fitting.Fitting_template.FitResults)
             current_results.success = fit_result_obj.success
             current_results.fitting_engine = fit_result_obj.fitting_engine
             current_results.p = fit_result_obj.p
@@ -388,23 +472,3 @@ class MultiFitter(Fitter):
 
             sp = ep
         return fit_results_list
-
-    @staticmethod
-    def unflatten_results(res, data_shape):
-        x = []
-        y_calc = []
-        y_obs = []
-        residual = []
-        start = 0
-        for i in data_shape:
-            end = i + start
-            x.append(res.x[start:end])
-            y_calc.append(res.y_calc[start:end])
-            y_obs.append(res.y_obs[start:end])
-            residual.append(res.residual[start:end])
-            start = end
-        res.x = x
-        res.y_calc = y_calc
-        res.y_obs = y_obs
-        res.residual = residual
-        return res

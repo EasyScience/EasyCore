@@ -77,9 +77,9 @@ def test_basic_fit(genObjs, fit_engine):
 
     f = Fitter(sp_sin, sp_sin)
     if fit_engine is not None:
-        f.switch_engine(fit_engine)
-        if f.engine.name != fit_engine:
-            # DFO_LS is not installed by default
+        try:
+            f.switch_engine(fit_engine)
+        except AttributeError:
             pytest.skip(msg=f"{fit_engine} is not installed")
     result = f.fit(x, y)
 
@@ -91,7 +91,9 @@ def test_basic_fit(genObjs, fit_engine):
 
 def check_fit_results(result, sp_sin, ref_sin, x, **kwargs):
     assert result.n_pars == len(sp_sin.get_fit_parameters())
-    assert result.goodness_of_fit == pytest.approx(0, abs=1.5e-3)
+    assert result.goodness_of_fit == pytest.approx(
+        0, abs=1.5e-3 * (len(result.x) - result.n_pars)
+    )
     assert result.reduced_chi == pytest.approx(0, abs=1.5e-3)
     assert result.success
     if "sp_ref1" in kwargs.keys():
@@ -135,9 +137,9 @@ def test_fit_result(genObjs, fit_engine):
     f = Fitter(sp_sin, sp_sin)
 
     if fit_engine is not None:
-        f.switch_engine(fit_engine)
-        if f.engine.name != fit_engine:
-            # DFO_LS is not installed by default
+        try:
+            f.switch_engine(fit_engine)
+        except AttributeError:
             pytest.skip(msg=f"{fit_engine} is not installed")
 
     result = f.fit(x, y)
@@ -196,9 +198,9 @@ def test_fit_constraints(genObjs2, fit_engine):
     f.add_fit_constraint(c)
 
     if fit_engine is not None:
-        f.switch_engine(fit_engine)
-        if f.engine.name != fit_engine:
-            # DFO_LS is not installed by default
+        try:
+            f.switch_engine(fit_engine)
+        except AttributeError:
             pytest.skip(msg=f"{fit_engine} is not installed")
 
     result = f.fit(x, y)
@@ -253,9 +255,9 @@ def test_multi_fit(genObjs, genObjs2, fit_engine):
 
     f = MultiFitter([sp_sin1, sp_sin2], [sp_sin1, sp_sin2])
     if fit_engine is not None:
-        f.switch_engine(fit_engine)
-        if f.engine.name != fit_engine:
-            # DFO_LS is not installed by default
+        try:
+            f.switch_engine(fit_engine)
+        except AttributeError:
             pytest.skip(msg=f"{fit_engine} is not installed")
     results = f.fit([x1, x2], [y1, y2])
     X = [x1, x2]
@@ -266,7 +268,9 @@ def test_multi_fit(genObjs, genObjs2, fit_engine):
         assert result.n_pars == len(sp_sin1.get_fit_parameters()) + len(
             sp_sin2.get_fit_parameters()
         )
-        assert result.goodness_of_fit == pytest.approx(0, abs=1.5e-3)
+        assert result.goodness_of_fit == pytest.approx(
+            0, abs=1.5e-3 * (len(result.x) - result.n_pars)
+        )
         assert result.reduced_chi == pytest.approx(0, abs=1.5e-3)
         assert result.success
         assert np.all(result.x == X[idx])
@@ -320,7 +324,7 @@ def test_2D_vectorized():
     ff = Fitter(m2, m2)
     result = ff.fit(XY, mm(XY), vectorized=True)
     assert result.n_pars == len(m2.get_fit_parameters())
-    assert result.goodness_of_fit == pytest.approx(0, abs=1.5e-3)
+    assert result.reduced_chi == pytest.approx(0, abs=1.5e-3)
     assert result.success
     assert np.all(result.x == XY)
     y_calc_ref = m2(XY)
