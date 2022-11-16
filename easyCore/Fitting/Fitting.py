@@ -130,7 +130,9 @@ class Fitter:
         """
         # There isn't any state to carry over
         if not self._is_initialized:
-            raise ReferenceError("The fitting engine must first be initialized")
+            raise ReferenceError(
+                "The fitting engine must be initialized before switching"
+            )
         # Constrains are not carried over. Do it manually.
         constraints = self.__engine_obj._constraints
         self.create(engine_name)
@@ -146,8 +148,9 @@ class Fitter:
         :rtype: List[str]
         """
         if Fitting.engines is None:
-            print("Fitting not instantiated yet")
-            raise ImportError
+            raise ImportError(
+                "There are no available fitting engines. Install `lmfit` and/or `bumps`"
+            )
         return [engine.name for engine in Fitting.engines]
 
     @property
@@ -229,7 +232,9 @@ class Fitter:
                 raise ReferenceError("The fitting engine must first be initialized")
             func = getattr(obj.engine, name, None)
             if func is None:
-                raise ValueError
+                raise ValueError(
+                    'The fitting engine does not have the attribute "{}"'.format(name)
+                )
             return func(*args, **kwargs)
 
         return inner
@@ -349,8 +354,6 @@ class Fitter:
         :param y: Input y dependent
         :return: Reshaped Fit Results
         """
-        # TODO: If vectorized, we need to reshape!
-
         setattr(fit_result, "x", x)
         setattr(fit_result, "y_obs", y)
         setattr(fit_result, "y_calc", np.reshape(fit_result.y_calc, y.shape))

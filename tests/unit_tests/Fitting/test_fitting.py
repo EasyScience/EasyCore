@@ -11,6 +11,7 @@ import pytest
 from easyCore import np
 from easyCore.Objects.ObjectClasses import Parameter, BaseObj
 from easyCore.Fitting.Fitting import Fitter, MultiFitter
+from easyCore.Fitting.fitting_template import FitError
 from easyCore.Fitting.Constraints import ObjConstraint
 
 
@@ -323,7 +324,13 @@ def test_2D_vectorized(fit_engine):
             ff.switch_engine(fit_engine)
         except AttributeError:
             pytest.skip(msg=f"{fit_engine} is not installed")
-    result = ff.fit(XY, mm(XY), vectorized=True)
+    try:
+        result = ff.fit(XY, mm(XY), vectorized=True)
+    except FitError as e:
+        if "Unable to allocate" in str(e):
+            pytest.skip(msg="MemoryError - Matrix too large")
+        else:
+            raise e
     assert result.n_pars == len(m2.get_fit_parameters())
     assert result.reduced_chi == pytest.approx(0, abs=1.5e-3)
     assert result.success
@@ -348,7 +355,13 @@ def test_2D_non_vectorized(fit_engine):
             ff.switch_engine(fit_engine)
         except AttributeError:
             pytest.skip(msg=f"{fit_engine} is not installed")
-    result = ff.fit(XY, mm(XY.reshape(-1, 2)))
+    try:
+        result = ff.fit(XY, mm(XY.reshape(-1, 2)))
+    except FitError as e:
+        if "Unable to allocate" in str(e):
+            pytest.skip(msg="MemoryError - Matrix too large")
+        else:
+            raise e
     assert result.n_pars == len(m2.get_fit_parameters())
     assert result.reduced_chi == pytest.approx(0, abs=1.5e-3)
     assert result.success
@@ -384,13 +397,13 @@ def test_multi_fit_1D_2D(genObjs, fit_engine):
     sp_sin1D.offset.user_constraints["sp_sin2"]()
 
     # Generate data
+    x1D = np.linspace(0.2, 3.8, 400)
+    y1D = ref_sin1D(x1D)
+
     x = np.linspace(0, 5, 200)
     X, Y = np.meshgrid(x, x)
-    XY = np.stack((X, Y), axis=2)
-
-    x1 = np.linspace(0.2, 3.8, 400)
-    y1D = ref_sin1D(x1)
-    y2D = ref_sin2D(XY)
+    x2D = np.stack((X, Y), axis=2)
+    y2D = ref_sin2D(x2D)
 
     ff = MultiFitter([sp_sin1D, sp_sin2D], [sp_sin1D, sp_sin2D])
     if fit_engine is not None:
@@ -409,9 +422,15 @@ def test_multi_fit_1D_2D(genObjs, fit_engine):
             f.switch_engine(fit_engine)
         except AttributeError:
             pytest.skip(msg=f"{fit_engine} is not installed")
-    results = f.fit([x1, XY], [y1D, y2D], vectorized=True)
+    try:
+        results = f.fit([x1D, x2D], [y1D, y2D], vectorized=True)
+    except FitError as e:
+        if "Unable to allocate" in str(e):
+            pytest.skip(msg="MemoryError - Matrix too large")
+        else:
+            raise e
 
-    X = [x1, XY]
+    X = [x1D, x2D]
     Y = [y1D, y2D]
     F_ref = [ref_sin1D, ref_sin2D]
     F_real = [sp_sin1D, sp_sin2D]
