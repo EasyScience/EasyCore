@@ -96,7 +96,7 @@ class Fitter:
         :return: None
         """
         self._fit_object = fit_object
-        self._fit = fit_function
+        self._fit_function = fit_function
         self.__initialize()
 
     def __initialize(self):
@@ -317,7 +317,7 @@ class Fitter:
                 if np.all(x_shape[:-1] != y_new.shape):
                     raise ValueError("The shape of the x and y data must be the same")
                 # If so do nothing but note that the data is vectorized
-                x_shape = (-1,)
+                # x_shape = (-1,) # Should this be done?
             else:
                 # Assert that the shapes are the same
                 if np.prod(x_new.shape[:-1]) != y_new.size:
@@ -325,7 +325,7 @@ class Fitter:
                         "The number of elements in x and y data must be the same"
                     )
                 # Reshape the data to be [len(NxMx..), Ndims] i.e. flatten to columns
-                x_new = x_new.reshape(x_shape[-1], -1)
+                x_new = x_new.reshape(-1, x_shape[-1], order="F")
         else:
             # Assert that the shapes are the same
             if np.all(x_shape != y_new.shape):
@@ -349,6 +349,8 @@ class Fitter:
         :param y: Input y dependent
         :return: Reshaped Fit Results
         """
+        # TODO: If vectorized, we need to reshape!
+
         setattr(fit_result, "x", x)
         setattr(fit_result, "y_obs", y)
         setattr(fit_result, "y_calc", np.reshape(fit_result.y_calc, y.shape))
@@ -438,9 +440,9 @@ class MultiFitter(Fitter):
             y_new.append(_y_new)
             w_new.append(_weights)
             dims.append(_dims)
-        x_fit = np.array(range(np.array(dims).flatten().sum()))
-        y_new = np.array(y_new).flatten()
-        w_new = np.array(w_new).flatten()
+        y_new = np.append(*y_new, axis=0)
+        # w_new = np.append(*w_new, axis=0)
+        x_fit = np.linspace(0, y_new.size - 1, y_new.size)
         return x_fit, x_new, y_new, w_new, dims, kwargs
 
     def _post_compute_reshaping(
@@ -470,10 +472,10 @@ class MultiFitter(Fitter):
             current_results.x = this_x
             current_results.y_obs = y[idx]
             current_results.y_calc = np.reshape(
-                fit_result_obj.y_calc[sp:ep], self._dependent_dims[idx]
+                fit_result_obj.y_calc[sp:ep], current_results.y_obs.shape
             )
             current_results.residual = np.reshape(
-                fit_result_obj.residual[sp:ep], self._dependent_dims[idx]
+                fit_result_obj.residual[sp:ep], current_results.y_obs.shape
             )
             current_results.goodness_of_fit = np.sum(current_results.residual**2)
             current_results.engine_result = fit_result_obj.engine_result

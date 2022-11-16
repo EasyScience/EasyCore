@@ -48,9 +48,7 @@ class bumps(FittingTemplate):  # noqa: S101
         self._cached_pars_order = ()
         self.p_0 = {}
 
-    def make_model(
-        self, pars: Optional[List[bumpsParameter]] = None
-    ) -> Callable:
+    def make_model(self, pars: Optional[List[bumpsParameter]] = None) -> Callable:
         """
         Generate a bumps model from the supplied `fit_function` and parameters in the base object.
         Note that this makes a callable as it needs to be initialized with *x*, *y*, *weights*
@@ -288,8 +286,7 @@ class bumps(FittingTemplate):  # noqa: S101
         results.y_obs = self._cached_model.y
         results.y_calc = self.evaluate(results.x, parameters=results.p)
         results.residual = results.y_obs - results.y_calc
-        results.goodness_of_fit = fit_results.fun
-
+        results.goodness_of_fit = np.sum(results.residual**2)
         results.fitting_engine = self.__class__
         results.fit_args = None
         results.engine_result = fit_results

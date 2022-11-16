@@ -281,13 +281,6 @@ def test_multi_fit(genObjs, genObjs2, fit_engine):
         )
 
 
-# def test_flatten_list():
-#     input_list = [[1, 2], [2]]
-#     expected_result = np.array([1, 2, 2])
-#     actual_result = _flatten_list(input_list)
-#     np.testing.assert_equal(expected_result, actual_result)
-
-
 class AbsSin2D(BaseObj):
     def __init__(self, offset: Parameter, phase: Parameter):
         super(AbsSin2D, self).__init__("sin2D", offset=offset, phase=phase)
@@ -308,20 +301,28 @@ class AbsSin2D(BaseObj):
 
 class AbsSin2DL(AbsSin2D):
     def __call__(self, x):
-        X = x[0, :]
-        Y = x[1, :]
+        X = x[:, 0]
+        Y = x[:, 1]
         return np.abs(
             np.sin(self.phase.raw_value * X + self.offset.raw_value)
         ) * np.abs(np.sin(self.phase.raw_value * Y + self.offset.raw_value))
 
 
-def test_2D_vectorized():
+@pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "DFO_LS"])
+def test_2D_vectorized(fit_engine):
     x = np.linspace(0, 5, 200)
     mm = AbsSin2D.from_pars(0.3, 1.6)
-    m2 = AbsSin2D.from_pars(0.1, 2)
+    m2 = AbsSin2D.from_pars(
+        0.1, 1.8
+    )  # The fit is quite sensitive to the initial values :-(
     X, Y = np.meshgrid(x, x)
     XY = np.stack((X, Y), axis=2)
     ff = Fitter(m2, m2)
+    if fit_engine is not None:
+        try:
+            ff.switch_engine(fit_engine)
+        except AttributeError:
+            pytest.skip(msg=f"{fit_engine} is not installed")
     result = ff.fit(XY, mm(XY), vectorized=True)
     assert result.n_pars == len(m2.get_fit_parameters())
     assert result.reduced_chi == pytest.approx(0, abs=1.5e-3)
@@ -332,18 +333,100 @@ def test_2D_vectorized():
     assert result.residual == pytest.approx(mm(XY) - y_calc_ref, abs=1e-2)
 
 
-# def test_2D_non_vectorized():
-#     x = np.linspace(0, 5, 200)
-#     mm = AbsSin2DL.from_pars(0.3, 1.6)
-#     m2 = AbsSin2DL.from_pars(0.1, 2)
-#     X, Y = np.meshgrid(x, x)
-#     XY = np.stack((X, Y), axis=2)
-#     ff = Fitter(m2, m2)
-#     result = ff.fit(XY, mm(XY.reshape(2, -1)))
-#     assert result.n_pars == len(m2.get_fit_parameters())
-#     assert result.goodness_of_fit == pytest.approx(0, abs=1.5e-3)
-#     assert result.success
-#     assert np.all(result.x == XY)
-#     y_calc_ref = m2(XY)
-#     assert result.y_calc == pytest.approx(y_calc_ref, abs=1e-2)
-#     assert result.residual == pytest.approx(mm(XY) - y_calc_ref, abs=1e-2)
+@pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "DFO_LS"])
+def test_2D_non_vectorized(fit_engine):
+    x = np.linspace(0, 5, 200)
+    mm = AbsSin2DL.from_pars(0.3, 1.6)
+    m2 = AbsSin2DL.from_pars(
+        0.1, 1.8
+    )  # The fit is quite sensitive to the initial values :-(
+    X, Y = np.meshgrid(x, x)
+    XY = np.stack((X, Y), axis=2)
+    ff = Fitter(m2, m2)
+    if fit_engine is not None:
+        try:
+            ff.switch_engine(fit_engine)
+        except AttributeError:
+            pytest.skip(msg=f"{fit_engine} is not installed")
+    result = ff.fit(XY, mm(XY.reshape(-1, 2)))
+    assert result.n_pars == len(m2.get_fit_parameters())
+    assert result.reduced_chi == pytest.approx(0, abs=1.5e-3)
+    assert result.success
+    assert np.all(result.x == XY)
+    y_calc_ref = m2(XY.reshape(-1, 2))
+    assert result.y_calc == pytest.approx(y_calc_ref, abs=1e-2)
+    assert result.residual == pytest.approx(
+        mm(XY.reshape(-1, 2)) - y_calc_ref, abs=1e-2
+    )
+
+
+@pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "DFO_LS"])
+def test_multi_fit_1D_2D(genObjs, fit_engine):
+
+    # Generate fit and reference objects
+    ref_sin1D = genObjs[0]
+    sp_sin1D = genObjs[1]
+
+    ref_sin2D = AbsSin2D.from_pars(0.3, 1.6)
+    sp_sin2D = AbsSin2D.from_pars(
+        0.1, 1.8
+    )  # The fit is quite sensitive to the initial values :-(
+
+    # Link the parameters
+    ref_sin1D.offset.user_constraints["ref_sin2"] = ObjConstraint(
+        ref_sin2D.offset, "", ref_sin1D.offset
+    )
+    ref_sin1D.offset.user_constraints["ref_sin2"]()
+
+    sp_sin1D.offset.user_constraints["sp_sin2"] = ObjConstraint(
+        sp_sin2D.offset, "", sp_sin1D.offset
+    )
+    sp_sin1D.offset.user_constraints["sp_sin2"]()
+
+    # Generate data
+    x = np.linspace(0, 5, 200)
+    X, Y = np.meshgrid(x, x)
+    XY = np.stack((X, Y), axis=2)
+
+    x1 = np.linspace(0.2, 3.8, 400)
+    y1D = ref_sin1D(x1)
+    y2D = ref_sin2D(XY)
+
+    ff = MultiFitter([sp_sin1D, sp_sin2D], [sp_sin1D, sp_sin2D])
+    if fit_engine is not None:
+        try:
+            ff.switch_engine(fit_engine)
+        except AttributeError:
+            pytest.skip(msg=f"{fit_engine} is not installed")
+
+    sp_sin1D.offset.fixed = False
+    sp_sin1D.phase.fixed = False
+    sp_sin2D.phase.fixed = False
+
+    f = MultiFitter([sp_sin1D, sp_sin2D], [sp_sin1D, sp_sin2D])
+    if fit_engine is not None:
+        try:
+            f.switch_engine(fit_engine)
+        except AttributeError:
+            pytest.skip(msg=f"{fit_engine} is not installed")
+    results = f.fit([x1, XY], [y1D, y2D], vectorized=True)
+
+    X = [x1, XY]
+    Y = [y1D, y2D]
+    F_ref = [ref_sin1D, ref_sin2D]
+    F_real = [sp_sin1D, sp_sin2D]
+    for idx, result in enumerate(results):
+        assert result.n_pars == len(sp_sin1D.get_fit_parameters()) + len(
+            sp_sin2D.get_fit_parameters()
+        )
+        assert result.goodness_of_fit == pytest.approx(
+            0, abs=1.5e-3 * (len(result.x) - result.n_pars)
+        )
+        assert result.reduced_chi == pytest.approx(0, abs=1.5e-3)
+        assert result.success
+        assert np.all(result.x == X[idx])
+        assert np.all(result.y_obs == Y[idx])
+        assert result.y_calc == pytest.approx(F_ref[idx](X[idx]), abs=1e-2)
+        assert result.residual == pytest.approx(
+            F_real[idx](X[idx]) - F_ref[idx](X[idx]), abs=1e-2
+        )
