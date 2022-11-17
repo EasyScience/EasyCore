@@ -8,6 +8,7 @@ __version__ = "0.1.0"
 #  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
 import numbers
+from inspect import getfullargspec
 
 from typing import (
     List,
@@ -18,10 +19,11 @@ from typing import (
     TypeVar,
     TYPE_CHECKING,
     Callable,
+    Set,
 )
 
 from easyCore import borg
-from easyCore.Utils.json import MSONable
+from .core import ComponentSerializer
 from easyCore.Utils.classTools import addLoggedProp
 from .Variable import Parameter, Descriptor
 
@@ -29,8 +31,10 @@ if TYPE_CHECKING:
     from easyCore.Utils.typing import C, V, iF
 
 
-class BasedBase(MSONable):
+class BasedBase(ComponentSerializer):
     __slots__ = ["_name", "_borg", "user_data", "_kwargs"]
+
+    _REDIRECT = {}
 
     def __init__(self, name: str, interface: Optional[iF] = None):
         self._borg = borg
@@ -38,6 +42,13 @@ class BasedBase(MSONable):
         self.interface = interface
         self.user_data: dict = {}
         self._name: str = name
+
+    @property
+    def _arg_spec(self) -> Set[str]:
+        base_cls = getattr(self, "__old_class__", self.__class__)
+        spec = getfullargspec(base_cls.__init__)
+        names = set(spec.args[1:])
+        return names
 
     def __reduce__(self):
         """
@@ -47,7 +58,7 @@ class BasedBase(MSONable):
         :return: Tuple consisting of how to make the object
         :rtype: tuple
         """
-        state = self.as_dict()
+        state = self.encode()
         cls = getattr(self, "__old_class__", self.__class__)
         return cls.from_dict, (state,)
 
@@ -133,25 +144,6 @@ class BasedBase(MSONable):
                 constraints.append(con[key])
         return constraints
 
-    def as_dict(
-        self, skip: Optional[List[str]] = None
-    ) -> Dict[str, Union[str, bool, numbers.Number]]:
-        """
-        Convert ones self into a serialized form.
-
-        :return: dictionary of ones self
-        """
-        if skip is None:
-            skip = []
-        d = MSONable.as_dict(self, skip=skip)
-        for key, item in d.items():
-            if hasattr(item, "as_dict"):
-                d[key] = item.as_dict(skip=skip)
-        # Attach the id. This might be useful in connected applications.
-        # Note that it is converted to int and then str because javascript....
-        d["@id"] = str(self._borg.map.convert_id(self).int)
-        return d
-
     def get_parameters(self) -> List[Parameter]:
         """
         Get all parameter objects as a list.
@@ -206,7 +198,7 @@ class BasedBase(MSONable):
 
 if TYPE_CHECKING:
     B = TypeVar("B", bound=BasedBase)
-    BV = TypeVar("BV", bound=Union[BasedBase, Descriptor])
+    BV = TypeVar("BV", bound=ComponentSerializer)
 
 
 class BaseObj(BasedBase):
@@ -339,16 +331,3 @@ class BaseObj(BasedBase):
                 obj._kwargs[key] = value
 
         return setter
-
-    # @staticmethod
-    # def __setter(key: str) -> Callable[[Union[B, V]], None]:
-    #     def setter(obj: Union[V, B], value: float) -> None:
-    #         if issubclass(obj._kwargs[key].__class__, Descriptor):
-    #             if issubclass(obj._kwargs[key].__class__, Descriptor):
-    #                 obj._kwargs[key] = value
-    #             else:
-    #                 obj._kwargs[key].value = value
-    #         else:
-    #             obj._kwargs[key] = value
-    #
-    #     return setter

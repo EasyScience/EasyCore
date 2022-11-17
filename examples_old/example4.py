@@ -3,7 +3,7 @@ __version__ = "0.1.0"
 
 import json
 from typing import Callable, List
-from easyCore.Utils.json import MSONable
+from easyCore.Objects.core import ComponentSerializer
 
 import numpy as np
 
@@ -76,7 +76,7 @@ class Calculator2:
         self._data = json.loads(input_str)
 
 
-class InterfaceTemplate(MSONable, metaclass=ABCMeta):
+class InterfaceTemplate(ComponentSerializer, metaclass=ABCMeta):
     """
     This class is a template and defines all properties that an interface should have.
     """
@@ -274,7 +274,7 @@ class InterfaceFactory:
     def switch(self, new_interface: str):
         """
         Changes the current interface to a new interface. The current interface is destroyed and
-        all MSONable parameters carried over to the new interface. i.e. pick up where you left off.
+        all ComponentSerializer parameters carried over to the new interface. i.e. pick up where you left off.
 
         :param new_interface: name of new interface to be created
         :type new_interface: str

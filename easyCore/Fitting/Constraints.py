@@ -15,13 +15,13 @@ from numbers import Number
 from typing import List, Union, Callable, TYPE_CHECKING, Optional, TypeVar
 
 from easyCore import borg, np
-from easyCore.Utils.json import MSONable
+from easyCore.Objects.core import ComponentSerializer
 
 if TYPE_CHECKING:
     from easyCore.Objects.Variable import V
 
 
-class ConstraintBase(MSONable, metaclass=ABCMeta):
+class ConstraintBase(ComponentSerializer, metaclass=ABCMeta):
     """
     A base class used to describe a constraint to be applied to easyCore base objects.
     """

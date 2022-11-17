@@ -266,8 +266,8 @@ def test_descriptor_as_dict():
     d = Descriptor("test", 1)
     result = d.as_dict()
     expected = {
-        "@module": "easyCore.Objects.Variable",
-        "@class": "Descriptor",
+        "@module": Descriptor.__module__,
+        "@class": Descriptor.__name__,
         "@version": easyCore.__version__,
         "name": "test",
         "value": 1,
@@ -287,8 +287,8 @@ def test_parameter_as_dict():
     d = Parameter("test", 1)
     result = d.as_dict()
     expected = {
-        "@module": "easyCore.Objects.Variable",
-        "@class": "Parameter",
+        "@module": Parameter.__module__,
+        "@class": Parameter.__name__,
         "@version": easyCore.__version__,
         "name": "test",
         "value": 1.0,
@@ -307,8 +307,8 @@ def test_parameter_as_dict():
     d = Parameter("test", 1, units="km", url="https://www.boo.com")
     result = d.as_dict()
     expected = {
-        "@module": "easyCore.Objects.Variable",
-        "@class": "Parameter",
+        "@module": Parameter.__module__,
+        "@class": Parameter.__name__,
         "@version": easyCore.__version__,
         "name": "test",
         "units": "kilometer",
@@ -330,8 +330,8 @@ def test_parameter_as_dict():
     (
         [
             {
-                "@module": "easyCore.Objects.Variable",
-                "@class": "Descriptor",
+                "@module": Descriptor.__module__,
+                "@class": Descriptor.__name__,
                 "@version": easyCore.__version__,
                 "name": "test",
                 "value": 1,
@@ -345,8 +345,8 @@ def test_parameter_as_dict():
         ],
         [
             {
-                "@module": "easyCore.Objects.Variable",
-                "@class": "Parameter",
+                "@module": Parameter.__module__,
+                "@class": Parameter.__name__,
                 "@version": easyCore.__version__,
                 "name": "test",
                 "units": "kilometer",
@@ -381,8 +381,8 @@ def test_item_from_dict(reference, constructor):
     "construct",
     (
         {
-            "@module": "easyCore.Objects.Variable",
-            "@class": "Descriptor",
+            "@module": Descriptor.__module__,
+            "@class": Descriptor.__name__,
             "@version": easyCore.__version__,
             "name": "test",
             "value": 1,
@@ -393,8 +393,8 @@ def test_item_from_dict(reference, constructor):
             "callback": None,
         },
         {
-            "@module": "easyCore.Objects.Variable",
-            "@class": "Parameter",
+            "@module": Parameter.__module__,
+            "@class": Parameter.__name__,
             "@version": easyCore.__version__,
             "name": "test",
             "units": "kilometer",
@@ -408,10 +408,10 @@ def test_item_from_dict(reference, constructor):
     ),
     ids=["Descriptor", "Parameter"],
 )
-def test_item_from_MontyDecoder(construct):
-    from easyCore.Utils.json import MontyDecoder
+def test_item_from_Decoder(construct):
+    from easyCore.Utils.io.dict import DictSerializer
 
-    d = MontyDecoder().process_decoded(construct)
+    d = DictSerializer().decode(construct)
     assert d.__class__.__name__ == construct["@class"]
     for key, item in construct.items():
         if key == "callback" or key.startswith("@"):
