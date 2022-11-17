@@ -10,7 +10,7 @@ from abc import ABCMeta, abstractmethod
 from typing import Union, Callable, List, Optional
 
 from easyCore import np
-from scipy import stats
+from easyCore.Utils.typing import noneType
 
 
 class FittingTemplate(metaclass=ABCMeta):
@@ -177,6 +177,8 @@ class FittingTemplate(metaclass=ABCMeta):
     def _error_from_jacobian(
         jacobian: np.ndarray, residuals: np.ndarray, confidence: float = 0.95
     ) -> np.ndarray:
+        from scipy import stats
+
         JtJi = np.linalg.inv(np.dot(jacobian.T, jacobian))
         # 1.96 is a 95% confidence value
         error_matrix = np.dot(

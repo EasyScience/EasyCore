@@ -18,7 +18,10 @@ from easyCore.Fitting.fitting_template import (
     FitError,
 )
 
-# Import bumps specific objects
+import lazy_import
+
+bumps = lazy_import.lazy_module("bumps")
+
 from bumps.names import Curve, FitProblem
 from bumps.parameter import Parameter as bumpsParameter
 from bumps.fitters import fit as bumps_fit, FIT_AVAILABLE_IDS
