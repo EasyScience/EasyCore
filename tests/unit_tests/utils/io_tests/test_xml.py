@@ -1,6 +1,7 @@
 __author__ = "github.com/wardsimon"
 __version__ = "0.0.1"
 
+import sys
 import xml.etree.ElementTree as ET
 from copy import deepcopy
 from typing import Type
@@ -116,3 +117,29 @@ def test_variable_XMLDictSerializer_decode(dp_kwargs: dict, dp_cls: Type[Descrip
             assert getattr(obj, k) == getattr(dec, k)
         else:
             raise AttributeError(f"{k} not found in decoded object")
+
+
+def test_slow_encode():
+
+    if sys.version_info < (3, 9):
+        pytest.skip("This test is only for python 3.9+")
+
+    a = {"a": [1, 2, 3]}
+    slow_xml = XMLSerializer().encode(a, fast=False)
+    reference = """<data>
+  <a>1</a>
+  <a>2</a>
+  <a>3</a>
+</data>"""
+    assert slow_xml == reference
+
+
+def test_include_header():
+
+    if sys.version_info < (3, 9):
+        pytest.skip("This test is only for python 3.9+")
+
+    a = {"a": [1, 2, 3]}
+    header_xml = XMLSerializer().encode(a, use_header=True)
+    reference = '?xml version="1.0"  encoding="UTF-8"?\n<data>\n  <a>1</a>\n  <a>2</a>\n  <a>3</a>\n</data>'
+    assert header_xml == reference
