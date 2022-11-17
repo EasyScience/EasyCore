@@ -10,7 +10,6 @@ from abc import ABCMeta, abstractmethod
 from typing import Union, Callable, List, Optional
 
 from easyCore import np
-from easyCore.Utils.typing import noneType
 
 
 class FittingTemplate(metaclass=ABCMeta):
