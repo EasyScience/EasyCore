@@ -9,7 +9,7 @@ import pytest
 
 from typing import List, Tuple
 from easyCore.Fitting.Constraints import NumericConstraint, ObjConstraint, SelfConstraint
-from easyCore.Objects.Base import Parameter
+from easyCore.Objects.Variable import Parameter
 
 
 @pytest.fixture
@@ -91,3 +91,25 @@ def test_ObjConstraint_Multiple(threePars):
     assert p0.raw_value == value
     assert p1.raw_value == value
     assert p2.raw_value == value
+
+def test_ConstraintEnable_Disable(twoPars):
+
+    assert twoPars[0][0].enabled
+    assert twoPars[0][1].enabled
+
+    c = ObjConstraint(twoPars[0][0], '', twoPars[0][1])
+    twoPars[0][0].user_constraints['num_1'] = c
+
+    assert c.enabled
+    assert twoPars[0][1].enabled
+    assert not twoPars[0][0].enabled
+
+    c.enabled = False
+    assert not c.enabled
+    assert twoPars[0][1].enabled
+    assert twoPars[0][0].enabled
+
+    c.enabled = True
+    assert c.enabled
+    assert twoPars[0][1].enabled
+    assert not twoPars[0][0].enabled

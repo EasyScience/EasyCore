@@ -8,15 +8,25 @@ __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
 from numbers import Number
-from typing import Union, Type, Optional, TYPE_CHECKING
+from typing import (
+    Union,
+    TypeVar,
+    Optional,
+    TYPE_CHECKING,
+    Callable,
+    List,
+    Dict,
+    Any,
+    Tuple,
+)
 
 from easyCore import borg
-from easyCore.Objects.Base import BasedBase, Descriptor
+from easyCore.Objects.ObjectClasses import BasedBase, Descriptor
 from collections.abc import MutableSequence
 from easyCore.Utils.UndoRedo import NotarizedDict
 
 if TYPE_CHECKING:
-    from easyCore.Objects.Inferface import InterfaceFactoryTemplate as Interface
+    from easyCore.Utils.typing import B, iF, V
 
 
 class BaseCollection(BasedBase, MutableSequence):
@@ -30,8 +40,8 @@ class BaseCollection(BasedBase, MutableSequence):
     def __init__(
         self,
         name: str,
-        *args: Union[Descriptor, BasedBase],
-        interface: Optional[Interface] = None,
+        *args: Union[B, V],
+        interface: Optional[iF] = None,
         **kwargs,
     ):
         """
@@ -45,13 +55,25 @@ class BaseCollection(BasedBase, MutableSequence):
         """
         BasedBase.__init__(self, name)
         kwargs = {key: kwargs[key] for key in kwargs.keys() if kwargs[key] is not None}
-
-        for item in [*kwargs.values(), *args]:
+        _args = []
+        for item in args:
+            if not isinstance(item, list):
+                _args.append(item)
+            else:
+                _args += item
+        _kwargs = {}
+        for key, item in kwargs.items():
+            if isinstance(item, list) and len(item) > 0:
+                _args += item
+            else:
+                _kwargs[key] = item
+        kwargs = _kwargs
+        for item in list(kwargs.values()) + _args:
             if not issubclass(type(item), (Descriptor, BasedBase)):
                 raise AttributeError(
                     "A collection can only be formed from easyCore objects."
                 )
-
+        args = _args
         _kwargs = {}
         for key, item in kwargs.items():
             _kwargs[key] = item
@@ -69,12 +91,14 @@ class BaseCollection(BasedBase, MutableSequence):
                 )
             self._borg.map.add_edge(self, kwargs[key])
             self._borg.map.reset_type(kwargs[key], "created_internal")
-            kwargs[key].interface = interface
+            if interface is not None:
+                kwargs[key].interface = interface
             # TODO wrap getter and setter in Logger
-        self.interface = interface
+        if interface is not None:
+            self.interface = interface
         self._kwargs._stack_enabled = True
 
-    def insert(self, index: int, value: Union[Descriptor, BasedBase]) -> None:
+    def insert(self, index: int, value: Union[V, B]) -> None:
         """
         Insert an object into the collection at an index.
 
@@ -103,7 +127,7 @@ class BaseCollection(BasedBase, MutableSequence):
                 "Only easyCore objects can be put into an easyCore group"
             )
 
-    def __getitem__(self, idx: Union[int, slice]) -> Union[Descriptor, BasedBase]:
+    def __getitem__(self, idx: Union[int, slice]) -> Union[V, B]:
         """
         Get an item in the collection based on it's index.
 
@@ -141,7 +165,7 @@ class BaseCollection(BasedBase, MutableSequence):
         keys = list(self._kwargs.keys())
         return self._kwargs[keys[idx]]
 
-    def __setitem__(self, key: int, value: Union[Descriptor, BasedBase]):
+    def __setitem__(self, key: int, value: Union[B, V]) -> None:
         """
         Set an item via it's index.
 
@@ -171,7 +195,7 @@ class BaseCollection(BasedBase, MutableSequence):
                 "At the moment only numerical values or easyCore objects can be set."
             )
 
-    def __delitem__(self, key: int):
+    def __delitem__(self, key: int) -> None:
         """
         Try to delete  an idem by key.
 
@@ -194,51 +218,54 @@ class BaseCollection(BasedBase, MutableSequence):
         """
         return len(self._kwargs.keys())
 
-    def as_dict(self, skip: list = None) -> dict:
+    def _convert_to_dict(
+        self, in_dict, encoder, skip: List[str] = [], **kwargs
+    ) -> dict:
         """
         Convert ones self into a serialized form.
 
         :return: dictionary of ones self
         :rtype: dict
         """
-        d = super(BaseCollection, self).as_dict(skip=skip)
-        data = []
-        dd = {}
-        for key in d.keys():
-            if key == "@id":
-                continue
-            if isinstance(d[key], dict):
-                data.append(d[key])
-            else:
-                dd[key] = d[key]
-        dd["data"] = data
-        # Attach the id. This might be useful in connected applications.
-        # Note that it is converted to int and then str because javascript....
-        dd["@id"] = d["@id"]
-        return dd
+        in_dict["data"] = [
+            encoder._convert_to_dict(item, skip=skip, **kwargs) for item in self
+        ]
+        return in_dict
+        # data = []
+        # dd = {}
+        # for key in d.keys():
+        #     if key == "@id":
+        #         continue
+        #     if isinstance(d[key], dict):
+        #         data.append(d[key])
+        #     else:
+        #         dd[key] = d[key]
+        # dd["data"] = data
+        # # Attach the id. This might be useful in connected applications.
+        # # Note that it is converted to int and then str because javascript....
+        # dd["@id"] = d["@id"]
+        # return dd
 
     @property
-    def data(self) -> tuple:
+    def data(self) -> Tuple:
         return tuple(self._kwargs.values())
-
-    @classmethod
-    def from_dict(cls, input_dict: dict):
-        """
-        De-serialise the data and try to recreate the object.
-
-        :param input_dict: serialised dictionary of an object. Usually generated from `obj.as_dict()`
-        :type input_dict: dict
-        :return: Class constructed from the input_dict
-        """
-
-        d = input_dict.copy()
-        if len(d["data"]) > 0:
-            for idx, item in enumerate(d["data"]):
-                d[item["@id"]] = item
-        del d["data"]
-        return super(BaseCollection, cls).from_dict(d)
 
     def __repr__(self) -> str:
         return (
             f"{self.__class__.__name__} `{getattr(self, 'name')}` of length {len(self)}"
         )
+
+    def sort(
+        self, mapping: Callable[[Union[B, V]], Any], reverse: bool = False
+    ) -> None:
+        """
+        Sort the collection according to the given mapping.
+
+        :param mapping: mapping function to sort the collection. i.e. lambda parameter: parameter.raw_value
+        :type mapping: Callable
+        :param reverse: Reverse the sorting.
+        :type reverse: bool
+        """
+        i = list(self._kwargs.items())
+        i.sort(key=lambda x: mapping(x[1]), reverse=reverse)
+        self._kwargs.reorder(**{k[0]: k[1] for k in i})

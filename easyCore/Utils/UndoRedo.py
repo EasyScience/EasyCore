@@ -2,14 +2,15 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
-__author__ = 'github.com/wardsimon'
-__version__ = '0.1.0'
+__author__ = "github.com/wardsimon"
+__version__ = "0.1.0"
 
 import abc
+import functools
 from collections import deque, UserDict
-from typing import Union, Any, NoReturn, Callable, TypeVar
+from typing import Union, Any, NoReturn, Callable, TypeVar, Iterable
 
-from easyCore import borg
+from easyCore import borg, np
 
 
 class UndoCommand(metaclass=abc.ABCMeta):
@@ -42,19 +43,20 @@ class UndoCommand(metaclass=abc.ABCMeta):
         self._text = text
 
 
-T_ = TypeVar('T_', bound=UndoCommand)
+T_ = TypeVar("T_", bound=UndoCommand)
 
 
 def dict_stack_deco(func: Callable) -> Callable:
     def inner(obj, *args, **kwargs):
         # Only do the work to a NotarizedDict.
-        if hasattr(obj, '_stack_enabled') and obj._stack_enabled:
+        if hasattr(obj, "_stack_enabled") and obj._stack_enabled:
             if not kwargs:
                 borg.stack.push(DictStack(obj, *args))
             else:
                 borg.stack.push(DictStackReCreate(obj, **kwargs))
         else:
             func(obj, *args, **kwargs)
+
     return inner
 
 
@@ -126,7 +128,7 @@ class CommandHolder:
 
     @property
     def text(self) -> str:
-        text = ''
+        text = ""
         if self._commands:
             text = self._commands[-1].text
         if self._text is not None:
@@ -196,7 +198,7 @@ class UndoStack:
 
     def pop(self) -> T_:
         """
-        !! WARNING - TO BE USED WITH EMINENCE CAUTION !!
+        !! WARNING - TO BE USED WITH EXTREME CAUTION !!
         !! THIS IS PROBABLY NOT THE FN YOU'RE LOOKING FOR, IT CAN BREAK A LOT OF STUFF !!
         Sometimes you really don't want the last command. Remove it from the stack
 
@@ -262,7 +264,7 @@ class UndoStack:
         Start a bulk update i.e. multiple commands under one undo/redo command
         """
         if self._macro_running:
-            raise AssertionError
+            raise AssertionError("Cannot start a macro when one is already running")
         com = CommandHolder(text)
         self.history.appendleft(com)
         self._macro_running = True
@@ -272,7 +274,7 @@ class UndoStack:
         End a bulk update i.e. multiple commands under one undo/redo command
         """
         if not self._macro_running:
-            raise AssertionError
+            raise AssertionError("Cannot end a macro when one is not running")
         self._macro_running = False
 
     def canUndo(self) -> bool:
@@ -291,7 +293,7 @@ class UndoStack:
         """
         Text associated with a redo item.
         """
-        text = ''
+        text = ""
         if self.canRedo():
             text = self.future[0].text
         return text
@@ -300,7 +302,7 @@ class UndoStack:
         """
         Text associated with a undo item.
         """
-        text = ''
+        text = ""
         if self.canUndo():
             text = self.history[0].text
         return text
@@ -311,14 +313,16 @@ class PropertyStack(UndoCommand):
     Stack operator for when a property setter is wrapped.
     """
 
-    def __init__(self, parent, func: Callable, old_value: Any, new_value: Any, text: str = None):
+    def __init__(
+        self, parent, func: Callable, old_value: Any, new_value: Any, text: str = None
+    ):
         # self.setText("Setting {} to {}".format(func.__name__, new_value))
         super().__init__(self)
         self._parent = parent
         self._old_value = old_value
         self._new_value = new_value
         self._set_func = func
-        self.text = f'{parent} value changed from {old_value} to {new_value}'
+        self.text = f"{parent} value changed from {old_value} to {new_value}"
         if text is not None:
             self.text = text
 
@@ -330,12 +334,14 @@ class PropertyStack(UndoCommand):
 
 
 class FunctionStack(UndoCommand):
-    def __init__(self, parent, set_func: Callable, unset_func: Callable, text: str = None):
+    def __init__(
+        self, parent, set_func: Callable, unset_func: Callable, text: str = None
+    ):
         super().__init__(self)
         self._parent = parent
         self._old_fn = set_func
         self._new_fn = unset_func
-        self.text = f'{parent} called {set_func}'
+        self.text = f"{parent} called {set_func}"
         if text is not None:
             self.text = text
 
@@ -347,7 +353,6 @@ class FunctionStack(UndoCommand):
 
 
 class DictStack(UndoCommand):
-
     def __init__(self, in_dict: NotarizedDict, *args):
         super().__init__(self)
         self._parent = in_dict
@@ -359,7 +364,7 @@ class DictStack(UndoCommand):
         self._index = None
         self._old_value = None
         self._new_value = None
-        self.text = ''
+        self.text = ""
 
         if len(args) == 1:
             # We are deleting
@@ -367,7 +372,7 @@ class DictStack(UndoCommand):
             self._index = list(self._parent.keys()).index(args[0])
             self._old_value = self._parent[args[0]]
             self._key = args[0]
-            self.text = f'Deleting {args[0]} from {self._parent}'
+            self.text = f"Deleting {args[0]} from {self._parent}"
         elif len(args) == 2:
             # We are either creating or setting
             self._key = args[0]
@@ -375,10 +380,12 @@ class DictStack(UndoCommand):
             if self._key in self._parent.keys():
                 # We are modifying
                 self._old_value = self._parent[self._key]
-                self.text = f'Setting {self._parent}[{self._key}] from {self._old_value} to {self._new_value}'
+                self.text = f"Setting {self._parent}[{self._key}] from {self._old_value} to {self._new_value}"
             else:
                 self._creation = True
-                self.text = f'Creating {self._parent}[{self._key}] with value {self._new_value}'
+                self.text = (
+                    f"Creating {self._parent}[{self._key}] with value {self._new_value}"
+                )
         else:
             raise ValueError
 
@@ -407,13 +414,12 @@ class DictStack(UndoCommand):
 
 
 class DictStackReCreate(UndoCommand):
-
     def __init__(self, in_dict: NotarizedDict, **kwargs):
         super().__init__(self)
         self._parent = in_dict
         self._old_value = in_dict.data.copy()
         self._new_value = kwargs
-        self.text = 'Updating dictionary'
+        self.text = "Updating dictionary"
 
     def undo(self) -> NoReturn:
         self._parent.data = self._old_value
@@ -422,7 +428,9 @@ class DictStackReCreate(UndoCommand):
         self._parent.data = self._new_value
 
 
-def property_stack_deco(arg: Union[str, Callable], begin_macro=False) -> Callable:
+def property_stack_deco(
+    arg: Union[str, Callable], begin_macro: bool = False
+) -> Callable:
     """
     Decorate a `property` setter with undo/redo functionality
     This decorator can be used as:
@@ -449,45 +457,39 @@ def property_stack_deco(arg: Union[str, Callable], begin_macro=False) -> Callabl
     An example would be `Function {name}: Set from {old_value} to {new_value}`
 
     """
-    if isinstance(arg, Callable):
-        func = arg
-        name = func.__name__
 
+    def make_wrapper(func: Callable, name: str, **kwargs) -> Callable:
         def wrapper(obj, *args) -> NoReturn:
             old_value = getattr(obj, name)
             new_value = args[0]
-
-            if new_value == old_value:
+            if issubclass(type(old_value), Iterable) or issubclass(
+                type(new_value), Iterable
+            ):
+                ret = np.all(old_value == new_value)
+            else:
+                ret = old_value == new_value
+            if ret:
                 return
 
             if borg.debug:
                 print(f"I'm {obj} and have been set from {old_value} to {new_value}!")
 
-            borg.stack.push(PropertyStack(obj, func, old_value, new_value))
+            borg.stack.push(PropertyStack(obj, func, old_value, new_value, **kwargs))
 
-        setattr(wrapper, 'func', func)
+        return functools.update_wrapper(wrapper, func)
+
+    if isinstance(arg, Callable):
+        func = arg
+        name = func.__name__
+        wrapper = make_wrapper(func, name)
+        setattr(wrapper, "func", func)
     else:
         txt = arg
 
         def wrapper(func: Callable) -> Callable:
-
             name = func.__name__
-
-            def inner_wrapper(obj, *args) -> NoReturn:
-
-                if begin_macro:
-                    borg.stack.beginMacro(txt)
-
-                old_value = getattr(obj, name)
-                new_value = args[0]
-
-                if new_value == old_value:
-                    return
-
-                if borg.debug:
-                    print(f"I'm {obj} and have been set from {old_value} to {new_value}!")
-                borg.stack.push(PropertyStack(obj, func, old_value, new_value, text=txt.format(**locals())))
-
-            setattr(inner_wrapper, 'func', func)
+            inner_wrapper = make_wrapper(func, name, text=txt.format(**locals()))
+            setattr(inner_wrapper, "func", func)
             return inner_wrapper
+
     return wrapper

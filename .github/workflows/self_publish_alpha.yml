@@ -10,17 +10,18 @@ jobs:
     if: "!contains(github.event.head_commit.message, '[ci skip]')"
     steps:
     - name: Check-out repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@v4
       name: Setup Python
       with:
-        python-version: 3.8
+        python-version: 3.9
 
     - uses: Gr1N/setup-poetry@v7
+      with:
+        poetry-version: 1.1.13
     - name: Install and build
       run: |
-        poetry version prerelease
         poetry build
 
     - name: Set name variable
@@ -49,7 +50,7 @@ jobs:
         python resources/scripts/generate_html.py ${{ env.REPOSITORY_NAME }}
 
     - name: Checkout target repo
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       env:
         REPO: easyScience/pypi
         REPO_PATH: pypi

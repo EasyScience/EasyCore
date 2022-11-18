@@ -2,11 +2,17 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
-__author__ = 'github.com/wardsimon'
-__version__ = '0.1.0'
+__author__ = "github.com/wardsimon"
+__version__ = "0.1.0"
 
-from easyCore import np
-from typing import Union, List
+# Template interface
+from easyCore.Objects.Inferface import iF
 
-noneType = type(None)
-Vector3Like = Union[List[float], np.ndarray]
+# Template Constraint
+from easyCore.Fitting.Constraints import C
+
+# Variable such as Descriptor, Parameter
+from easyCore.Objects.Variable import V
+
+# Base object from BaseObj (B) a BaseObject OR Variable (BV)
+from easyCore.Objects.ObjectClasses import B, BV

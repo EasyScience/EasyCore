@@ -8,6 +8,7 @@ __version__ = "0.1.0"
 #  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
 import numbers
+from inspect import getfullargspec
 
 from typing import (
     List,
@@ -15,40 +16,49 @@ from typing import (
     Iterable,
     Dict,
     Optional,
-    Type,
+    TypeVar,
     TYPE_CHECKING,
+    Callable,
+    Set,
 )
 
 from easyCore import borg
-from easyCore.Utils.json import MSONable
+from .core import ComponentSerializer
 from easyCore.Utils.classTools import addLoggedProp
 from .Variable import Parameter, Descriptor
 
 if TYPE_CHECKING:
-    from easyCore.Fitting.Constraints import ConstraintBase as Constraint
-    from easyCore.Objects.Inferface import InterfaceFactoryTemplate as Interface
+    from easyCore.Utils.typing import C, V, iF
 
 
-class BasedBase(MSONable):
+class BasedBase(ComponentSerializer):
     __slots__ = ["_name", "_borg", "user_data", "_kwargs"]
 
-    def __init__(
-        self, name: str, interface: Optional[Union[Type[Interface, None]]] = None
-    ):
+    _REDIRECT = {}
+
+    def __init__(self, name: str, interface: Optional[iF] = None):
         self._borg = borg
         self._borg.map.add_vertex(self, obj_type="created")
         self.interface = interface
         self.user_data: dict = {}
         self._name: str = name
 
+    @property
+    def _arg_spec(self) -> Set[str]:
+        base_cls = getattr(self, "__old_class__", self.__class__)
+        spec = getfullargspec(base_cls.__init__)
+        names = set(spec.args[1:])
+        return names
+
     def __reduce__(self):
         """
-        Make the class picklable. Due to the nature of the dynamic class definitions special measures need to be taken.
+        Make the class picklable.
+        Due to the nature of the dynamic class definitions special measures need to be taken.
 
         :return: Tuple consisting of how to make the object
         :rtype: tuple
         """
-        state = self.as_dict()
+        state = self.encode()
         cls = getattr(self, "__old_class__", self.__class__)
         return cls.from_dict, (state,)
 
@@ -72,16 +82,16 @@ class BasedBase(MSONable):
         self._name = new_name
 
     @property
-    def interface(self) -> Type[Interface]:
+    def interface(self) -> iF:
         """
         Get the current interface of the object
         """
         return self._interface
 
     @interface.setter
-    def interface(self, value: Type[Interface]):
+    def interface(self, new_interface: iF):
         """
-        Set the current interface to the object and generate bindings if possible. I.e.
+        Set the current interface to the object and generate bindings if possible. iF.e.
         ```
         def __init__(self, bar, interface=None, **kwargs):
             super().__init__(self, **kwargs)
@@ -89,8 +99,8 @@ class BasedBase(MSONable):
             self.interface = interface # As final step after initialization to set correct bindings.
         ```
         """
-        self._interface = value
-        if value is not None:
+        self._interface = new_interface
+        if new_interface is not None:
             self.generate_bindings()
 
     def generate_bindings(self):
@@ -125,33 +135,14 @@ class BasedBase(MSONable):
         self.generate_bindings()
 
     @property
-    def constraints(self) -> List[Type[Constraint]]:
+    def constraints(self) -> List[C]:
         pars = self.get_parameters()
         constraints = []
         for par in pars:
-            con: Dict[str, Type[Constraint]] = par.user_constraints
+            con: Dict[str, C] = par.user_constraints
             for key in con.keys():
                 constraints.append(con[key])
         return constraints
-
-    def as_dict(
-        self, skip: Optional[List[str]] = None
-    ) -> Dict[str, Union[str, bool, numbers.Number]]:
-        """
-        Convert ones self into a serialized form.
-
-        :return: dictionary of ones self
-        """
-        if skip is None:
-            skip = []
-        d = MSONable.as_dict(self, skip=skip)
-        for key, item in d.items():
-            if hasattr(item, "as_dict"):
-                d[key] = item.as_dict(skip=skip)
-        # Attach the id. This might be useful in connected applications.
-        # Note that it is converted to int and then str because javascript....
-        d["@id"] = str(self._borg.map.convert_id(self).int)
-        return d
 
     def get_parameters(self) -> List[Parameter]:
         """
@@ -167,7 +158,7 @@ class BasedBase(MSONable):
                 par_list.append(item)
         return par_list
 
-    def _get_linkable_attributes(self) -> List[Union[Descriptor, Parameter]]:
+    def _get_linkable_attributes(self) -> List[V]:
         """
         Get all objects which can be linked against as a list.
 
@@ -205,6 +196,11 @@ class BasedBase(MSONable):
         return sorted(new_class_objs)
 
 
+if TYPE_CHECKING:
+    B = TypeVar("B", bound=BasedBase)
+    BV = TypeVar("BV", bound=ComponentSerializer)
+
+
 class BaseObj(BasedBase):
     """
     This is the base class for which all higher level classes are built off of.
@@ -216,8 +212,8 @@ class BaseObj(BasedBase):
     def __init__(
         self,
         name: str,
-        *args: Optional[Union[Type[Descriptor], Type[BasedBase]]],
-        **kwargs: Optional[Union[Type[Descriptor], Type[BasedBase]]],
+        *args: Optional[BV],
+        **kwargs: Optional[BV],
     ):
         """
         Set up the base class.
@@ -252,9 +248,7 @@ class BaseObj(BasedBase):
                 test_class=BaseObj,
             )
 
-    def _add_component(
-        self, key: str, component: Union[Type[Descriptor], Type[BasedBase]]
-    ):
+    def _add_component(self, key: str, component: BV) -> None:
         """
         Dynamically add a component to the class. This is an internal method, though can be called remotely.
         The recommended alternative is to use typing, i.e.
@@ -288,38 +282,50 @@ class BaseObj(BasedBase):
             test_class=BaseObj,
         )
 
-    def __setattr__(self, key: str, value):
+    def __setattr__(self, key: str, value: BV) -> None:
         # Assume that the annotation is a ClassVar
+        old_obj = None
         if (
             hasattr(self.__class__, "__annotations__")
             and key in self.__class__.__annotations__
+            and hasattr(self.__class__.__annotations__[key], "__args__")
             and issubclass(
                 getattr(value, "__old_class__", value.__class__),
                 self.__class__.__annotations__[key].__args__,
             )
         ):
+            if issubclass(type(getattr(self, key, None)), (BasedBase, Descriptor)):
+                old_obj = self.__getattribute__(key)
+                self._borg.map.prune_vertex_from_edge(self, old_obj)
             self._add_component(key, value)
-            return
-        if hasattr(self, key) and issubclass(type(value), (BasedBase, Descriptor)):
-            old_obj = self.__getattribute__(key)
-            self._borg.map.prune_vertex_from_edge(self, old_obj)
-            self._borg.map.add_edge(self, value)
+        else:
+            if hasattr(self, key) and issubclass(type(value), (BasedBase, Descriptor)):
+                old_obj = self.__getattribute__(key)
+                self._borg.map.prune_vertex_from_edge(self, old_obj)
+                self._borg.map.add_edge(self, value)
         super(BaseObj, self).__setattr__(key, value)
+        # Update the interface bindings if something changed (BasedBase and Descriptor)
+        if old_obj is not None:
+            old_interface = getattr(self, "interface", None)
+            if old_interface is not None:
+                self.generate_bindings()
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__} `{getattr(self, 'name')}`"
 
     @staticmethod
-    def __getter(key: str):
-        def getter(obj: Union[Type[Descriptor], Type[BasedBase]]):
+    def __getter(key: str) -> Callable[[BV], BV]:
+        def getter(obj: BV) -> BV:
             return obj._kwargs[key]
 
         return getter
 
     @staticmethod
-    def __setter(key: str):
-        def setter(obj: Union[Type[Descriptor], Type[BasedBase]], value: float):
-            if issubclass(obj._kwargs[key].__class__, Descriptor):
+    def __setter(key: str) -> Callable[[BV], None]:
+        def setter(obj: BV, value: float) -> None:
+            if issubclass(obj._kwargs[key].__class__, Descriptor) and not issubclass(
+                value.__class__, Descriptor
+            ):
                 obj._kwargs[key].value = value
             else:
                 obj._kwargs[key] = value

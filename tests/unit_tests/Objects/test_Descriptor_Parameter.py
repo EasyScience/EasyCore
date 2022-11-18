@@ -178,27 +178,27 @@ def test_item_unit_set(instance):
 def test_item_convert_unit(instance):
     d = instance("test", 273, units="kelvin")
     d.convert_unit("degree_Celsius")
-    assert pytest.approx(d.raw_value, -0.149)
+    assert -0.15 == pytest.approx(d.raw_value)
 
 
 @pytest.mark.parametrize(
     "conv_unit, data_in, result",
     [
-        ("degree_Celsius", {"min": 0}, {"min": -273.149, "raw_value": -0.149}),
-        ("degree_Celsius", {"max": 500}, {"max": 773.149, "raw_value": -0.149}),
-        ("degree_Celsius", {"error": 0.1}, {"error": 0.1, "raw_value": -0.149}),
+        ("degree_Celsius", {"min": 0}, {"min": -273.150, "raw_value": -0.150}),
+        ("degree_Celsius", {"max": 500}, {"max": 226.85, "raw_value": -0.150}),
+        ("degree_Celsius", {"error": 0.1}, {"error": 0.1, "raw_value": -0.150}),
         (
             "degree_Celsius",
             {"min": 0, "max": 500, "error": 0.1},
-            {"min": -273.149, "max": 773.149, "error": 0.1, "raw_value": -0.149},
+            {"min": -273.150, "max": 226.85, "error": 0.1, "raw_value": -0.150},
         ),
-        ("degree_Fahrenheit", {"min": 0}, {"min": -459.67, "raw_value": 31.729}),
-        ("degree_Fahrenheit", {"max": 500}, {"max": 440.33, "raw_value": 31.729}),
-        ("degree_Fahrenheit", {"error": 0.1}, {"error": 0.18, "raw_value": 31.729}),
+        ("degree_Fahrenheit", {"min": 0}, {"min": -459.67, "raw_value": 31.730}),
+        ("degree_Fahrenheit", {"max": 500}, {"max": 440.33, "raw_value": 31.730}),
+        ("degree_Fahrenheit", {"error": 0.1}, {"error": 0.18, "raw_value": 31.730}),
         (
             "degree_Fahrenheit",
             {"min": 0, "max": 500, "error": 0.1},
-            {"min": -459.67, "max": 440.33, "error": 0.18, "raw_value": 31.729},
+            {"min": -459.67, "max": 440.33, "error": 0.18, "raw_value": 31.730},
         ),
     ],
     ids=[
@@ -216,7 +216,7 @@ def test_parameter_advanced_convert_unit(conv_unit: str, data_in: dict, result: 
     d = Parameter("test", 273, units="kelvin", **data_in)
     d.convert_unit(conv_unit)
     for key in result.keys():
-        assert pytest.approx(getattr(d, key), result[key])
+        assert result[key] == pytest.approx(getattr(d, key))
 
 
 @pytest.mark.parametrize("instance", (Descriptor, Parameter), indirect=True)
@@ -266,8 +266,8 @@ def test_descriptor_as_dict():
     d = Descriptor("test", 1)
     result = d.as_dict()
     expected = {
-        "@module": "easyCore.Objects.Variable",
-        "@class": "Descriptor",
+        "@module": Descriptor.__module__,
+        "@class": Descriptor.__name__,
         "@version": easyCore.__version__,
         "name": "test",
         "value": 1,
@@ -287,8 +287,8 @@ def test_parameter_as_dict():
     d = Parameter("test", 1)
     result = d.as_dict()
     expected = {
-        "@module": "easyCore.Objects.Variable",
-        "@class": "Parameter",
+        "@module": Parameter.__module__,
+        "@class": Parameter.__name__,
         "@version": easyCore.__version__,
         "name": "test",
         "value": 1.0,
@@ -307,8 +307,8 @@ def test_parameter_as_dict():
     d = Parameter("test", 1, units="km", url="https://www.boo.com")
     result = d.as_dict()
     expected = {
-        "@module": "easyCore.Objects.Variable",
-        "@class": "Parameter",
+        "@module": Parameter.__module__,
+        "@class": Parameter.__name__,
         "@version": easyCore.__version__,
         "name": "test",
         "units": "kilometer",
@@ -330,8 +330,8 @@ def test_parameter_as_dict():
     (
         [
             {
-                "@module": "easyCore.Objects.Variable",
-                "@class": "Descriptor",
+                "@module": Descriptor.__module__,
+                "@class": Descriptor.__name__,
                 "@version": easyCore.__version__,
                 "name": "test",
                 "value": 1,
@@ -345,8 +345,8 @@ def test_parameter_as_dict():
         ],
         [
             {
-                "@module": "easyCore.Objects.Variable",
-                "@class": "Parameter",
+                "@module": Parameter.__module__,
+                "@class": Parameter.__name__,
                 "@version": easyCore.__version__,
                 "name": "test",
                 "units": "kilometer",
@@ -381,8 +381,8 @@ def test_item_from_dict(reference, constructor):
     "construct",
     (
         {
-            "@module": "easyCore.Objects.Variable",
-            "@class": "Descriptor",
+            "@module": Descriptor.__module__,
+            "@class": Descriptor.__name__,
             "@version": easyCore.__version__,
             "name": "test",
             "value": 1,
@@ -393,8 +393,8 @@ def test_item_from_dict(reference, constructor):
             "callback": None,
         },
         {
-            "@module": "easyCore.Objects.Variable",
-            "@class": "Parameter",
+            "@module": Parameter.__module__,
+            "@class": Parameter.__name__,
             "@version": easyCore.__version__,
             "name": "test",
             "units": "kilometer",
@@ -408,10 +408,10 @@ def test_item_from_dict(reference, constructor):
     ),
     ids=["Descriptor", "Parameter"],
 )
-def test_item_from_MontyDecoder(construct):
-    from easyCore.Utils.json import MontyDecoder
+def test_item_from_Decoder(construct):
+    from easyCore.Utils.io.dict import DictSerializer
 
-    d = MontyDecoder().process_decoded(construct)
+    d = DictSerializer().decode(construct)
     assert d.__class__.__name__ == construct["@class"]
     for key, item in construct.items():
         if key == "callback" or key.startswith("@"):

@@ -2,16 +2,20 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
+from __future__ import annotations
+
 __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
-from typing import List, Tuple
+from typing import List, Tuple, TYPE_CHECKING, TypeVar, Union
 
 from easyCore import borg
 from easyCore.Utils.Hugger.Property import LoggedProperty
 
+if TYPE_CHECKING:
+    from easyCore.Utils.typing import B, BV
 
-def addLoggedProp(inst, name, *args, **kwargs):
+def addLoggedProp(inst: BV, name: str, *args, **kwargs) -> None:
     cls = type(inst)
     annotations = getattr(cls, "__annotations__", False)
     if not hasattr(cls, "__perinstance"):
@@ -24,7 +28,7 @@ def addLoggedProp(inst, name, *args, **kwargs):
     setattr(cls, name, LoggedProperty(*args, **kwargs))
 
 
-def addProp(inst, name, *args, **kwargs):
+def addProp(inst: BV, name: str, *args, **kwargs) -> None:
     cls = type(inst)
     annotations = getattr(cls, "__annotations__", False)
     if not hasattr(cls, "__perinstance"):
@@ -38,7 +42,7 @@ def addProp(inst, name, *args, **kwargs):
     setattr(cls, name, property(*args, **kwargs))
 
 
-def removeProp(inst, name):
+def removeProp(inst: BV, name: str) ->None:
     cls = type(inst)
     if not hasattr(cls, "__perinstance"):
         cls = type(cls.__name__, (cls,), {"__module__": __name__})
@@ -48,7 +52,7 @@ def removeProp(inst, name):
     delattr(cls, name)
 
 
-def generatePath(model_obj, skip_first: bool = False) -> Tuple[List[int], List[str]]:
+def generatePath(model_obj: B, skip_first: bool = False) -> Tuple[List[int], List[str]]:
     pars = model_obj.get_parameters()
     start_idx = 0 + int(skip_first)
     ids = []

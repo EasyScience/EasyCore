@@ -8,12 +8,12 @@ __version__ = "0.1.0"
 import pytest
 import numpy as np
 
-from typing import List, Type, Union
+from typing import List, Type, Union, ClassVar, Optional
 from contextlib import contextmanager
 
 import easyCore
-from easyCore.Objects.Base import Descriptor, Parameter, BaseObj
-from easyCore.Utils.json import MontyDecoder
+from easyCore.Objects.ObjectClasses import Descriptor, Parameter, BaseObj
+from easyCore.Utils.io.dict import DictSerializer
 
 
 @pytest.fixture
@@ -85,8 +85,6 @@ def test_baseobj_get(setup_pars: dict):
 
 
 def test_baseobj_set(setup_pars: dict):
-    from copy import deepcopy
-
     name = setup_pars["name"]
     explicit_name1 = "par1"
     kwargs = {
@@ -127,8 +125,8 @@ def test_baseobj_as_dict(setup_pars: dict):
         "@version": easyCore.__version__,
         "name": "test",
         "par1": {
-            "@module": "easyCore.Objects.Variable",
-            "@class": "Parameter",
+            "@module": Parameter.__module__,
+            "@class": Parameter.__name__,
             "@version": easyCore.__version__,
             "name": "p1",
             "value": 0.1,
@@ -139,8 +137,8 @@ def test_baseobj_as_dict(setup_pars: dict):
             "units": "dimensionless",
         },
         "des1": {
-            "@module": "easyCore.Objects.Variable",
-            "@class": "Descriptor",
+            "@module": Descriptor.__module__,
+            "@class": Descriptor.__name__,
             "@version": easyCore.__version__,
             "name": "d1",
             "value": 0.1,
@@ -150,8 +148,8 @@ def test_baseobj_as_dict(setup_pars: dict):
             "display_name": "d1",
         },
         "par2": {
-            "@module": "easyCore.Objects.Variable",
-            "@class": "Parameter",
+            "@module": Parameter.__module__,
+            "@class": Parameter.__name__,
             "@version": easyCore.__version__,
             "name": "p2",
             "value": 0.1,
@@ -162,8 +160,8 @@ def test_baseobj_as_dict(setup_pars: dict):
             "units": "dimensionless",
         },
         "des2": {
-            "@module": "easyCore.Objects.Variable",
-            "@class": "Descriptor",
+            "@module": Descriptor.__module__,
+            "@class": Descriptor.__name__,
             "@version": easyCore.__version__,
             "name": "d2",
             "value": 0.1,
@@ -173,8 +171,8 @@ def test_baseobj_as_dict(setup_pars: dict):
             "display_name": "d2",
         },
         "par3": {
-            "@module": "easyCore.Objects.Variable",
-            "@class": "Parameter",
+            "@module": Parameter.__module__,
+            "@class": Parameter.__name__,
             "@version": easyCore.__version__,
             "name": "p3",
             "value": 0.1,
@@ -190,9 +188,11 @@ def test_baseobj_as_dict(setup_pars: dict):
         if isinstance(check, dict) and isinstance(item, dict):
             if "@module" in item.keys():
                 with not_raises([ValueError, AttributeError]):
-                    this_obj = MontyDecoder().process_decoded(item)
-            for this_check_key, this_item_key in zip(check.keys(), item.keys()):
-                check_dict(check[this_check_key], item[this_item_key])
+                    this_obj = DictSerializer().decode(item)
+
+            for key in check.keys():
+                assert key in item.keys()
+                check_dict(check[key], item[key])
         else:
             assert isinstance(item, type(check))
             assert item == check
@@ -205,7 +205,8 @@ def test_baseobj_dir(setup_pars):
     del setup_pars["name"]
     obj = BaseObj(name, **setup_pars)
     expected = [
-        "REDIRECT",
+        "encode",
+        "decode",
         "as_dict",
         "constraints",
         "des1",
@@ -220,16 +221,15 @@ def test_baseobj_dir(setup_pars):
         "par2",
         "par3",
         "switch_interface",
-        "to_data_dict",
-        "to_json",
+        "as_data_dict",
+        "as_dict",
         "unsafe_hash",
         "user_data",
     ]
     obtained = dir(obj)
     assert len(obtained) == len(expected)
     assert obtained == sorted(obtained)
-    for this_item, this_expect in zip(obtained, expected):
-        assert this_item == this_expect
+    assert len(set(expected).difference(set(obtained))) == 0
 
 
 def test_baseobj_get_parameters(setup_pars):
@@ -339,3 +339,133 @@ def test_subclassing():
     y = l2.m.raw_value * x + l2.c.raw_value + l2.diff.raw_value
 
     assert np.allclose(l2(x), y)
+
+
+def test_Base_GETSET():
+    class A(BaseObj):
+        def __init__(self, a: Parameter):
+            super(A, self).__init__("a", a=a)
+
+        @classmethod
+        def from_pars(cls, a: float):
+            return cls(a=Parameter("a", a))
+
+    a_start = 5
+    a_end = 10
+    a = A.from_pars(a_start)
+    graph = a._borg.map
+
+    assert a.a.raw_value == a_start
+    assert len(graph.get_edges(a)) == 1
+
+    setattr(a, "a", a_end)
+    assert a.a.raw_value == a_end
+    assert len(graph.get_edges(a)) == 1
+
+
+def test_Base_GETSET():
+    class A(BaseObj):
+        def __init__(self, a: Parameter):
+            super(A, self).__init__("a", a=a)
+            b = 0
+
+        @classmethod
+        def from_pars(cls, a: float):
+            return cls(a=Parameter("a", a))
+
+    a = A.from_pars(5)
+    b_new = 10
+    a.b = b_new
+    assert a.b == b_new
+
+
+def test_Base_GETSET_v2():
+    class A(BaseObj):
+
+        a: ClassVar[Parameter]
+
+        def __init__(self, a: Parameter):
+            super(A, self).__init__("a", a=a)
+
+        @classmethod
+        def from_pars(cls, a: float):
+            return cls(a=Parameter("a", a))
+
+    a_start = 5
+    a_end = 10
+    a = A.from_pars(a_start)
+    graph = a._borg.map
+
+    assert a.a.raw_value == a_start
+    assert len(graph.get_edges(a)) == 1
+
+    setattr(a, "a", a_end)
+    assert a.a.raw_value == a_end
+    assert len(graph.get_edges(a)) == 1
+
+
+def test_Base_GETSET_v3():
+    class A(BaseObj):
+
+        a: ClassVar[Parameter]
+
+        def __init__(self, a: Parameter):
+            super(A, self).__init__("a", a=a)
+
+        @classmethod
+        def from_pars(cls, a: float):
+            return cls(a=Parameter("a", a))
+
+    a_start = 5
+    a_end = 10
+    a = A.from_pars(a_start)
+    graph = a._borg.map
+
+    def get_key(obj):
+        return graph.convert_id_to_key(obj)
+
+    assert a.a.raw_value == a_start
+    assert len(graph.get_edges(a)) == 1
+    a_ = Parameter("a", a_end)
+    assert get_key(a.a) in graph.get_edges(a)
+    a__ = a.a
+
+    setattr(a, "a", a_)
+    assert a.a.raw_value == a_end
+    assert len(graph.get_edges(a)) == 1
+    assert get_key(a_) in graph.get_edges(a)
+    assert get_key(a__) not in graph.get_edges(a)
+
+
+def test_BaseCreation():
+    class A(BaseObj):
+        def __init__(self, a: Optional[Union[Parameter, float]] = None):
+            super(A, self).__init__("A", a=Parameter("a", 1.0))
+            if a is not None:
+                self.a = a
+
+    a = A()
+    assert a.a.raw_value == 1.0
+    a = A(2.0)
+    assert a.a.raw_value == 2.0
+    a = A(Parameter("a", 3.0))
+    assert a.a.raw_value == 3.0
+    a.a = 4.0
+    assert a.a.raw_value == 4.0
+
+    class B(BaseObj):
+        def __init__(self, b: Optional[Union[A, Parameter, float]] = None):
+            super(B, self).__init__("B", b=A())
+            if b is not None:
+                if isinstance(b, (float, Parameter)):
+                    b = A(b)
+                self.b = b
+
+    b = B()
+    assert b.b.a.raw_value == 1.0
+    b = B(2.0)
+    assert b.b.a.raw_value == 2.0
+    b = B(A(3.0))
+    assert b.b.a.raw_value == 3.0
+    b.b.a = 4.0
+    assert b.b.a.raw_value == 4.0

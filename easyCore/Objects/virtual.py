@@ -2,16 +2,21 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
+from __future__ import annotations
+
 __author__ = "github.com/wardsimon"
 __version__ = "0.0.1"
 
 import inspect
 import weakref
 from copy import deepcopy
-from typing import Iterable, MutableSequence
+from typing import Iterable, MutableSequence, TYPE_CHECKING, TypeVar
 
 from easyCore import borg
 from easyCore.Fitting.Constraints import ObjConstraint
+
+if TYPE_CHECKING:
+    from easyCore.Utils.typing import BV
 
 
 def raise_(ex):
@@ -28,33 +33,50 @@ def _remover(a_obj_id: str, v_obj_id: str):
         del a_obj._constraints["virtual"][v_obj_id]
 
 
-def realizer(obj):
+def realizer(obj: BV):
+    """
+    Convert component which is `Virtual` in a `Virtual` object into a `Real` component.
+
+    :param obj: Virtual object which has the property `component`
+    """
     if getattr(obj, "_is_virtual", False):
         klass = getattr(obj, "__non_virtual_class__")
         import easyCore.Objects.Variable as ec_var
+
         args = []
         if klass in ec_var.__dict__.values():  # is_variable check
-            kwargs = obj.to_data_dict()
+            kwargs = obj.encode_data()
             return klass(**kwargs)
         else:
             kwargs = {name: realizer(item) for name, item in obj._kwargs.items()}
             if isinstance(klass, Iterable) or issubclass(klass, MutableSequence):
                 for key, value in inspect.signature(klass).parameters.items():
-                    if value.kind in [inspect.Parameter.POSITIONAL_ONLY,
-                                      inspect.Parameter.POSITIONAL_OR_KEYWORD]:
+                    if value.kind in [
+                        inspect.Parameter.POSITIONAL_ONLY,
+                        inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                    ]:
                         args.append(getattr(obj, key))
             return klass(*args, **kwargs)
     else:
         return obj
 
 
-def component_realizer(obj, component, recursive=True):
+def component_realizer(obj: BV, component: str, recursive: bool = True):
+    """
+    Convert component which is `Virtual` in a `Virtual` object into a `Real` component.
+
+    :param obj: Virtual object which has the property `component`
+    :param component: The name of the component to be converted
+    :param recursive: Should we realize all sub-components of the component
+    """
+
     import easyCore.Objects.Variable as ec_var
+
     done_mapping = True
     if not isinstance(obj, Iterable) or not issubclass(obj.__class__, MutableSequence):
         old_component = obj._kwargs[component]
         new_components = realizer(obj._kwargs[component])
-        if hasattr(new_components,'enabled'):
+        if hasattr(new_components, "enabled"):
             new_components.enabled = True
     else:
         old_component = obj[component]
@@ -70,9 +92,14 @@ def component_realizer(obj, component, recursive=True):
             else:
                 value = key
                 key = value._borg.map.convert_id_to_key(value)
-            if getattr(value, '__old_class__', value.__class__) in ec_var.__dict__.values():
+            if (
+                getattr(value, "__old_class__", value.__class__)
+                in ec_var.__dict__.values()
+            ):
                 continue
-            component._borg.map.prune_vertex_from_edge(component, component._kwargs[key])
+            component._borg.map.prune_vertex_from_edge(
+                component, component._kwargs[key]
+            )
             component._borg.map.add_edge(component, old_component._kwargs[key])
             component._kwargs[key] = old_component._kwargs[key]
             done_mapping = False
@@ -80,10 +107,9 @@ def component_realizer(obj, component, recursive=True):
         obj._borg.map.prune_vertex_from_edge(obj, old_component)
         obj._borg.map.add_edge(obj, new_components)
         obj._kwargs[component] = new_components
-    return obj
 
 
-def virtualizer(obj):
+def virtualizer(obj: BV) -> BV:
     """
     Convert a real `easyCore` object to a virtual object.
     This means that the object returned is an exact copy which is unsettable, unchangeable
@@ -102,7 +128,9 @@ def virtualizer(obj):
         old_obj = obj._borg.map.get_item_by_key(obj._derived_from)
         constraint = ObjConstraint(new_obj, "", old_obj)
         constraint.external = True
-        old_obj._constraints["virtual"][str(obj._borg.map.convert_id(new_obj).int)] = constraint
+        old_obj._constraints["virtual"][
+            str(obj._borg.map.convert_id(new_obj).int)
+        ] = constraint
         new_obj._constraints["builtin"] = dict()
         # setattr(new_obj, "__previous_set", getattr(olobj, "__previous_set", None))
         weakref.finalize(
@@ -116,12 +144,12 @@ def virtualizer(obj):
     # The supplied class
     klass = getattr(obj, "__old_class__", obj.__class__)
     virtual_options = {
-        "_is_virtual":           True,
-        "is_virtual":            property(fget=lambda self: self._is_virtual),
-        "_derived_from":         property(fget=lambda self: self._borg.map.convert_id(obj).int),
+        "_is_virtual": True,
+        "is_virtual": property(fget=lambda self: self._is_virtual),
+        "_derived_from": property(fget=lambda self: self._borg.map.convert_id(obj).int),
         "__non_virtual_class__": klass,
-        "realize":               realizer,
-        "relalize_component":    component_realizer,
+        "realize": realizer,
+        "relalize_component": component_realizer,
     }
 
     import easyCore.Objects.Variable as ec_var
@@ -140,10 +168,10 @@ def virtualizer(obj):
     # If `obj` is a parameter or descriptor etc, then simple mods.
     if hasattr(obj, "_constructor"):
         # All Variables are based on the Descriptor.
-        d = obj.as_dict()
+        d = obj.encode_data()
         if hasattr(d, "fixed"):
             d["fixed"] = True
-        v_p = cls.from_dict(d)
+        v_p = cls(**d)
         v_p._enabled = False
         constraint = ObjConstraint(v_p, "", obj)
         constraint.external = True
@@ -161,8 +189,10 @@ def virtualizer(obj):
         kwargs = {name: virtualizer(item) for name, item in obj._kwargs.items()}
         if isinstance(klass, Iterable) or issubclass(klass, MutableSequence):
             for key, value in inspect.signature(cls).parameters.items():
-                if value.kind in [inspect.Parameter.POSITIONAL_ONLY,
-                                  inspect.Parameter.POSITIONAL_OR_KEYWORD]:
+                if value.kind in [
+                    inspect.Parameter.POSITIONAL_ONLY,
+                    inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                ]:
                     args.append(getattr(obj, key))
         v_p = cls(*args, **kwargs)
     return v_p
