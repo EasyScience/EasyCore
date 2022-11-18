@@ -16,7 +16,6 @@ from easyCore.Fitting.Constraints import ObjConstraint
 
 
 class AbsSin(BaseObj):
-
     phase: ClassVar[Parameter]
     offset: ClassVar[Parameter]
 
@@ -65,8 +64,9 @@ def test_basic_fit(genObjs):
     assert sp_sin.offset.raw_value == pytest.approx(ref_sin.offset.raw_value, rel=1e-3)
 
 
+@pytest.mark.parametrize("with_errors", [False, True])
 @pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "DFO_LS"])
-def test_basic_fit(genObjs, fit_engine):
+def test_basic_fit(genObjs, fit_engine, with_errors):
     ref_sin = genObjs[0]
     sp_sin = genObjs[1]
 
@@ -82,7 +82,11 @@ def test_basic_fit(genObjs, fit_engine):
             f.switch_engine(fit_engine)
         except AttributeError:
             pytest.skip(msg=f"{fit_engine} is not installed")
-    result = f.fit(x, y)
+    args = [x, y]
+    kwargs = {}
+    if with_errors:
+        kwargs["weights"] = 1 / np.sqrt(y)
+    result = f.fit(*args, **kwargs)
 
     if fit_engine is not None:
         assert result.fitting_engine.name == fit_engine
@@ -227,8 +231,9 @@ def test_fit_constraints(genObjs2, fit_engine):
 #     check_fit_results(result, sp_sin, ref_sin, x)
 
 
+@pytest.mark.parametrize("with_errors", [False, True])
 @pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "DFO_LS"])
-def test_multi_fit(genObjs, genObjs2, fit_engine):
+def test_multi_fit(genObjs, genObjs2, fit_engine, with_errors):
     ref_sin1 = genObjs[0]
     ref_sin2 = genObjs2[0]
 
@@ -260,7 +265,13 @@ def test_multi_fit(genObjs, genObjs2, fit_engine):
             f.switch_engine(fit_engine)
         except AttributeError:
             pytest.skip(msg=f"{fit_engine} is not installed")
-    results = f.fit([x1, x2], [y1, y2])
+
+    args = [[x1, x2], [y1, y2]]
+    kwargs = {}
+    if with_errors:
+        kwargs["weights"] = [1 / np.sqrt(y1), 1 / np.sqrt(y2)]
+
+    results = f.fit(*args, **kwargs)
     X = [x1, x2]
     Y = [y1, y2]
     F_ref = [ref_sin1, ref_sin2]
@@ -309,8 +320,9 @@ class AbsSin2DL(AbsSin2D):
         ) * np.abs(np.sin(self.phase.raw_value * Y + self.offset.raw_value))
 
 
+@pytest.mark.parametrize("with_errors", [False, True])
 @pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "DFO_LS"])
-def test_2D_vectorized(fit_engine):
+def test_2D_vectorized(fit_engine, with_errors):
     x = np.linspace(0, 5, 200)
     mm = AbsSin2D.from_pars(0.3, 1.6)
     m2 = AbsSin2D.from_pars(
@@ -325,7 +337,11 @@ def test_2D_vectorized(fit_engine):
         except AttributeError:
             pytest.skip(msg=f"{fit_engine} is not installed")
     try:
-        result = ff.fit(XY, mm(XY), vectorized=True)
+        args = [XY, mm(XY)]
+        kwargs = {"vectorized": True}
+        if with_errors:
+            kwargs["weights"] = 1 / np.sqrt(args[1])
+        result = ff.fit(*args, **kwargs)
     except FitError as e:
         if "Unable to allocate" in str(e):
             pytest.skip(msg="MemoryError - Matrix too large")
@@ -340,8 +356,9 @@ def test_2D_vectorized(fit_engine):
     assert result.residual == pytest.approx(mm(XY) - y_calc_ref, abs=1e-2)
 
 
+@pytest.mark.parametrize("with_errors", [False, True])
 @pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "DFO_LS"])
-def test_2D_non_vectorized(fit_engine):
+def test_2D_non_vectorized(fit_engine, with_errors):
     x = np.linspace(0, 5, 200)
     mm = AbsSin2DL.from_pars(0.3, 1.6)
     m2 = AbsSin2DL.from_pars(
@@ -356,7 +373,11 @@ def test_2D_non_vectorized(fit_engine):
         except AttributeError:
             pytest.skip(msg=f"{fit_engine} is not installed")
     try:
-        result = ff.fit(XY, mm(XY.reshape(-1, 2)))
+        args = [XY, mm(XY.reshape(-1, 2))]
+        kwargs = {"vectorized": False}
+        if with_errors:
+            kwargs["weights"] = 1 / np.sqrt(args[1])
+        result = ff.fit(*args, **kwargs)
     except FitError as e:
         if "Unable to allocate" in str(e):
             pytest.skip(msg="MemoryError - Matrix too large")
@@ -373,9 +394,9 @@ def test_2D_non_vectorized(fit_engine):
     )
 
 
+@pytest.mark.parametrize("with_errors", [False, True])
 @pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "DFO_LS"])
-def test_multi_fit_1D_2D(genObjs, fit_engine):
-
+def test_multi_fit_1D_2D(genObjs, fit_engine, with_errors):
     # Generate fit and reference objects
     ref_sin1D = genObjs[0]
     sp_sin1D = genObjs[1]
@@ -423,7 +444,11 @@ def test_multi_fit_1D_2D(genObjs, fit_engine):
         except AttributeError:
             pytest.skip(msg=f"{fit_engine} is not installed")
     try:
-        results = f.fit([x1D, x2D], [y1D, y2D], vectorized=True)
+        args = [[x1D, x2D], [y1D, y2D]]
+        kwargs = {"vectorized": True}
+        if with_errors:
+            kwargs["weights"] = [1 / np.sqrt(y1D), 1 / np.sqrt(y2D)]
+        results = f.fit(*args, **kwargs)
     except FitError as e:
         if "Unable to allocate" in str(e):
             pytest.skip(msg="MemoryError - Matrix too large")
