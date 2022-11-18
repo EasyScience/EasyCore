@@ -3,7 +3,7 @@ repos:
   rev: 22.3.0
   hooks:
   - id: black
-    language_version: python3     # Should be a command that runs python3.6+
+    exclude: ^dist/
 
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: v4.0.1    # Use the ref you want to point at
