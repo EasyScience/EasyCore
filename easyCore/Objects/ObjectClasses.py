@@ -8,6 +8,7 @@ __version__ = "0.1.0"
 #  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 
 import numbers
+import weakref
 from inspect import getfullargspec
 
 from typing import (
@@ -32,16 +33,17 @@ if TYPE_CHECKING:
 
 
 class BasedBase(ComponentSerializer):
-    __slots__ = ["_name", "_borg", "user_data", "_kwargs"]
+    __slots__ = ["_name", "_borg", "user_data", "_kwargs", "_color"]
 
     _REDIRECT = {}
 
     def __init__(self, name: str, interface: Optional[iF] = None):
         self._borg = borg
-        self._borg.map.add_vertex(self, obj_type="created")
+        self._name: str = name
+        self._color = "blue"
+        self._borg.map.add_node(self, obj_type="created")
         self.interface = interface
         self.user_data: dict = {}
-        self._name: str = name
 
     @property
     def _arg_spec(self) -> Set[str]:
@@ -247,6 +249,9 @@ class BaseObj(BasedBase):
                 my_self=self,
                 test_class=BaseObj,
             )
+        self._finalizer = weakref.finalize(
+            self, self._borg.graph.prune, self._borg.graph.convert_id(self).int
+        )
 
     def _add_component(self, key: str, component: BV) -> None:
         """
@@ -296,12 +301,12 @@ class BaseObj(BasedBase):
         ):
             if issubclass(type(getattr(self, key, None)), (BasedBase, Descriptor)):
                 old_obj = self.__getattribute__(key)
-                self._borg.map.prune_vertex_from_edge(self, old_obj)
+                self._borg.map.prune_node_from_edge(self, old_obj)
             self._add_component(key, value)
         else:
             if hasattr(self, key) and issubclass(type(value), (BasedBase, Descriptor)):
                 old_obj = self.__getattribute__(key)
-                self._borg.map.prune_vertex_from_edge(self, old_obj)
+                self._borg.map.prune_node_from_edge(self, old_obj)
                 self._borg.map.add_edge(self, value)
         super(BaseObj, self).__setattr__(key, value)
         # Update the interface bindings if something changed (BasedBase and Descriptor)

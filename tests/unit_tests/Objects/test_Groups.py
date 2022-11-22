@@ -7,6 +7,7 @@ __version__ = "0.1.0"
 
 from typing import List
 
+import numpy as np
 import pytest
 import easyCore
 
@@ -338,7 +339,9 @@ def test_baseCollection_as_dict(cls):
     d = obj.as_dict()
 
     def check_dict(dict_1: dict, dict_2: dict):
-        keys_1 = dict_1.keys()
+        keys_1 = list(dict_1.keys())
+        if "color" in keys_1:
+            del keys_1[keys_1.index("color")]
         keys_2 = dict_2.keys()
         assert not set(keys_1).difference(set(keys_2))
 
@@ -479,8 +482,12 @@ def test_baseCollection_set_index(cls):
     edges = obj._borg.map.get_edges(obj)
     assert len(edges) == len(obj)
     for item in obj:
-        assert obj._borg.map.convert_id_to_key(item) in edges
-    assert obj._borg.map.convert_id_to_key(p2) not in edges
+        assert np.any(
+            [str(obj._borg.map.convert_id_to_key(item)) in edge for edge in edges]
+        )
+    assert np.any(
+        [str(obj._borg.map.convert_id_to_key(p2)) not in edge for edge in edges]
+    )
 
 
 @pytest.mark.parametrize("cls", class_constructors)
@@ -503,8 +510,12 @@ def test_baseCollection_set_index_based(cls):
     edges = obj._borg.map.get_edges(obj)
     assert len(edges) == len(obj)
     for item in obj:
-        assert obj._borg.map.convert_id_to_key(item) in edges
-    assert obj._borg.map.convert_id_to_key(p4) not in edges
+        assert np.any(
+            [str(obj._borg.map.convert_id_to_key(item)) in edge for edge in edges]
+        )
+    assert np.any(
+        [str(obj._borg.map.convert_id_to_key(p4)) not in edge for edge in edges]
+    )
 
 
 @pytest.mark.parametrize("cls", class_constructors)

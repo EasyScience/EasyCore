@@ -49,6 +49,7 @@ lmfit = "^1.0"
 bumps = ">=0.8,<0.10"
 asteval = "^0.9.27"
 lazy-import = "^0.2"
+networkx = "^2.8"
 DFO-LS = {version = "^1.2", optional = true}
 xarray = ">=0.16,<0.21"
 pytest = {version = "^7.0.0", optional = true}

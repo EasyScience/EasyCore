@@ -97,14 +97,12 @@ def component_realizer(obj: BV, component: str, recursive: bool = True):
                 in ec_var.__dict__.values()
             ):
                 continue
-            component._borg.map.prune_vertex_from_edge(
-                component, component._kwargs[key]
-            )
+            component._borg.map.prune_node_from_edge(component, component._kwargs[key])
             component._borg.map.add_edge(component, old_component._kwargs[key])
             component._kwargs[key] = old_component._kwargs[key]
             done_mapping = False
     if done_mapping:
-        obj._borg.map.prune_vertex_from_edge(obj, old_component)
+        obj._borg.map.prune_node_from_edge(obj, old_component)
         obj._borg.map.add_edge(obj, new_components)
         obj._kwargs[component] = new_components
 

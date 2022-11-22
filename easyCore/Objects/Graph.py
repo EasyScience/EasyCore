@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 #  SPDX-FileCopyrightText: 2022 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
@@ -6,69 +8,14 @@ __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
 import weakref
-import sys
-from typing import List, Union
-from weakref import WeakKeyDictionary
+from typing import List, Union, TYPE_CHECKING, Optional, Tuple
+from weakref import WeakKeyDictionary, ref as weakref
 from collections import defaultdict
 from uuid import uuid4, UUID
+import networkx as nx
 
-
-class _EntryList(list):
-    def __init__(self, *args, my_type=None, **kwargs):
-        super(_EntryList, self).__init__(*args, **kwargs)
-        self.__known_types = {"argument", "created", "created_internal", "returned"}
-        self.finalizer = None
-        self._type = []
-        if my_type in self.__known_types:
-            self._type.append(my_type)
-
-    def __repr__(self) -> str:
-        s = "Graph entry of type: "
-        if self._type:
-            s += ", ".join(self._type)
-        else:
-            s += "Undefined"
-        s += ". With"
-        if self.finalizer is None:
-            s += "out"
-        s += "a finalizer."
-        return s
-
-    def __delitem__(self, key):
-        super(_EntryList, self).__delitem__(key)
-
-    def remove_type(self, old_type: str):
-        if old_type in self.__known_types and old_type in self._type:
-            self._type.remove(old_type)
-
-    def reset_type(self, default_type: str = None):
-        self._type = []
-        self.type = default_type
-
-    @property
-    def type(self) -> List[str]:
-        return self._type
-
-    @type.setter
-    def type(self, value: str):
-        if value in self.__known_types and value not in self._type:
-            self._type.append(value)
-
-    @property
-    def is_argument(self) -> bool:
-        return "argument" in self._type
-
-    @property
-    def is_created(self) -> bool:
-        return "created" in self._type
-
-    @property
-    def is_created_internal(self) -> bool:
-        return "created_internal" in self._type
-
-    @property
-    def is_returned(self) -> bool:
-        return "returned" in self._type
+if TYPE_CHECKING:
+    from easyCore.Utils.typing import BV
 
 
 class UniqueIdMap(WeakKeyDictionary):
@@ -85,163 +32,144 @@ uniqueidmap = UniqueIdMap()
 
 class Graph:
     def __init__(self):
-        self._store = weakref.WeakValueDictionary()
-        self.__graph_dict = {}
+        # self._store = WeakValueDictionary()
+        # self.__graph_dict = {}
+        self._G = nx.DiGraph()
+        self.__known_types = {"argument", "created", "created_internal", "returned"}
 
-    def vertices(self) -> List[int]:
-        """returns the vertices of a graph"""
-        return list(self._store.keys())
+    def reset_graph(self):
+        # self._store = WeakValueDictionary()
+        # self.__graph_dict = {}
+        self._G = nx.DiGraph()
 
-    def edges(self):
+    def nodes(self) -> List[str]:
+        """returns the nodes of a graph"""
+        return list(self._G.nodes)
+
+    def edges(self) -> List[Tuple[str, str]]:
         """returns the edges of a graph"""
-        return self.__generate_edges()
+        return list(self._G.edges)
+
+    def _query_graph_types(self, created_type):
+        return [n for n, d in self._G.nodes(data=True) if created_type in d["type"]]
 
     @property
-    def argument_objs(self) -> List[int]:
-        return self._nested_get("argument")
+    def argument_objs(self) -> List[str]:
+        return self._query_graph_types("argument")
 
     @property
-    def created_objs(self) -> List[int]:
-        return self._nested_get("created")
+    def created_objs(self) -> List[str]:
+        return self._query_graph_types("created")
 
     @property
-    def created_internal(self) -> List[int]:
-        return self._nested_get("created_internal")
+    def created_internal(self) -> List[str]:
+        return self._query_graph_types("created_internal")
 
     @property
-    def returned_objs(self) -> List[int]:
-        return self._nested_get("returned")
+    def returned_objs(self) -> List[str]:
+        return self._query_graph_types("returned")
 
-    def get_item_by_key(self, item_id: int) -> object:
-        if item_id in self._store.keys():
-            return self._store[item_id]
-        raise ValueError
+    def get_item_by_key(self, item_id: str) -> Optional[BV]:
+        item_id = str(item_id)
+        return self._G.nodes.get(item_id, {"object": lambda: None})["object"]()
 
-    def is_known(self, vertex: object) -> bool:
-        return self.convert_id(vertex).int in self._store.keys()
+    def is_known(self, node: BV) -> bool:
+        return str(self.convert_id(node).int) in self._G.nodes
 
-    def find_type(self, vertex: object) -> List[str]:
-        if self.is_known(vertex):
-            oid = self.convert_id(vertex)
-            return self.__graph_dict[oid].type
+    def find_type(self, node: BV) -> List[str]:
+        item_id = str(self.convert_id(node).int)
+        return self._G.nodes.get(item_id, {"type": []})["type"]
 
-    def reset_type(self, obj, default_type: str):
-        if self.convert_id(obj).int in self.__graph_dict.keys():
-            self.__graph_dict[self.convert_id(obj).int].reset_type(default_type)
+    def reset_type(self, node: BV, default_type: str):
+        item_id = str(self.convert_id(node).int)
+        self._G.nodes[item_id]["type"] = [default_type]
 
-    def change_type(self, obj, new_type: str):
-        if self.convert_id(obj).int in self.__graph_dict.keys():
-            self.__graph_dict[self.convert_id(obj).int].type = new_type
+    def change_type(self, node: BV, new_type: str):
+        item_id = str(self.convert_id(node).int)
+        if (
+            new_type in self.__known_types
+            and new_type not in self._G.nodes[item_id]["type"]
+        ):
+            self._G.nodes[item_id]["type"].append(new_type)
 
-    def add_vertex(self, obj: object, obj_type: str = None):
-        oid = self.convert_id(obj).int
-        self._store[oid] = obj
-        self.__graph_dict[oid] = _EntryList()  # Enhanced list of keys
-        self.__graph_dict[oid].finalizer = weakref.finalize(
-            self._store[oid], self.prune, oid
-        )
-        self.__graph_dict[oid].type = obj_type
+    def add_node(self, node: BV, obj_type: str = None):
+        oid = self.convert_id(node).int
+        self._G.add_node(str(oid), object=weakref(node), type=[obj_type])
 
-    def add_edge(self, start_obj: object, end_obj: object):
-        vertex1 = self.convert_id(start_obj).int
-        vertex2 = self.convert_id(end_obj).int
-        if vertex1 in self.__graph_dict.keys():
-            self.__graph_dict[vertex1].append(vertex2)
-        else:
-            raise AttributeError
+    def add_edge(self, start_obj: BV, end_obj: BV):
+        node1 = str(self.convert_id(start_obj).int)
+        node2 = str(self.convert_id(end_obj).int)
+        weight = 0.5
+        if hasattr(end_obj, "value"):
+            weight = 5
+        self._G.add_weighted_edges_from([(node1, node2, weight)])
 
-    def get_edges(self, start_obj) -> List[str]:
-        vertex1 = self.convert_id(start_obj).int
-        if vertex1 in self.__graph_dict.keys():
-            return list(self.__graph_dict[vertex1])
-        else:
-            raise AttributeError
+    def get_edges(self, start_obj: BV) -> List[Tuple[str, str]]:
+        node1 = str(self.convert_id(start_obj).int)
+        return list(self._G.edges(node1))
 
-    def __generate_edges(self) -> list:
-        """A static method generating the edges of the
-        graph "graph". Edges are represented as sets
-        with one (a loop back to the vertex) or two
-        vertices
-        """
-        edges = []
-        for vertex in self.__graph_dict:
-            for neighbour in self.__graph_dict[vertex]:
-                if {neighbour, vertex} not in edges:
-                    edges.append({vertex, neighbour})
-        return edges
-
-    def prune_vertex_from_edge(self, parent_obj, child_obj):
-        vertex1 = self.convert_id(parent_obj).int
+    def prune_node_from_edge(self, parent_obj: BV, child_obj: BV):
+        vertex1 = str(self.convert_id(parent_obj).int)
         if child_obj is None:
             return
-        vertex2 = self.convert_id(child_obj).int
-
-        if (
-            vertex1 in self.__graph_dict.keys()
-            and vertex2 in self.__graph_dict[vertex1]
-        ):
-            del self.__graph_dict[vertex1][self.__graph_dict[vertex1].index(vertex2)]
+        vertex2 = str(self.convert_id(child_obj).int)
+        self._G.remove_edge(vertex1, vertex2)
 
     def prune(self, key: int):
-        if key in self.__graph_dict.keys():
-            del self.__graph_dict[key]
+        key = str(key)
+        self._G.remove_node(key)
 
-    def find_isolated_vertices(self) -> list:
-        """returns a list of isolated vertices."""
-        graph = self.__graph_dict
-        isolated = []
-        for vertex in graph:
-            print(isolated, vertex)
-            if not graph[vertex]:
-                isolated += [vertex]
-        return isolated
+    def find_isolated_nodes(self) -> List[int]:
+        """returns a list of isolated nodes."""
+        return list(nx.isolates(self._G))
 
-    def find_path(self, start_obj, end_obj, path=[]) -> list:
+    def find_path(
+        self,
+        start_obj: Union[BV, int],
+        end_obj: Union[BV, int],
+        path: Optional[List[str]] = None,
+    ) -> List[str]:
         """find a path from start_vertex to end_vertex
         in graph"""
-
+        if path is None:
+            path = []
         try:
             start_vertex = self.convert_id(start_obj).int
             end_vertex = self.convert_id(end_obj).int
         except TypeError:
             start_vertex = start_obj
             end_vertex = end_obj
-
-        graph = self.__graph_dict
-        path = path + [start_vertex]
-        if start_vertex == end_vertex:
+        try:
+            return path + nx.shortest_path(self._G, str(start_vertex), str(end_vertex))
+        except nx.exception.NetworkXNoPath:
             return path
-        if start_vertex not in graph:
-            return []
-        for vertex in graph[start_vertex]:
-            if vertex not in path:
-                extended_path = self.find_path(vertex, end_vertex, path)
-                if extended_path:
-                    return extended_path
-        return []
 
-    def find_all_paths(self, start_obj, end_obj, path=[]) -> list:
+    def find_all_paths(
+        self,
+        start_obj: Union[BV, int],
+        end_obj: Union[BV, int],
+        path: Optional[List[str]] = None,
+    ) -> List[List[str]]:
         """find all paths from start_vertex to
         end_vertex in graph"""
+        if path is None:
+            path = []
+        try:
+            start_vertex = self.convert_id(start_obj).int
+            end_vertex = self.convert_id(end_obj).int
+        except TypeError:
+            start_vertex = start_obj
+            end_vertex = end_obj
+        try:
+            return path + nx.all_shortest_paths(
+                self._G, str(start_vertex), str(end_vertex)
+            )
+        except nx.exception.NetworkXNoPath:
+            return path
 
-        start_vertex = self.convert_id(start_obj).int
-        end_vertex = self.convert_id(end_obj).int
-
-        graph = self.__graph_dict
-        path = path + [start_vertex]
-        if start_vertex == end_vertex:
-            return [path]
-        if start_vertex not in graph:
-            return []
-        paths = []
-        for vertex in graph[start_vertex]:
-            if vertex not in path:
-                extended_paths = self.find_all_paths(vertex, end_vertex, path)
-                for p in extended_paths:
-                    paths.append(p)
-        return paths
-
-    def reverse_route(self, end_obj, start_obj=None) -> List:
+    def reverse_route(
+        self, end_obj: Union[BV, int], start_obj: Optional[Union[BV, int]] = None
+    ) -> List[str]:
         """
         In this case we have an object and want to know the connections to get to another in reverse.
         We might not know the start_object. In which case we follow the shortest path to a base vertex.
@@ -252,50 +180,58 @@ class Graph:
         :return:
         :rtype:
         """
-        end_vertex = self.convert_id(end_obj).int
-
-        path_length = sys.maxsize
-        optimum_path = []
         if start_obj is None:
-            # We now have to find where to begin.....
-            for possible_start, vertices in self.__graph_dict.items():
-                if end_vertex in vertices:
-                    temp_path = self.find_path(possible_start, end_vertex)
-                    if len(temp_path) < path_length:
-                        path_length = len(temp_path)
-                        optimum_path = temp_path
+            start_node = str(self.convert_id(end_obj).int)
+            reversed_graph = nx.reverse(self._G)
+            return [start_node] + list(nx.descendants(reversed_graph, start_node))
         else:
-            optimum_path = self.find_path(start_obj, end_obj)
-        optimum_path.reverse()
-        return optimum_path
+            path = self.find_path(start_obj, end_obj)
+            path.reverse()
+            return path
+        # first_decendent = nx.descendants(reversed_graph, start_node)
+        #
+        # path_length = sys.maxsize
+        # optimum_path = []
+        # if start_obj is None:
+        #     # We now have to find where to begin.....
+        #     for possible_start, nodes in self.__graph_dict.items():
+        #         if end_vertex in nodes:
+        #             temp_path = self.find_path(possible_start, end_vertex)
+        #             if len(temp_path) < path_length:
+        #                 path_length = len(temp_path)
+        #                 optimum_path = temp_path
+        # else:
+        #     optimum_path = self.find_path(start_obj, end_obj)
+        # optimum_path.reverse()
+        # return optimum_path
 
-    def is_connected(self, vertices_encountered=None, start_vertex=None) -> bool:
-        """determines if the graph is connected"""
-        if vertices_encountered is None:
-            vertices_encountered = set()
-        graph = self.__graph_dict
-        vertices = list(graph.keys())
-        if not start_vertex:
-            # chose a vertex from graph as a starting point
-            start_vertex = vertices[0]
-        vertices_encountered.add(start_vertex)
-        if len(vertices_encountered) != len(vertices):
-            for vertex in graph[start_vertex]:
-                if vertex not in vertices_encountered and self.is_connected(
-                    vertices_encountered, vertex
-                ):
-                    return True
-        else:
-            return True
-        return False
+    # def is_connected(self, nodes_encountered=None, start_vertex=None) -> bool:
+    #     """determines if the graph is connected"""
+    #     if nodes_encountered is None:
+    #         nodes_encountered = set()
+    #     graph = self.__graph_dict
+    #     nodes = list(graph.keys())
+    #     if not start_vertex:
+    #         # chose a vertex from graph as a starting point
+    #         start_vertex = nodes[0]
+    #     nodes_encountered.add(start_vertex)
+    #     if len(nodes_encountered) != len(nodes):
+    #         for vertex in graph[start_vertex]:
+    #             if vertex not in nodes_encountered and self.is_connected(
+    #                 nodes_encountered, vertex
+    #             ):
+    #                 return True
+    #     else:
+    #         return True
+    #     return False
 
-    def _nested_get(self, obj_type: str) -> List[int]:
-        """Access a nested object in root by key sequence."""
-        extracted_list = []
-        for key, item in self.__graph_dict.items():
-            if obj_type in item.type:
-                extracted_list.append(key)
-        return extracted_list
+    # def _nested_get(self, obj_type: str) -> List[int]:
+    #     """Access a nested object in root by key sequence."""
+    #     extracted_list = []
+    #     for key, item in self.__graph_dict.items():
+    #         if obj_type in item.type:
+    #             extracted_list.append(key)
+    #     return extracted_list
 
     @staticmethod
     def convert_id(input_value) -> UUID:
@@ -312,7 +248,57 @@ class Graph:
         return input_value.int
 
     def __repr__(self) -> str:
-        return f"Graph object of {len(self._store)} vertices."
+        return f"Graph object of {len(self._G.nodes)} nodes."
+
+    def plot(
+        self, node: BV, layout=nx.layout.shell_layout, with_labels=False, **kwargs
+    ):
+        from easyCore import GRAPHICS, hv
+
+        if not GRAPHICS:
+            raise EnvironmentError(
+                "Holoviews needs to be installed in order to use `plot`"
+            )
+        start_node_id = str(self.convert_id(node).int)
+        to_add = {
+            "name": "name",
+            "color": "_color",
+        }
+
+        def node_expander(this_G, this_node):
+            entry = list(self._G[this_node])
+            if len(entry) > 0:
+                for new_node in entry:
+                    new_obj = self._G.nodes[new_node]["object"]
+                    attrs = {
+                        name: getattr(new_obj, value) for name, value in to_add.items()
+                    }
+
+                    this_G.add_node(new_node, **attrs)
+                    this_G.add_edge(this_node, new_node)
+                    node_expander(this_G, new_node)
+
+        H = nx.DiGraph()
+        H.add_node(
+            start_node_id,
+            **{name: getattr(node, value) for name, value in to_add.items()},
+        )
+        node_expander(H, start_node_id)
+        graph = hv.Graph.from_networkx(H, layout, **kwargs).opts(
+            node_color="color",
+            directed=True,
+            node_size=20,
+            arrowhead_length=0.035,
+            width=400,
+            height=400,
+            xaxis=None,
+            yaxis=None,
+            bgcolor="#d3d3d3",
+        )
+        labels = hv.Labels(graph.nodes, ["x", "y"], "name")
+        if with_labels:
+            return graph, labels.opts(text_font_size="10pt", text_color="white")
+        return graph
 
 
 def unique_id(obj) -> UUID:

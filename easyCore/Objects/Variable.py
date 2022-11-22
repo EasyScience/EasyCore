@@ -74,6 +74,7 @@ class Descriptor(ComponentSerializer):
         callback: Optional[property] = property(),
         enabled: Optional[bool] = True,
         parent: Optional[Union[Any, None]] = None,
+        color="green",
     ):  # noqa: S107
         """
         This is the base of all variable descriptions for models. It contains all information to describe a single
@@ -107,13 +108,14 @@ class Descriptor(ComponentSerializer):
         if not hasattr(self, "_args"):
             self._args = {"value": None, "units": ""}
 
+        self.name: str = name
+        self._color = color
         # Let the collective know we've been assimilated
-        self._borg.map.add_vertex(self, obj_type="created")
+        self._borg.map.add_node(self, obj_type="created")
         # Make the connection between self and parent
         if parent is not None:
             self._borg.map.add_edge(parent, self)
 
-        self.name: str = name
         # Attach units if necessary
         if isinstance(units, ureg.Unit):
             self._units = ureg.Quantity(1, units=deepcopy(units))
@@ -147,7 +149,11 @@ class Descriptor(ComponentSerializer):
         self._callback: property = callback
         self.user_data: dict = {}
 
-        finalizer = None
+        finalizer = [
+            weakref.finalize(
+                self, self._borg.graph.prune, self._borg.graph.convert_id(self).int
+            )
+        ]
         if self._callback.fdel is not None:
             weakref.finalize(self, self._callback.fdel)
         self._finalizer = finalizer
@@ -517,7 +523,8 @@ class Parameter(Descriptor):
             raise ValueError("`value` can not be greater than `max`")
         if error < 0:
             raise ValueError("Standard deviation `error` must be positive")
-
+        if "color" not in kwargs:
+            kwargs["color"] = "red"
         super().__init__(name, value, **kwargs)
         self._args["units"] = str(self.unit)
 

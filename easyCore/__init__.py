@@ -11,6 +11,14 @@ from easyCore.Objects.Borg import Borg
 import pint
 from .REDIRECT import _REDIRECT
 
+
+GRAPHICS = True
+try:
+    import holoviews as hv
+except ImportError:
+    GRAPHICS = False
+    hv = None
+
 default_fitting_engine = "lmfit"
 
 ureg = pint.UnitRegistry()

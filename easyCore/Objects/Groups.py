@@ -189,7 +189,7 @@ class BaseCollection(BasedBase, MutableSequence):
             self._borg.map.reset_type(value, "created_internal")
             value.interface = self.interface
             # REMOVE EDGE
-            self._borg.map.prune_vertex_from_edge(self, old_item)
+            self._borg.map.prune_node_from_edge(self, old_item)
         else:
             raise NotImplementedError(
                 "At the moment only numerical values or easyCore objects can be set."
@@ -206,7 +206,7 @@ class BaseCollection(BasedBase, MutableSequence):
         """
         keys = list(self._kwargs.keys())
         item = self._kwargs[keys[key]]
-        self._borg.map.prune_vertex_from_edge(self, item)
+        self._borg.map.prune_node_from_edge(self, item)
         del self._kwargs[keys[key]]
 
     def __len__(self) -> int:

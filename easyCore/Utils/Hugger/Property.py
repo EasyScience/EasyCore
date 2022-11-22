@@ -9,7 +9,7 @@ import sys
 
 from typing import Callable, List, Any
 from functools import wraps
-
+from weakref import ref
 from easyCore import borg
 from easyCore.Utils.Hugger.Hugger import Store, PatcherFactory
 
@@ -27,7 +27,7 @@ class LoggedProperty(property):
     def __init__(self, *args, get_id=None, my_self=None, test_class=None, **kwargs):
         super(LoggedProperty, self).__init__(*args, **kwargs)
         self._get_id = get_id
-        self._my_self = my_self
+        self._my_self = ref(my_self)
         self.test_class = test_class
 
     @staticmethod
@@ -61,9 +61,9 @@ class LoggedProperty(property):
             if borg.map.is_known(item_to_be_resulted):
                 borg.map.change_type(item_to_be_resulted, "returned")
             else:
-                borg.map.add_vertex(item_to_be_resulted, obj_type="returned")
+                borg.map.add_node(item_to_be_resulted, obj_type="returned")
 
-        if not test and self._get_id is not None and self._my_self is not None:
+        if not test and self._get_id is not None and self._my_self() is not None:
             if not isinstance(res, list):
                 result_item(res)
             else:
@@ -72,7 +72,7 @@ class LoggedProperty(property):
             Store().append_log(self.makeEntry("get", res))
             if borg.debug:  # noqa: S1006
                 print(
-                    f"I'm {self._my_self} and {self._get_id} has been called from the outside!"
+                    f"I'm {self._my_self()} and {self._get_id} has been called from the outside!"
                 )
         return res
 
@@ -80,11 +80,11 @@ class LoggedProperty(property):
         if not borg.script.enabled:
             return super().__set__(instance, value)
         test = self._caller_class(self.test_class)
-        if not test and self._get_id is not None and self._my_self is not None:
+        if not test and self._get_id is not None and self._my_self() is not None:
             Store().append_log(self.makeEntry("set", value))
             if borg.debug:  # noqa: S1006
                 print(
-                    f"I'm {self._my_self} and {self._get_id} has been set to {value} from the outside!"
+                    f"I'm {self._my_self()} and {self._get_id} has been set to {value} from the outside!"
                 )
         return super().__set__(instance, value)
 
@@ -104,29 +104,25 @@ class LoggedProperty(property):
             if len(returns) > 0:
                 temp = temp[:-2]
                 temp += " = "
-            if borg.map.convert_id_to_key(self._my_self) in borg.map.created_objs:
+            if borg.map.convert_id_to_key(self._my_self()) in borg.map.created_objs:
                 # for edge in route[::-1]:
                 index = borg.map.created_objs.index(
-                    borg.map.convert_id_to_key(self._my_self)
+                    borg.map.convert_id_to_key(self._my_self())
                 )
-                temp += (
-                    f"{self._my_self.__class__.__name__.lower()}_{index}.{self._get_id}"
-                )
-            if borg.map.convert_id(self._my_self) in borg.map.created_internal:
+                temp += f"{self._my_self().__class__.__name__.lower()}_{index}.{self._get_id}"
+            if borg.map.convert_id(self._my_self()) in borg.map.created_internal:
                 # We now have to trace....
-                route = borg.map.reverse_route(self._my_self)  # noqa: F841
+                route = borg.map.reverse_route(self._my_self())  # noqa: F841
                 index = borg.map.created_objs.index(
-                    borg.map.convert_id_to_key(self._my_self)
+                    borg.map.convert_id_to_key(self._my_self())
                 )
-                temp += (
-                    f"{self._my_self.__class__.__name__.lower()}_{index}.{self._get_id}"
-                )
+                temp += f"{self._my_self().__class__.__name__.lower()}_{index}.{self._get_id}"
         elif log_type == "set":
-            if borg.map.convert_id_to_key(self._my_self) in borg.map.created_objs:
+            if borg.map.convert_id_to_key(self._my_self()) in borg.map.created_objs:
                 index = borg.map.created_objs.index(
-                    borg.map.convert_id_to_key(self._my_self)
+                    borg.map.convert_id_to_key(self._my_self())
                 )
-                temp += f"{self._my_self.__class__.__name__.lower()}_{index}.{self._get_id} = "
+                temp += f"{self._my_self().__class__.__name__.lower()}_{index}.{self._get_id} = "
             args = args[1:]
             for var in args:
                 if borg.map.convert_id_to_key(var) in borg.map.argument_objs:
@@ -141,7 +137,7 @@ class LoggedProperty(property):
                     temp += f"{Store().var_ident}{index}"
                 elif borg.map.convert_id_to_key(var) in borg.map.created_objs:
                     index = borg.map.created_objs.index(borg.map.convert_id_to_key(var))
-                    temp += f"{self._my_self.__class__.__name__.lower()}_{index}"
+                    temp += f"{self._my_self().__class__.__name__.lower()}_{index}"
                 else:
                     if isinstance(var, str):
                         var = '"' + var + '"'
