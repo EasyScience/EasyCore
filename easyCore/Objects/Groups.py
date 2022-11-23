@@ -10,12 +10,10 @@ __version__ = "0.1.0"
 from numbers import Number
 from typing import (
     Union,
-    TypeVar,
     Optional,
     TYPE_CHECKING,
     Callable,
     List,
-    Dict,
     Any,
     Tuple,
 )

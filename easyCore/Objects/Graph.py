@@ -7,9 +7,8 @@ from __future__ import annotations
 __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
-import weakref
 from typing import List, Union, TYPE_CHECKING, Optional, Tuple
-from weakref import WeakKeyDictionary, ref as weakref
+from weakref import WeakKeyDictionary, ref
 from collections import defaultdict
 from uuid import uuid4, UUID
 import networkx as nx
@@ -94,7 +93,7 @@ class Graph:
 
     def add_node(self, node: BV, obj_type: str = None):
         oid = self.convert_id(node).int
-        self._G.add_node(str(oid), object=weakref(node), type=[obj_type])
+        self._G.add_node(str(oid), object=ref(node), type=[obj_type])
 
     def add_edge(self, start_obj: BV, end_obj: BV):
         node1 = str(self.convert_id(start_obj).int)
@@ -113,11 +112,13 @@ class Graph:
         if child_obj is None:
             return
         vertex2 = str(self.convert_id(child_obj).int)
-        self._G.remove_edge(vertex1, vertex2)
+        if (vertex1, vertex2) in self._G.edges:
+            self._G.remove_edge(vertex1, vertex2)
 
     def prune(self, key: int):
         key = str(key)
-        self._G.remove_node(key)
+        if key in self._G.nodes:
+            self._G.remove_node(key)
 
     def find_isolated_nodes(self) -> List[int]:
         """returns a list of isolated nodes."""
@@ -182,8 +183,10 @@ class Graph:
         """
         if start_obj is None:
             start_node = str(self.convert_id(end_obj).int)
-            reversed_graph = nx.reverse(self._G)
-            return [start_node] + list(nx.descendants(reversed_graph, start_node))
+            nodes = list(
+                nx.dag_longest_path(nx.dfs_tree(self._G.reverse(), source=start_node))
+            )
+            return nodes
         else:
             path = self.find_path(start_obj, end_obj)
             path.reverse()
@@ -271,7 +274,8 @@ class Graph:
                 for new_node in entry:
                     new_obj = self._G.nodes[new_node]["object"]
                     attrs = {
-                        name: getattr(new_obj, value) for name, value in to_add.items()
+                        name: getattr(new_obj(), value)
+                        for name, value in to_add.items()
                     }
 
                     this_G.add_node(new_node, **attrs)

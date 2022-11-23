@@ -54,7 +54,7 @@ dp_param_dict = {
 }
 
 _skip_opt = [[], None] + [
-    k for k in dp_param_dict["argvalues"][0][0].keys() if k[0] is not "@"
+    k for k in dp_param_dict["argvalues"][0][0].keys() if k[0] != "@"
 ]
 skip_dict = {
     "argnames": "skip",
