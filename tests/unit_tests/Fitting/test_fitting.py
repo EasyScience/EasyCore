@@ -354,7 +354,7 @@ def test_multi_fit2(genObjs, genObjs2, fit_engine, with_errors):
     for idx, result in enumerate(results):
         assert result.n_pars == len(sp_sin1.get_fit_parameters()) + len(
             sp_sin2.get_fit_parameters()
-        )
+        ) + len(sp_sin3.get_fit_parameters())
         assert result.goodness_of_fit == pytest.approx(
             0, abs=1.5e-3 * (len(result.x) - result.n_pars)
         )
