@@ -293,6 +293,81 @@ def test_multi_fit(genObjs, genObjs2, fit_engine, with_errors):
         )
 
 
+@pytest.mark.parametrize("with_errors", [False, True])
+@pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "DFO_LS"])
+def test_multi_fit2(genObjs, genObjs2, fit_engine, with_errors):
+    ref_sin1 = genObjs[0]
+    ref_sin2 = genObjs2[0]
+    ref_sin3 = AbsSin.from_pars(0.4, 1.6)
+
+    ref_sin1.offset.user_constraints["ref_sin2"] = ObjConstraint(
+        ref_sin2.offset, "", ref_sin1.offset
+    )
+    ref_sin1.offset.user_constraints["ref_sin3"] = ObjConstraint(
+        ref_sin3.phase, "", ref_sin1.phase
+    )
+    ref_sin1.offset.user_constraints["ref_sin2"]()
+    ref_sin1.offset.user_constraints["ref_sin3"]()
+
+    sp_sin1 = genObjs[1]
+    sp_sin2 = genObjs2[1]
+    sp_sin3 = AbsSin.from_pars(0.2, 2.1)
+
+    sp_sin1.offset.user_constraints["sp_sin2"] = ObjConstraint(
+        sp_sin2.offset, "", sp_sin1.offset
+    )
+    sp_sin1.offset.user_constraints["sp_sin2"]()
+    sp_sin1.offset.user_constraints["sp_sin3"] = ObjConstraint(
+        sp_sin3.phase, "", sp_sin1.phase
+    )
+    sp_sin1.offset.user_constraints["sp_sin3"]()
+
+    x1 = np.linspace(0, 5, 200)
+    y1 = ref_sin1(x1)
+    x2 = np.copy(x1)
+    y2 = ref_sin2(x2)
+    x3 = np.copy(x1)
+    y3 = ref_sin3(x3)
+
+    sp_sin1.offset.fixed = False
+    sp_sin1.phase.fixed = False
+    sp_sin2.phase.fixed = False
+    sp_sin3.offset.fixed = False
+
+    f = MultiFitter([sp_sin1, sp_sin2, sp_sin3], [sp_sin1, sp_sin2, sp_sin3])
+    if fit_engine is not None:
+        try:
+            f.switch_engine(fit_engine)
+        except AttributeError:
+            pytest.skip(msg=f"{fit_engine} is not installed")
+
+    args = [[x1, x2, x3], [y1, y2, y3]]
+    kwargs = {}
+    if with_errors:
+        kwargs["weights"] = [1 / np.sqrt(y1), 1 / np.sqrt(y2), 1 / np.sqrt(y3)]
+
+    results = f.fit(*args, **kwargs)
+    X = [x1, x2, x3]
+    Y = [y1, y2, y3]
+    F_ref = [ref_sin1, ref_sin2, ref_sin3]
+    F_real = [sp_sin1, sp_sin2, sp_sin3]
+    for idx, result in enumerate(results):
+        assert result.n_pars == len(sp_sin1.get_fit_parameters()) + len(
+            sp_sin2.get_fit_parameters()
+        )
+        assert result.goodness_of_fit == pytest.approx(
+            0, abs=1.5e-3 * (len(result.x) - result.n_pars)
+        )
+        assert result.reduced_chi == pytest.approx(0, abs=1.5e-3)
+        assert result.success
+        assert np.all(result.x == X[idx])
+        assert np.all(result.y_obs == Y[idx])
+        assert result.y_calc == pytest.approx(F_ref[idx](X[idx]), abs=1e-2)
+        assert result.residual == pytest.approx(
+            F_real[idx](X[idx]) - F_ref[idx](X[idx]), abs=1e-2
+        )
+
+
 class AbsSin2D(BaseObj):
     def __init__(self, offset: Parameter, phase: Parameter):
         super(AbsSin2D, self).__init__("sin2D", offset=offset, phase=phase)

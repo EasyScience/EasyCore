@@ -443,8 +443,8 @@ class MultiFitter(Fitter):
             y_new.append(_y_new)
             w_new.append(_weights)
             dims.append(_dims)
-        y_new = np.append(*y_new, axis=0)
-        # w_new = np.append(*w_new, axis=0)
+        y_new = np.hstack(y_new)
+        w_new = np.hstack(w_new)
         x_fit = np.linspace(0, y_new.size - 1, y_new.size)
         return x_fit, x_new, y_new, w_new, dims, kwargs
 
