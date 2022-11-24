@@ -1,10 +1,13 @@
 __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
+import pytest
+
 #  SPDX-FileCopyrightText: 2022 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
 from easyCore import borg
+from easyCore.Objects.Graph import Graph
 from easyCore.Objects.ObjectClasses import Parameter, Descriptor, BaseObj
 
 
@@ -93,6 +96,8 @@ def test_edges():
     p1 = Parameter("p1", 1)
     b1 = BaseObj("b1", p1=p1)
     assert list(G._G.edges) == G.edges()
+    with pytest.raises(ValueError):
+        G.edges(graph="test")
 
 
 def test_type_query():
@@ -219,6 +224,19 @@ def test_reverse_route1():
 
     path = G.reverse_route(p1, b2)
     assert path == [p1_id, b1_id, b2_id]
+    with pytest.raises(ValueError):
+        G.reverse_route(p1, p2, graph="test")
+
+
+def test_edges2():
+    G = Graph()
+    G.add_node(0)
+    G.add_node(1)
+    with pytest.raises(ValueError):
+        G.add_edge(0, 1, graph="test")
+    G.add_edge(0, 1)
+    with pytest.raises(ValueError):
+        G.get_edges(0, graph="test")
 
 
 def test_reverse_route2():
@@ -235,3 +253,78 @@ def test_reverse_route2():
 
     path = G.reverse_route(p1)
     assert path == [p1_id, b1_id, b2_id]
+
+
+def test_item_by_key_fail():
+    G = Graph()
+    G.create_synced_graph("test")
+    G.add_node(0)
+    with pytest.raises(KeyError):
+        G.get_item_by_key(1)
+
+
+def test_synced_graph():
+    G = Graph()
+    G.add_node(1)
+    G.create_synced_graph("test")
+    G.add_node(2)
+    assert list(G._graphs["test"].nodes()) == [1, 2]
+
+
+def test_create_special_graph():
+    from networkx import MultiDiGraph
+
+    G = Graph()
+    G.create_synced_graph("test", graph_type=MultiDiGraph)
+
+
+def test_synced_graph_names():
+    G = Graph()
+    G.create_synced_graph("test")
+    assert G.synced_graph_names() == ["base", "test"]
+
+
+def test_remove_graph():
+    G = Graph()
+    G.create_synced_graph("test")
+    G.remove_synced_graph("test")
+    assert G.synced_graph_names() == ["base"]
+    with pytest.raises(ValueError):
+        G.remove_synced_graph("base")
+
+
+def test_remove_synced_graph_2():
+    G = Graph()
+    G.create_synced_graph("test")
+    G.add_node(0)
+    G.remove_synced_graph("test")
+    assert G.nodes() == [0]
+    assert G.synced_graph_names() == ["base"]
+
+
+def test_remove_synced_graph_3():
+    G = Graph()
+    G.create_synced_graph("test")
+    G.add_node(0)
+    G.add_node(1)
+    G.add_node(2)
+    G.add_edge(0, 1, graph="test")
+    G.add_edge(1, 2)
+    assert G.nodes() == [0, 1, 2]
+    G.remove_synced_graph("test")
+    assert G.edges() == [(1, 2)]
+    assert G.synced_graph_names() == ["base"]
+    with pytest.raises(ValueError):
+        G.remove_synced_graph("test")
+
+
+def test_two_graph_get():
+    G = Graph()
+    G.add_node(0)
+    G.add_node(1)
+    G.add_node(2)
+    G.create_synced_graph("test")
+    G.add_edge(1, 2)
+    G.add_edge(0, 1, graph="test")
+    assert G.edges() == [(1, 2)]
+    assert G.edges(graph="test") == [(0, 1)]

@@ -37,15 +37,19 @@ class Graph:
         }
         self.__known_types = {"argument", "created", "created_internal", "returned"}
 
-    def create_synced_graph(self, graph_name: str, graph_type=None):
+    def create_synced_graph(self, graph_name: str, graph_type: Optional = None):
         if graph_type is None:
             graph_type = nx.DiGraph
         self._graphs[graph_name] = graph_type()
         self._graphs[graph_name].add_nodes_from(self._G.nodes(data=True))
 
     def remove_synced_graph(self, graph_name: str):
+        if graph_name == "base":
+            raise ValueError("Cannot remove base graph")
         if graph_name in self._graphs and graph_name != "base":
             self._graphs.pop(graph_name)
+        else:
+            raise ValueError(f"Graph {graph_name} not found")
 
     def synced_graph_names(self) -> List[str]:
         return list(self._graphs.keys())
@@ -91,7 +95,7 @@ class Graph:
         if item_id not in self._G.nodes:
             item_id = str(item_id)
         if item_id not in self._G.nodes:
-            raise ValueError(f"Item {item_id} not found")
+            raise KeyError(f"Item {item_id} not found")
         return self._G.nodes.get(item_id, {"object": lambda: None})["object"]()
 
     def is_known(self, node: BV) -> bool:
