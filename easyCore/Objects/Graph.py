@@ -38,6 +38,10 @@ class Graph:
         self.__known_types = {"argument", "created", "created_internal", "returned"}
 
     def create_synced_graph(self, graph_name: str, graph_type: Optional = None):
+        """
+        Create a new graph of type `graph_type` (Default is networkx.DiGraph), which
+        will have the nodes of the base graph and the nodes will be synced.
+        """
         if graph_type is None:
             graph_type = nx.DiGraph
         self._graphs[graph_name] = graph_type()

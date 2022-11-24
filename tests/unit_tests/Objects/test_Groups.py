@@ -113,7 +113,7 @@ def test_baseCollection_create_fail2(cls, setup_pars, key):
     del setup_pars["name"]
     setup_pars[key] = Descriptor("fail_name", 0)
 
-    with pytest.raises(AttributeError):
+    with pytest.raises((AttributeError, KeyError)):
         coll = cls(name, **setup_pars)
 
 
