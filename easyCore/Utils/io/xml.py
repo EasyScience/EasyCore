@@ -58,7 +58,7 @@ class XMLSerializer(BaseEncoderDecoder):
         else:
             obj_dict = encoder().encode(obj, skip=skip, full_encode=True, **kwargs)
         block = ET.Element("data")
-        self._check_class(block, None, obj_dict)
+        self._check_class(block, None, obj_dict, skip=skip)
         header = ""
         if use_header:
             header = '?xml version="1.0"  encoding="UTF-8"?'
@@ -132,21 +132,25 @@ class XMLSerializer(BaseEncoderDecoder):
                 value = in_string
         return value
 
-    def _check_class(self, element, key: str, value: Any):
+    def _check_class(
+        self, element, key: str, value: Any, skip: Optional[List[str]] = None
+    ):
         """
         Add a value to an element or create a new element based on input type.
         """
         T_ = type(value)
         if isinstance(value, dict):
             for k, v in value.items():
+                if k in skip:
+                    continue
                 kk = k
                 if k[0] == "@":
                     kk = "__" + kk[1:]
                 if not isinstance(v, list):
                     s = ET.SubElement(element, kk)
-                    self._check_class(s, kk, v)
+                    self._check_class(s, kk, v, skip=skip)
                 else:
-                    self._check_class(element, kk, v)
+                    self._check_class(element, kk, v, skip=skip)
         elif isinstance(value, bool):
             element.text = str(value)
         elif isinstance(value, str):
@@ -154,7 +158,7 @@ class XMLSerializer(BaseEncoderDecoder):
         elif isinstance(value, list):
             for i in value:
                 s = ET.SubElement(element, key)
-                self._check_class(s, None, i)
+                self._check_class(s, None, i, skip=skip)
         elif value is None:
             element.text = "None"
         elif issubclass(T_, Number):
@@ -162,4 +166,5 @@ class XMLSerializer(BaseEncoderDecoder):
         elif issubclass(T_, np.ndarray):
             element.text = str(value.tolist())
         else:
+            print(f"Cannot encode {T_} to XML")
             raise NotImplementedError
