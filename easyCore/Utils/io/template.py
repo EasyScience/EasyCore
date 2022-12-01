@@ -293,9 +293,16 @@ def recursive_encoder(
         encoder = BaseEncoderDecoder()
     T_ = type(obj)
     if issubclass(T_, (list, tuple, MutableSequence)):
-        return [
-            recursive_encoder(it, skip, encoder, full_encode, **kwargs) for it in obj
-        ]
+        # Is it a core MutableSequence?
+        if (
+            hasattr(obj, "encode") and obj.__class__.__module__ != "builtins"
+        ):  # strings have encode
+            return encoder._convert_to_dict(obj, skip, full_encode, **kwargs)
+        else:
+            return [
+                recursive_encoder(it, skip, encoder, full_encode, **kwargs)
+                for it in obj
+            ]
     if isinstance(obj, dict):
         return {
             kk: recursive_encoder(vv, skip, encoder, full_encode, **kwargs)

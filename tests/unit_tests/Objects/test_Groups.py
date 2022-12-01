@@ -528,3 +528,27 @@ def test_baseCollection_sort_reverse(cls):
     d.sort(lambda x: x.raw_value, reverse=True)
     for i, item in enumerate(d):
         assert item.raw_value == expected[i]
+
+
+class Beta(BaseObj):
+    pass
+
+
+@pytest.mark.parametrize("cls", class_constructors)
+def test_basecollectionGraph(cls):
+    from easyCore import borg
+
+    G = borg.map
+    name = "test"
+    v = [1, 2]
+    p = [Parameter(f"p{i}", v[i]) for i in range(len(v))]
+    p_id = [G.convert_id_to_key(_p) for _p in p]
+    bb = cls(name, *p)
+    bb_id = G.convert_id_to_key(bb)
+    b = Beta("b", bb=bb)
+    b_id = G.convert_id_to_key(b)
+    for _id in p_id:
+        assert _id in G.get_edges(bb)
+    assert len(p) == len(G.get_edges(bb))
+    assert bb_id in G.get_edges(b)
+    assert 1 == len(G.get_edges(b))
