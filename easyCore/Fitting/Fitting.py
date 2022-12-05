@@ -282,10 +282,10 @@ class Fitter:
             constraints = self.__engine_obj._constraints
             self.fit_function = fit_fun_wrap
             self.__engine_obj._constraints = constraints
-            f_res = self.engine.fit(x_fit, y_new, **kwargs)
+            f_res = self.engine.fit(x_fit, y_new, weights=weights, **kwargs)
 
             # Postcompute
-            fit_result = self._post_compute_reshaping(f_res, x, y)
+            fit_result = self._post_compute_reshaping(f_res, x, y, weights)
             # Reset the function and constrains
             self.fit_function = fit_fun
             self.__engine_obj._constraints = constraints
@@ -346,7 +346,9 @@ class Fitter:
         return x_for_fit, x_new, y_new, weights, x_shape, kwargs
 
     @staticmethod
-    def _post_compute_reshaping(fit_result: FR, x: np.ndarray, y: np.ndarray) -> FR:
+    def _post_compute_reshaping(
+        fit_result: FR, x: np.ndarray, y: np.ndarray, weights: np.ndarray
+    ) -> FR:
         """
         Reshape the output of the fitter into the correct dimensions.
         :param fit_result: Output from the fitter
@@ -357,7 +359,7 @@ class Fitter:
         setattr(fit_result, "x", x)
         setattr(fit_result, "y_obs", y)
         setattr(fit_result, "y_calc", np.reshape(fit_result.y_calc, y.shape))
-        setattr(fit_result, "residual", np.reshape(fit_result.residual, y.shape))
+        setattr(fit_result, "y_err", np.reshape(fit_result.y_err, y.shape))
         return fit_result
 
 
@@ -444,12 +446,19 @@ class MultiFitter(Fitter):
             w_new.append(_weights)
             dims.append(_dims)
         y_new = np.hstack(y_new)
-        w_new = np.hstack(w_new)
+        if w_new[0] is None:
+            w_new = None
+        else:
+            w_new = np.hstack(w_new)
         x_fit = np.linspace(0, y_new.size - 1, y_new.size)
         return x_fit, x_new, y_new, w_new, dims, kwargs
 
     def _post_compute_reshaping(
-        self, fit_result_obj: FR, x: List[np.ndarray], y: List[np.ndarray]
+        self,
+        fit_result_obj: FR,
+        x: List[np.ndarray],
+        y: List[np.ndarray],
+        weights: List[np.ndarray],
     ) -> List[FR]:
         """
         Take a fit results object and split it into n chuncks based on the size of the x, y inputs
@@ -477,14 +486,13 @@ class MultiFitter(Fitter):
             current_results.y_calc = np.reshape(
                 fit_result_obj.y_calc[sp:ep], current_results.y_obs.shape
             )
-            current_results.residual = np.reshape(
-                fit_result_obj.residual[sp:ep], current_results.y_obs.shape
+            current_results.y_err = np.reshape(
+                fit_result_obj.y_err[sp:ep], current_results.y_obs.shape
             )
-            current_results.goodness_of_fit = np.sum(current_results.residual**2)
             current_results.engine_result = fit_result_obj.engine_result
 
             # Attach an additional field for the un-modified results
             current_results.total_results = fit_result_obj
-
+            fit_results_list.append(current_results)
             sp = ep
         return fit_results_list

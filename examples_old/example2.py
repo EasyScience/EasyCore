@@ -1,5 +1,5 @@
-__author__ = 'github.com/wardsimon'
-__version__ = '0.1.0'
+__author__ = "github.com/wardsimon"
+__version__ = "0.1.0"
 
 import numpy as np
 from easyCore.Objects.ObjectClasses import Parameter, BaseObj
@@ -17,12 +17,11 @@ class Line(BaseObj):
     _c = 0
 
     def __init__(self):
-        super().__init__(self.__class__.__name__,
-                         *self._defaults)
+        super().__init__(self.__class__.__name__, *self._defaults)
 
     @property
     def _defaults(self):
-        return [Parameter('m', self._m), Parameter('c', self._c)]
+        return [Parameter("m", self._m), Parameter("c", self._c)]
 
     @property
     def gradient(self):
@@ -36,7 +35,7 @@ class Line(BaseObj):
         return self.gradient * x + self.intercept
 
     def __repr__(self):
-        return f'Line: m={self.m}, c={self.c}'
+        return f"Line: m={self.m}, c={self.c}"
 
 
 l = Line()
@@ -48,5 +47,5 @@ y = np.array([2, 4, 6]) - 1
 
 f_res = f.fit(x, y)
 
-print(f_res.goodness_of_fit)
+print(f_res.chi2)
 print(l)
