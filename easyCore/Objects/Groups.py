@@ -248,6 +248,15 @@ class BaseCollection(BasedBase, MutableSequence):
 
     @property
     def data(self) -> Tuple:
+        """
+        The data function returns a tuple of the keyword arguments passed to the
+        constructor. This is useful for when you need to pass in a dictionary of data
+        to other functions, such as with matplotlib's plot function.
+
+        :param self: Access attributes of the class within the method
+        :return: The values of the attributes in a tuple
+        :doc-author: Trelent
+        """
         return tuple(self._kwargs.values())
 
     def __repr__(self) -> str:

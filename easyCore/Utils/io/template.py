@@ -222,7 +222,9 @@ class BaseEncoderDecoder:
         if isinstance(obj, Enum):
             d.update({"value": runner(obj.value)})  # pylint: disable=E1101
         if hasattr(obj, "_convert_to_dict"):
-            d = obj._convert_to_dict(d, self)
+            d = obj._convert_to_dict(d, self, skip=skip, **kwargs)
+        if hasattr(obj, "_borg") and "@id" not in d:
+            d["@id"] = str(obj._borg.map.convert_id(obj).int)
         return d
 
     @staticmethod
