@@ -296,6 +296,28 @@ def test_variable_DataDictSerializer_decode(dp_kwargs: dict, dp_cls: Type[Descri
         dec = obj.decode(enc, decoder=DataDictSerializer)
 
 
+def test_group_encode():
+    d0 = Descriptor("a", 0)
+    d1 = Descriptor("b", 1)
+
+    from easyCore.Objects.Groups import BaseCollection
+
+    b = BaseCollection("test", d0, d1)
+    d = b.as_dict()
+    assert isinstance(d["data"], list)
+
+
+def test_group_encode2():
+    d0 = Descriptor("a", 0)
+    d1 = Descriptor("b", 1)
+
+    from easyCore.Objects.Groups import BaseCollection
+
+    b = BaseObj("outer", b=BaseCollection("test", d0, d1))
+    d = b.as_dict()
+    assert isinstance(d["b"], dict)
+
+
 #
 # @pytest.mark.parametrize(**dp_param_dict)
 # def test_custom_class_DictSerializer_decode(dp_kwargs: dict, dp_cls: Type[Descriptor]):

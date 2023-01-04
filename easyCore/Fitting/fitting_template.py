@@ -206,8 +206,7 @@ class FitResults:
         "x_matrices",
         "y_obs",
         "y_calc",
-        "residual",
-        "goodness_of_fit",
+        "y_err",
         "engine_result",
         "total_results",
     ]
@@ -222,8 +221,7 @@ class FitResults:
         self.x_matrices = np.ndarray([])
         self.y_obs = np.ndarray([])
         self.y_calc = np.ndarray([])
-        self.goodness_of_fit = np.Inf
-        self.residual = np.ndarray([])
+        self.y_err = np.ndarray([])
         self.engine_result = None
         self.total_results = None
 
@@ -232,8 +230,16 @@ class FitResults:
         return len(self.p)
 
     @property
+    def residual(self):
+        return self.y_obs - self.y_calc
+
+    @property
+    def chi2(self):
+        return ((self.residual / self.y_err) ** 2).sum()
+
+    @property
     def reduced_chi(self):
-        return self.goodness_of_fit / (len(self.x) - self.n_pars)
+        return self.chi2 / (len(self.x) - self.n_pars)
 
 
 class NameConverter:

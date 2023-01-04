@@ -288,8 +288,9 @@ class bumps(FittingTemplate):  # noqa: S101
         results.x = self._cached_model.x
         results.y_obs = self._cached_model.y
         results.y_calc = self.evaluate(results.x, parameters=results.p)
-        results.residual = results.y_obs - results.y_calc
-        results.goodness_of_fit = np.sum(results.residual**2)
+        results.y_err = self._cached_model.dy
+        # results.residual = results.y_obs - results.y_calc
+        # results.goodness_of_fit = np.sum(results.residual**2)
         results.fitting_engine = self.__class__
         results.fit_args = None
         results.engine_result = fit_results

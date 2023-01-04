@@ -107,7 +107,7 @@ class lmfit(FittingTemplate):  # noqa: S101
             for name, value in kwargs.items():
                 par_name = int(name[1:])
                 if par_name in self._cached_pars.keys():
-                    # This will take in to account constraints
+                    # This will take into account constraints
                     self._cached_pars[par_name].value = value
                     # Since we are calling the parameter fset will be called.
             # TODO Pre processing here
@@ -178,7 +178,7 @@ class lmfit(FittingTemplate):  # noqa: S101
             default_method["method"] = method
 
         if weights is None:
-            weights = np.sqrt(np.abs(y))
+            weights = 1 / np.sqrt(np.abs(y))
 
         if engine_kwargs is None:
             engine_kwargs = {}
@@ -276,13 +276,13 @@ class lmfit(FittingTemplate):  # noqa: S101
         # We need to unify return codes......
         results.success = fit_results.success
         results.y_obs = fit_results.data
-        results.residual = fit_results.residual
+        # results.residual = fit_results.residual
         results.x = fit_results.userkws["x"]
         results.p = fit_results.values
         results.p0 = fit_results.init_values
-        results.goodness_of_fit = fit_results.chisqr
+        # results.goodness_of_fit = fit_results.chisqr
         results.y_calc = fit_results.best_fit
-
+        results.y_err = 1 / fit_results.weights
         results.fitting_engine = self.__class__
         results.fit_args = None
 
