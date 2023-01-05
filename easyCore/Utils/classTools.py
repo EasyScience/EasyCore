@@ -1,6 +1,6 @@
-#  SPDX-FileCopyrightText: 2022 easyCore contributors  <core@easyscience.software>
+#  SPDX-FileCopyrightText: 2023 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
-#  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+#  © 2021-2023 Contributors to the easyCore project <https://github.com/easyScience/easyCore
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ from easyCore.Utils.Hugger.Property import LoggedProperty
 
 if TYPE_CHECKING:
     from easyCore.Utils.typing import B, BV
+
 
 def addLoggedProp(inst: BV, name: str, *args, **kwargs) -> None:
     cls = type(inst)
@@ -42,7 +43,7 @@ def addProp(inst: BV, name: str, *args, **kwargs) -> None:
     setattr(cls, name, property(*args, **kwargs))
 
 
-def removeProp(inst: BV, name: str) ->None:
+def removeProp(inst: BV, name: str) -> None:
     cls = type(inst)
     if not hasattr(cls, "__perinstance"):
         cls = type(cls.__name__, (cls,), {"__module__": __name__})
