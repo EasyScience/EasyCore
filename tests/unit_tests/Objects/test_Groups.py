@@ -1,9 +1,9 @@
 __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
-#  SPDX-FileCopyrightText: 2022 easyCore contributors  <core@easyscience.software>
+#  SPDX-FileCopyrightText: 2023 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
-#  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+#  © 2021-2023 Contributors to the easyCore project <https://github.com/easyScience/easyCore
 
 from typing import List
 
@@ -338,8 +338,13 @@ def test_baseCollection_as_dict(cls):
     d = obj.as_dict()
 
     def check_dict(dict_1: dict, dict_2: dict):
-        keys_1 = dict_1.keys()
-        keys_2 = dict_2.keys()
+        keys_1 = list(dict_1.keys())
+        keys_2 = list(dict_2.keys())
+        if "@id" in keys_1:
+            del keys_1[keys_1.index("@id")]
+        if "@id" in keys_2:
+            del keys_2[keys_2.index("@id")]
+
         assert not set(keys_1).difference(set(keys_2))
 
         def testit(item1, item2):

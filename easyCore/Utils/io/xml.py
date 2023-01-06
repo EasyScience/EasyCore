@@ -1,3 +1,7 @@
+#  SPDX-FileCopyrightText: 2023 easyCore contributors  <core@easyscience.software>
+#  SPDX-License-Identifier: BSD-3-Clause
+#  © 2021-2023 Contributors to the easyCore project <https://github.com/easyScience/easyCore
+
 from __future__ import annotations
 
 __author__ = "github.com/wardsimon"
@@ -132,7 +136,9 @@ class XMLSerializer(BaseEncoderDecoder):
                 value = in_string
         return value
 
-    def _check_class(self, element, key: str, value: Any, skip: Optional[List[str]] = None):
+    def _check_class(
+        self, element, key: str, value: Any, skip: Optional[List[str]] = None
+    ):
         """
         Add a value to an element or create a new element based on input type.
         """
