@@ -183,6 +183,7 @@ def test_lmfit_methods(genObjs, fit_method):
     check_fit_results(result, sp_sin, ref_sin, x)
 
 
+@pytest.mark.xfail(reason="known bumps issue")
 @pytest.mark.parametrize("fit_method", ["newton", "lm"])
 def test_bumps_methods(genObjs, fit_method):
     ref_sin = genObjs[0]
