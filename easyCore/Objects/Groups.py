@@ -1,6 +1,6 @@
-#  SPDX-FileCopyrightText: 2022 easyCore contributors  <core@easyscience.software>
+#  SPDX-FileCopyrightText: 2023 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
-#  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+#  © 2021-2023 Contributors to the easyCore project <https://github.com/easyScience/easyCore
 
 from __future__ import annotations
 
@@ -227,24 +227,15 @@ class BaseCollection(BasedBase, MutableSequence):
         :return: dictionary of ones self
         :rtype: dict
         """
+        d = {}
+        if hasattr(self, "_modify_dict"):
+            # any extra keys defined on the inheriting class
+            d = self._modify_dict(skip=skip, **kwargs)
         in_dict["data"] = [
             encoder._convert_to_dict(item, skip=skip, **kwargs) for item in self
         ]
-        return in_dict
-        # data = []
-        # dd = {}
-        # for key in d.keys():
-        #     if key == "@id":
-        #         continue
-        #     if isinstance(d[key], dict):
-        #         data.append(d[key])
-        #     else:
-        #         dd[key] = d[key]
-        # dd["data"] = data
-        # # Attach the id. This might be useful in connected applications.
-        # # Note that it is converted to int and then str because javascript....
-        # dd["@id"] = d["@id"]
-        # return dd
+        out_dict = {**in_dict, **d}
+        return out_dict
 
     @property
     def data(self) -> Tuple:

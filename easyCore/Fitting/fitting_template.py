@@ -2,9 +2,9 @@ __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
 
-#  SPDX-FileCopyrightText: 2022 easyCore contributors  <core@easyscience.software>
+#  SPDX-FileCopyrightText: 2023 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
-#  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+#  © 2021-2023 Contributors to the easyCore project <https://github.com/easyScience/easyCore
 
 from abc import ABCMeta, abstractmethod
 from typing import Union, Callable, List, Optional
@@ -33,6 +33,7 @@ class FittingTemplate(metaclass=ABCMeta):
         self._object = obj
         self._original_fit_function = fit_function
         self._cached_pars = {}
+        self._cached_pars_vals = {}
         self._cached_model = None
         self._fit_function = None
         self._constraints = []
