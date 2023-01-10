@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>easyCore.Fitting.Constraints &mdash; easyCore 0.2.3 documentation</title>
+  <title>easyCore.Fitting.Constraints &mdash; easyCore 0.3.0 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/sg_gallery.css" type="text/css" />
@@ -76,9 +76,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../index.html">Module code</a> &raquo;</li>
-      <li>easyCore.Fitting.Constraints</li>
+      <li><a href="../../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">easyCore.Fitting.Constraints</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -88,37 +88,37 @@
            <div itemprop="articleBody">
              
   <h1>Source code for easyCore.Fitting.Constraints</h1><div class="highlight"><pre>
-<span></span><span class="c1">#  SPDX-FileCopyrightText: 2022 easyCore contributors  &lt;core@easyscience.software&gt;</span>
+<span></span><span class="c1">#  SPDX-FileCopyrightText: 2023 easyCore contributors  &lt;core@easyscience.software&gt;</span>
 <span class="c1">#  SPDX-License-Identifier: BSD-3-Clause</span>
-<span class="c1">#  © 2021-2022 Contributors to the easyCore project &lt;https://github.com/easyScience/easyCore&gt;</span>
+<span class="c1">#  © 2021-2023 Contributors to the easyCore project &lt;https://github.com/easyScience/easyCore</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">annotations</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;github.com/wardsimon&quot;</span>
 <span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;0.1.0&quot;</span>
 
-<span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">abstractmethod</span><span class="p">,</span> <span class="n">ABCMeta</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span><span class="p">,</span> <span class="n">ABCMeta</span>
 
 <span class="kn">import</span> <span class="nn">weakref</span>
-<span class="kn">from</span> <span class="nn">asteval</span> <span class="k">import</span> <span class="n">Interpreter</span>
-<span class="kn">from</span> <span class="nn">numbers</span> <span class="k">import</span> <span class="n">Number</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TypeVar</span>
+<span class="kn">from</span> <span class="nn">asteval</span> <span class="kn">import</span> <span class="n">Interpreter</span>
+<span class="kn">from</span> <span class="nn">numbers</span> <span class="kn">import</span> <span class="n">Number</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TypeVar</span>
 
-<span class="kn">from</span> <span class="nn">easyCore</span> <span class="k">import</span> <span class="n">borg</span><span class="p">,</span> <span class="n">np</span>
-<span class="kn">from</span> <span class="nn">easyCore.Utils.json</span> <span class="k">import</span> <span class="n">MSONable</span>
+<span class="kn">from</span> <span class="nn">easyCore</span> <span class="kn">import</span> <span class="n">borg</span><span class="p">,</span> <span class="n">np</span>
+<span class="kn">from</span> <span class="nn">easyCore.Objects.core</span> <span class="kn">import</span> <span class="n">ComponentSerializer</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">easyCore.Objects.Variable</span> <span class="k">import</span> <span class="n">V</span>
+    <span class="kn">from</span> <span class="nn">easyCore.Objects.Variable</span> <span class="kn">import</span> <span class="n">V</span>
 
 
-<div class="viewcode-block" id="ConstraintBase"><a class="viewcode-back" href="../../../fitting/constraints.html#easyCore.Fitting.Constraints.ConstraintBase">[docs]</a><span class="k">class</span> <span class="nc">ConstraintBase</span><span class="p">(</span><span class="n">MSONable</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="ConstraintBase"><a class="viewcode-back" href="../../../fitting/constraints.html#easyCore.Fitting.Constraints.ConstraintBase">[docs]</a><span class="k">class</span> <span class="nc">ConstraintBase</span><span class="p">(</span><span class="n">ComponentSerializer</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A base class used to describe a constraint to be applied to easyCore base objects.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">_borg</span> <span class="o">=</span> <span class="n">borg</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">dependent_obj</span><span class="p">:</span> <span class="n">V</span><span class="p">,</span>
         <span class="n">independent_obj</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">V</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">V</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -155,8 +155,8 @@
                     <span class="p">)</span>
                 <span class="k">if</span> <span class="n">borg</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
                     <span class="nb">print</span><span class="p">(</span>
-                        <span class="n">f</span><span class="s2">&quot;Dependent variable </span><span class="si">{dependent_obj}</span><span class="s2">. It should be a `Descriptor`.&quot;</span>
-                        <span class="n">f</span><span class="s2">&quot;Setting to fixed&quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;Dependent variable </span><span class="si">{</span><span class="n">dependent_obj</span><span class="si">}</span><span class="s2">. It should be a `Descriptor`.&quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;Setting to fixed&quot;</span>
                     <span class="p">)</span>
                 <span class="n">dependent_obj</span><span class="o">.</span><span class="n">enabled</span> <span class="o">=</span> <span class="kc">False</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_finalizer</span> <span class="o">=</span> <span class="n">weakref</span><span class="o">.</span><span class="n">finalize</span><span class="p">(</span>
@@ -168,7 +168,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Is the current constraint enabled.</span>
 
 <span class="sd">        :return: Logical answer to if the constraint is enabled.</span>
@@ -177,7 +177,7 @@
 
     <span class="nd">@enabled</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enabled_value</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">                Set the enabled state of the constraint. If the new value is the same as the current value only the state is</span>
 <span class="sd">                changed.</span>
 
@@ -196,8 +196,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">get_obj</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dependent_obj_ids</span><span class="p">)</span><span class="o">.</span><span class="n">enabled</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_enabled</span> <span class="o">=</span> <span class="n">enabled_value</span>
 
-    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">no_set</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">no_set</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Method which applies the constraint</span>
 
 <span class="sd">        :return: None if `no_set` is False, float otherwise.</span>
@@ -234,7 +234,7 @@
 
 <div class="viewcode-block" id="ConstraintBase._parse_operator"><a class="viewcode-back" href="../../../fitting/constraints.html#easyCore.Fitting.Constraints.ConstraintBase._parse_operator">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">_parse_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="n">V</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Number</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Abstract method which contains the constraint logic</span>
 
 <span class="sd">        :param obj: The object/objects which the constraint will use</span>
@@ -242,11 +242,11 @@
 <span class="sd">        &quot;&quot;&quot;</span></div>
 
 <div class="viewcode-block" id="ConstraintBase.__repr__"><a class="viewcode-back" href="../../../fitting/constraints.html#easyCore.Fitting.Constraints.ConstraintBase.__repr__">[docs]</a>    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="ConstraintBase.get_key"><a class="viewcode-back" href="../../../fitting/constraints.html#easyCore.Fitting.Constraints.ConstraintBase.get_key">[docs]</a>    <span class="k">def</span> <span class="nf">get_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the unique key of a easyCore object</span>
 
 <span class="sd">        :param obj: easyCore object</span>
@@ -255,7 +255,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_borg</span><span class="o">.</span><span class="n">map</span><span class="o">.</span><span class="n">convert_id_to_key</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ConstraintBase.get_obj"><a class="viewcode-back" href="../../../fitting/constraints.html#easyCore.Fitting.Constraints.ConstraintBase.get_obj">[docs]</a>    <span class="k">def</span> <span class="nf">get_obj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">V</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get an easyCore object from its unique key</span>
 
 <span class="sd">        :param key: an easyCore objects unique key</span>
@@ -268,15 +268,13 @@
 
 
 <div class="viewcode-block" id="NumericConstraint"><a class="viewcode-back" href="../../../fitting/constraints.html#easyCore.Fitting.Constraints.NumericConstraint">[docs]</a><span class="k">class</span> <span class="nc">NumericConstraint</span><span class="p">(</span><span class="n">ConstraintBase</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A `NumericConstraint` is a constraint whereby a dependent parameters value is something of an independent parameters</span>
 <span class="sd">    value. I.e. a &lt; 1, a &gt; 5</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">dependent_obj</span><span class="p">:</span> <span class="n">V</span><span class="p">,</span> <span class="n">operator</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Number</span>
-    <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dependent_obj</span><span class="p">:</span> <span class="n">V</span><span class="p">,</span> <span class="n">operator</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Number</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A `NumericConstraint` is a constraint whereby a dependent parameters value is something of an independent</span>
 <span class="sd">        parameters value. I.e. a &lt; 1, a &gt; 5</span>
 
@@ -303,16 +301,14 @@
             <span class="n">dependent_obj</span><span class="p">,</span> <span class="n">operator</span><span class="o">=</span><span class="n">operator</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_parse_operator</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="n">V</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Number</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_parse_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="n">V</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Number</span><span class="p">:</span>
         <span class="n">value</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">raw_value</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">aeval</span><span class="o">.</span><span class="n">symtable</span><span class="p">[</span><span class="s2">&quot;value1&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">aeval</span><span class="o">.</span><span class="n">symtable</span><span class="p">[</span><span class="s2">&quot;value2&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">aeval</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;value3 = value1 </span><span class="si">{self.operator}</span><span class="s2"> value2&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">aeval</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;value3 = value1 </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="si">}</span><span class="s2"> value2&quot;</span><span class="p">)</span>
             <span class="n">logic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aeval</span><span class="o">.</span><span class="n">symtable</span><span class="p">[</span><span class="s2">&quot;value3&quot;</span><span class="p">]</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">logic</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
                 <span class="n">value</span><span class="p">[</span><span class="ow">not</span> <span class="n">logic</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aeval</span><span class="o">.</span><span class="n">symtable</span><span class="p">[</span><span class="s2">&quot;value2&quot;</span><span class="p">]</span>
@@ -322,23 +318,21 @@
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">e</span>
         <span class="k">finally</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">aeval</span><span class="o">.</span><span class="n">symtable</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">aeval</span> <span class="o">=</span> <span class="n">Interpreter</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">value</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{self.__class__.__name__}</span><span class="s2"> with `value` </span><span class="si">{self.operator}</span><span class="s2"> </span><span class="si">{self.value}</span><span class="s2">&quot;</span></div>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> with `value` </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span></div>
 
 
 <div class="viewcode-block" id="SelfConstraint"><a class="viewcode-back" href="../../../fitting/constraints.html#easyCore.Fitting.Constraints.SelfConstraint">[docs]</a><span class="k">class</span> <span class="nc">SelfConstraint</span><span class="p">(</span><span class="n">ConstraintBase</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A `SelfConstraint` is a constraint which tests a logical constraint on a property of itself, similar to a</span>
 <span class="sd">    `NumericConstraint`. i.e. a &gt; a.min. These constraints are usually used in the internal easyCore logic.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">dependent_obj</span><span class="p">:</span> <span class="n">V</span><span class="p">,</span> <span class="n">operator</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dependent_obj</span><span class="p">:</span> <span class="n">V</span><span class="p">,</span> <span class="n">operator</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A `SelfConstraint` is a constraint which tests a logical constraint on a property of itself, similar to</span>
 <span class="sd">        a `NumericConstraint`. i.e. a &gt; a.min.</span>
 
@@ -365,14 +359,12 @@
             <span class="n">dependent_obj</span><span class="p">,</span> <span class="n">operator</span><span class="o">=</span><span class="n">operator</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_parse_operator</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="n">V</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Number</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_parse_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="n">V</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Number</span><span class="p">:</span>
         <span class="n">value</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">raw_value</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">aeval</span><span class="o">.</span><span class="n">symtable</span><span class="p">[</span><span class="s2">&quot;value1&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">aeval</span><span class="o">.</span><span class="n">symtable</span><span class="p">[</span><span class="s2">&quot;value2&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">aeval</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;value3 = value1 </span><span class="si">{self.operator}</span><span class="s2"> value2&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">aeval</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;value3 = value1 </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="si">}</span><span class="s2"> value2&quot;</span><span class="p">)</span>
             <span class="n">logic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aeval</span><span class="o">.</span><span class="n">symtable</span><span class="p">[</span><span class="s2">&quot;value3&quot;</span><span class="p">]</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">logic</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
                 <span class="n">value</span><span class="p">[</span><span class="ow">not</span> <span class="n">logic</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aeval</span><span class="o">.</span><span class="n">symtable</span><span class="p">[</span><span class="s2">&quot;value2&quot;</span><span class="p">]</span>
@@ -382,25 +374,23 @@
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">e</span>
         <span class="k">finally</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">aeval</span><span class="o">.</span><span class="n">symtable</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">aeval</span> <span class="o">=</span> <span class="n">Interpreter</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">value</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">(</span>
-            <span class="n">f</span><span class="s2">&quot;</span><span class="si">{self.__class__.__name__}</span><span class="s2"> with `value` </span><span class="si">{self.operator}</span><span class="s2"> obj.</span><span class="si">{self.value}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> with `value` </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="si">}</span><span class="s2"> obj.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="ObjConstraint"><a class="viewcode-back" href="../../../fitting/constraints.html#easyCore.Fitting.Constraints.ObjConstraint">[docs]</a><span class="k">class</span> <span class="nc">ObjConstraint</span><span class="p">(</span><span class="n">ConstraintBase</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A `ObjConstraint` is a constraint whereby a dependent parameter is something of an independent parameter</span>
 <span class="sd">    value. E.g. a (Dependent Parameter) = 2* b (Independent Parameter)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">dependent_obj</span><span class="p">:</span> <span class="n">V</span><span class="p">,</span> <span class="n">operator</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">independent_obj</span><span class="p">:</span> <span class="n">V</span>
-    <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dependent_obj</span><span class="p">:</span> <span class="n">V</span><span class="p">,</span> <span class="n">operator</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">independent_obj</span><span class="p">:</span> <span class="n">V</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A `ObjConstraint` is a constraint whereby a dependent parameter is something of an independent parameter</span>
 <span class="sd">        value. E.g. a (Dependent Parameter) &lt; b (Independent Parameter)</span>
 
@@ -429,38 +419,36 @@
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">external</span> <span class="o">=</span> <span class="kc">True</span>
 
-    <span class="k">def</span> <span class="nf">_parse_operator</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="n">V</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Number</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_parse_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="n">V</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Number</span><span class="p">:</span>
         <span class="n">value</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">raw_value</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">aeval</span><span class="o">.</span><span class="n">symtable</span><span class="p">[</span><span class="s2">&quot;value1&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">aeval</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;value2 = </span><span class="si">{self.operator}</span><span class="s2"> value1&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">aeval</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;value2 = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="si">}</span><span class="s2"> value1&quot;</span><span class="p">)</span>
             <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aeval</span><span class="o">.</span><span class="n">symtable</span><span class="p">[</span><span class="s2">&quot;value2&quot;</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">e</span>
         <span class="k">finally</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">aeval</span><span class="o">.</span><span class="n">symtable</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">aeval</span> <span class="o">=</span> <span class="n">Interpreter</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">value</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{self.__class__.__name__}</span><span class="s2"> with `dependent_obj` = </span><span class="si">{self.operator}</span><span class="s2"> `independent_obj`&quot;</span></div>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> with `dependent_obj` = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="si">}</span><span class="s2"> `independent_obj`&quot;</span></div>
 
 
 <div class="viewcode-block" id="MultiObjConstraint"><a class="viewcode-back" href="../../../fitting/constraints.html#easyCore.Fitting.Constraints.MultiObjConstraint">[docs]</a><span class="k">class</span> <span class="nc">MultiObjConstraint</span><span class="p">(</span><span class="n">ConstraintBase</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A `MultiObjConstraint` is similar to :class:`easyCore.Fitting.Constraints.ObjConstraint` except that it relates to</span>
 <span class="sd">    multiple independent objects.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">independent_objs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">V</span><span class="p">],</span>
         <span class="n">operator</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
         <span class="n">dependent_obj</span><span class="p">:</span> <span class="n">V</span><span class="p">,</span>
         <span class="n">value</span><span class="p">:</span> <span class="n">Number</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A `MultiObjConstraint` is similar to :class:`easyCore.Fitting.Constraints.ObjConstraint` except that it relates</span>
 <span class="sd">        to one or more independent objects.</span>
 
@@ -518,9 +506,7 @@
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">external</span> <span class="o">=</span> <span class="kc">True</span>
 
-    <span class="k">def</span> <span class="nf">_parse_operator</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">independent_objs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">V</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Number</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_parse_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">independent_objs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">V</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Number</span><span class="p">:</span>
         <span class="n">in_str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="n">value</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">obj</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">independent_objs</span><span class="p">):</span>
@@ -531,30 +517,30 @@
             <span class="k">if</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="p">):</span>
                 <span class="n">in_str</span> <span class="o">+=</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">aeval</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;final_value = </span><span class="si">{self.value}</span><span class="s2"> - (</span><span class="si">{in_str}</span><span class="s2">)&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">aeval</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;final_value = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> - (</span><span class="si">{</span><span class="n">in_str</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
             <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aeval</span><span class="o">.</span><span class="n">symtable</span><span class="p">[</span><span class="s2">&quot;final_value&quot;</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">e</span>
         <span class="k">finally</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">aeval</span><span class="o">.</span><span class="n">symtable</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">aeval</span> <span class="o">=</span> <span class="n">Interpreter</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">value</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{self.__class__.__name__}</span><span class="s2">&quot;</span></div>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span></div>
 
 
 <div class="viewcode-block" id="FunctionalConstraint"><a class="viewcode-back" href="../../../fitting/constraints.html#easyCore.Fitting.Constraints.FunctionalConstraint">[docs]</a><span class="k">class</span> <span class="nc">FunctionalConstraint</span><span class="p">(</span><span class="n">ConstraintBase</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Functional constraints do not depend on other parameters and as such can be more complex.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">dependent_obj</span><span class="p">:</span> <span class="n">V</span><span class="p">,</span>
         <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
         <span class="n">independent_objs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">V</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Functional constraints do not depend on other parameters and as such can be more complex.</span>
 
 <span class="sd">        :param dependent_obj: Dependent Parameter</span>
@@ -584,17 +570,15 @@
         <span class="k">if</span> <span class="n">independent_objs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">external</span> <span class="o">=</span> <span class="kc">True</span>
 
-    <span class="k">def</span> <span class="nf">_parse_operator</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="n">V</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Number</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">aeval</span><span class="o">.</span><span class="n">symtable</span><span class="p">[</span><span class="n">f</span><span class="s2">&quot;f{id(self.function)}&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span>
-        <span class="n">value_str</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;r_value = f{id(self.function)}(&quot;</span>
+    <span class="k">def</span> <span class="nf">_parse_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="n">V</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Number</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aeval</span><span class="o">.</span><span class="n">symtable</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;f</span><span class="si">{</span><span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span>
+        <span class="n">value_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;r_value = f</span><span class="si">{</span><span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">)</span><span class="si">}</span><span class="s2">(&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">:</span>
-                <span class="n">value_str</span> <span class="o">+=</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{o.raw_value}</span><span class="s2">,&quot;</span>
+                <span class="n">value_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">o</span><span class="o">.</span><span class="n">raw_value</span><span class="si">}</span><span class="s2">,&quot;</span>
             <span class="n">value_str</span> <span class="o">=</span> <span class="n">value_str</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">value_str</span> <span class="o">+=</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{obj.raw_value}</span><span class="s2">&quot;</span>
+            <span class="n">value_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">obj</span><span class="o">.</span><span class="n">raw_value</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="n">value_str</span> <span class="o">+=</span> <span class="s2">&quot;)&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">aeval</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">value_str</span><span class="p">)</span>
@@ -602,11 +586,11 @@
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">e</span>
         <span class="k">finally</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">aeval</span><span class="o">.</span><span class="n">symtable</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">aeval</span> <span class="o">=</span> <span class="n">Interpreter</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">value</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{self.__class__.__name__}</span><span class="s2">&quot;</span></div>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span></div>
 
 
 <span class="k">def</span> <span class="nf">cleanup_constraint</span><span class="p">(</span><span class="n">obj_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
@@ -615,7 +599,7 @@
         <span class="n">obj</span><span class="o">.</span><span class="n">enabled</span> <span class="o">=</span> <span class="n">enabled</span>
     <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">borg</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Object with ID </span><span class="si">{obj_id}</span><span class="s2"> has already been deleted&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Object with ID </span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2"> has already been deleted&quot;</span><span class="p">)</span>
 </pre></div>
 
            </div>

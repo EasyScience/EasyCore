@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Constraints &mdash; easyCore 0.2.3 documentation</title>
+  <title>Constraints &mdash; easyCore 0.3.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/sg_gallery.css" type="text/css" />
@@ -93,8 +93,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Constraints</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Constraints</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/fitting/constraints.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -138,13 +138,10 @@
 <h2>Constraint Reference<a class="headerlink" href="#constraint-reference" title="Permalink to this heading"></a></h2>
 <section id="examples-using-constraints">
 <h3>Examples using <cite>Constraints</cite><a class="headerlink" href="#examples-using-constraints" title="Permalink to this heading"></a></h3>
-<div class="sphx-glr-thumbcontainer" tooltip="Constraints example"><figure class="align-default" id="id1">
-<img alt="Constraints example" src="../_images/sphx_glr_plot_constraints_thumb.png" />
-<figcaption>
-<p><span class="caption-text"><a class="reference internal" href="../fitting_examples/plot_constraints.html#sphx-glr-fitting-examples-plot-constraints-py"><span class="std std-ref">Constraints example</span></a></span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
-</figcaption>
-</figure>
-</div><div class="sphx-glr-clear"></div></section>
+<div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="Constraints example"><img alt="Constraints example" src="../_images/sphx_glr_plot_constraints_thumb.png" />
+<p><a class="reference internal" href="../fitting_examples/plot_constraints.html#sphx-glr-fitting-examples-plot-constraints-py"><span class="std std-ref">Constraints example</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Constraints example</div>
+</div></div></section>
 <section id="built-in-constraints">
 <h3>Built-in constraints<a class="headerlink" href="#built-in-constraints" title="Permalink to this heading"></a></h3>
 <p>These are the built in constraints which you can use</p>
@@ -156,9 +153,9 @@ a <cite>NumericConstraint</cite>. i.e. a &gt; a.min.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dependent_obj</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">V</span></code>, bound= <code class="xref py py-class docutils literal notranslate"><span class="pre">Descriptor</span></code>)) – Dependent Parameter</p></li>
-<li><p><strong>operator</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Relation to between the parameter and the values. e.g. <code class="docutils literal notranslate"><span class="pre">=</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code></p></li>
-<li><p><strong>value</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Name of attribute to be compared against</p></li>
+<li><p><strong>dependent_obj</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">V</span></code>, bound= <code class="xref py py-class docutils literal notranslate"><span class="pre">Descriptor</span></code>)) – Dependent Parameter</p></li>
+<li><p><strong>operator</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Relation to between the parameter and the values. e.g. <code class="docutils literal notranslate"><span class="pre">=</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code></p></li>
+<li><p><strong>value</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Name of attribute to be compared against</p></li>
 </ul>
 </dd>
 <dt class="field-even">Example</dt>
@@ -179,11 +176,11 @@ a <cite>NumericConstraint</cite>. i.e. a &gt; a.min.</p>
 </div>
 <dl class="py property">
 <dt class="sig sig-object py" id="easyCore.Fitting.Constraints.SelfConstraint.enabled">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></em><a class="headerlink" href="#easyCore.Fitting.Constraints.SelfConstraint.enabled" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></em><a class="headerlink" href="#easyCore.Fitting.Constraints.SelfConstraint.enabled" title="Permalink to this definition"></a></dt>
 <dd><p>Is the current constraint enabled.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Logical answer to if the constraint is enabled.</p>
@@ -201,9 +198,9 @@ parameters value. I.e. a &lt; 1, a &gt; 5</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dependent_obj</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">V</span></code>, bound= <code class="xref py py-class docutils literal notranslate"><span class="pre">Descriptor</span></code>)) – Dependent Parameter</p></li>
-<li><p><strong>operator</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Relation to between the parameter and the values. e.g. <code class="docutils literal notranslate"><span class="pre">=</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code></p></li>
-<li><p><strong>value</strong> (<a class="reference external" href="https://docs.python.org/3/library/numbers.html#numbers.Number" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Number</span></code></a>) – What the parameters value should be compared against.</p></li>
+<li><p><strong>dependent_obj</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">V</span></code>, bound= <code class="xref py py-class docutils literal notranslate"><span class="pre">Descriptor</span></code>)) – Dependent Parameter</p></li>
+<li><p><strong>operator</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Relation to between the parameter and the values. e.g. <code class="docutils literal notranslate"><span class="pre">=</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code></p></li>
+<li><p><strong>value</strong> (<a class="reference external" href="https://docs.python.org/3/library/numbers.html#numbers.Number" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Number</span></code></a>) – What the parameters value should be compared against.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Example</dt>
@@ -224,11 +221,11 @@ parameters value. I.e. a &lt; 1, a &gt; 5</p>
 </div>
 <dl class="py property">
 <dt class="sig sig-object py" id="easyCore.Fitting.Constraints.NumericConstraint.enabled">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></em><a class="headerlink" href="#easyCore.Fitting.Constraints.NumericConstraint.enabled" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></em><a class="headerlink" href="#easyCore.Fitting.Constraints.NumericConstraint.enabled" title="Permalink to this definition"></a></dt>
 <dd><p>Is the current constraint enabled.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Logical answer to if the constraint is enabled.</p>
@@ -246,9 +243,9 @@ value. E.g. a (Dependent Parameter) &lt; b (Independent Parameter)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dependent_obj</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">V</span></code>, bound= <code class="xref py py-class docutils literal notranslate"><span class="pre">Descriptor</span></code>)) – Dependent Parameter</p></li>
-<li><p><strong>operator</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Relation to between the independent parameter and dependent parameter. e.g. <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">*</span></code>, <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">+</span></code></p></li>
-<li><p><strong>independent_obj</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">V</span></code>, bound= <code class="xref py py-class docutils literal notranslate"><span class="pre">Descriptor</span></code>)) – Independent Parameter</p></li>
+<li><p><strong>dependent_obj</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">V</span></code>, bound= <code class="xref py py-class docutils literal notranslate"><span class="pre">Descriptor</span></code>)) – Dependent Parameter</p></li>
+<li><p><strong>operator</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Relation to between the independent parameter and dependent parameter. e.g. <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">*</span></code>, <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">+</span></code></p></li>
+<li><p><strong>independent_obj</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">V</span></code>, bound= <code class="xref py py-class docutils literal notranslate"><span class="pre">Descriptor</span></code>)) – Independent Parameter</p></li>
 </ul>
 </dd>
 <dt class="field-even">Example</dt>
@@ -269,11 +266,11 @@ value. E.g. a (Dependent Parameter) &lt; b (Independent Parameter)</p>
 </div>
 <dl class="py property">
 <dt class="sig sig-object py" id="easyCore.Fitting.Constraints.ObjConstraint.enabled">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></em><a class="headerlink" href="#easyCore.Fitting.Constraints.ObjConstraint.enabled" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></em><a class="headerlink" href="#easyCore.Fitting.Constraints.ObjConstraint.enabled" title="Permalink to this definition"></a></dt>
 <dd><p>Is the current constraint enabled.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Logical answer to if the constraint is enabled.</p>
@@ -290,14 +287,14 @@ value. E.g. a (Dependent Parameter) &lt; b (Independent Parameter)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dependent_obj</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">V</span></code>, bound= <code class="xref py py-class docutils literal notranslate"><span class="pre">Descriptor</span></code>)) – Dependent Parameter</p></li>
-<li><p><strong>func</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.10)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>) – Function to be evaluated in the form <code class="docutils literal notranslate"><span class="pre">f(value,</span> <span class="pre">*args,</span> <span class="pre">**kwargs)</span></code></p></li>
+<li><p><strong>dependent_obj</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">V</span></code>, bound= <code class="xref py py-class docutils literal notranslate"><span class="pre">Descriptor</span></code>)) – Dependent Parameter</p></li>
+<li><p><strong>func</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.11)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>) – Function to be evaluated in the form <code class="docutils literal notranslate"><span class="pre">f(value,</span> <span class="pre">*args,</span> <span class="pre">**kwargs)</span></code></p></li>
 </ul>
 </dd>
 <dt class="field-even">Example</dt>
 <dd class="field-even"><p></p></dd>
 </dl>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">easyCore.Fitting.Constraints</span> <span class="kn">import</span> <span class="n">FunctionalConstraint</span>
 <span class="kn">from</span> <span class="nn">easyCore.Objects.Base</span> <span class="kn">import</span> <span class="n">Parameter</span>
 
@@ -314,11 +311,11 @@ value. E.g. a (Dependent Parameter) &lt; b (Independent Parameter)</p>
 </div>
 <dl class="py property">
 <dt class="sig sig-object py" id="easyCore.Fitting.Constraints.FunctionalConstraint.enabled">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></em><a class="headerlink" href="#easyCore.Fitting.Constraints.FunctionalConstraint.enabled" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></em><a class="headerlink" href="#easyCore.Fitting.Constraints.FunctionalConstraint.enabled" title="Permalink to this definition"></a></dt>
 <dd><p>Is the current constraint enabled.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Logical answer to if the constraint is enabled.</p>
@@ -339,10 +336,10 @@ to one or more independent objects.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>independent_objs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">V</span></code>, bound= <code class="xref py py-class docutils literal notranslate"><span class="pre">Descriptor</span></code>)]) – List of Independent Parameters</p></li>
-<li><p><strong>operator</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – List of operators operating on the Independent Parameters</p></li>
-<li><p><strong>dependent_obj</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">V</span></code>, bound= <code class="xref py py-class docutils literal notranslate"><span class="pre">Descriptor</span></code>)) – Dependent Parameter</p></li>
-<li><p><strong>value</strong> (<a class="reference external" href="https://docs.python.org/3/library/numbers.html#numbers.Number" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Number</span></code></a>) – Value of the expression</p></li>
+<li><p><strong>independent_objs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">V</span></code>, bound= <code class="xref py py-class docutils literal notranslate"><span class="pre">Descriptor</span></code>)]) – List of Independent Parameters</p></li>
+<li><p><strong>operator</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – List of operators operating on the Independent Parameters</p></li>
+<li><p><strong>dependent_obj</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">V</span></code>, bound= <code class="xref py py-class docutils literal notranslate"><span class="pre">Descriptor</span></code>)) – Dependent Parameter</p></li>
+<li><p><strong>value</strong> (<a class="reference external" href="https://docs.python.org/3/library/numbers.html#numbers.Number" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Number</span></code></a>) – Value of the expression</p></li>
 </ul>
 </dd>
 <dt class="field-even">Example</dt>
@@ -384,11 +381,11 @@ to one or more independent objects.</p>
 </div>
 <dl class="py property">
 <dt class="sig sig-object py" id="easyCore.Fitting.Constraints.MultiObjConstraint.enabled">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></em><a class="headerlink" href="#easyCore.Fitting.Constraints.MultiObjConstraint.enabled" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></em><a class="headerlink" href="#easyCore.Fitting.Constraints.MultiObjConstraint.enabled" title="Permalink to this definition"></a></dt>
 <dd><p>Is the current constraint enabled.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Logical answer to if the constraint is enabled.</p>
@@ -418,10 +415,10 @@ to one or more independent objects.</p>
 <dd><p>Abstract method which contains the constraint logic</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>obj</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">V</span></code>, bound= <code class="xref py py-class docutils literal notranslate"><span class="pre">Descriptor</span></code>)) – The object/objects which the constraint will use</p>
+<dd class="field-odd"><p><strong>obj</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">V</span></code>, bound= <code class="xref py py-class docutils literal notranslate"><span class="pre">Descriptor</span></code>)) – The object/objects which the constraint will use</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/numbers.html#numbers.Number" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Number</span></code></a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/numbers.html#numbers.Number" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Number</span></code></a></p>
 </dd>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>A numeric result of the constraint logic</p>
@@ -431,11 +428,11 @@ to one or more independent objects.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="easyCore.Fitting.Constraints.ConstraintBase.enabled">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></em><a class="headerlink" href="#easyCore.Fitting.Constraints.ConstraintBase.enabled" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></em><a class="headerlink" href="#easyCore.Fitting.Constraints.ConstraintBase.enabled" title="Permalink to this definition"></a></dt>
 <dd><p>Is the current constraint enabled.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Logical answer to if the constraint is enabled.</p>
@@ -452,7 +449,7 @@ to one or more independent objects.</p>
 <dd class="field-odd"><p><strong>obj</strong> – easyCore object</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
 </dd>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>key for easyCore object</p>
@@ -466,10 +463,10 @@ to one or more independent objects.</p>
 <dd><p>Get an easyCore object from its unique key</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>key</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – an easyCore objects unique key</p>
+<dd class="field-odd"><p><strong>key</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – an easyCore objects unique key</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">V</span></code>, bound= <code class="xref py py-class docutils literal notranslate"><span class="pre">Descriptor</span></code>)</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">V</span></code>, bound= <code class="xref py py-class docutils literal notranslate"><span class="pre">Descriptor</span></code>)</p>
 </dd>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>easyCore object</p>

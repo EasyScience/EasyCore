@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>easyCore.Objects.ObjectClasses &mdash; easyCore 0.2.3 documentation</title>
+  <title>easyCore.Objects.ObjectClasses &mdash; easyCore 0.3.0 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/sg_gallery.css" type="text/css" />
@@ -76,9 +76,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../index.html">Module code</a> &raquo;</li>
-      <li>easyCore.Objects.ObjectClasses</li>
+      <li><a href="../../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">easyCore.Objects.ObjectClasses</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -88,18 +88,19 @@
            <div itemprop="articleBody">
              
   <h1>Source code for easyCore.Objects.ObjectClasses</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">annotations</span>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;github.com/wardsimon&quot;</span>
 <span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;0.1.0&quot;</span>
 
-<span class="c1">#  SPDX-FileCopyrightText: 2022 easyCore contributors  &lt;core@easyscience.software&gt;</span>
+<span class="c1">#  SPDX-FileCopyrightText: 2023 easyCore contributors  &lt;core@easyscience.software&gt;</span>
 <span class="c1">#  SPDX-License-Identifier: BSD-3-Clause</span>
-<span class="c1">#  © 2021-2022 Contributors to the easyCore project &lt;https://github.com/easyScience/easyCore&gt;</span>
+<span class="c1">#  © 2021-2023 Contributors to the easyCore project &lt;https://github.com/easyScience/easyCore</span>
 
 <span class="kn">import</span> <span class="nn">numbers</span>
+<span class="kn">from</span> <span class="nn">inspect</span> <span class="kn">import</span> <span class="n">getfullargspec</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="p">(</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">List</span><span class="p">,</span>
     <span class="n">Union</span><span class="p">,</span>
     <span class="n">Iterable</span><span class="p">,</span>
@@ -108,42 +109,52 @@
     <span class="n">TypeVar</span><span class="p">,</span>
     <span class="n">TYPE_CHECKING</span><span class="p">,</span>
     <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">Set</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="kn">from</span> <span class="nn">easyCore</span> <span class="k">import</span> <span class="n">borg</span>
-<span class="kn">from</span> <span class="nn">easyCore.Utils.json</span> <span class="k">import</span> <span class="n">MSONable</span>
-<span class="kn">from</span> <span class="nn">easyCore.Utils.classTools</span> <span class="k">import</span> <span class="n">addLoggedProp</span>
-<span class="kn">from</span> <span class="nn">.Variable</span> <span class="k">import</span> <span class="n">Parameter</span><span class="p">,</span> <span class="n">Descriptor</span>
+<span class="kn">from</span> <span class="nn">easyCore</span> <span class="kn">import</span> <span class="n">borg</span>
+<span class="kn">from</span> <span class="nn">.core</span> <span class="kn">import</span> <span class="n">ComponentSerializer</span>
+<span class="kn">from</span> <span class="nn">easyCore.Utils.classTools</span> <span class="kn">import</span> <span class="n">addLoggedProp</span>
+<span class="kn">from</span> <span class="nn">.Variable</span> <span class="kn">import</span> <span class="n">Parameter</span><span class="p">,</span> <span class="n">Descriptor</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">easyCore.Utils.typing</span> <span class="k">import</span> <span class="n">C</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">iF</span>
+    <span class="kn">from</span> <span class="nn">easyCore.Utils.typing</span> <span class="kn">import</span> <span class="n">C</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">iF</span>
 
 
-<span class="k">class</span> <span class="nc">BasedBase</span><span class="p">(</span><span class="n">MSONable</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">BasedBase</span><span class="p">(</span><span class="n">ComponentSerializer</span><span class="p">):</span>
     <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;_name&quot;</span><span class="p">,</span> <span class="s2">&quot;_borg&quot;</span><span class="p">,</span> <span class="s2">&quot;user_data&quot;</span><span class="p">,</span> <span class="s2">&quot;_kwargs&quot;</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">interface</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">iF</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="n">_REDIRECT</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">interface</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">iF</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_borg</span> <span class="o">=</span> <span class="n">borg</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_borg</span><span class="o">.</span><span class="n">map</span><span class="o">.</span><span class="n">add_vertex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj_type</span><span class="o">=</span><span class="s2">&quot;created&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">interface</span> <span class="o">=</span> <span class="n">interface</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">user_data</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">name</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_arg_spec</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="n">base_cls</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;__old_class__&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span>
+        <span class="n">spec</span> <span class="o">=</span> <span class="n">getfullargspec</span><span class="p">(</span><span class="n">base_cls</span><span class="o">.</span><span class="fm">__init__</span><span class="p">)</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="k">return</span> <span class="n">names</span>
+
     <span class="k">def</span> <span class="nf">__reduce__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Make the class picklable.</span>
 <span class="sd">        Due to the nature of the dynamic class definitions special measures need to be taken.</span>
 
 <span class="sd">        :return: Tuple consisting of how to make the object</span>
 <span class="sd">        :rtype: tuple</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span>
         <span class="bp">cls</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;__old_class__&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_dict</span><span class="p">,</span> <span class="p">(</span><span class="n">state</span><span class="p">,)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the common name of the object.</span>
 
 <span class="sd">        :return: Common name of the object</span>
@@ -152,7 +163,7 @@
 
     <span class="nd">@name</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set a new common name for the object.</span>
 
 <span class="sd">        :param new_name: New name for the object</span>
@@ -162,14 +173,14 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">interface</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">iF</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the current interface of the object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interface</span>
 
     <span class="nd">@interface</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">interface</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_interface</span><span class="p">:</span> <span class="n">iF</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set the current interface to the object and generate bindings if possible. iF.e.</span>
 <span class="sd">        ```</span>
 <span class="sd">        def __init__(self, bar, interface=None, **kwargs):</span>
@@ -183,7 +194,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">generate_bindings</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">generate_bindings</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate or re-generate bindings to an interface (if exists)</span>
 
 <span class="sd">        :raises: AttributeError</span>
@@ -203,7 +214,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">generate_bindings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">switch_interface</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_interface_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Switch or create a new interface.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">interface</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -223,27 +234,8 @@
                 <span class="n">constraints</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">con</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">constraints</span>
 
-    <span class="k">def</span> <span class="nf">as_dict</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">skip</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Number</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Convert ones self into a serialized form.</span>
-
-<span class="sd">        :return: dictionary of ones self</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">skip</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">skip</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">d</span> <span class="o">=</span> <span class="n">MSONable</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">skip</span><span class="o">=</span><span class="n">skip</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="s2">&quot;as_dict&quot;</span><span class="p">):</span>
-                <span class="n">d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(</span><span class="n">skip</span><span class="o">=</span><span class="n">skip</span><span class="p">)</span>
-        <span class="c1"># Attach the id. This might be useful in connected applications.</span>
-        <span class="c1"># Note that it is converted to int and then str because javascript....</span>
-        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;@id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_borg</span><span class="o">.</span><span class="n">map</span><span class="o">.</span><span class="n">convert_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">d</span>
-
     <span class="k">def</span> <span class="nf">get_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Parameter</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get all parameter objects as a list.</span>
 
 <span class="sd">        :return: List of `Parameter` objects.</span>
@@ -257,7 +249,7 @@
         <span class="k">return</span> <span class="n">par_list</span>
 
     <span class="k">def</span> <span class="nf">_get_linkable_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">V</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get all objects which can be linked against as a list.</span>
 
 <span class="sd">        :return: List of `Descriptor`/`Parameter` objects.</span>
@@ -271,7 +263,7 @@
         <span class="k">return</span> <span class="n">item_list</span>
 
     <span class="k">def</span> <span class="nf">get_fit_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Parameter</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get all objects which can be fitted (and are not fixed) as a list.</span>
 
 <span class="sd">        :return: List of `Parameter` objects which can be used in fitting.</span>
@@ -284,8 +276,8 @@
                 <span class="n">fit_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">fit_list</span>
 
-    <span class="k">def</span> <span class="nf">__dir__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__dir__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This creates auto-completion and helps out in iPython notebooks.</span>
 
 <span class="sd">        :return: list of function and parameter names for auto-completion</span>
@@ -296,24 +288,24 @@
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="n">B</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">BasedBase</span><span class="p">)</span>
-    <span class="n">BV</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;BV&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">Union</span><span class="p">[</span><span class="n">BasedBase</span><span class="p">,</span> <span class="n">Descriptor</span><span class="p">])</span>
+    <span class="n">BV</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;BV&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">ComponentSerializer</span><span class="p">)</span>
 
 
 <span class="k">class</span> <span class="nc">BaseObj</span><span class="p">(</span><span class="n">BasedBase</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This is the base class for which all higher level classes are built off of.</span>
 <span class="sd">    NOTE: This object is serializable only if parameters are supplied as:</span>
 <span class="sd">    `BaseObj(a=value, b=value)`. For `Parameter` or `Descriptor` objects we can</span>
 <span class="sd">    cheat with `BaseObj(*[Descriptor(...), Parameter(...), ...])`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">BV</span><span class="p">],</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">BV</span><span class="p">],</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set up the base class.</span>
 
 <span class="sd">        :param name: Name of this object</span>
@@ -347,7 +339,7 @@
             <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_add_component</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">component</span><span class="p">:</span> <span class="n">BV</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Dynamically add a component to the class. This is an internal method, though can be called remotely.</span>
 <span class="sd">        The recommended alternative is to use typing, i.e.</span>
 
@@ -380,7 +372,7 @@
             <span class="n">test_class</span><span class="o">=</span><span class="n">BaseObj</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">BV</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">BV</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># Assume that the annotation is a ClassVar</span>
         <span class="n">old_obj</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="p">(</span>
@@ -408,8 +400,8 @@
             <span class="k">if</span> <span class="n">old_interface</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">generate_bindings</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{self.__class__.__name__}</span><span class="s2"> `{getattr(self, &#39;name&#39;)}`&quot;</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> `</span><span class="si">{</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;name&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">`&quot;</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">__getter</span><span class="p">(</span><span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">BV</span><span class="p">],</span> <span class="n">BV</span><span class="p">]:</span>

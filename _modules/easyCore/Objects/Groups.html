@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>easyCore.Objects.Groups &mdash; easyCore 0.2.3 documentation</title>
+  <title>easyCore.Objects.Groups &mdash; easyCore 0.3.0 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/sg_gallery.css" type="text/css" />
@@ -76,9 +76,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../index.html">Module code</a> &raquo;</li>
-      <li>easyCore.Objects.Groups</li>
+      <li><a href="../../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">easyCore.Objects.Groups</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -88,43 +88,53 @@
            <div itemprop="articleBody">
              
   <h1>Source code for easyCore.Objects.Groups</h1><div class="highlight"><pre>
-<span></span><span class="c1">#  SPDX-FileCopyrightText: 2022 easyCore contributors  &lt;core@easyscience.software&gt;</span>
+<span></span><span class="c1">#  SPDX-FileCopyrightText: 2023 easyCore contributors  &lt;core@easyscience.software&gt;</span>
 <span class="c1">#  SPDX-License-Identifier: BSD-3-Clause</span>
-<span class="c1">#  © 2021-2022 Contributors to the easyCore project &lt;https://github.com/easyScience/easyCore&gt;</span>
+<span class="c1">#  © 2021-2023 Contributors to the easyCore project &lt;https://github.com/easyScience/easyCore</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">annotations</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;github.com/wardsimon&quot;</span>
 <span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;0.1.0&quot;</span>
 
-<span class="kn">from</span> <span class="nn">numbers</span> <span class="k">import</span> <span class="n">Number</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">numbers</span> <span class="kn">import</span> <span class="n">Number</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Union</span><span class="p">,</span>
+    <span class="n">TypeVar</span><span class="p">,</span>
+    <span class="n">Optional</span><span class="p">,</span>
+    <span class="n">TYPE_CHECKING</span><span class="p">,</span>
+    <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">List</span><span class="p">,</span>
+    <span class="n">Dict</span><span class="p">,</span>
+    <span class="n">Any</span><span class="p">,</span>
+    <span class="n">Tuple</span><span class="p">,</span>
+<span class="p">)</span>
 
-<span class="kn">from</span> <span class="nn">easyCore</span> <span class="k">import</span> <span class="n">borg</span>
-<span class="kn">from</span> <span class="nn">easyCore.Objects.ObjectClasses</span> <span class="k">import</span> <span class="n">BasedBase</span><span class="p">,</span> <span class="n">Descriptor</span>
-<span class="kn">from</span> <span class="nn">collections.abc</span> <span class="k">import</span> <span class="n">MutableSequence</span>
-<span class="kn">from</span> <span class="nn">easyCore.Utils.UndoRedo</span> <span class="k">import</span> <span class="n">NotarizedDict</span>
+<span class="kn">from</span> <span class="nn">easyCore</span> <span class="kn">import</span> <span class="n">borg</span>
+<span class="kn">from</span> <span class="nn">easyCore.Objects.ObjectClasses</span> <span class="kn">import</span> <span class="n">BasedBase</span><span class="p">,</span> <span class="n">Descriptor</span>
+<span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">MutableSequence</span>
+<span class="kn">from</span> <span class="nn">easyCore.Utils.UndoRedo</span> <span class="kn">import</span> <span class="n">NotarizedDict</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">easyCore.Utils.typing</span> <span class="k">import</span> <span class="n">B</span><span class="p">,</span> <span class="n">iF</span><span class="p">,</span> <span class="n">V</span>
+    <span class="kn">from</span> <span class="nn">easyCore.Utils.typing</span> <span class="kn">import</span> <span class="n">B</span><span class="p">,</span> <span class="n">iF</span><span class="p">,</span> <span class="n">V</span>
 
 
 <div class="viewcode-block" id="BaseCollection"><a class="viewcode-back" href="../../../reference/base.html#easyCore.Objects.Groups.BaseCollection">[docs]</a><span class="k">class</span> <span class="nc">BaseCollection</span><span class="p">(</span><span class="n">BasedBase</span><span class="p">,</span> <span class="n">MutableSequence</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This is the base class for which all higher level classes are built off of.</span>
 <span class="sd">    NOTE: This object is serializable only if parameters are supplied as:</span>
 <span class="sd">    `BaseObj(a=value, b=value)`. For `Parameter` or `Descriptor` objects we can</span>
 <span class="sd">    cheat with `BaseObj(*[Descriptor(...), Parameter(...), ...])`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">B</span><span class="p">,</span> <span class="n">V</span><span class="p">],</span>
         <span class="n">interface</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">iF</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set up the base collection class.</span>
 
 <span class="sd">        :param name: Name of this object</span>
@@ -135,13 +145,25 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">BasedBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
         <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
-
-        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="p">[</span><span class="o">*</span><span class="n">kwargs</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="o">*</span><span class="n">args</span><span class="p">]:</span>
+        <span class="n">_args</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">_args</span> <span class="o">+=</span> <span class="n">item</span>
+        <span class="n">_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">_args</span> <span class="o">+=</span> <span class="n">item</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">_kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="n">_kwargs</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="o">+</span> <span class="n">_args</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">issubclass</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">),</span> <span class="p">(</span><span class="n">Descriptor</span><span class="p">,</span> <span class="n">BasedBase</span><span class="p">)):</span>
                 <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
                     <span class="s2">&quot;A collection can only be formed from easyCore objects.&quot;</span>
                 <span class="p">)</span>
-
+        <span class="n">args</span> <span class="o">=</span> <span class="n">_args</span>
         <span class="n">_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">_kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span>
@@ -155,7 +177,7 @@
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">or</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__slots__</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
-                    <span class="n">f</span><span class="s2">&quot;Given kwarg: `</span><span class="si">{key}</span><span class="s2">`, is an internal attribute. Please rename.&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Given kwarg: `</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">`, is an internal attribute. Please rename.&quot;</span>
                 <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_borg</span><span class="o">.</span><span class="n">map</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_borg</span><span class="o">.</span><span class="n">map</span><span class="o">.</span><span class="n">reset_type</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="s2">&quot;created_internal&quot;</span><span class="p">)</span>
@@ -167,7 +189,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_kwargs</span><span class="o">.</span><span class="n">_stack_enabled</span> <span class="o">=</span> <span class="kc">True</span>
 
 <div class="viewcode-block" id="BaseCollection.insert"><a class="viewcode-back" href="../../../reference/base.html#easyCore.Objects.Groups.BaseCollection.insert">[docs]</a>    <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">V</span><span class="p">,</span> <span class="n">B</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Insert an object into the collection at an index.</span>
 
 <span class="sd">        :param index: Index for easyCore object to be inserted.</span>
@@ -195,8 +217,8 @@
                 <span class="s2">&quot;Only easyCore objects can be put into an easyCore group&quot;</span>
             <span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">slice</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">V</span><span class="p">,</span> <span class="n">B</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">slice</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">V</span><span class="p">,</span> <span class="n">B</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get an item in the collection based on it&#39;s index.</span>
 
 <span class="sd">        :param idx: index or slice of the collection.</span>
@@ -215,7 +237,7 @@
             <span class="n">idx</span> <span class="o">=</span> <span class="p">[</span><span class="n">index</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">idx</span><span class="p">]</span>
             <span class="n">l</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">l</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Given index does not exist&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Given index does not exist&quot;</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">l</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="n">idx</span> <span class="o">=</span> <span class="n">idx</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
@@ -225,7 +247,7 @@
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Boolean indexing is not supported at the moment&quot;</span><span class="p">)</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">idx</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-                    <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Given index </span><span class="si">{idx}</span><span class="s2"> is out of bounds&quot;</span><span class="p">)</span>
+                    <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Given index </span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2"> is out of bounds&quot;</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span>
                     <span class="s2">&quot;Index must be of type `int`/`slice` or an item name (`str`)&quot;</span>
@@ -233,8 +255,8 @@
         <span class="n">keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kwargs</span><span class="p">[</span><span class="n">keys</span><span class="p">[</span><span class="n">idx</span><span class="p">]]</span>
 
-    <span class="k">def</span> <span class="nf">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">B</span><span class="p">,</span> <span class="n">V</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">B</span><span class="p">,</span> <span class="n">V</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set an item via it&#39;s index.</span>
 
 <span class="sd">        :param key: Index in self.</span>
@@ -263,8 +285,8 @@
                 <span class="s2">&quot;At the moment only numerical values or easyCore objects can be set.&quot;</span>
             <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Try to delete  an idem by key.</span>
 
 <span class="sd">        :param key:</span>
@@ -277,8 +299,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_borg</span><span class="o">.</span><span class="n">map</span><span class="o">.</span><span class="n">prune_vertex_from_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kwargs</span><span class="p">[</span><span class="n">keys</span><span class="p">[</span><span class="n">key</span><span class="p">]]</span>
 
-    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the number of items in this collection</span>
 
 <span class="sd">        :return: Number of items in this collection.</span>
@@ -286,57 +308,47 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 
-<div class="viewcode-block" id="BaseCollection.as_dict"><a class="viewcode-back" href="../../../reference/base.html#easyCore.Objects.Groups.BaseCollection.as_dict">[docs]</a>    <span class="k">def</span> <span class="nf">as_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">skip</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_convert_to_dict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">in_dict</span><span class="p">,</span> <span class="n">encoder</span><span class="p">,</span> <span class="n">skip</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Convert ones self into a serialized form.</span>
 
 <span class="sd">        :return: dictionary of ones self</span>
 <span class="sd">        :rtype: dict</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">d</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">BaseCollection</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(</span><span class="n">skip</span><span class="o">=</span><span class="n">skip</span><span class="p">)</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">dd</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;@id&quot;</span><span class="p">:</span>
-                <span class="k">continue</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">dict</span><span class="p">):</span>
-                <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">dd</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-        <span class="n">dd</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
-        <span class="c1"># Attach the id. This might be useful in connected applications.</span>
-        <span class="c1"># Note that it is converted to int and then str because javascript....</span>
-        <span class="n">dd</span><span class="p">[</span><span class="s2">&quot;@id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;@id&quot;</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">dd</span></div>
+        <span class="n">d</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_modify_dict&quot;</span><span class="p">):</span>
+            <span class="c1"># any extra keys defined on the inheriting class</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modify_dict</span><span class="p">(</span><span class="n">skip</span><span class="o">=</span><span class="n">skip</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">in_dict</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">encoder</span><span class="o">.</span><span class="n">_convert_to_dict</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">skip</span><span class="o">=</span><span class="n">skip</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span>
+        <span class="p">]</span>
+        <span class="n">out_dict</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">in_dict</span><span class="p">,</span> <span class="o">**</span><span class="n">d</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">out_dict</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The data function returns a tuple of the keyword arguments passed to the</span>
+<span class="sd">        constructor. This is useful for when you need to pass in a dictionary of data</span>
+<span class="sd">        to other functions, such as with matplotlib&#39;s plot function.</span>
+
+<span class="sd">        :param self: Access attributes of the class within the method</span>
+<span class="sd">        :return: The values of the attributes in a tuple</span>
+<span class="sd">        :doc-author: Trelent</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_kwargs</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
 
-<div class="viewcode-block" id="BaseCollection.from_dict"><a class="viewcode-back" href="../../../reference/base.html#easyCore.Objects.Groups.BaseCollection.from_dict">[docs]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">input_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;BaseCollection&quot;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        De-serialise the data and try to recreate the object.</span>
-
-<span class="sd">        :param input_dict: serialised dictionary of an object. Usually generated from `obj.as_dict()`</span>
-<span class="sd">        :type input_dict: dict</span>
-<span class="sd">        :return: Class constructed from the input_dict</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">d</span> <span class="o">=</span> <span class="n">input_dict</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]):</span>
-                <span class="n">d</span><span class="p">[</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;@id&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">item</span>
-        <span class="k">del</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">BaseCollection</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">d</span><span class="p">)</span></div>
-
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">(</span>
-            <span class="n">f</span><span class="s2">&quot;</span><span class="si">{self.__class__.__name__}</span><span class="s2"> `{getattr(self, &#39;name&#39;)}` of length {len(self)}&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> `</span><span class="si">{</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;name&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">` of length </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
 
-<div class="viewcode-block" id="BaseCollection.sort"><a class="viewcode-back" href="../../../reference/base.html#easyCore.Objects.Groups.BaseCollection.sort">[docs]</a>    <span class="k">def</span> <span class="nf">sort</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mapping</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Union</span><span class="p">[</span><span class="n">B</span><span class="p">,</span> <span class="n">V</span><span class="p">]],</span> <span class="n">Any</span><span class="p">],</span> <span class="n">reverse</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="BaseCollection.sort"><a class="viewcode-back" href="../../../reference/base.html#easyCore.Objects.Groups.BaseCollection.sort">[docs]</a>    <span class="k">def</span> <span class="nf">sort</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">mapping</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Union</span><span class="p">[</span><span class="n">B</span><span class="p">,</span> <span class="n">V</span><span class="p">]],</span> <span class="n">Any</span><span class="p">],</span> <span class="n">reverse</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Sort the collection according to the given mapping.</span>
 
 <span class="sd">        :param mapping: mapping function to sort the collection. i.e. lambda parameter: parameter.raw_value</span>

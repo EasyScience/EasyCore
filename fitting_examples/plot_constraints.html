@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Constraints example &mdash; easyCore 0.2.3 documentation</title>
+  <title>Constraints example &mdash; easyCore 0.3.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/sg_gallery.css" type="text/css" />
@@ -81,9 +81,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="index.html">Fitting Examples</a> &raquo;</li>
-      <li>Constraints example</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Fitting Examples</a></li>
+      <li class="breadcrumb-item active">Constraints example</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/fitting_examples/plot_constraints.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -101,8 +101,8 @@ to download the full example code</p>
 <section class="sphx-glr-example-title" id="constraints-example">
 <span id="sphx-glr-fitting-examples-plot-constraints-py"></span><h1>Constraints example<a class="headerlink" href="#constraints-example" title="Permalink to this heading"></a></h1>
 <p>This  example shows the usages of the different constraints.</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">easyCore.Fitting</span> <span class="k">import</span> <span class="n">Constraints</span>
-<span class="kn">from</span> <span class="nn">easyCore.Objects.ObjectClasses</span> <span class="k">import</span> <span class="n">Parameter</span>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">easyCore.Fitting</span> <span class="kn">import</span> <span class="n">Constraints</span>
+<span class="kn">from</span> <span class="nn">easyCore.Objects.ObjectClasses</span> <span class="kn">import</span> <span class="n">Parameter</span>
 
 <span class="n">p1</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;p1&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 <span class="n">constraint</span> <span class="o">=</span> <span class="n">Constraints</span><span class="o">.</span><span class="n">NumericConstraint</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="s1">&#39;&lt;&#39;</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
@@ -110,10 +110,9 @@ to download the full example code</p>
 
 <span class="k">for</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">value</span></a> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">):</span>
     <span class="n">p1</span><span class="o">.</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">value</span></a> <span class="o">=</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">value</span></a>
-    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Set Value: </span><span class="si">{value}</span><span class="s1">, Parameter Value: </span><span class="si">{p1}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Set Value: </span><span class="si">{</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">value</span></a><span class="si">}</span><span class="s1">, Parameter Value: </span><span class="si">{</span><span class="n">p1</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p class="sphx-glr-script-out">Out:</p>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Set Value: 4, Parameter Value: &lt;Parameter &#39;p1&#39;: 4.0+/-0, bounds=[-inf:inf]&gt;
 Set Value: 5, Parameter Value: &lt;Parameter &#39;p1&#39;: 5.0+/-0, bounds=[-inf:inf]&gt;
 Set Value: 6, Parameter Value: &lt;Parameter &#39;p1&#39;: 5.0+/-0, bounds=[-inf:inf]&gt;
@@ -123,8 +122,8 @@ Set Value: 6, Parameter Value: &lt;Parameter &#39;p1&#39;: 5.0+/-0, bounds=[-inf
 rST and your code. This separates your example
 into distinct text and code blocks. You can continue writing code below the
 embedded rST text block:</p>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  0.004 seconds)</p>
-<div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-fitting-examples-plot-constraints-py">
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  0.008 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-fitting-examples-plot-constraints-py">
 <div class="sphx-glr-download sphx-glr-download-python docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/56625970f94ba0f1ffe83a76b414126d/plot_constraints.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_constraints.py</span></code></a></p>
 </div>
