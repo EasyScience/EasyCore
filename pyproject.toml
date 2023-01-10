@@ -6,7 +6,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.black]
 line-length = 88
-target-version = ['py37']
+target-version = ['py38']
 include = '\.pyi?$'
 extend-exclude = '''
 # A regex preceded with ^/ will apply only to files and directories
@@ -23,7 +23,7 @@ repo = 'easyCore'
 
 [tool.poetry]
 name = "easyScienceCore"
-version = "0.2.3"
+version = "0.3.0"
 description = "Generic logic for easyScience libraries"
 license = "BSD-3-Clause"
 authors = ["Simon Ward"]
@@ -41,7 +41,7 @@ include = ["CHANGELOG.md"]
 packages = [ { include = "easyCore" } ]
 
 [tool.poetry.dependencies]
-python = ">=3.7,<3.11" # "^3.8" generates error when installing PySide2 in easyAppGui
+python = ">=3.7,<3.12" # "^3.8" generates error when installing PySide2 in easyAppGui
 numpy = "^1.21"
 pint = ">=0.17,<0.19"
 uncertainties = "^3.1"
@@ -50,31 +50,36 @@ bumps = ">=0.8,<0.10"
 asteval = "^0.9.27"
 DFO-LS = {version = "^1.2", optional = true}
 xarray = ">=0.16,<0.21"
+pytest = {version = "^7.0.0", optional = true}
+pytest-cov = {version = "^3.0.0", optional = true}
+codecov = {version = "^2.1.11", optional = true}
+flake8 = {version = "^5.0", optional = true}
+tox-gh-actions = {version = "^2.11", optional = true}
+doc8 = {version = "^0.11.0", optional = true}
+readme-renderer = {version = "^35.0", optional = true}
+Sphinx = {version = "^4.0.2", optional = true}
+sphinx-rtd-theme = {version = "^1.0.0", optional = true}
+sphinx-autodoc-typehints = {version = "^1.12.0", optional = true}
+sphinx-gallery = {version = "^0.10.0", optional = true}
 
-[tool.poetry.dev-dependencies]
-pytest = "^7.0.0"
-pytest-cov = "^3.0.0"
-codecov = "^2.1.11"
-matplotlib = "^3.2.2"
-doc8 = "^0.11.0"
-readme-renderer = "^35.0"
-Sphinx = "^4.0.2"
-sphinx-rtd-theme = "^1.0.0"
-sphinx-autodoc-typehints = "^1.12.0"
-sphinx-gallery = "^0.10.0"
+[tool.poetry.extras]
+graphics = ['holoviews']
+full = ['DFO-LS', 'holoviews']
+test = ['DFO-LS', 'pytest', 'pytest-cov', 'codecov', 'flake8']
+docs = ['doc8', 'readme-renderer', 'Sphinx', 'sphinx-rtd-theme', 'sphinx-autodoc-typehints', 'sphinx-gallery']
+ci = ['DFO-LS', 'pytest', 'pytest-cov', 'codecov', 'flake8', 'tox-gh-actions']
 
 [tool.tox]
 legacy_tox_ini = """
 [tox]
 isolated_build = True
-envlist = py{37,38,39,310,311}
+envlist = py{38,39,310,311}
 [gh-actions]
 python =
-    3.7: py37
     3.8: py38
     3.9: py39
     3.10: py310
-    3.11.0-alpha.1: py311
+    3.11: py311
 [gh-actions:env]
 PLATFORM =
     ubuntu-latest: linux
@@ -94,7 +99,6 @@ passenv =
 deps = coverage
 whitelist_externals = poetry
 commands =
-    pip install ./
-    pip install pytest-cov codecov pytest
+    pip install '.[ci]'
     pytest --cov --cov-report=xml
 """

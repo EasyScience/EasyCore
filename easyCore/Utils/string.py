@@ -1,10 +1,10 @@
-__author__ = 'github.com/wardsimon'
-__version__ = '0.1.0'
+__author__ = "github.com/wardsimon"
+__version__ = "0.1.0"
 
 
-#  SPDX-FileCopyrightText: 2022 easyCore contributors  <core@easyscience.software>
+#  SPDX-FileCopyrightText: 2023 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
-#  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+#  © 2021-2023 Contributors to the easyCore project <https://github.com/easyScience/easyCore
 """
 This module provides utility classes for string operations.
 """
@@ -12,7 +12,9 @@ This module provides utility classes for string operations.
 from fractions import Fraction
 
 
-def transformation_to_string(matrix, translation_vec=(0, 0, 0), components=('x', 'y', 'z'), c='', delim=','):
+def transformation_to_string(
+    matrix, translation_vec=(0, 0, 0), components=("x", "y", "z"), c="", delim=","
+):
     """
     Convenience method. Given matrix returns string, e.g. x+2y+1/4
     :param matrix
@@ -24,24 +26,26 @@ def transformation_to_string(matrix, translation_vec=(0, 0, 0), components=('x',
     """
     parts = []
     for i in range(3):
-        s = ''
+        s = ""
         m = matrix[i]
         t = translation_vec[i]
         for j, dim in enumerate(components):
             if m[j] != 0:
                 f = Fraction(m[j]).limit_denominator()
-                if s != '' and f >= 0:
-                    s += '+'
+                if s != "" and f >= 0:
+                    s += "+"
                 if abs(f.numerator) != 1:
                     s += str(f.numerator)
                 elif f < 0:
-                    s += '-'
+                    s += "-"
                 s += c + dim
                 if f.denominator != 1:
-                    s += '/' + str(f.denominator)
+                    s += "/" + str(f.denominator)
         if t != 0:
-            s += ('+' if (t > 0 and s != '') else '') + str(Fraction(t).limit_denominator())
-        if s == '':
-            s += '0'
+            s += ("+" if (t > 0 and s != "") else "") + str(
+                Fraction(t).limit_denominator()
+            )
+        if s == "":
+            s += "0"
         parts.append(s)
     return delim.join(parts)

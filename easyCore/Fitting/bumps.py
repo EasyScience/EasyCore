@@ -1,6 +1,6 @@
-#  SPDX-FileCopyrightText: 2022 easyCore contributors  <core@easyscience.software>
+#  SPDX-FileCopyrightText: 2023 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
-#  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+#  © 2021-2023 Contributors to the easyCore project <https://github.com/easyScience/easyCore
 
 __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
@@ -18,7 +18,6 @@ from easyCore.Fitting.fitting_template import (
     FitError,
 )
 
-# Import bumps specific objects
 from bumps.names import Curve, FitProblem
 from bumps.parameter import Parameter as bumpsParameter
 from bumps.fitters import fit as bumps_fit, FIT_AVAILABLE_IDS
@@ -48,9 +47,7 @@ class bumps(FittingTemplate):  # noqa: S101
         self._cached_pars_order = ()
         self.p_0 = {}
 
-    def make_model(
-        self, pars: Optional[List[bumpsParameter]] = None
-    ) -> Callable:
+    def make_model(self, pars: Optional[List[bumpsParameter]] = None) -> Callable:
         """
         Generate a bumps model from the supplied `fit_function` and parameters in the base object.
         Note that this makes a callable as it needs to be initialized with *x*, *y*, *weights*
@@ -88,9 +85,11 @@ class bumps(FittingTemplate):  # noqa: S101
         # Original fit function
         func = self._original_fit_function
         # Get a list of `Parameters`
-        self._cached_pars = {}
+        self._cached_pars_vals = {}
         for parameter in self._object.get_fit_parameters():
-            self._cached_pars[NameConverter().get_key(parameter)] = parameter
+            key = NameConverter().get_key(parameter)
+            self._cached_pars[key] = parameter
+            self._cached_pars_vals[key] = (parameter.value, parameter.error)
 
         # Make a new fit function
         def fit_function(x: np.ndarray, **kwargs):
@@ -107,10 +106,11 @@ class bumps(FittingTemplate):  # noqa: S101
             for name, value in kwargs.items():
                 par_name = int(name[1:])
                 if par_name in self._cached_pars.keys():
-                    self._cached_pars[par_name].value = value
-                    update_fun = self._cached_pars[par_name]._callback.fset
-                    if update_fun:
-                        update_fun(value)
+                    if self._cached_pars[par_name].raw_value != value:
+                        self._cached_pars[par_name].value = value
+                    # update_fun = self._cached_pars[par_name]._callback.fset
+                    # if update_fun:
+                    #     update_fun(value)
             # TODO Pre processing here
             for constraint in self.fit_constraints():
                 constraint()
@@ -203,17 +203,19 @@ class bumps(FittingTemplate):  # noqa: S101
         # Why do we do this? Because a fitting template has to have borg instantiated outside pre-runtime
         from easyCore import borg
 
-        borg.stack.beginMacro("Fitting routine")
+        stack_status = borg.stack.enabled
+        borg.stack.enabled = False
+
         try:
             model_results = bumps_fit(
                 problem, **default_method, **minimizer_kwargs, **kwargs
             )
-            self._set_parameter_fit_result(model_results)
+            self._set_parameter_fit_result(model_results, stack_status)
             results = self._gen_fit_results(model_results)
         except Exception as e:
+            for key in self._cached_pars.keys():
+                self._cached_pars[key].value = self._cached_pars_vals[key][0]
             raise FitError(e)
-        finally:
-            borg.stack.endMacro()
         return results
 
     def convert_to_pars_obj(
@@ -249,7 +251,7 @@ class bumps(FittingTemplate):  # noqa: S101
             fixed=obj.fixed,
         )
 
-    def _set_parameter_fit_result(self, fit_result):
+    def _set_parameter_fit_result(self, fit_result, stack_status: bool):
         """
         Update parameters to their final values and assign a std error to them.
 
@@ -257,11 +259,23 @@ class bumps(FittingTemplate):  # noqa: S101
         :return: None
         :rtype: noneType
         """
+        from easyCore import borg
+
         pars = self._cached_pars
+
+        if stack_status:
+            for name in pars.keys():
+                pars[name].value = self._cached_pars_vals[name][0]
+                pars[name].error = self._cached_pars_vals[name][1]
+            borg.stack.enabled = True
+            borg.stack.beginMacro("Fitting routine")
+
         for index, name in enumerate(self._cached_model._pnames):
             dict_name = int(name[1:])
             pars[dict_name].value = fit_result.x[index]
             pars[dict_name].error = fit_result.dx[index]
+        if stack_status:
+            borg.stack.endMacro()
 
     def _gen_fit_results(self, fit_results, **kwargs) -> FitResults:
         """
@@ -287,9 +301,9 @@ class bumps(FittingTemplate):  # noqa: S101
         results.x = self._cached_model.x
         results.y_obs = self._cached_model.y
         results.y_calc = self.evaluate(results.x, parameters=results.p)
-        results.residual = results.y_obs - results.y_calc
-        results.goodness_of_fit = fit_results.fun
-
+        results.y_err = self._cached_model.dy
+        # results.residual = results.y_obs - results.y_calc
+        # results.goodness_of_fit = np.sum(results.residual**2)
         results.fitting_engine = self.__class__
         results.fit_args = None
         results.engine_result = fit_results

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-#  SPDX-FileCopyrightText: 2022 easyCore contributors  <core@easyscience.software>
+#  SPDX-FileCopyrightText: 2023 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
-#  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+#  © 2021-2023 Contributors to the easyCore project <https://github.com/easyScience/easyCore
 
 __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
@@ -57,7 +57,7 @@ class InterfaceFactoryTemplate:
     def switch(self, new_interface: str, fitter: Optional[Type[Fitter]] = None):
         """
         Changes the current interface to a new interface. The current interface is destroyed and
-        all MSONable parameters carried over to the new interface. i.e. pick up where you left off.
+        all ComponentSerializer parameters carried over to the new interface. i.e. pick up where you left off.
 
         :param new_interface: name of new interface to be created
         :type new_interface: str
@@ -135,7 +135,11 @@ class InterfaceFactoryTemplate:
 
         def __fit_func(*args, **kwargs):
             return self.__interface_obj.fit_func(*args, **kwargs)
+
         return __fit_func
+
+    def call(self, *args, **kwargs):
+        return self.fit_func(*args, **kwargs)
 
     def generate_bindings(self, model, *args, ifun=None, **kwargs):
         """
@@ -216,5 +220,6 @@ class ItemContainer(NamedTuple):
             self.setter_fn(self.link_name, **{inner_key: value})
 
         return set_value
+
 
 iF = TypeVar("iF", bound=InterfaceFactoryTemplate)

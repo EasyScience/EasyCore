@@ -1,6 +1,6 @@
-#  SPDX-FileCopyrightText: 2022 easyCore contributors  <core@easyscience.software>
+#  SPDX-FileCopyrightText: 2023 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
-#  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+#  © 2021-2023 Contributors to the easyCore project <https://github.com/easyScience/easyCore
 
 __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
@@ -73,7 +73,7 @@ class ItemHolder:
                 # format - nom(unc)
                 fmt = "%%.%df" % max(0, -no_exp)
                 s = (fmt + "(%.0f)") % (
-                    no_int * 10 ** no_exp,
+                    no_int * 10**no_exp,
                     un_int * 10 ** max(0, un_exp),
                 )
         elif isinstance(self.value, str):
@@ -121,6 +121,8 @@ class ItemHolder:
     @staticmethod
     def _makeFakeItem(in_string: str) -> FakeItem:
         in_string = in_string.strip()
+        if "'" in in_string:
+            in_string = in_string.replace("'", "")
         fixed = None
         error = None
         tokens = in_string.split("(")
