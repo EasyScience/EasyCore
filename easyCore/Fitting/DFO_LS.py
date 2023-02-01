@@ -1,15 +1,22 @@
-#  SPDX-FileCopyrightText: 2022 easyCore contributors  <core@easyscience.software>
+#  SPDX-FileCopyrightText: 2023 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
-#  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+#  © 2021-2023 Contributors to the easyCore project <https://github.com/easyScience/easyCore
 
-__author__ = 'github.com/wardsimon'
-__version__ = '0.1.0'
+__author__ = "github.com/wardsimon"
+__version__ = "0.1.0"
 
 from typing import List, Optional
 from numbers import Number
 
-from easyCore.Fitting.fitting_template import Union, Callable, \
-    FittingTemplate, np, FitResults, NameConverter, FitError
+from easyCore.Fitting.fitting_template import (
+    Union,
+    Callable,
+    FittingTemplate,
+    np,
+    FitResults,
+    NameConverter,
+    FitError,
+)
 
 # Import dfols specific objects
 import dfols
@@ -21,7 +28,7 @@ class DFO(FittingTemplate):  # noqa: S101
     """
 
     property_type = Number
-    name = 'DFO_LS'
+    name = "DFO_LS"
 
     def __init__(self, obj, fit_function: Callable):
         """
@@ -52,18 +59,18 @@ class DFO(FittingTemplate):  # noqa: S101
                 par = {}
                 if not pars:
                     for name, item in obj._cached_pars.items():
-                        par['p' + str(name)] = item.raw_value
+                        par["p" + str(name)] = item.raw_value
                 else:
                     for item in pars:
-                        par['p' + str(NameConverter().get_key(item))] = item.raw_value
+                        par["p" + str(NameConverter().get_key(item))] = item.raw_value
 
                 def residuals(x0) -> np.ndarray:
                     for idx, par_name in enumerate(par.keys()):
                         par[par_name] = x0[idx]
                     return (y - fit_func(x, **par)) / weights
 
-                setattr(residuals, 'x', x)
-                setattr(residuals, 'y', y)
+                setattr(residuals, "x", x)
+                setattr(residuals, "y", y)
                 return residuals
 
             return make_func
@@ -82,8 +89,11 @@ class DFO(FittingTemplate):  # noqa: S101
         func = self._original_fit_function
         # Get a list of `Parameters`
         self._cached_pars = {}
+        self._cached_pars_vals = {}
         for parameter in self._object.get_fit_parameters():
-            self._cached_pars[NameConverter().get_key(parameter)] = parameter
+            key = NameConverter().get_key(parameter)
+            self._cached_pars[key] = parameter
+            self._cached_pars_vals[key] = (parameter.value, parameter.error)
 
         # Make a new fit function
         def fit_function(x: np.ndarray, **kwargs):
@@ -101,8 +111,9 @@ class DFO(FittingTemplate):  # noqa: S101
             for name, value in kwargs.items():
                 par_name = int(name[1:])
                 if par_name in self._cached_pars.keys():
-                    # This will take in to account constraints
-                    self._cached_pars[par_name].value = value
+                    # This will take into account constraints
+                    if self._cached_pars[par_name].raw_value != value:
+                        self._cached_pars[par_name].value = value
                     # Since we are calling the parameter fset will be called.
             # TODO Pre processing here
             for constraint in self.fit_constraints():
@@ -114,9 +125,18 @@ class DFO(FittingTemplate):  # noqa: S101
         self._fit_function = fit_function
         return fit_function
 
-    def fit(self, x: np.ndarray, y: np.ndarray, weights: Optional[np.ndarray] = None,
-            model=None, parameters=None, method: str = None, xtol: float = 1e-6, ftol: float = 1e-8,
-            **kwargs) -> FitResults:
+    def fit(
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        weights: Optional[np.ndarray] = None,
+        model=None,
+        parameters=None,
+        method: str = None,
+        xtol: float = 1e-6,
+        ftol: float = 1e-8,
+        **kwargs,
+    ) -> FitResults:
         """
         Perform a fit using the DFO-ls engine.
 
@@ -139,7 +159,7 @@ class DFO(FittingTemplate):  # noqa: S101
 
         default_method = {}
         if method is not None and method in self.available_methods():
-            default_method['method'] = method
+            default_method["method"] = method
 
         if weights is None:
             weights = np.sqrt(np.abs(y))
@@ -148,19 +168,25 @@ class DFO(FittingTemplate):  # noqa: S101
             model = self.make_model(pars=parameters)
             model = model(x, y, weights)
         self._cached_model = model
-        self.p_0 = {f'p{key}': self._cached_pars[key].raw_value for key in self._cached_pars.keys()}
+        self.p_0 = {
+            f"p{key}": self._cached_pars[key].raw_value
+            for key in self._cached_pars.keys()
+        }
 
         # Why do we do this? Because a fitting template has to have borg instantiated outside pre-runtime
         from easyCore import borg
-        borg.stack.beginMacro('Fitting routine')
+
+        stack_status = borg.stack.enabled
+        borg.stack.enabled = False
+
         try:
             model_results = self.dfols_fit(model, **kwargs)
-            self._set_parameter_fit_result(model_results)
-            results = self._gen_fit_results(model_results)
+            self._set_parameter_fit_result(model_results, stack_status)
+            results = self._gen_fit_results(model_results, weights)
         except Exception as e:
+            for key in self._cached_pars.keys():
+                self._cached_pars[key].value = self._cached_pars_vals[key][0]
             raise FitError(e)
-        finally:
-            borg.stack.endMacro()
         return results
 
     def convert_to_pars_obj(self, par_list: Optional[list] = None):
@@ -178,7 +204,9 @@ class DFO(FittingTemplate):  # noqa: S101
         """
         pass
 
-    def _set_parameter_fit_result(self, fit_result, ci: float = 0.95) -> None:
+    def _set_parameter_fit_result(
+        self, fit_result, stack_status, ci: float = 0.95
+    ) -> None:
         """
         Update parameters to their final values and assign a std error to them.
 
@@ -187,13 +215,27 @@ class DFO(FittingTemplate):  # noqa: S101
         :return: None
         :rtype: noneType
         """
+        from easyCore import borg
+
         pars = self._cached_pars
-        error_matrix = self._error_from_jacobian(fit_result.jacobian, fit_result.resid, ci)
+        if stack_status:
+            for name in pars.keys():
+                pars[name].value = self._cached_pars_vals[name][0]
+                pars[name].error = self._cached_pars_vals[name][1]
+            borg.stack.enabled = True
+            borg.stack.beginMacro("Fitting routine")
+
+        error_matrix = self._error_from_jacobian(
+            fit_result.jacobian, fit_result.resid, ci
+        )
         for idx, par in enumerate(pars.values()):
             par.value = fit_result.x[idx]
             par.error = error_matrix[idx, idx]
 
-    def _gen_fit_results(self, fit_results, **kwargs) -> FitResults:
+        if stack_status:
+            borg.stack.endMacro()
+
+    def _gen_fit_results(self, fit_results, weights, **kwargs) -> FitResults:
         """
         Convert fit results into the unified `FitResults` format
 
@@ -210,14 +252,15 @@ class DFO(FittingTemplate):  # noqa: S101
         pars = self._cached_pars
         item = {}
         for p_name, par in pars.items():
-            item[f'p{p_name}'] = par.raw_value
+            item[f"p{p_name}"] = par.raw_value
         results.p0 = self.p_0
         results.p = item
         results.x = self._cached_model.x
         results.y_obs = self._cached_model.y
         results.y_calc = self.evaluate(results.x, parameters=results.p)
-        results.residual = results.y_obs - results.y_calc
-        results.goodness_of_fit = fit_results.f
+        results.y_err = weights
+        # results.residual = results.y_obs - results.y_calc
+        # results.goodness_of_fit = fit_results.f
 
         results.fitting_engine = self.__class__
         results.fit_args = None
@@ -226,20 +269,22 @@ class DFO(FittingTemplate):  # noqa: S101
         return results
 
     def available_methods(self) -> List[str]:
-        return ['leastsq']
+        return ["leastsq"]
 
     def dfols_fit(self, model: Callable, **kwargs):
         """
-        Method to convert easyCore styling to DFO-LS styling (yes, again)
+                Method to convert easyCore styling to DFO-LS styling (yes, again)
 
-        :param model: Model which accepts f(x[0])
-        :type model: Callable
-        :param kwargs: Any additional arguments for dfols.solver
-        :type kwargs: dict
-        :return: dfols fit results container
-=        """
+                :param model: Model which accepts f(x[0])
+                :type model: Callable
+                :param kwargs: Any additional arguments for dfols.solver
+                :type kwargs: dict
+                :return: dfols fit results container
+        ="""
         x0 = np.array([par.raw_value for par in iter(self._cached_pars.values())])
-        bounds = (np.array([par.min for par in iter(self._cached_pars.values())]),
-                  np.array([par.max for par in iter(self._cached_pars.values())]))
+        bounds = (
+            np.array([par.min for par in iter(self._cached_pars.values())]),
+            np.array([par.max for par in iter(self._cached_pars.values())]),
+        )
         results = dfols.solve(model, x0, bounds=bounds, **kwargs)
         return results

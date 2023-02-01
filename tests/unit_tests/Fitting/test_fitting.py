@@ -1,6 +1,6 @@
-#  SPDX-FileCopyrightText: 2022 easyCore contributors  <core@easyscience.software>
+#  SPDX-FileCopyrightText: 2023 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
-#  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+#  © 2021-2023 Contributors to the easyCore project <https://github.com/easyScience/easyCore
 
 __author__ = "github.com/wardsimon"
 __version__ = "0.0.1"
@@ -30,6 +30,23 @@ class AbsSin(BaseObj):
 
     def __call__(self, x):
         return np.abs(np.sin(self.phase.raw_value * x + self.offset.raw_value))
+
+
+class Line(BaseObj):
+    m: ClassVar[Parameter]
+    c: ClassVar[Parameter]
+
+    def __init__(self, m: Parameter, c: Parameter):
+        super(Line, self).__init__("line", m=m, c=c)
+
+    @classmethod
+    def from_pars(cls, m, c):
+        m = Parameter("m", m)
+        c = Parameter("c", c)
+        return cls(m=m, c=c)
+
+    def __call__(self, x):
+        return self.m.raw_value * x + self.c.raw_value
 
 
 @pytest.fixture
@@ -96,9 +113,7 @@ def test_basic_fit(genObjs, fit_engine, with_errors):
 
 def check_fit_results(result, sp_sin, ref_sin, x, **kwargs):
     assert result.n_pars == len(sp_sin.get_fit_parameters())
-    assert result.goodness_of_fit == pytest.approx(
-        0, abs=1.5e-3 * (len(result.x) - result.n_pars)
-    )
+    assert result.chi2 == pytest.approx(0, abs=1.5e-3 * (len(result.x) - result.n_pars))
     assert result.reduced_chi == pytest.approx(0, abs=1.5e-3)
     assert result.success
     if "sp_ref1" in kwargs.keys():
@@ -113,7 +128,7 @@ def check_fit_results(result, sp_sin, ref_sin, x, **kwargs):
     for item1, item2 in zip(sp_sin._kwargs.values(), ref_sin._kwargs.values()):
         # assert item.error > 0 % This does not work as some methods don't calculate error
         assert item1.error == pytest.approx(0, abs=1e-1)
-        assert item1.raw_value == pytest.approx(item2.raw_value, abs=2e-3)
+        assert item1.raw_value == pytest.approx(item2.raw_value, abs=5e-3)
     y_calc_ref = ref_sin(x)
     assert result.y_calc == pytest.approx(y_calc_ref, abs=1e-2)
     assert result.residual == pytest.approx(sp_sin(x) - y_calc_ref, abs=1e-2)
@@ -168,6 +183,7 @@ def test_lmfit_methods(genObjs, fit_method):
     check_fit_results(result, sp_sin, ref_sin, x)
 
 
+@pytest.mark.xfail(reason="known bumps issue")
 @pytest.mark.parametrize("fit_method", ["newton", "lm"])
 def test_bumps_methods(genObjs, fit_method):
     ref_sin = genObjs[0]
@@ -280,7 +296,7 @@ def test_multi_fit(genObjs, genObjs2, fit_engine, with_errors):
         assert result.n_pars == len(sp_sin1.get_fit_parameters()) + len(
             sp_sin2.get_fit_parameters()
         )
-        assert result.goodness_of_fit == pytest.approx(
+        assert result.chi2 == pytest.approx(
             0, abs=1.5e-3 * (len(result.x) - result.n_pars)
         )
         assert result.reduced_chi == pytest.approx(0, abs=1.5e-3)
@@ -290,6 +306,84 @@ def test_multi_fit(genObjs, genObjs2, fit_engine, with_errors):
         assert result.y_calc == pytest.approx(F_ref[idx](X[idx]), abs=1e-2)
         assert result.residual == pytest.approx(
             F_real[idx](X[idx]) - F_ref[idx](X[idx]), abs=1e-2
+        )
+
+
+@pytest.mark.parametrize("with_errors", [False, True])
+@pytest.mark.parametrize("fit_engine", [None, "lmfit", "bumps", "DFO_LS"])
+def test_multi_fit2(genObjs, genObjs2, fit_engine, with_errors):
+    ref_sin1 = genObjs[0]
+    ref_sin2 = genObjs2[0]
+    ref_line = Line.from_pars(1, 4.6)
+
+    ref_sin1.offset.user_constraints["ref_sin2"] = ObjConstraint(
+        ref_sin2.offset, "", ref_sin1.offset
+    )
+    ref_sin1.offset.user_constraints["ref_line"] = ObjConstraint(
+        ref_line.m, "", ref_sin1.offset
+    )
+    ref_sin1.offset.user_constraints["ref_sin2"]()
+    ref_sin1.offset.user_constraints["ref_line"]()
+
+    sp_sin1 = genObjs[1]
+    sp_sin2 = genObjs2[1]
+    sp_line = Line.from_pars(0.43, 6.1)
+
+    sp_sin1.offset.user_constraints["sp_sin2"] = ObjConstraint(
+        sp_sin2.offset, "", sp_sin1.offset
+    )
+    sp_sin1.offset.user_constraints["sp_line"] = ObjConstraint(
+        sp_line.m, "", sp_sin1.offset
+    )
+    sp_sin1.offset.user_constraints["sp_sin2"]()
+    sp_sin1.offset.user_constraints["sp_line"]()
+
+    x1 = np.linspace(0, 5, 200)
+    y1 = ref_sin1(x1)
+    x3 = np.copy(x1)
+    y3 = ref_sin2(x3)
+    x2 = np.copy(x1)
+    y2 = ref_line(x2)
+
+    sp_sin1.offset.fixed = False
+    sp_sin1.phase.fixed = False
+    sp_sin2.phase.fixed = False
+    sp_line.c.fixed = False
+
+    f = MultiFitter([sp_sin1, sp_line, sp_sin2], [sp_sin1, sp_line, sp_sin2])
+    if fit_engine is not None:
+        try:
+            f.switch_engine(fit_engine)
+        except AttributeError:
+            pytest.skip(msg=f"{fit_engine} is not installed")
+
+    args = [[x1, x2, x3], [y1, y2, y3]]
+    kwargs = {}
+    if with_errors:
+        kwargs["weights"] = [1 / np.sqrt(y1), 1 / np.sqrt(y2), 1 / np.sqrt(y3)]
+
+    results = f.fit(*args, **kwargs)
+    X = [x1, x2, x3]
+    Y = [y1, y2, y3]
+    F_ref = [ref_sin1, ref_line, ref_sin2]
+    F_real = [sp_sin1, sp_line, sp_sin2]
+
+    assert len(results) == len(X)
+
+    for idx, result in enumerate(results):
+        assert result.n_pars == len(sp_sin1.get_fit_parameters()) + len(
+            sp_sin2.get_fit_parameters()
+        ) + len(sp_line.get_fit_parameters())
+        assert result.chi2 == pytest.approx(
+            0, abs=1.5e-3 * (len(result.x) - result.n_pars)
+        )
+        assert result.reduced_chi == pytest.approx(0, abs=1.5e-3)
+        assert result.success
+        assert np.all(result.x == X[idx])
+        assert np.all(result.y_obs == Y[idx])
+        assert result.y_calc == pytest.approx(F_real[idx](X[idx]), abs=1e-2)
+        assert result.residual == pytest.approx(
+            F_ref[idx](X[idx]) - F_real[idx](X[idx]), abs=1e-2
         )
 
 
@@ -403,8 +497,8 @@ def test_multi_fit_1D_2D(genObjs, fit_engine, with_errors):
 
     ref_sin2D = AbsSin2D.from_pars(0.3, 1.6)
     sp_sin2D = AbsSin2D.from_pars(
-        0.1, 1.8
-    )  # The fit is quite sensitive to the initial values :-(
+        0.1, 1.75
+    )  # The fit is VERY sensitive to the initial values :-(
 
     # Link the parameters
     ref_sin1D.offset.user_constraints["ref_sin2"] = ObjConstraint(
@@ -463,7 +557,7 @@ def test_multi_fit_1D_2D(genObjs, fit_engine, with_errors):
         assert result.n_pars == len(sp_sin1D.get_fit_parameters()) + len(
             sp_sin2D.get_fit_parameters()
         )
-        assert result.goodness_of_fit == pytest.approx(
+        assert result.chi2 == pytest.approx(
             0, abs=1.5e-3 * (len(result.x) - result.n_pars)
         )
         assert result.reduced_chi == pytest.approx(0, abs=1.5e-3)

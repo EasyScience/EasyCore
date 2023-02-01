@@ -2,9 +2,9 @@ __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
 
-#  SPDX-FileCopyrightText: 2022 easyCore contributors  <core@easyscience.software>
+#  SPDX-FileCopyrightText: 2023 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
-#  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+#  © 2021-2023 Contributors to the easyCore project <https://github.com/easyScience/easyCore
 
 from abc import ABCMeta, abstractmethod
 from typing import Union, Callable, List, Optional
@@ -33,6 +33,7 @@ class FittingTemplate(metaclass=ABCMeta):
         self._object = obj
         self._original_fit_function = fit_function
         self._cached_pars = {}
+        self._cached_pars_vals = {}
         self._cached_model = None
         self._fit_function = None
         self._constraints = []
@@ -206,8 +207,7 @@ class FitResults:
         "x_matrices",
         "y_obs",
         "y_calc",
-        "residual",
-        "goodness_of_fit",
+        "y_err",
         "engine_result",
         "total_results",
     ]
@@ -222,8 +222,7 @@ class FitResults:
         self.x_matrices = np.ndarray([])
         self.y_obs = np.ndarray([])
         self.y_calc = np.ndarray([])
-        self.goodness_of_fit = np.Inf
-        self.residual = np.ndarray([])
+        self.y_err = np.ndarray([])
         self.engine_result = None
         self.total_results = None
 
@@ -232,8 +231,16 @@ class FitResults:
         return len(self.p)
 
     @property
+    def residual(self):
+        return self.y_obs - self.y_calc
+
+    @property
+    def chi2(self):
+        return ((self.residual / self.y_err) ** 2).sum()
+
+    @property
     def reduced_chi(self):
-        return self.goodness_of_fit / (len(self.x) - self.n_pars)
+        return self.chi2 / (len(self.x) - self.n_pars)
 
 
 class NameConverter:

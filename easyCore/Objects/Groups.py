@@ -1,6 +1,6 @@
-#  SPDX-FileCopyrightText: 2022 easyCore contributors  <core@easyscience.software>
+#  SPDX-FileCopyrightText: 2023 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
-#  © 2021-2022 Contributors to the easyCore project <https://github.com/easyScience/easyCore>
+#  © 2021-2023 Contributors to the easyCore project <https://github.com/easyScience/easyCore
 
 from __future__ import annotations
 
@@ -227,27 +227,27 @@ class BaseCollection(BasedBase, MutableSequence):
         :return: dictionary of ones self
         :rtype: dict
         """
+        d = {}
+        if hasattr(self, "_modify_dict"):
+            # any extra keys defined on the inheriting class
+            d = self._modify_dict(skip=skip, **kwargs)
         in_dict["data"] = [
             encoder._convert_to_dict(item, skip=skip, **kwargs) for item in self
         ]
-        return in_dict
-        # data = []
-        # dd = {}
-        # for key in d.keys():
-        #     if key == "@id":
-        #         continue
-        #     if isinstance(d[key], dict):
-        #         data.append(d[key])
-        #     else:
-        #         dd[key] = d[key]
-        # dd["data"] = data
-        # # Attach the id. This might be useful in connected applications.
-        # # Note that it is converted to int and then str because javascript....
-        # dd["@id"] = d["@id"]
-        # return dd
+        out_dict = {**in_dict, **d}
+        return out_dict
 
     @property
     def data(self) -> Tuple:
+        """
+        The data function returns a tuple of the keyword arguments passed to the
+        constructor. This is useful for when you need to pass in a dictionary of data
+        to other functions, such as with matplotlib's plot function.
+
+        :param self: Access attributes of the class within the method
+        :return: The values of the attributes in a tuple
+        :doc-author: Trelent
+        """
         return tuple(self._kwargs.values())
 
     def __repr__(self) -> str:

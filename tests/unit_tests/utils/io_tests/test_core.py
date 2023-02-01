@@ -66,6 +66,8 @@ skip_dict = {
 def check_dict(check, item):
     if isinstance(check, dict) and isinstance(item, dict):
         for key in check.keys():
+            if key == "@id":
+                continue
             assert key in item.keys()
             check_dict(check[key], item[key])
     else:

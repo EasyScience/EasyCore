@@ -1,3 +1,7 @@
+#  SPDX-FileCopyrightText: 2023 easyCore contributors  <core@easyscience.software>
+#  SPDX-License-Identifier: BSD-3-Clause
+#  © 2021-2023 Contributors to the easyCore project <https://github.com/easyScience/easyCore
+
 from __future__ import annotations
 
 __author__ = "github.com/wardsimon"
@@ -24,6 +28,7 @@ from typing import (
 )
 
 from easyCore import np, _REDIRECT as GLOBAL_REDIRECT
+from easyCore import borg
 
 if TYPE_CHECKING:
     from easyCore.Utils.typing import BV
@@ -222,7 +227,9 @@ class BaseEncoderDecoder:
         if isinstance(obj, Enum):
             d.update({"value": runner(obj.value)})  # pylint: disable=E1101
         if hasattr(obj, "_convert_to_dict"):
-            d = obj._convert_to_dict(d, self)
+            d = obj._convert_to_dict(d, self, skip=skip, **kwargs)
+        if hasattr(obj, "_borg") and "@id" not in d:
+            d["@id"] = str(obj._borg.map.convert_id(obj).int)
         return d
 
     @staticmethod
@@ -293,9 +300,16 @@ def recursive_encoder(
         encoder = BaseEncoderDecoder()
     T_ = type(obj)
     if issubclass(T_, (list, tuple, MutableSequence)):
-        return [
-            recursive_encoder(it, skip, encoder, full_encode, **kwargs) for it in obj
-        ]
+        # Is it a core MutableSequence?
+        if (
+            hasattr(obj, "encode") and obj.__class__.__module__ != "builtins"
+        ):  # strings have encode
+            return encoder._convert_to_dict(obj, skip, full_encode, **kwargs)
+        else:
+            return [
+                recursive_encoder(it, skip, encoder, full_encode, **kwargs)
+                for it in obj
+            ]
     if isinstance(obj, dict):
         return {
             kk: recursive_encoder(vv, skip, encoder, full_encode, **kwargs)
