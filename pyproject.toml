@@ -1,29 +1,10 @@
-# POETRY CONFIG
-
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.black]
-line-length = 88
-target-version = ['py38']
-include = '\.pyi?$'
-extend-exclude = '''
-# A regex preceded with ^/ will apply only to files and directories
-# in the root of the project.
-^/foo.py  # exclude a file named foo.py in the root of the project (in addition to the defaults)
-'''
-
-[tool.coverage.run]
-source = ['easyCore']
-
-[tool.github.info]
-organization = 'easyScience'
-repo = 'easyCore'
-
 [tool.poetry]
 name = "easyScienceCore"
-version = "0.3.0"
+version = "0.3.1"
 description = "Generic logic for easyScience libraries"
 license = "BSD-3-Clause"
 authors = ["Simon Ward"]
@@ -37,11 +18,10 @@ classifiers = [
     "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",  # Again, pick a license
     "Programming Language :: Python :: 3 :: Only",
 ]
-include = ["CHANGELOG.md"]
 packages = [ { include = "easyCore" } ]
 
 [tool.poetry.dependencies]
-python = ">=3.7,<3.12" # "^3.8" generates error when installing PySide2 in easyAppGui
+python = ">=3.8"
 numpy = "^1.21"
 pint = ">=0.17,<0.19"
 uncertainties = "^3.1"
@@ -68,6 +48,23 @@ full = ['DFO-LS', 'holoviews']
 test = ['DFO-LS', 'pytest', 'pytest-cov', 'codecov', 'flake8']
 docs = ['doc8', 'readme-renderer', 'Sphinx', 'sphinx-rtd-theme', 'sphinx-autodoc-typehints', 'sphinx-gallery']
 ci = ['DFO-LS', 'pytest', 'pytest-cov', 'codecov', 'flake8', 'tox-gh-actions']
+
+[tool.github.info]
+organization = 'easyScience'
+repo = 'easyCore'
+
+[tool.coverage.run]
+source = ['easyCore']
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+include = '\.pyi?$'
+extend-exclude = '''
+# A regex preceded with ^/ will apply only to files and directories
+# in the root of the project.
+^/foo.py  # exclude a file named foo.py in the root of the project (in addition to the defaults)
+'''
 
 [tool.tox]
 legacy_tox_ini = """
