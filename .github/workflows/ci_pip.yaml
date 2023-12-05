@@ -54,7 +54,7 @@ jobs:
       with:
         python-version: 3.9
 
-    - uses: Gr1N/setup-poetry@v7
+    - uses: Gr1N/setup-poetry@v8
 
     - name: Check Build
       run: |
