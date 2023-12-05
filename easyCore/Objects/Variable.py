@@ -240,8 +240,12 @@ class Descriptor(ComponentSerializer):
         if self._callback.fget is not None:
             try:
                 value = self._callback.fget()
-                if value != self._value.magnitude:
+                if hasattr(self._value, "magnitude"):
+                    if value != self._value.magnitude:
+                        self.__deepValueSetter(value)
+                elif value != self._value:
                     self.__deepValueSetter(value)
+
             except Exception as e:
                 raise ValueError(f"Unable to return value:\n{e}")
         r_value = self._value
