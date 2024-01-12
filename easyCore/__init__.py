@@ -3,7 +3,7 @@
 #  © 2021-2023 Contributors to the easyCore project <https://github.com/easyScience/easyCore
 
 __author__ = "github.com/wardsimon"
-__version__ = "0.2.2"
+__version__ = "0.3.1"
 
 import numpy as np
 
