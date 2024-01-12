@@ -21,7 +21,7 @@ This section gathers examples which correspond to fitting data.
 .. only:: html
 
   .. image:: /fitting_examples/images/thumb/sphx_glr_plot_constraints_thumb.png
-    :alt: Constraints example
+    :alt:
 
   :ref:`sphx_glr_fitting_examples_plot_constraints.py`
 

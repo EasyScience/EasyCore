@@ -16,12 +16,12 @@ This section gathers examples which correspond to subclassing the :class:`easyCo
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Imports *******">
+    <div class="sphx-glr-thumbcontainer" tooltip="Imports *">
 
 .. only:: html
 
   .. image:: /base_examples/images/thumb/sphx_glr_plot_baseclass1_thumb.png
-    :alt: Subclassing BaseObj - Simple Pendulum
+    :alt:
 
   :ref:`sphx_glr_base_examples_plot_baseclass1.py`
 

@@ -10,7 +10,7 @@
     .. note::
         :class: sphx-glr-download-link-note
 
-        Click :ref:`here <sphx_glr_download_base_examples_plot_baseclass1.py>`
+        :ref:`Go to the end <sphx_glr_download_base_examples_plot_baseclass1.py>`
         to download the full example code
 
 .. rst-class:: sphx-glr-example-title
@@ -34,7 +34,7 @@ saving time from multiple imports.
 
 .. GENERATED FROM PYTHON SOURCE LINES 16-20
 
-.. code-block:: python3
+.. code-block:: Python
 
     from easyCore import np
     from easyCore.Objects.ObjectClasses import BaseObj, Parameter
@@ -43,13 +43,6 @@ saving time from multiple imports.
 
 
 
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    RuntimeError: module compiled against API version 0x10 but this version of numpy is 0xf . Check the section C-API incompatibility at the Troubleshooting ImportError section at https://numpy.org/devdocs/user/troubleshooting-importerror.html#c-api-incompatibility for indications on how to solve this problem .
-    RuntimeError: module compiled against API version 0x10 but this version of numpy is 0xf . Check the section C-API incompatibility at the Troubleshooting ImportError section at https://numpy.org/devdocs/user/troubleshooting-importerror.html#c-api-incompatibility for indications on how to solve this problem .
 
 
 
@@ -65,7 +58,7 @@ embedded rST text block:
 
 .. GENERATED FROM PYTHON SOURCE LINES 27-51
 
-.. code-block:: python3
+.. code-block:: Python
 
 
 
@@ -109,7 +102,7 @@ embedded rST text block:
 
 .. GENERATED FROM PYTHON SOURCE LINES 58-67
 
-.. code-block:: python3
+.. code-block:: Python
 
 
     p1 = Pendulum.from_pars()
@@ -133,7 +126,7 @@ Plotting
 
 .. GENERATED FROM PYTHON SOURCE LINES 69-80
 
-.. code-block:: python3
+.. code-block:: Python
 
 
     t = np.linspace(0, 3, 601)
@@ -169,7 +162,7 @@ embedded rST text block:
 
 .. GENERATED FROM PYTHON SOURCE LINES 87-95
 
-.. code-block:: python3
+.. code-block:: Python
 
 
     pendulum_array = [Pendulum.from_pars(p=phase) for phase in np.linspace(0, 1, 3)]
@@ -194,7 +187,7 @@ embedded rST text block:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.623 seconds)
+   **Total running time of the script:** (0 minutes 0.739 seconds)
 
 
 .. _sphx_glr_download_base_examples_plot_baseclass1.py:
@@ -203,14 +196,13 @@ embedded rST text block:
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
 
+    .. container:: sphx-glr-download sphx-glr-download-jupyter
+
+      :download:`Download Jupyter notebook: plot_baseclass1.ipynb <plot_baseclass1.ipynb>`
 
     .. container:: sphx-glr-download sphx-glr-download-python
 
       :download:`Download Python source code: plot_baseclass1.py <plot_baseclass1.py>`
-
-    .. container:: sphx-glr-download sphx-glr-download-jupyter
-
-      :download:`Download Jupyter notebook: plot_baseclass1.ipynb <plot_baseclass1.ipynb>`
 
 
 .. only:: html

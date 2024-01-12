@@ -10,7 +10,7 @@
     .. note::
         :class: sphx-glr-download-link-note
 
-        Click :ref:`here <sphx_glr_download_fitting_examples_plot_constraints.py>`
+        :ref:`Go to the end <sphx_glr_download_fitting_examples_plot_constraints.py>`
         to download the full example code
 
 .. rst-class:: sphx-glr-example-title
@@ -24,7 +24,7 @@ This  example shows the usages of the different constraints.
 
 .. GENERATED FROM PYTHON SOURCE LINES 6-18
 
-.. code-block:: python3
+.. code-block:: Python
 
 
     from easyCore.Fitting import Constraints
@@ -63,7 +63,7 @@ embedded rST text block:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.008 seconds)
+   **Total running time of the script:** (0 minutes 0.006 seconds)
 
 
 .. _sphx_glr_download_fitting_examples_plot_constraints.py:
@@ -72,14 +72,13 @@ embedded rST text block:
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
 
+    .. container:: sphx-glr-download sphx-glr-download-jupyter
+
+      :download:`Download Jupyter notebook: plot_constraints.ipynb <plot_constraints.ipynb>`
 
     .. container:: sphx-glr-download sphx-glr-download-python
 
       :download:`Download Python source code: plot_constraints.py <plot_constraints.py>`
-
-    .. container:: sphx-glr-download sphx-glr-download-jupyter
-
-      :download:`Download Jupyter notebook: plot_constraints.ipynb <plot_constraints.ipynb>`
 
 
 .. only:: html
