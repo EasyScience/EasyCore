@@ -215,7 +215,7 @@ def test_custom_class_full_encode_with_numpy():
         "a": {
             "@module": "easyCore.Objects.Variable",
             "@class": "Descriptor",
-            "@version": "0.2.2",
+            "@version": "0.3.1",
             "description": "",
             "units": "dimensionless",
             "display_name": "a",
