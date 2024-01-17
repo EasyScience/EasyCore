@@ -163,11 +163,7 @@ class BaseCollection(BasedBase, MutableSequence):
                     "Index must be of type `int`/`slice` or an item name (`str`)"
                 )
         keys = list(self._kwargs.keys())
-        if len(keys) <= idx:
-            #raise IndexError(f"Given index {idx} is out of bounds")
-            return None
-        else:
-            return self._kwargs[keys[idx]]
+        return self._kwargs[keys[idx]]
 
     def __setitem__(self, key: int, value: Union[B, V]) -> None:
         """
