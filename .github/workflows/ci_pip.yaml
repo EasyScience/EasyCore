@@ -1,38 +1,57 @@
+# SHOULD BE RENAMED TO python-ci.yml TO BE CONSISTENT WITH THE REFLECTOMETRY
+# This workflow will for a variety of Python versions 
+# - install the code base
+# - lint the code base
+# - test the code base
+# - upload the test coverage to codecov
+#
+# It will also
+# - build the package
+# - check the package
+#
+# For more information see: https://help.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions#publishing-to-package-registries
+
 name: CI using pip
 
 on: [push, pull_request]
 
 jobs:
-  CI_Testing:
+  Code_Consistency:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: chartboost/ruff-action@v1
+      - name: Suggestion to fix issues
+        if: ${{ failure() }}
+        run: |
+            echo "::notice::In project root run 'python.exe -m ruff . --fix' and commit changes to fix issues."
+            exit 1
 
+  Code_Testing:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11']
+        python-version: ['3.9', '3.10', '3.11']
         os: [ubuntu-latest, macos-latest, windows-latest]
 
     runs-on: ${{ matrix.os }}
     if: "!contains(github.event.head_commit.message, '[ci skip]')"
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
-    - uses: actions/setup-python@v4
+    - uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
 
     - name: Install dependencies
-      run: |
-        pip install '.[ci]' && pip uninstall -y easysciencecore
-    - name: Lint with flake8
-      run: |
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 ./easyCore --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 ./easyCore --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      run: pip install -e '.[dev]'
+
     - name: Test with tox
       run: |
+        pip install tox tox-gh-actions coverage
         tox
+
     - name: Upload coverage
       uses: codecov/codecov-action@v3
       with:
@@ -42,99 +61,24 @@ jobs:
         OS: ${{ matrix.os }}
         PYTHON: ${{ matrix.python-version }}
 
-  test_Packaging:
+  Package_Testing:
 
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, '[ci skip]')"
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
-    - uses: actions/setup-python@v4
+    - uses: actions/setup-python@v5
       with:
         python-version: 3.9
 
-    - uses: Gr1N/setup-poetry@v8
+    - name: Install dependencies and build
+      run: |
+        pip install -e '.[dev]'
+        python -m build
 
     - name: Check Build
       run: |
-        pip install twine
-        poetry build
-        python -m twine check dist/*
-# name: CI using pip
-
-# on: [push, pull_request]
-
-# jobs:
-#   CI_Testing:
-
-#     strategy:
-#       max-parallel: 4
-#       fail-fast: false
-#       matrix:
-#         python-version: ["3.7", "3.8", "3.9", "3.10"]
-#         os: [ubuntu-latest, macos-latest, windows-latest]
-#         experimental: [false]
-#         include:
-#           - python-version: "3.11.0-alpha.1"
-#             os: ubuntu-latest
-#             experimental: true
-
-#     runs-on: ${{ matrix.os }}
-#     continue-on-error: ${{ matrix.experimental }}
-#     if: "!contains(github.event.head_commit.message, '[ci skip]')"
-
-#     steps:
-#     - uses: actions/checkout@v3
-
-#     - uses: actions/setup-python@v4
-#       with:
-#         python-version: ${{ matrix.python-version }}
-
-#     - uses: Gr1N/setup-poetry@v7
-
-#     - name: Install dependencies
-#       run: |
-#         poetry update
-
-#     - name: Lint with flake8
-#       run: |
-#         poetry add flake8
-#         # stop the build if there are Python syntax errors or undefined names
-#         poetry run flake8 ./easyCore --count --select=E9,F63,F7,F82 --show-source --statistics
-#         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-#         poetry run flake8 ./easyCore --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-
-#     - name: Test with tox
-#       run: |
-#         poetry add -D pytest coverage
-#         poetry run pytest --cov --cov-report=xml
-
-#     - name: Upload coverage
-#       uses: codecov/codecov-action@v1.0.7
-#       with:
-#         name: Pytest coverage
-#         env_vars: OS,PYTHON,GITHUB_ACTIONS,GITHUB_ACTION,GITHUB_REF,GITHUB_REPOSITORY,GITHUB_HEAD_REF,GITHUB_RUN_ID,GITHUB_SHA,COVERAGE_FILE
-#       env:
-#         OS: ${{ matrix.os }}
-#         PYTHON: ${{ matrix.python-version }}
-
-#   test_Packaging:
-
-#     runs-on: ubuntu-latest
-#     if: "!contains(github.event.head_commit.message, '[ci skip]')"
-
-#     steps:
-#     - uses: actions/checkout@v3
-
-#     - uses: actions/setup-python@v4
-#       with:
-#         python-version: 3.9
-
-#     - uses: Gr1N/setup-poetry@v7
-
-#     - name: Check Build
-#       run: |
-#         pip install twine
-#         poetry build
-#         python -m twine check dist/*
+        cd ./dist
+        pytest ../
