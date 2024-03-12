@@ -35,6 +35,9 @@ build
 *.app
 *.dmg
 
+# VScode
+.vscode
+
 # Misc
 ..*
 *.log
