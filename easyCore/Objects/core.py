@@ -4,8 +4,8 @@
 
 from __future__ import annotations
 
-__author__ = "github.com/wardsimon"
-__version__ = "0.0.1"
+__author__ = 'github.com/wardsimon'
+__version__ = '0.0.1'
 
 import json
 from collections import OrderedDict
@@ -32,9 +32,7 @@ class ComponentSerializer:
 
     _CORE = True
 
-    def encode(
-        self, skip: Optional[List[str]] = None, encoder: Optional[EC] = None, **kwargs
-    ) -> Any:
+    def encode(self, skip: Optional[List[str]] = None, encoder: Optional[EC] = None, **kwargs) -> Any:
         """
         Use an encoder to covert an easyCore object into another format. Default is to a dictionary using `DictSerializer`.
 
@@ -85,9 +83,7 @@ class ComponentSerializer:
 
         return cls.decode(obj_dict, decoder=DictSerializer)
 
-    def encode_data(
-        self, skip: Optional[List[str]] = None, encoder: Optional[EC] = None, **kwargs
-    ) -> Any:
+    def encode_data(self, skip: Optional[List[str]] = None, encoder: Optional[EC] = None, **kwargs) -> Any:
         """
         Returns just the data in an easyCore object win the format specified by an encoder.
 
@@ -118,31 +114,21 @@ class ComponentSerializer:
         any nested keys, and then performing a hash on the resulting object
         """
 
-        def flatten(obj, seperator="."):
+        def flatten(obj, seperator='.'):
             # Flattens a dictionary
 
             flat_dict = {}
             for key, value in obj.items():
                 if isinstance(value, dict):
-                    flat_dict.update(
-                        {
-                            seperator.join([key, _key]): _value
-                            for _key, _value in flatten(value).items()
-                        }
-                    )
+                    flat_dict.update({seperator.join([key, _key]): _value for _key, _value in flatten(value).items()})
                 elif isinstance(value, list):
-                    list_dict = {
-                        "{}{}{}".format(key, seperator, num): item
-                        for num, item in enumerate(value)
-                    }
+                    list_dict = {'{}{}{}'.format(key, seperator, num): item for num, item in enumerate(value)}
                     flat_dict.update(flatten(list_dict))
                 else:
                     flat_dict[key] = value
 
             return flat_dict
 
-        ordered_keys = sorted(
-            flatten(jsanitize(self.as_dict())).items(), key=lambda x: x[0]
-        )
-        ordered_keys = [item for item in ordered_keys if "@" not in item[0]]
-        return sha1(json.dumps(OrderedDict(ordered_keys)).encode("utf-8"))  # nosec
+        ordered_keys = sorted(flatten(jsanitize(self.as_dict())).items(), key=lambda x: x[0])
+        ordered_keys = [item for item in ordered_keys if '@' not in item[0]]
+        return sha1(json.dumps(OrderedDict(ordered_keys)).encode('utf-8'))  # noqa: S324

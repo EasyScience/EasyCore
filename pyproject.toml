@@ -41,7 +41,8 @@ dev = [
     "codecov",
     "flake8",
     "tox-gh-actions",
-    "ruff"
+    "ruff",
+    "matplotlib"
 ]
 docs = [
     "doc8",
@@ -105,6 +106,8 @@ commands =
 line-length = 127
 exclude = [
     "docs",
+    "examples_old",
+    "tests"
 ]
 
 [tool.ruff.format]
