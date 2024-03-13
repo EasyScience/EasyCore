@@ -7,7 +7,7 @@ from copy import deepcopy
 from typing import Type
 
 import pytest
-from .test_core import dp_param_dict, skip_dict, check_dict, A, B, Descriptor, Parameter
+from .test_core import dp_param_dict, skip_dict, A, Descriptor
 from easyCore.Utils.io.xml import XMLSerializer
 
 

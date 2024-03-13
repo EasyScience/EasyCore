@@ -5,17 +5,12 @@
 __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
-import weakref
 import inspect
 import sys
 from typing import Tuple, List
-from collections.abc import Callable
 from abc import ABCMeta, abstractmethod
-from functools import wraps
-from types import MethodType
 
 from easyCore.Utils.classUtils import singleton
-from collections.abc import Mapping
 
 
 @singleton

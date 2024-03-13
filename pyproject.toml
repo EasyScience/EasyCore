@@ -40,7 +40,8 @@ dev = [
     "pytest-cov",
     "codecov",
     "flake8",
-    "tox-gh-actions"
+    "tox-gh-actions",
+    "ruff"
 ]
 docs = [
     "doc8",

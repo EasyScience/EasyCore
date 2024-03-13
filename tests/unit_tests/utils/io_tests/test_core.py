@@ -2,14 +2,12 @@ __author__ = "github.com/wardsimon"
 __version__ = "0.0.1"
 
 from copy import deepcopy
-from typing import Union, Type
+from typing import Type
 
 import pytest
 import easyCore
 
-from easyCore.models.polynomial import Line
 from easyCore.Objects.ObjectClasses import BaseObj, Parameter, Descriptor
-from easyCore.Objects.Groups import BaseCollection
 
 
 dp_param_dict = {
@@ -54,7 +52,7 @@ dp_param_dict = {
 }
 
 _skip_opt = [[], None] + [
-    k for k in dp_param_dict["argvalues"][0][0].keys() if k[0] is not "@"
+    k for k in dp_param_dict["argvalues"][0][0].keys() if k[0] != "@"
 ]
 skip_dict = {
     "argnames": "skip",

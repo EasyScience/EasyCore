@@ -11,7 +11,6 @@ from typing import List, Tuple
 from easyCore.Fitting.Constraints import (
     NumericConstraint,
     ObjConstraint,
-    SelfConstraint,
 )
 from easyCore.Objects.Variable import Parameter
 

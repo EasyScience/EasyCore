@@ -10,7 +10,7 @@ __version__ = "3.0.0"
 
 import json
 
-from typing import Optional, List, Dict, Any, TYPE_CHECKING
+from typing import List, TYPE_CHECKING
 
 
 from easyCore import np

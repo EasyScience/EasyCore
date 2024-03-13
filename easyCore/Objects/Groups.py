@@ -10,12 +10,10 @@ __version__ = "0.1.0"
 from numbers import Number
 from typing import (
     Union,
-    TypeVar,
     Optional,
     TYPE_CHECKING,
     Callable,
     List,
-    Dict,
     Any,
     Tuple,
 )
@@ -147,7 +145,7 @@ class BaseCollection(BasedBase, MutableSequence):
             idx = [index for index, item in enumerate(self) if item.name == idx]
             l = len(idx)
             if l == 0:
-                raise IndexError(f"Given index does not exist")
+                raise IndexError("Given index does not exist")
             elif l == 1:
                 idx = idx[0]
             else:

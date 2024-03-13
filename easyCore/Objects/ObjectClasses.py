@@ -7,12 +7,10 @@ __version__ = "0.1.0"
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the easyCore project <https://github.com/easyScience/easyCore
 
-import numbers
 from inspect import getfullargspec
 
 from typing import (
     List,
-    Union,
     Iterable,
     Dict,
     Optional,

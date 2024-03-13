@@ -7,10 +7,9 @@ from __future__ import annotations
 __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
 from typing import TypeVar, List, NamedTuple, Callable, TYPE_CHECKING, Optional, Type
 
-from easyCore import np
 
 
 _C = TypeVar("_C", bound=ABCMeta)

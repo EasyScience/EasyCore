@@ -9,7 +9,6 @@ import inspect
 from typing import List, Optional
 
 from easyCore.Fitting.fitting_template import (
-    Union,
     Callable,
     FittingTemplate,
     np,

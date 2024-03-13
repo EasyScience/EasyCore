@@ -7,7 +7,7 @@ from __future__ import annotations
 __author__ = "github.com/wardsimon"
 __version__ = "0.0.1"
 
-from typing import Optional, List, Dict, Any, TYPE_CHECKING, Set, Type
+from typing import Optional, List, Dict, Any, TYPE_CHECKING
 from hashlib import sha1
 import json
 from easyCore.Utils.io.dict import DictSerializer, DataDictSerializer

@@ -27,8 +27,7 @@ from typing import (
     Type,
 )
 
-from easyCore import np, _REDIRECT as GLOBAL_REDIRECT
-from easyCore import borg
+from easyCore import np
 
 if TYPE_CHECKING:
     from easyCore.Utils.typing import BV

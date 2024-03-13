@@ -7,7 +7,7 @@ from __future__ import annotations
 __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
-from typing import List, Tuple, TYPE_CHECKING, TypeVar, Union
+from typing import List, Tuple, TYPE_CHECKING
 
 from easyCore import borg
 from easyCore.Utils.Hugger.Property import LoggedProperty

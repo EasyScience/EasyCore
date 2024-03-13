@@ -7,7 +7,7 @@ __version__ = "0.0.1"
 
 import pytest
 from easyCore.Objects import virtual as Virtual
-from easyCore.Objects.Variable import Parameter, Descriptor
+from easyCore.Objects.Variable import Parameter
 from easyCore.models.polynomial import Line
 
 
