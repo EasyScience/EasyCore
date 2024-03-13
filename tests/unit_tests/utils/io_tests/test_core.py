@@ -5,7 +5,6 @@ from copy import deepcopy
 from typing import Type
 
 import pytest
-import numpy as np
 
 import easyCore
 from easyCore.Objects.ObjectClasses import BaseObj
@@ -39,8 +38,8 @@ dp_param_dict = {
                 "units": "kilometer",
                 "value": 1.0,
                 "error": 0.0,
-                "min": -np.inf,
-                "max": np.inf,
+                "min": -easyCore.np.inf,
+                "max": easyCore.np.inf,
                 "fixed": False,
                 "url": "https://www.boo.com",
                 "description": "",
