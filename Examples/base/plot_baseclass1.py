@@ -13,13 +13,14 @@ Imports
 Firstly the necessary imports. Notice that we import numpy from easyCore. This is not done for any reason other than
 saving time from multiple imports.
 """
-import matplotlib.pyplot as plt
 
-from easyCore import np
+import matplotlib.pyplot as plt
+import numpy as np
+
 from easyCore.Objects.ObjectClasses import BaseObj
 from easyCore.Objects.ObjectClasses import Parameter
 
-#%%
+# %%
 # Subclassing
 # ***********
 # To include embedded rST, use a line of >= 20 ``#``'s or ``#%%`` between your
@@ -40,7 +41,7 @@ class Pendulum(BaseObj):
         return cls(A, f, p)
 
     def __call__(self, t):
-        return self.A.raw_value * np.sin(2*np.pi*self.f.raw_value*t + self.p.raw_value)
+        return self.A.raw_value * np.sin(2 * np.pi * self.f.raw_value * t + self.p.raw_value)
 
     def plot(self, time, axis=None, **kwargs):
         if axis is None:
@@ -50,7 +51,8 @@ class Pendulum(BaseObj):
         p = axis.plot(time, self(time), **kwargs)
         return p
 
-#%%
+
+# %%
 # Single Example
 # **************
 # To include embedded rST, use a line of >= 20 ``#``'s or ``#%%`` between your
@@ -64,9 +66,9 @@ p2 = Pendulum.from_pars(A=5)
 # Another pendulum with Frequency = 4
 p3 = Pendulum.from_pars(A=5, f=4)
 # Another pendulum with Phase = pi/2
-p4 = Pendulum.from_pars(A=5, f=4, p=np.pi/2)
+p4 = Pendulum.from_pars(A=5, f=4, p=np.pi / 2)
 
-#%%
+# %%
 # Plotting
 
 t = np.linspace(0, 3, 601)
@@ -79,7 +81,7 @@ p3.plot(t, axis=ax3)
 p4.plot(t, axis=ax4)
 fig.show()
 
-#%%
+# %%
 # Multiple Examples
 # *****************
 # To include embedded rST, use a line of >= 20 ``#``'s or ``#%%`` between your
@@ -93,4 +95,3 @@ for pendulum in pendulum_array:
     pendulum.plot(t, label=f'Phase = {pendulum.p}')
 plt.legend(loc='lower right')
 fig.show()
-

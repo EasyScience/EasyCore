@@ -4,8 +4,8 @@
 
 from __future__ import annotations
 
-__author__ = "github.com/wardsimon"
-__version__ = "0.0.1"
+__author__ = 'github.com/wardsimon'
+__version__ = '0.0.1'
 
 import datetime
 import json
@@ -24,7 +24,7 @@ from typing import Tuple
 from typing import Type
 from typing import TypeVar
 
-from easyCore import np
+import numpy as np
 
 if TYPE_CHECKING:
     from easyCore.Utils.typing import BV
@@ -89,24 +89,24 @@ class BaseEncoderDecoder:
 
         if isinstance(obj, datetime.datetime):
             return {
-                "@module": "datetime",
-                "@class": "datetime",
-                "string": obj.__str__(),
+                '@module': 'datetime',
+                '@class': 'datetime',
+                'string': obj.__str__(),
             }
         if np is not None:
             if isinstance(obj, np.ndarray):
-                if str(obj.dtype).startswith("complex"):
+                if str(obj.dtype).startswith('complex'):
                     return {
-                        "@module": "numpy",
-                        "@class": "array",
-                        "dtype": obj.dtype.__str__(),
-                        "data": [obj.real.tolist(), obj.imag.tolist()],
+                        '@module': 'numpy',
+                        '@class': 'array',
+                        'dtype': obj.dtype.__str__(),
+                        'data': [obj.real.tolist(), obj.imag.tolist()],
                     }
                 return {
-                    "@module": "numpy",
-                    "@class": "array",
-                    "dtype": obj.dtype.__str__(),
-                    "data": obj.tolist(),
+                    '@module': 'numpy',
+                    '@class': 'array',
+                    'dtype': obj.dtype.__str__(),
+                    'data': obj.tolist(),
                 }
             if isinstance(obj, np.generic):
                 return obj.item()
@@ -133,20 +133,20 @@ class BaseEncoderDecoder:
             if new_obj is not obj:
                 return new_obj
 
-        d = {"@module": get_class_module(obj), "@class": obj.__class__.__name__}
+        d = {'@module': get_class_module(obj), '@class': obj.__class__.__name__}
 
         try:
-            parent_module = get_class_module(obj).split(".")[0]
+            parent_module = get_class_module(obj).split('.')[0]
             module_version = import_module(parent_module).__version__  # type: ignore
-            d["@version"] = "{}".format(module_version)
+            d['@version'] = '{}'.format(module_version)
         except (AttributeError, ImportError):
-            d["@version"] = None  # type: ignore
+            d['@version'] = None  # type: ignore
 
         spec, args = BaseEncoderDecoder.get_arg_spec(obj.__class__.__init__)
-        if hasattr(obj, "_arg_spec"):
+        if hasattr(obj, '_arg_spec'):
             args = obj._arg_spec
 
-        redirect = getattr(obj, "_REDIRECT", {})
+        redirect = getattr(obj, '_REDIRECT', {})
 
         def runner(o):
             if full_encode:
@@ -165,20 +165,20 @@ class BaseEncoderDecoder:
                         a = runner(obj.__getattribute__(c))
                     except AttributeError:
                         try:
-                            a = runner(obj.__getattribute__("_" + c))
+                            a = runner(obj.__getattribute__('_' + c))
                         except AttributeError:
                             err = True
-                            if hasattr(obj, "kwargs"):
+                            if hasattr(obj, 'kwargs'):
                                 # type: ignore
-                                option = getattr(obj, "kwargs")
+                                option = getattr(obj, 'kwargs')
                                 if hasattr(option, c):
                                     v = getattr(option, c)
                                     delattr(option, c)
                                     d.update(runner(v))  # pylint: disable=E1101
                                     err = False
-                            if hasattr(obj, "_kwargs"):
+                            if hasattr(obj, '_kwargs'):
                                 # type: ignore
-                                option = getattr(obj, "_kwargs")
+                                option = getattr(obj, '_kwargs')
                                 if hasattr(option, c):
                                     v = getattr(option, c)
                                     delattr(option, c)
@@ -186,26 +186,24 @@ class BaseEncoderDecoder:
                                     err = False
                             if err:
                                 raise NotImplementedError(
-                                    "Unable to automatically determine as_dict "
-                                    "format from class. MSONAble requires all "
-                                    "args to be present as either self.argname or "
-                                    "self._argname, and kwargs to be present under"
-                                    "a self.kwargs variable to automatically "
-                                    "determine the dict format. Alternatively, "
-                                    "you can implement both as_dict and from_dict."
+                                    'Unable to automatically determine as_dict '
+                                    'format from class. MSONAble requires all '
+                                    'args to be present as either self.argname or '
+                                    'self._argname, and kwargs to be present under'
+                                    'a self.kwargs variable to automatically '
+                                    'determine the dict format. Alternatively, '
+                                    'you can implement both as_dict and from_dict.'
                                 )
-                d[c] = recursive_encoder(
-                    a, skip=skip, encoder=self, full_encode=full_encode, **kwargs
-                )
+                d[c] = recursive_encoder(a, skip=skip, encoder=self, full_encode=full_encode, **kwargs)
         if spec.varargs is not None and getattr(obj, spec.varargs, None) is not None:
             d.update({spec.varargs: getattr(obj, spec.varargs)})
-        if hasattr(obj, "_kwargs"):
+        if hasattr(obj, '_kwargs'):
             if not issubclass(type(obj), MutableSequence):
                 d_k = list(d.keys())
-                for k, v in getattr(obj, "_kwargs").items():
+                for k, v in getattr(obj, '_kwargs').items():
                     # We should have already obtained `key` and `_key`
                     if k not in skip and k not in d_k:
-                        if k[0] == "_" and k[1:] in d_k:
+                        if k[0] == '_' and k[1:] in d_k:
                             continue
                         vv = v
                         if k in redirect.keys():
@@ -221,11 +219,11 @@ class BaseEncoderDecoder:
                             **kwargs,
                         )
         if isinstance(obj, Enum):
-            d.update({"value": runner(obj.value)})  # pylint: disable=E1101
-        if hasattr(obj, "_convert_to_dict"):
+            d.update({'value': runner(obj.value)})  # pylint: disable=E1101
+        if hasattr(obj, '_convert_to_dict'):
             d = obj._convert_to_dict(d, self, skip=skip, **kwargs)
-        if hasattr(obj, "_borg") and "@id" not in d:
-            d["@id"] = str(obj._borg.map.convert_id(obj).int)
+        if hasattr(obj, '_borg') and '@id' not in d:
+            d['@id'] = str(obj._borg.map.convert_id(obj).int)
         return d
 
     @staticmethod
@@ -239,42 +237,32 @@ class BaseEncoderDecoder:
         """
         T_ = type(d)
         if isinstance(d, dict):
-            if "@module" in d and "@class" in d:
-                modname = d["@module"]
-                classname = d["@class"]
+            if '@module' in d and '@class' in d:
+                modname = d['@module']
+                classname = d['@class']
                 # if classname in DictSerializer.REDIRECT.get(modname, {}):
                 #     modname = DictSerializer.REDIRECT[modname][classname]["@module"]
                 #     classname = DictSerializer.REDIRECT[modname][classname]["@class"]
             else:
                 modname = None
                 classname = None
-            if modname and modname not in ["bson.objectid", "numpy"]:
-                if modname == "datetime" and classname == "datetime":
+            if modname and modname not in ['bson.objectid', 'numpy']:
+                if modname == 'datetime' and classname == 'datetime':
                     try:
-                        dt = datetime.datetime.strptime(
-                            d["string"], "%Y-%m-%d %H:%M:%S.%f"
-                        )
+                        dt = datetime.datetime.strptime(d['string'], '%Y-%m-%d %H:%M:%S.%f')
                     except ValueError:
-                        dt = datetime.datetime.strptime(
-                            d["string"], "%Y-%m-%d %H:%M:%S"
-                        )
+                        dt = datetime.datetime.strptime(d['string'], '%Y-%m-%d %H:%M:%S')
                     return dt
 
                 mod = __import__(modname, globals(), locals(), [classname], 0)
                 if hasattr(mod, classname):
                     cls_ = getattr(mod, classname)
-                    data = {
-                        k: BaseEncoderDecoder._convert_from_dict(v)
-                        for k, v in d.items()
-                        if not k.startswith("@")
-                    }
+                    data = {k: BaseEncoderDecoder._convert_from_dict(v) for k, v in d.items() if not k.startswith('@')}
                     return cls_(**data)
-            elif np is not None and modname == "numpy" and classname == "array":
-                if d["dtype"].startswith("complex"):
-                    return np.array(
-                        [r + i * 1j for r, i in zip(*d["data"])], dtype=d["dtype"]
-                    )
-                return np.array(d["data"], dtype=d["dtype"])
+            elif np is not None and modname == 'numpy' and classname == 'array':
+                if d['dtype'].startswith('complex'):
+                    return np.array([r + i * 1j for r, i in zip(*d['data'])], dtype=d['dtype'])
+                return np.array(d['data'], dtype=d['dtype'])
 
         if issubclass(T_, (list, MutableSequence)):
             return [BaseEncoderDecoder._convert_from_dict(x) for x in d]
@@ -282,13 +270,11 @@ class BaseEncoderDecoder:
 
 
 if TYPE_CHECKING:
-    _ = TypeVar("EC", bound=BaseEncoderDecoder)
+    _ = TypeVar('EC', bound=BaseEncoderDecoder)
     EC = Type[_]
 
 
-def recursive_encoder(
-    obj, skip: List[str] = [], encoder=None, full_encode=False, **kwargs
-):
+def recursive_encoder(obj, skip: List[str] = [], encoder=None, full_encode=False, **kwargs):
     """
     Walk through an object encoding it
     """
@@ -297,23 +283,13 @@ def recursive_encoder(
     T_ = type(obj)
     if issubclass(T_, (list, tuple, MutableSequence)):
         # Is it a core MutableSequence?
-        if (
-            hasattr(obj, "encode") and obj.__class__.__module__ != "builtins"
-        ):  # strings have encode
+        if hasattr(obj, 'encode') and obj.__class__.__module__ != 'builtins':  # strings have encode
             return encoder._convert_to_dict(obj, skip, full_encode, **kwargs)
         else:
-            return [
-                recursive_encoder(it, skip, encoder, full_encode, **kwargs)
-                for it in obj
-            ]
+            return [recursive_encoder(it, skip, encoder, full_encode, **kwargs) for it in obj]
     if isinstance(obj, dict):
-        return {
-            kk: recursive_encoder(vv, skip, encoder, full_encode, **kwargs)
-            for kk, vv in obj.items()
-        }
-    if (
-        hasattr(obj, "encode") and obj.__class__.__module__ != "builtins"
-    ):  # strings have encode
+        return {kk: recursive_encoder(vv, skip, encoder, full_encode, **kwargs) for kk, vv in obj.items()}
+    if hasattr(obj, 'encode') and obj.__class__.__module__ != 'builtins':  # strings have encode
         return encoder._convert_to_dict(obj, skip, full_encode, **kwargs)
     return obj
 
@@ -322,5 +298,5 @@ def get_class_module(obj):
     """
     Returns the REAL module of the class of the object.
     """
-    c = getattr(obj, "__old_class__", obj.__class__)
+    c = getattr(obj, '__old_class__', obj.__class__)
     return c.__module__

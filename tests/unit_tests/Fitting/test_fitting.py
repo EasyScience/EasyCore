@@ -9,7 +9,7 @@ from typing import ClassVar
 
 import pytest
 
-from easyCore import np
+import numpy as np
 from easyCore.Fitting.Constraints import ObjConstraint
 from easyCore.Fitting.Fitting import Fitter
 from easyCore.Fitting.Fitting import MultiFitter

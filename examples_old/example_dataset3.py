@@ -5,7 +5,7 @@ import time
 
 import matplotlib.pyplot as plt
 
-from easyCore import np
+import numpy as np
 from easyCore.Datasets.xarray import xr
 from easyCore.Fitting.Fitting import Fitter
 from easyCore.Objects.ObjectClasses import BaseObj

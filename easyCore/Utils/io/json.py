@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-__author__ = "https://github.com/materialsvirtuallab/monty/blob/master/monty/json.py"
-__version__ = "3.0.0"
+__author__ = 'https://github.com/materialsvirtuallab/monty/blob/master/monty/json.py'
+__version__ = '3.0.0'
 
 #  SPDX-FileCopyrightText: 2023 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
@@ -12,14 +12,14 @@ import json
 from typing import TYPE_CHECKING
 from typing import List
 
-from easyCore import np
+import numpy as np
 
 from .template import BaseEncoderDecoder
 
 if TYPE_CHECKING:
     from easyCore.Objects.ObjectClasses import BV
 
-_KNOWN_CORE_TYPES = ("Descriptor", "Parameter")
+_KNOWN_CORE_TYPES = ('Descriptor', 'Parameter')
 
 
 class JsonSerializer(BaseEncoderDecoder):
@@ -30,7 +30,7 @@ class JsonSerializer(BaseEncoderDecoder):
         ENCODER = type(
             JsonEncoderTemplate.__name__,
             (JsonEncoderTemplate, BaseEncoderDecoder),
-            {"skip": skip},
+            {'skip': skip},
         )
         return json.dumps(obj, cls=ENCODER)
 
@@ -50,8 +50,8 @@ class JsonDataSerializer(BaseEncoderDecoder):
             JsonEncoderTemplate.__name__,
             (JsonEncoderTemplate, BaseEncoderDecoder),
             {
-                "skip": skip,
-                "_converter": lambda *args, **kwargs: DataDictSerializer._parse_dict(
+                'skip': skip,
+                '_converter': lambda *args, **kwargs: DataDictSerializer._parse_dict(
                     DataDictSerializer._convert_to_dict(*args, **kwargs)
                 ),
             },
@@ -61,9 +61,7 @@ class JsonDataSerializer(BaseEncoderDecoder):
 
     @classmethod
     def decode(cls, data: str) -> BV:
-        raise NotImplementedError(
-            "It is not possible to reconstitute objects from data only objects."
-        )
+        raise NotImplementedError('It is not possible to reconstitute objects from data only objects.')
 
 
 class JsonEncoderTemplate(json.JSONEncoder):
@@ -156,14 +154,9 @@ def jsanitize(obj, strict=False, allow_bson=False):
     if isinstance(obj, (list, tuple)):
         return [jsanitize(i, strict=strict, allow_bson=allow_bson) for i in obj]
     if np is not None and isinstance(obj, np.ndarray):
-        return [
-            jsanitize(i, strict=strict, allow_bson=allow_bson) for i in obj.tolist()
-        ]
+        return [jsanitize(i, strict=strict, allow_bson=allow_bson) for i in obj.tolist()]
     if isinstance(obj, dict):
-        return {
-            k.__str__(): jsanitize(v, strict=strict, allow_bson=allow_bson)
-            for k, v in obj.items()
-        }
+        return {k.__str__(): jsanitize(v, strict=strict, allow_bson=allow_bson) for k, v in obj.items()}
     if isinstance(obj, (int, float)):
         return obj
     if obj is None:
