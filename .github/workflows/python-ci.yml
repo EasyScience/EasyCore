@@ -1,4 +1,3 @@
-# SHOULD BE RENAMED TO python-ci.yml TO BE CONSISTENT WITH THE REFLECTOMETRY
 # This workflow will for a variety of Python versions 
 # - install the code base
 # - lint the code base
