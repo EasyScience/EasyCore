@@ -1,11 +1,13 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.1.0'
 
+import matplotlib.pyplot as plt
+
 from easyCore import np
 from easyCore.Datasets.xarray import xr
-import matplotlib.pyplot as plt
-from easyCore.Objects.Base import Parameter, BaseObj
 from easyCore.Fitting.Fitting import Fitter
+from easyCore.Objects.Base import BaseObj
+from easyCore.Objects.Base import Parameter
 
 d = xr.Dataset()
 

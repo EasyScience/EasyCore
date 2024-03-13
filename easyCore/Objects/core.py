@@ -7,12 +7,18 @@ from __future__ import annotations
 __author__ = "github.com/wardsimon"
 __version__ = "0.0.1"
 
-from typing import Optional, List, Dict, Any, TYPE_CHECKING
-from hashlib import sha1
 import json
-from easyCore.Utils.io.dict import DictSerializer, DataDictSerializer
-from easyCore.Utils.io.json import jsanitize
 from collections import OrderedDict
+from hashlib import sha1
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+
+from easyCore.Utils.io.dict import DataDictSerializer
+from easyCore.Utils.io.dict import DictSerializer
+from easyCore.Utils.io.json import jsanitize
 
 if TYPE_CHECKING:
     from easyCore.Utils.io.template import EC

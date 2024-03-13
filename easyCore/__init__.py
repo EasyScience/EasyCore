@@ -6,8 +6,9 @@ __author__ = "github.com/wardsimon"
 __version__ = "0.3.1"
 
 
-from easyCore.Objects.Borg import Borg
 import pint
+
+from easyCore.Objects.Borg import Borg
 
 default_fitting_engine = "lmfit"
 

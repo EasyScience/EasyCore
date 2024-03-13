@@ -9,23 +9,20 @@ __version__ = "0.0.1"
 
 import datetime
 import json
-
 from abc import abstractmethod
 from enum import Enum
 from importlib import import_module
 from inspect import getfullargspec
-from typing import (
-    List,
-    TYPE_CHECKING,
-    Callable,
-    Tuple,
-    Any,
-    Optional,
-    Dict,
-    MutableSequence,
-    TypeVar,
-    Type,
-)
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import MutableSequence
+from typing import Optional
+from typing import Tuple
+from typing import Type
+from typing import TypeVar
 
 from easyCore import np
 

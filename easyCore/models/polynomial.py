@@ -7,12 +7,15 @@ __version__ = "0.0.1"
 
 
 import functools
+from typing import ClassVar
+from typing import Iterable
+from typing import Optional
+from typing import Union
 
 from easyCore import np
-from easyCore.Objects.ObjectClasses import BaseObj, Parameter
 from easyCore.Objects.Groups import BaseCollection
-
-from typing import ClassVar, Optional, Iterable, Union
+from easyCore.Objects.ObjectClasses import BaseObj
+from easyCore.Objects.ObjectClasses import Parameter
 
 
 def designate_calc_fn(func):

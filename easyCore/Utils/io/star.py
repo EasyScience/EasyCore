@@ -8,9 +8,10 @@ __version__ = "0.1.0"
 import re
 import textwrap
 import warnings
-
-from collections import deque, OrderedDict
-from math import floor, log10
+from collections import OrderedDict
+from collections import deque
+from math import floor
+from math import log10
 from numbers import Number
 from typing import List
 

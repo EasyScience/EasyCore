@@ -6,20 +6,22 @@ __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
 import inspect
-from typing import List, Optional
+from typing import List
+from typing import Optional
 
-from easyCore.Fitting.fitting_template import (
-    Callable,
-    FittingTemplate,
-    np,
-    FitResults,
-    NameConverter,
-    FitError,
-)
+from lmfit import Model as lmModel
 
 # Import lmfit specific objects
-from lmfit import Parameter as lmParameter, Parameters as lmParameters, Model as lmModel
+from lmfit import Parameter as lmParameter
+from lmfit import Parameters as lmParameters
 from lmfit.model import ModelResult
+
+from easyCore.Fitting.fitting_template import Callable
+from easyCore.Fitting.fitting_template import FitError
+from easyCore.Fitting.fitting_template import FitResults
+from easyCore.Fitting.fitting_template import FittingTemplate
+from easyCore.Fitting.fitting_template import NameConverter
+from easyCore.Fitting.fitting_template import np
 
 
 class lmfit(FittingTemplate):  # noqa: S101

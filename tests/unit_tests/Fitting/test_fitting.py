@@ -8,11 +8,14 @@ __version__ = "0.0.1"
 from typing import ClassVar
 
 import pytest
+
 from easyCore import np
-from easyCore.Objects.ObjectClasses import Parameter, BaseObj
-from easyCore.Fitting.Fitting import Fitter, MultiFitter
-from easyCore.Fitting.fitting_template import FitError
 from easyCore.Fitting.Constraints import ObjConstraint
+from easyCore.Fitting.Fitting import Fitter
+from easyCore.Fitting.Fitting import MultiFitter
+from easyCore.Fitting.fitting_template import FitError
+from easyCore.Objects.ObjectClasses import BaseObj
+from easyCore.Objects.ObjectClasses import Parameter
 
 
 class AbsSin(BaseObj):

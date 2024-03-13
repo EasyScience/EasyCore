@@ -5,10 +5,11 @@ from copy import deepcopy
 from typing import Type
 
 import pytest
+
 import easyCore
-
-from easyCore.Objects.ObjectClasses import BaseObj, Parameter, Descriptor
-
+from easyCore.Objects.ObjectClasses import BaseObj
+from easyCore.Objects.ObjectClasses import Descriptor
+from easyCore.Objects.ObjectClasses import Parameter
 
 dp_param_dict = {
     "argnames": "dp_kwargs, dp_cls",

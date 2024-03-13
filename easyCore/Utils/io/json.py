@@ -9,11 +9,11 @@ __version__ = "3.0.0"
 
 
 import json
-
-from typing import List, TYPE_CHECKING
-
+from typing import TYPE_CHECKING
+from typing import List
 
 from easyCore import np
+
 from .template import BaseEncoderDecoder
 
 if TYPE_CHECKING:

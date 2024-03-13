@@ -7,24 +7,25 @@ from __future__ import annotations
 __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
+from collections.abc import MutableSequence
 from numbers import Number
-from typing import (
-    Union,
-    Optional,
-    TYPE_CHECKING,
-    Callable,
-    List,
-    Any,
-    Tuple,
-)
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import Callable
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
 from easyCore import borg
-from easyCore.Objects.ObjectClasses import BasedBase, Descriptor
-from collections.abc import MutableSequence
+from easyCore.Objects.ObjectClasses import BasedBase
+from easyCore.Objects.ObjectClasses import Descriptor
 from easyCore.Utils.UndoRedo import NotarizedDict
 
 if TYPE_CHECKING:
-    from easyCore.Utils.typing import B, iF, V
+    from easyCore.Utils.typing import B
+    from easyCore.Utils.typing import V
+    from easyCore.Utils.typing import iF
 
 
 class BaseCollection(BasedBase, MutableSequence):

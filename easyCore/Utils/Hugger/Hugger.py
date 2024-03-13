@@ -7,8 +7,10 @@ __version__ = "0.1.0"
 
 import inspect
 import sys
-from typing import Tuple, List
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
+from abc import abstractmethod
+from typing import List
+from typing import Tuple
 
 from easyCore.Utils.classUtils import singleton
 

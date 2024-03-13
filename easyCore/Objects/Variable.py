@@ -8,32 +8,32 @@ __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
 import numbers
-import weakref
 import warnings
-
+import weakref
 from copy import deepcopy
 from inspect import getfullargspec
 from types import MappingProxyType
-from typing import (
-    List,
-    Union,
-    Any,
-    Dict,
-    Optional,
-    TYPE_CHECKING,
-    Callable,
-    Tuple,
-    TypeVar,
-    Type,
-    Set,
-)
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Set
+from typing import Tuple
+from typing import Type
+from typing import TypeVar
+from typing import Union
 
-from easyCore import borg, ureg, np, pint
+from easyCore import borg
+from easyCore import np
+from easyCore import pint
+from easyCore import ureg
+from easyCore.Fitting.Constraints import SelfConstraint
+from easyCore.Objects.core import ComponentSerializer
 from easyCore.Utils.classTools import addProp
 from easyCore.Utils.Exceptions import CoreSetException
 from easyCore.Utils.UndoRedo import property_stack_deco
-from easyCore.Objects.core import ComponentSerializer
-from easyCore.Fitting.Constraints import SelfConstraint
 
 if TYPE_CHECKING:
     from easyCore.Utils.typing import C

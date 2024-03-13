@@ -7,13 +7,16 @@ from __future__ import annotations
 __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
-from typing import List, Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING
+from typing import List
+from typing import Tuple
 
 from easyCore import borg
 from easyCore.Utils.Hugger.Property import LoggedProperty
 
 if TYPE_CHECKING:
-    from easyCore.Utils.typing import B, BV
+    from easyCore.Utils.typing import BV
+    from easyCore.Utils.typing import B
 
 
 def addLoggedProp(inst: BV, name: str, *args, **kwargs) -> None:

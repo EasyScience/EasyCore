@@ -8,22 +8,26 @@ import functools
 #  SPDX-FileCopyrightText: 2023 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the easyCore project <https://github.com/easyScience/easyCore
-
 from abc import ABCMeta
 from types import FunctionType
-from typing import List, Callable, TypeVar, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
+from typing import Callable
+from typing import List
+from typing import Optional
+from typing import TypeVar
 
-from easyCore import borg, default_fitting_engine, np
 import easyCore.Fitting as Fitting
+from easyCore import borg
+from easyCore import default_fitting_engine
+from easyCore import np
 from easyCore.Objects.Groups import BaseCollection
-
 
 _C = TypeVar("_C", bound=ABCMeta)
 _M = TypeVar("_M", bound=Fitting.FittingTemplate)
 
 if TYPE_CHECKING:
-    from easyCore.Utils.typing import B
     from easyCore.Fitting.fitting_template import FitResults as FR
+    from easyCore.Utils.typing import B
 
 
 class Fitter:

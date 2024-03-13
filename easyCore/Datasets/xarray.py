@@ -5,14 +5,20 @@
 __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
-from typing import Callable, Union, TypeVar, List, Tuple, Any, Iterable
-
 import weakref
+from typing import Any
+from typing import Callable
+from typing import Iterable
+from typing import List
+from typing import Tuple
+from typing import TypeVar
+from typing import Union
 
 # import pint_xarray
 import xarray as xr
 
-from easyCore import np, ureg
+from easyCore import np
+from easyCore import ureg
 from easyCore.Fitting.fitting_template import FitResults
 
 T_ = TypeVar("T_")

@@ -7,14 +7,21 @@ from __future__ import annotations
 __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
-from abc import abstractmethod, ABCMeta
-
 import weakref
-from asteval import Interpreter
+from abc import ABCMeta
+from abc import abstractmethod
 from numbers import Number
-from typing import List, Union, Callable, TYPE_CHECKING, Optional, TypeVar
+from typing import TYPE_CHECKING
+from typing import Callable
+from typing import List
+from typing import Optional
+from typing import TypeVar
+from typing import Union
 
-from easyCore import borg, np
+from asteval import Interpreter
+
+from easyCore import borg
+from easyCore import np
 from easyCore.Objects.core import ComponentSerializer
 
 if TYPE_CHECKING:

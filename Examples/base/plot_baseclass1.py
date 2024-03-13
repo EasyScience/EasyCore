@@ -13,9 +13,11 @@ Imports
 Firstly the necessary imports. Notice that we import numpy from easyCore. This is not done for any reason other than
 saving time from multiple imports.
 """
-from easyCore import np
-from easyCore.Objects.ObjectClasses import BaseObj, Parameter
 import matplotlib.pyplot as plt
+
+from easyCore import np
+from easyCore.Objects.ObjectClasses import BaseObj
+from easyCore.Objects.ObjectClasses import Parameter
 
 #%%
 # Subclassing

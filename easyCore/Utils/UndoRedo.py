@@ -7,10 +7,17 @@ __version__ = "0.1.0"
 
 import abc
 import functools
-from collections import deque, UserDict
-from typing import Union, Any, NoReturn, Callable, TypeVar, Iterable
+from collections import UserDict
+from collections import deque
+from typing import Any
+from typing import Callable
+from typing import Iterable
+from typing import NoReturn
+from typing import TypeVar
+from typing import Union
 
-from easyCore import borg, np
+from easyCore import borg
+from easyCore import np
 
 
 class UndoCommand(metaclass=abc.ABCMeta):

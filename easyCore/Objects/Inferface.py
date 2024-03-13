@@ -8,9 +8,13 @@ __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
 from abc import ABCMeta
-from typing import TypeVar, List, NamedTuple, Callable, TYPE_CHECKING, Optional, Type
-
-
+from typing import TYPE_CHECKING
+from typing import Callable
+from typing import List
+from typing import NamedTuple
+from typing import Optional
+from typing import Type
+from typing import TypeVar
 
 _C = TypeVar("_C", bound=ABCMeta)
 _M = TypeVar("_M")

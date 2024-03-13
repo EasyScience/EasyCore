@@ -2,20 +2,20 @@ __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
 import json
+from abc import ABCMeta
+from abc import abstractmethod
 from typing import Callable
-from easyCore.Objects.core import ComponentSerializer
 
 import numpy as np
 
 from easyCore import borg
-from easyCore.Objects.Base import Parameter, BaseObj
+from easyCore.Fitting.Fitting import Fitter
+from easyCore.Objects.Base import BaseObj
+from easyCore.Objects.Base import Parameter
+from easyCore.Objects.core import ComponentSerializer
 
 # from easyCore.Objects.Base import LoggedProperty
 from easyCore.Objects.Inferface import InterfaceFactoryTemplate
-from easyCore.Fitting.Fitting import Fitter
-
-from abc import ABCMeta, abstractmethod
-
 
 # This is a much more complex case where we have calculators, interfaces, interface factory and an
 # inherited object (from `BaseObj`). In this case the Line class is available with/without an interface

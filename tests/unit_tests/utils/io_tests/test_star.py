@@ -6,10 +6,14 @@ __author__ = "github.com/wardsimon"
 __version__ = "0.0.1"
 
 import pytest
-from easyCore.Utils.io.star import ItemHolder, StarLoop, StarSection
-from easyCore.Objects.Variable import Parameter, Descriptor
+
 from easyCore.models.polynomial import Line
 from easyCore.Objects.Groups import BaseCollection
+from easyCore.Objects.Variable import Descriptor
+from easyCore.Objects.Variable import Parameter
+from easyCore.Utils.io.star import ItemHolder
+from easyCore.Utils.io.star import StarLoop
+from easyCore.Utils.io.star import StarSection
 
 
 @pytest.mark.parametrize(

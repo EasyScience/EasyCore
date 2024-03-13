@@ -6,9 +6,10 @@ __author__ = "github.com/wardsimon"
 __version__ = "0.0.1"
 
 import pytest
+
+from easyCore.models.polynomial import Line
 from easyCore.Objects import virtual as Virtual
 from easyCore.Objects.Variable import Parameter
-from easyCore.models.polynomial import Line
 
 
 @pytest.mark.parametrize(
