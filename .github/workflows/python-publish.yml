@@ -1,10 +1,10 @@
 # This workflow will
 # - build distribution package, pure python wheel
-# - deploy produced distribution package to PyIP
+# - publish produced distribution package to PyPI
 #
 # For more information see: https://help.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions#publishing-to-package-registries
 
-name: Deploy Python Package
+name: Publish Python Package
 
 on:
   workflow_dispatch:

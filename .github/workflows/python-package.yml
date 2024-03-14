@@ -35,7 +35,8 @@ jobs:
       run: |
         cd ./dist
         pytest ../
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v4
       with:
-        name: EasyCore - Python ${{ matrix.python-version }}
+        name: easyCore - Python ${{ matrix.python-version }}
         path: ${{ github.workspace }}/dist/*
+        overwrite: true
