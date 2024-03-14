@@ -6,6 +6,7 @@ from typing import Type
 
 import numpy as np
 import pytest
+from importlib import metadata
 
 from easyCore.Utils.io.dict import DataDictSerializer
 from easyCore.Utils.io.dict import DictSerializer
@@ -224,7 +225,7 @@ def test_custom_class_full_encode_with_numpy():
         "a": {
             "@module": "easyCore.Objects.Variable",
             "@class": "Descriptor",
-            "@version": "0.3.1",
+            "@version": metadata.version("easyCore"),
             "description": "",
             "units": "dimensionless",
             "display_name": "a",
