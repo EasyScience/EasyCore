@@ -7,16 +7,19 @@ from __future__ import annotations
 __author__ = "github.com/wardsimon"
 __version__ = "0.0.1"
 
-import xml.etree.ElementTree as ET
-
-from numbers import Number
 import sys
-from typing import List, TYPE_CHECKING, Any, Optional
+import xml.etree.ElementTree as ET
+from numbers import Number
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import List
+from typing import Optional
 
 import numpy as np
 
+from easyCore.Utils.io.dict import DataDictSerializer
+from easyCore.Utils.io.dict import DictSerializer
 from easyCore.Utils.io.template import BaseEncoderDecoder
-from easyCore.Utils.io.dict import DictSerializer, DataDictSerializer
 
 if TYPE_CHECKING:
     from easyCore.Utils.typing import BV

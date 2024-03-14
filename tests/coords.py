@@ -13,11 +13,10 @@ boundary conditions or otherwise. Many of these are heavily vectorized in
 numpy for performance.
 """
 
-import math
 import itertools
+import math
 
 import numpy as np
-
 import pyximport
 
 pyximport.install(setup_args={"include_dirs": np.get_include()})

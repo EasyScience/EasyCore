@@ -5,14 +5,13 @@ __version__ = "0.1.0"
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the easyCore project <https://github.com/easyScience/easyCore
 
+from typing import List
+from typing import Tuple
+
 import pytest
 
-from typing import List, Tuple
-from easyCore.Fitting.Constraints import (
-    NumericConstraint,
-    ObjConstraint,
-    SelfConstraint,
-)
+from easyCore.Fitting.Constraints import NumericConstraint
+from easyCore.Fitting.Constraints import ObjConstraint
 from easyCore.Objects.Variable import Parameter
 
 

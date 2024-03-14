@@ -4,36 +4,37 @@
 
 from __future__ import annotations
 
-__author__ = "github.com/wardsimon"
-__version__ = "0.1.0"
+__author__ = 'github.com/wardsimon'
+__version__ = '0.1.0'
 
 import numbers
-import weakref
 import warnings
-
+import weakref
 from copy import deepcopy
 from inspect import getfullargspec
 from types import MappingProxyType
-from typing import (
-    List,
-    Union,
-    Any,
-    Dict,
-    Optional,
-    TYPE_CHECKING,
-    Callable,
-    Tuple,
-    TypeVar,
-    Type,
-    Set,
-)
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Set
+from typing import Tuple
+from typing import Type
+from typing import TypeVar
+from typing import Union
 
-from easyCore import borg, ureg, np, pint
+import numpy as np
+
+from easyCore import borg
+from easyCore import pint
+from easyCore import ureg
+from easyCore.Fitting.Constraints import SelfConstraint
+from easyCore.Objects.core import ComponentSerializer
 from easyCore.Utils.classTools import addProp
 from easyCore.Utils.Exceptions import CoreSetException
 from easyCore.Utils.UndoRedo import property_stack_deco
-from easyCore.Objects.core import ComponentSerializer
-from easyCore.Fitting.Constraints import SelfConstraint
 
 if TYPE_CHECKING:
     from easyCore.Utils.typing import C
@@ -56,11 +57,11 @@ class Descriptor(ComponentSerializer):
     _constructor = Q_
     _borg = borg
     _REDIRECT = {
-        "value": lambda obj: obj.raw_value,
-        "units": lambda obj: obj._args["units"],
-        "parent": None,
-        "callback": None,
-        "_finalizer": None,
+        'value': lambda obj: obj.raw_value,
+        'units': lambda obj: obj._args['units'],
+        'parent': None,
+        'callback': None,
+        '_finalizer': None,
     }
 
     def __init__(
@@ -104,11 +105,11 @@ class Descriptor(ComponentSerializer):
 
         .. note:: Undo/Redo functionality is implemented for the attributes `value`, `unit` and `display name`.
         """
-        if not hasattr(self, "_args"):
-            self._args = {"value": None, "units": ""}
+        if not hasattr(self, '_args'):
+            self._args = {'value': None, 'units': ''}
 
         # Let the collective know we've been assimilated
-        self._borg.map.add_vertex(self, obj_type="created")
+        self._borg.map.add_vertex(self, obj_type='created')
         # Make the connection between self and parent
         if parent is not None:
             self._borg.map.add_edge(parent, self)
@@ -126,20 +127,20 @@ class Descriptor(ComponentSerializer):
         self.__isBooleanValue = isinstance(value, bool)
         if self.__isBooleanValue:
             value = int(value)
-        self._args["value"] = value
-        self._args["units"] = str(self.unit)
+        self._args['value'] = value
+        self._args['units'] = str(self.unit)
         self._value = self.__class__._constructor(**self._args)
 
         self._enabled = enabled
 
         if description is None:
-            description = ""
+            description = ''
         self.description: str = description
 
         self._display_name: str = display_name
 
         if url is None:
-            url = ""
+            url = ''
 
         self.url: str = url
         if callback is None:
@@ -154,13 +155,13 @@ class Descriptor(ComponentSerializer):
 
     @property
     def _arg_spec(self) -> Set[str]:
-        base_cls = getattr(self, "__old_class__", self.__class__)
+        base_cls = getattr(self, '__old_class__', self.__class__)
         mro = base_cls.__mro__
         idx = mro.index(ComponentSerializer)
         names = set()
         for i in range(idx):
             cls = mro[i]
-            if hasattr(cls, "_CORE"):
+            if hasattr(cls, '_CORE'):
                 spec = getfullargspec(cls.__init__)
                 names = names.union(set(spec.args[1:]))
         return names
@@ -174,7 +175,7 @@ class Descriptor(ComponentSerializer):
         """
         state = self.encode()
         cls = self.__class__
-        if hasattr(self, "__old_class__"):
+        if hasattr(self, '__old_class__'):
             cls = self.__old_class__
         return cls.from_dict, (state,)
 
@@ -224,7 +225,7 @@ class Descriptor(ComponentSerializer):
             unit_str = str(unit_str)
         new_unit = ureg.parse_expression(unit_str)
         self._units = new_unit
-        self._args["units"] = str(new_unit)
+        self._args['units'] = str(new_unit)
         self._value = self.__class__._constructor(**self._args)
 
     @property
@@ -240,14 +241,14 @@ class Descriptor(ComponentSerializer):
         if self._callback.fget is not None:
             try:
                 value = self._callback.fget()
-                if hasattr(self._value, "magnitude"):
+                if hasattr(self._value, 'magnitude'):
                     if value != self._value.magnitude:
                         self.__deepValueSetter(value)
                 elif value != self._value:
                     self.__deepValueSetter(value)
 
             except Exception as e:
-                raise ValueError(f"Unable to return value:\n{e}")
+                raise ValueError(f'Unable to return value:\n{e}')
         r_value = self._value
         if self.__isBooleanValue:
             r_value = bool(r_value)
@@ -261,15 +262,15 @@ class Descriptor(ComponentSerializer):
         :return: None
         """
         # TODO there should be a callback to the collective, logging this as a return(if from a non `easyCore` class)
-        if hasattr(value, "magnitude"):
+        if hasattr(value, 'magnitude'):
             value = value.magnitude
-            if hasattr(value, "nominal_value"):
+            if hasattr(value, 'nominal_value'):
                 value = value.nominal_value
         self._type = type(value)
         self.__isBooleanValue = isinstance(value, bool)
         if self.__isBooleanValue:
             value = int(value)
-        self._args["value"] = value
+        self._args['value'] = value
         self._value = self.__class__._constructor(**self._args)
 
     @value.setter
@@ -283,7 +284,7 @@ class Descriptor(ComponentSerializer):
         """
         if not self.enabled:
             if borg.debug:
-                raise CoreSetException(f"{str(self)} is not enabled.")
+                raise CoreSetException(f'{str(self)} is not enabled.')
             return
         self.__deepValueSetter(value)
         if self._callback.fset is not None:
@@ -300,9 +301,9 @@ class Descriptor(ComponentSerializer):
         :return: The raw value of self
         """
         value = self._value
-        if hasattr(value, "magnitude"):
+        if hasattr(value, 'magnitude'):
             value = value.magnitude
-            if hasattr(value, "nominal_value"):
+            if hasattr(value, 'nominal_value'):
                 value = value.nominal_value
         if self.__isBooleanValue:
             value = bool(value)
@@ -337,8 +338,8 @@ class Descriptor(ComponentSerializer):
         new_unit = ureg.parse_expression(unit_str)
         self._value = self._value.to(new_unit)
         self._units = new_unit
-        self._args["value"] = self.raw_value
-        self._args["units"] = str(self.unit)
+        self._args['value'] = self.raw_value
+        self._args['units'] = str(self.unit)
 
     # @cached_property
     @property
@@ -359,10 +360,10 @@ class Descriptor(ComponentSerializer):
         else:
             obj_value = self._value.magnitude
         if isinstance(obj_value, float):
-            obj_value = "{:0.04f}".format(obj_value)
-        obj_units = ""
+            obj_value = '{:0.04f}'.format(obj_value)
+        obj_units = ''
         if not self.unit.dimensionless:
-            obj_units = " {:~P}".format(self.unit)
+            obj_units = ' {:~P}'.format(self.unit)
         out_str = f"<{class_name} '{obj_name}': {obj_value}{obj_units}>"
         return out_str
 
@@ -376,15 +377,15 @@ class Descriptor(ComponentSerializer):
         """
         pickled_obj = self.encode()
         pickled_obj.update(kwargs)
-        if "@class" in pickled_obj.keys():
-            pickled_obj["@class"] = data_type.__name__
+        if '@class' in pickled_obj.keys():
+            pickled_obj['@class'] = data_type.__name__
         return data_type.from_dict(pickled_obj)
 
     def __copy__(self):
         return self.__class__.from_dict(self.as_dict())
 
 
-V = TypeVar("V", bound=Descriptor)
+V = TypeVar('V', bound=Descriptor)
 
 
 class ComboDescriptor(Descriptor):
@@ -402,16 +403,14 @@ class ComboDescriptor(Descriptor):
         # We have initialized from the Descriptor class where value has it's own undo/redo decorator
         # This needs to be bypassed to use the Parameter undo/redo stack
         fun = self.__class__.value.fset
-        if hasattr(fun, "func"):
-            fun = getattr(fun, "func")
-        self.__previous_set: Callable[
-            [V, Union[numbers.Number, np.ndarray]], Union[numbers.Number, np.ndarray]
-        ] = fun
+        if hasattr(fun, 'func'):
+            fun = getattr(fun, 'func')
+        self.__previous_set: Callable[[V, Union[numbers.Number, np.ndarray]], Union[numbers.Number, np.ndarray]] = fun
 
         # Monkey patch the unit and the value to take into account the new max/min situation
         addProp(
             self,
-            "value",
+            'value',
             fget=self.__class__.value.fget,
             fset=self.__class__._property_value.fset,
             fdel=self.__class__.value.fdel,
@@ -453,17 +452,15 @@ class ComboDescriptor(Descriptor):
 
     @available_options.setter
     @property_stack_deco
-    def available_options(
-        self, available_options: List[Union[numbers.Number, np.ndarray, Q_]]
-    ) -> None:
+    def available_options(self, available_options: List[Union[numbers.Number, np.ndarray, Q_]]) -> None:
         self._available_options = available_options
 
     def as_dict(self, **kwargs) -> Dict[str, Any]:
         import json
 
         d = super().as_dict(**kwargs)
-        d["name"] = self.name
-        d["available_options"] = json.dumps(self.available_options)
+        d['name'] = self.name
+        d['available_options'] = json.dumps(self.available_options)
         return d
 
 
@@ -511,24 +508,24 @@ class Parameter(Descriptor):
             Undo/Redo functionality is implemented for the attributes `value`, `error`, `min`, `max`, `fixed`
         """
         # Set the error
-        self._args = {"value": value, "units": "", "error": error}
+        self._args = {'value': value, 'units': '', 'error': error}
 
         if not isinstance(value, numbers.Number):
-            raise ValueError("In a parameter the `value` must be numeric")
+            raise ValueError('In a parameter the `value` must be numeric')
         if value < min:
-            raise ValueError("`value` can not be less than `min`")
+            raise ValueError('`value` can not be less than `min`')
         if value > max:
-            raise ValueError("`value` can not be greater than `max`")
+            raise ValueError('`value` can not be greater than `max`')
         if error < 0:
-            raise ValueError("Standard deviation `error` must be positive")
+            raise ValueError('Standard deviation `error` must be positive')
 
         super().__init__(name, value, **kwargs)
-        self._args["units"] = str(self.unit)
+        self._args['units'] = str(self.unit)
 
         # Warnings if we are given a boolean
         if self._type == bool:
             warnings.warn(
-                "Boolean values are not officially supported in Parameter. Use a Descriptor instead",
+                'Boolean values are not officially supported in Parameter. Use a Descriptor instead',
                 UserWarning,
             )
 
@@ -538,12 +535,12 @@ class Parameter(Descriptor):
         self._fixed: bool = fixed
         self.initial_value = self.value
         self._constraints: dict = {
-            "user": {},
-            "builtin": {
-                "min": SelfConstraint(self, ">=", "_min"),
-                "max": SelfConstraint(self, "<=", "_max"),
+            'user': {},
+            'builtin': {
+                'min': SelfConstraint(self, '>=', '_min'),
+                'max': SelfConstraint(self, '<=', '_max'),
             },
-            "virtual": {},
+            'virtual': {},
         }
         # This is for the serialization. Otherwise we wouldn't catch the values given to `super()`
         self._kwargs = kwargs
@@ -551,8 +548,8 @@ class Parameter(Descriptor):
         # We have initialized from the Descriptor class where value has it's own undo/redo decorator
         # This needs to be bypassed to use the Parameter undo/redo stack
         fun = self.__class__.value.fset
-        if hasattr(fun, "func"):
-            fun = getattr(fun, "func")
+        if hasattr(fun, 'func'):
+            fun = getattr(fun, 'func')
         self.__previous_set: Callable[
             [V, Union[numbers.Number, np.ndarray]],
             Union[numbers.Number, np.ndarray],
@@ -561,7 +558,7 @@ class Parameter(Descriptor):
         # Monkey patch the unit and the value to take into account the new max/min situation
         addProp(
             self,
-            "value",
+            'value',
             fget=self.__class__.value.fget,
             fset=self.__class__._property_value.fset,
             fdel=self.__class__.value.fdel,
@@ -584,9 +581,7 @@ class Parameter(Descriptor):
             set_value = set_value.magnitude.nominal_value
         # Save the old state and create the new state
         old_value = self._value
-        self._value = self.__class__._constructor(
-            value=set_value, units=self._args["units"], error=self._args["error"]
-        )
+        self._value = self.__class__._constructor(value=set_value, units=self._args['units'], error=self._args['error'])
 
         # First run the built in constraints. i.e. min/max
         constraint_type: MappingProxyType[str, C] = self.builtin_constraints
@@ -602,7 +597,7 @@ class Parameter(Descriptor):
             self._borg.stack.force_state(state)
 
         # And finally update any virtual constraints
-        constraint_type: dict = self._constraints["virtual"]
+        constraint_type: dict = self._constraints['virtual']
         _ = self.__constraint_runner(constraint_type, new_value)
 
         # Restore to the old state
@@ -616,14 +611,14 @@ class Parameter(Descriptor):
         :param new_unit: new unit
         :return: None
         """
-        old_unit = str(self._args["units"])
+        old_unit = str(self._args['units'])
         super().convert_unit(new_unit)
         # Deal with min/max. Error is auto corrected
-        if not self.value.unitless and old_unit != "dimensionless":
+        if not self.value.unitless and old_unit != 'dimensionless':
             self._min = Q_(self.min, old_unit).to(self._units).magnitude
             self._max = Q_(self.max, old_unit).to(self._units).magnitude
         # Log the new converted error
-        self._args["error"] = self.value.error.magnitude
+        self._args['error'] = self.value.error.magnitude
 
     @property
     def min(self) -> numbers.Number:
@@ -647,9 +642,7 @@ class Parameter(Descriptor):
         if value <= self.raw_value:
             self._min = value
         else:
-            raise ValueError(
-                f"The current set value ({self.raw_value}) is less than the desired min value ({value})."
-            )
+            raise ValueError(f'The current set value ({self.raw_value}) is less than the desired min value ({value}).')
 
     @property
     def max(self) -> numbers.Number:
@@ -673,9 +666,7 @@ class Parameter(Descriptor):
         if value >= self.raw_value:
             self._max = value
         else:
-            raise ValueError(
-                f"The current set value ({self.raw_value}) is greater than the desired max value ({value})."
-            )
+            raise ValueError(f'The current set value ({self.raw_value}) is greater than the desired max value ({value}).')
 
     @property
     def fixed(self) -> bool:
@@ -701,7 +692,7 @@ class Parameter(Descriptor):
             if self._borg.stack.enabled:
                 self._borg.stack.pop()
             if borg.debug:
-                raise CoreSetException(f"{str(self)} is not enabled.")
+                raise CoreSetException(f'{str(self)} is not enabled.')
             return
         # TODO Should we try and cast value to bool rather than throw ValueError?
         if not isinstance(value, bool):
@@ -729,7 +720,7 @@ class Parameter(Descriptor):
         """
         if value < 0:
             raise ValueError
-        self._args["error"] = value
+        self._args['error'] = value
         self._value = self.__class__._constructor(**self._args)
 
     def __repr__(self) -> str:
@@ -740,10 +731,10 @@ class Parameter(Descriptor):
         super_str = super_str[:-1]
         s = []
         if self.fixed:
-            super_str += " (fixed)"
+            super_str += ' (fixed)'
         s.append(super_str)
-        s.append("bounds=[%s:%s]" % (repr(self.min), repr(self.max)))
-        return "%s>" % ", ".join(s)
+        s.append('bounds=[%s:%s]' % (repr(self.min), repr(self.max)))
+        return '%s>' % ', '.join(s)
 
     def __float__(self) -> float:
         return float(self.raw_value)
@@ -755,7 +746,7 @@ class Parameter(Descriptor):
 
         :return: Dictionary of constraints which are built into the system
         """
-        return MappingProxyType(self._constraints["builtin"])
+        return MappingProxyType(self._constraints['builtin'])
 
     @property
     def user_constraints(self) -> Dict[str, C]:
@@ -764,11 +755,11 @@ class Parameter(Descriptor):
 
         :return: Dictionary of constraints which are user supplied
         """
-        return self._constraints["user"]
+        return self._constraints['user']
 
     @user_constraints.setter
     def user_constraints(self, constraints_dict: Dict[str, C]) -> None:
-        self._constraints["user"] = constraints_dict
+        self._constraints['user'] = constraints_dict
 
     def _quick_set(
         self,
@@ -799,12 +790,12 @@ class Parameter(Descriptor):
                 self._borg.stack.force_state(state)
         if run_virtual_constraints:
             # And finally update any virtual constraints
-            constraint_type: dict = self._constraints["virtual"]
+            constraint_type: dict = self._constraints['virtual']
             _ = self.__constraint_runner(constraint_type, set_value)
 
         # Finally set the value
         self._property_value._magnitude._nominal_value = set_value
-        self._args["value"] = set_value
+        self._args['value'] = set_value
         if self._callback.fset is not None:
             self._callback.fset(set_value)
 
@@ -820,11 +811,11 @@ class Parameter(Descriptor):
             this_new_value = constraint(no_set=True)
             if this_new_value != newer_value:
                 if borg.debug:
-                    print(f"Constraint `{constraint}` has been applied")
+                    print(f'Constraint `{constraint}` has been applied')
                 self._value = self.__class__._constructor(
                     value=this_new_value,
-                    units=self._args["units"],
-                    error=self._args["error"],
+                    units=self._args['units'],
+                    error=self._args['error'],
                 )
             newer_value = this_new_value
         return newer_value
@@ -839,9 +830,7 @@ class Parameter(Descriptor):
         return self._min, self._max
 
     @bounds.setter
-    def bounds(
-        self, new_bound: Union[Tuple[numbers.Number, numbers.Number], numbers.Number]
-    ) -> None:
+    def bounds(self, new_bound: Union[Tuple[numbers.Number, numbers.Number], numbers.Number]) -> None:
         """
         Set the bounds of the parameter. *This will also enable the parameter*.
 
@@ -851,7 +840,7 @@ class Parameter(Descriptor):
         # Macro checking and opening for undo/redo
         close_macro = False
         if self._borg.stack.enabled:
-            self._borg.stack.beginMacro("Setting bounds")
+            self._borg.stack.beginMacro('Setting bounds')
             close_macro = True
         # Have we only been given a single number (MIN)?
         if isinstance(new_bound, numbers.Number):

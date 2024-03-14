@@ -2,8 +2,10 @@ __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
 import numpy as np
-from easyCore.Objects.ObjectClasses import Parameter, BaseObj
+
 from easyCore.Fitting.Fitting import Fitter
+from easyCore.Objects.ObjectClasses import BaseObj
+from easyCore.Objects.ObjectClasses import Parameter
 
 # In this case we have inherited from `BaseObj` to create a class which has fitable attributes.
 

@@ -10,7 +10,9 @@ __version__ = "0.0.1"
 import inspect
 import weakref
 from copy import deepcopy
-from typing import Iterable, MutableSequence, TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING
+from typing import Iterable
+from typing import MutableSequence
 
 from easyCore import borg
 from easyCore.Fitting.Constraints import ObjConstraint

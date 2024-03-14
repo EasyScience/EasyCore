@@ -7,7 +7,11 @@ __version__ = "3.0.0"
 #  © 2021-2023 Contributors to the easyCore project <https://github.com/easyScience/easyCore
 
 
-from typing import Optional, List, Dict, Any, TYPE_CHECKING
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
 
 from easyCore.Utils.io.template import BaseEncoderDecoder
 

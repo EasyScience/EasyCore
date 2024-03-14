@@ -2,23 +2,30 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the easyCore project <https://github.com/easyScience/easyCore
 
-__author__ = "github.com/wardsimon"
-__version__ = "0.1.0"
-
-from typing import Callable, Union, TypeVar, List, Tuple, Any, Iterable
+__author__ = 'github.com/wardsimon'
+__version__ = '0.1.0'
 
 import weakref
+from typing import Any
+from typing import Callable
+from typing import Iterable
+from typing import List
+from typing import Tuple
+from typing import TypeVar
+from typing import Union
+
+import numpy as np
 
 # import pint_xarray
 import xarray as xr
 
-from easyCore import np, ureg
+from easyCore import ureg
 from easyCore.Fitting.fitting_template import FitResults
 
-T_ = TypeVar("T_")
+T_ = TypeVar('T_')
 
 
-@xr.register_dataset_accessor("easyCore")
+@xr.register_dataset_accessor('easyCore')
 class easyCoreDatasetAccessor:
     """
         Accessor to extend an xarray DataSet to easyCore. These functions can be accessed by `obj.easyCore.func`.
@@ -42,15 +49,15 @@ class easyCoreDatasetAccessor:
         self._obj = xarray_obj
         self._core_object = None
         self.__error_mapper = {}
-        self.sigma_label_prefix = "s_"
-        if self._obj.attrs.get("name", None) is None:
-            self._obj.attrs["name"] = ""
-        if self._obj.attrs.get("description", None) is None:
-            self._obj.attrs["description"] = ""
-        if self._obj.attrs.get("url", None) is None:
-            self._obj.attrs["url"] = ""
-        if self._obj.attrs.get("units", None) is None:
-            self._obj.attrs["units"] = {}
+        self.sigma_label_prefix = 's_'
+        if self._obj.attrs.get('name', None) is None:
+            self._obj.attrs['name'] = ''
+        if self._obj.attrs.get('description', None) is None:
+            self._obj.attrs['description'] = ''
+        if self._obj.attrs.get('url', None) is None:
+            self._obj.attrs['url'] = ''
+        if self._obj.attrs.get('units', None) is None:
+            self._obj.attrs['units'] = {}
 
     @property
     def name(self) -> str:
@@ -60,7 +67,7 @@ class easyCoreDatasetAccessor:
         :return: Common name of the DataSet
         :rtype: str
         """
-        return self._obj.attrs["name"]
+        return self._obj.attrs['name']
 
     @name.setter
     def name(self, new_name: str):
@@ -72,7 +79,7 @@ class easyCoreDatasetAccessor:
         :return: None
         :rtype: None
         """
-        self._obj.attrs["name"] = new_name
+        self._obj.attrs['name'] = new_name
 
     @property
     def description(self) -> str:
@@ -82,7 +89,7 @@ class easyCoreDatasetAccessor:
         :return: Description of the DataSet
         :rtype: str
         """
-        return self._obj.attrs["description"]
+        return self._obj.attrs['description']
 
     @description.setter
     def description(self, new_description: str):
@@ -94,7 +101,7 @@ class easyCoreDatasetAccessor:
         :return: None
         :rtype: None
         """
-        self._obj.attrs["description"] = new_description
+        self._obj.attrs['description'] = new_description
 
     @property
     def url(self) -> str:
@@ -104,7 +111,7 @@ class easyCoreDatasetAccessor:
         :return: URL of the DataSet (empty if no URL)
         :rtype: str
         """
-        return self._obj.attrs["url"]
+        return self._obj.attrs['url']
 
     @url.setter
     def url(self, new_url: str):
@@ -116,7 +123,7 @@ class easyCoreDatasetAccessor:
         :return:None
         :rtype: None
         """
-        self._obj.attrs["url"] = new_url
+        self._obj.attrs['url'] = new_url
 
     @property
     def core_object(self):
@@ -147,7 +154,7 @@ class easyCoreDatasetAccessor:
         self,
         coordinate_name: str,
         coordinate_values: Union[List[T_], np.ndarray],
-        unit: str = "",
+        unit: str = '',
     ):
         """
         Add a coordinate to the DataSet. This can be then be assigned to one or more DataArrays.
@@ -162,7 +169,7 @@ class easyCoreDatasetAccessor:
         :rtype: None
         """
         self._obj.coords[coordinate_name] = coordinate_values
-        self._obj.attrs["units"][coordinate_name] = ureg.Unit(unit)
+        self._obj.attrs['units'][coordinate_name] = ureg.Unit(unit)
 
     def remove_coordinate(self, coordinate_name: str):
         """
@@ -175,7 +182,7 @@ class easyCoreDatasetAccessor:
         :rtype: None
         """
         del self._obj.coords[coordinate_name]
-        del self._obj.attrs["units"][coordinate_name]
+        del self._obj.attrs['units'][coordinate_name]
 
     def add_variable(
         self,
@@ -183,7 +190,7 @@ class easyCoreDatasetAccessor:
         variable_coordinates: Union[str, List[str]],
         variable_values: Union[List[T_], np.ndarray],
         variable_sigma: Union[List[T_], np.ndarray] = None,
-        unit: str = "",
+        unit: str = '',
         auto_sigma: bool = False,
     ):
         """
@@ -212,15 +219,13 @@ class easyCoreDatasetAccessor:
 
         # The variable_coordinates can be any iterable object. Though we would assume list/tuple
         if not isinstance(variable_coordinates, Iterable):
-            raise ValueError("The variable coordinates must be a list of strings")
+            raise ValueError('The variable coordinates must be a list of strings')
 
         # Check to see if the user want to assign a coordinate which does not exist yet.
         known_keys = self._obj.coords.keys()
         for dimension in variable_coordinates:
             if dimension not in known_keys:
-                raise ValueError(
-                    f"The supplied coordinate `{dimension}` must first be defined."
-                )
+                raise ValueError(f'The supplied coordinate `{dimension}` must first be defined.')
 
         # Create  the dataset.
         self._obj[variable_name] = (variable_coordinates, variable_values)
@@ -238,9 +243,7 @@ class easyCoreDatasetAccessor:
                 # CASE 1-3, We have been given a list. Make it a numpy array
                 self.sigma_attach(variable_name, np.array(variable_sigma))
             else:
-                raise ValueError(
-                    "User supplied sigmas must be of the form; Callable fn, numpy array, list"
-                )
+                raise ValueError('User supplied sigmas must be of the form; Callable fn, numpy array, list')
         else:
             # CASE 2, No sigmas have been supplied.
             if auto_sigma:
@@ -248,17 +251,13 @@ class easyCoreDatasetAccessor:
                 self.sigma_generator(variable_name)
 
         # Set units for the newly created DataArray
-        self._obj.attrs["units"][variable_name] = ureg.Unit(unit)
+        self._obj.attrs['units'][variable_name] = ureg.Unit(unit)
         # If a sigma has been attached, attempt to work out the units.
         if unit and variable_sigma is None and auto_sigma:
-            self._obj.attrs["units"][
-                self.sigma_label_prefix + variable_name
-            ] = ureg.Unit(unit + " ** 0.5")
+            self._obj.attrs['units'][self.sigma_label_prefix + variable_name] = ureg.Unit(unit + ' ** 0.5')
         else:
             if auto_sigma:
-                self._obj.attrs["units"][
-                    self.sigma_label_prefix + variable_name
-                ] = ureg.Unit("")
+                self._obj.attrs['units'][self.sigma_label_prefix + variable_name] = ureg.Unit('')
 
     def remove_variable(self, variable_name: str):
         """
@@ -356,7 +355,7 @@ class easyCoreDatasetAccessor:
             c_array.append(da)
             n_array.append(da.name)
 
-        f = xr.concat(c_array, dim="fit_dim")
+        f = xr.concat(c_array, dim='fit_dim')
         f = f.stack(all_x=n_array)
         return f
 
@@ -365,7 +364,7 @@ class easyCoreDatasetAccessor:
         fitter,
         data_arrays: list,
         *args,
-        dask: str = "forbidden",
+        dask: str = 'forbidden',
         fit_kwargs: dict = None,
         fn_kwargs: dict = None,
         vectorized: bool = False,
@@ -410,7 +409,7 @@ class easyCoreDatasetAccessor:
                 # Pull out any sigmas and send them to the fitter.
                 temp = self._obj[self.__error_mapper[variable_label]]
                 temp[xr.ufuncs.isnan(temp)] = 1e5
-                fit_kwargs["weights"] = temp
+                fit_kwargs['weights'] = temp
             # Perform a standard DataArray fit.
             return dataset.easyCore.fit(
                 fitter,
@@ -423,13 +422,9 @@ class easyCoreDatasetAccessor:
             )
         else:
             # In this case we are fitting multiple datasets to the same fn!
-            bdim_f = [
-                self._obj[p].easyCore.fit_prep(fitter.fit_function) for p in data_arrays
-            ]
+            bdim_f = [self._obj[p].easyCore.fit_prep(fitter.fit_function) for p in data_arrays]
             dim_names = [
-                list(self._obj[p].dims.keys())
-                if isinstance(self._obj[p].dims, dict)
-                else self._obj[p].dims
+                list(self._obj[p].dims.keys()) if isinstance(self._obj[p].dims, dict) else self._obj[p].dims
                 for p in data_arrays
             ]
             bdims = [bdim[0] for bdim in bdim_f]
@@ -444,7 +439,7 @@ class easyCoreDatasetAccessor:
                     dims = list(dims.keys())
 
                 def local_fit_func(x, *args, idx=None, **kwargs):
-                    kwargs["vectorize"] = vectorized
+                    kwargs['vectorize'] = vectorized
                     res = xr.apply_ufunc(
                         fs[idx],
                         *bdims[idx],
@@ -453,7 +448,7 @@ class easyCoreDatasetAccessor:
                         kwargs=fn_kwargs,
                         **kwargs,
                     )
-                    if dask != "forbidden":
+                    if dask != 'forbidden':
                         res.compute()
                     return res.stack(all_x=dim_names[idx])
 
@@ -464,30 +459,22 @@ class easyCoreDatasetAccessor:
                 res = []
                 for idx in range(len(fn_array)):
                     res.append(fn_array[idx](x, *args, idx=idx, **kwargs))
-                return xr.DataArray(
-                    np.concatenate(res, axis=0), coords={"all_x": x}, dims="all_x"
-                )
+                return xr.DataArray(np.concatenate(res, axis=0), coords={'all_x': x}, dims='all_x')
 
             fitter.initialize(fitter.fit_object, fit_func)
             try:
-                if fit_kwargs.get("weights", None) is not None:
-                    del fit_kwargs["weights"]
-                x = xr.DataArray(
-                    np.arange(np.sum([y.size for y in y_list])), dims="all_x"
-                )
-                y = xr.DataArray(
-                    np.concatenate(y_list, axis=0), coords={"all_x": x}, dims="all_x"
-                )
+                if fit_kwargs.get('weights', None) is not None:
+                    del fit_kwargs['weights']
+                x = xr.DataArray(np.arange(np.sum([y.size for y in y_list])), dims='all_x')
+                y = xr.DataArray(np.concatenate(y_list, axis=0), coords={'all_x': x}, dims='all_x')
                 f_res = fitter.fit(x, y, **fit_kwargs)
-                f_res = check_sanity_multiple(
-                    f_res, [self._obj[p] for p in data_arrays]
-                )
+                f_res = check_sanity_multiple(f_res, [self._obj[p] for p in data_arrays])
             finally:
                 fitter.fit_function = old_fit_func
             return f_res
 
 
-@xr.register_dataarray_accessor("easyCore")
+@xr.register_dataarray_accessor('easyCore')
 class easyCoreDataarrayAccessor:
     """
     Accessor to extend an xarray DataArray to easyCore. These functions can be accessed by `obj.easyCore.func`.
@@ -497,12 +484,12 @@ class easyCoreDataarrayAccessor:
     def __init__(self, xarray_obj: xr.DataArray):
         self._obj = xarray_obj
         self._core_object = None
-        self.sigma_label_prefix = "s_"
-        if self._obj.attrs.get("computation", None) is None:
-            self._obj.attrs["computation"] = {
-                "precompute_func": None,
-                "compute_func": None,
-                "postcompute_func": None,
+        self.sigma_label_prefix = 's_'
+        if self._obj.attrs.get('computation', None) is None:
+            self._obj.attrs['computation'] = {
+                'precompute_func': None,
+                'compute_func': None,
+                'postcompute_func': None,
             }
 
     def __empty_functional(self) -> Callable:
@@ -556,7 +543,7 @@ class easyCoreDataarrayAccessor:
         :return: Computational function applied to the DataArray
         :rtype: Callable
         """
-        result = self._obj.attrs["computation"]["compute_func"]
+        result = self._obj.attrs['computation']['compute_func']
         if result is None:
             result = self.__empty_functional()
         return result
@@ -571,7 +558,7 @@ class easyCoreDataarrayAccessor:
         :return: None
         :rtype: None
         """
-        self._obj.attrs["computation"]["compute_func"] = new_computational_fn
+        self._obj.attrs['computation']['compute_func'] = new_computational_fn
 
     @property
     def precompute_func(self) -> Callable:
@@ -581,7 +568,7 @@ class easyCoreDataarrayAccessor:
         :return: Computational function applied to the DataArray before fitting
         :rtype: Callable
         """
-        result = self._obj.attrs["computation"]["precompute_func"]
+        result = self._obj.attrs['computation']['precompute_func']
         if result is None:
             result = self.__empty_functional()
         return result
@@ -596,7 +583,7 @@ class easyCoreDataarrayAccessor:
         :return: None
         :rtype: None
         """
-        self._obj.attrs["computation"]["precompute_func"] = new_computational_fn
+        self._obj.attrs['computation']['precompute_func'] = new_computational_fn
 
     @property
     def postcompute_func(self) -> Callable:
@@ -606,7 +593,7 @@ class easyCoreDataarrayAccessor:
         :return: Computational function applied to the DataArray after fitting
         :rtype: Callable
         """
-        result = self._obj.attrs["computation"]["postcompute_func"]
+        result = self._obj.attrs['computation']['postcompute_func']
         if result is None:
             result = self.__empty_functional()
         return result
@@ -621,11 +608,9 @@ class easyCoreDataarrayAccessor:
         :return: None
         :rtype: None
         """
-        self._obj.attrs["computation"]["postcompute_func"] = new_computational_fn
+        self._obj.attrs['computation']['postcompute_func'] = new_computational_fn
 
-    def fit_prep(
-        self, func_in: Callable, bdims=None, dask_chunks=None
-    ) -> Tuple[xr.DataArray, Callable]:
+    def fit_prep(self, func_in: Callable, bdims=None, dask_chunks=None) -> Tuple[xr.DataArray, Callable]:
         """
         Generate boradcasted coordinates for fitting and reform the fitting function into one which can handle xarrays
 
@@ -642,16 +627,12 @@ class easyCoreDataarrayAccessor:
         if bdims is None:
             coords = [self._obj.coords[da].transpose() for da in self._obj.dims]
             bdims = xr.broadcast(*coords)
-        self._obj.attrs["computation"]["compute_func"] = func_in
+        self._obj.attrs['computation']['compute_func'] = func_in
 
         def func(x, *args, vectorize: bool = False, **kwargs):
             old_shape = x.shape
             if not vectorize:
-                xs = [
-                    x_new.flatten()
-                    for x_new in [x, *args]
-                    if isinstance(x_new, np.ndarray)
-                ]
+                xs = [x_new.flatten() for x_new in [x, *args] if isinstance(x_new, np.ndarray)]
                 x_new = np.column_stack(xs)
                 if len(x_new.shape) > 1 and x_new.shape[1] == 1:
                     x_new = x_new.reshape((-1))
@@ -685,7 +666,7 @@ class easyCoreDataarrayAccessor:
             c_array.append(da)
             n_array.append(da.name)
 
-        f = xr.concat(c_array, dim="fit_dim")
+        f = xr.concat(c_array, dim='fit_dim')
         f = f.stack(all_x=n_array)
         return f
 
@@ -696,7 +677,7 @@ class easyCoreDataarrayAccessor:
         fit_kwargs: dict = None,
         fn_kwargs: dict = None,
         vectorize: bool = False,
-        dask: str = "forbidden",
+        dask: str = 'forbidden',
         **kwargs,
     ) -> FitResults:
         """
@@ -743,26 +724,24 @@ class easyCoreDataarrayAccessor:
             """
             Function which will be called by the fitter. This will deal with sending the function the correct data.
             """
-            kwargs["vectorize"] = vectorize
-            res = xr.apply_ufunc(
-                f, *bdims, *args, dask=dask, kwargs=fn_kwargs, **kwargs
-            )
-            if dask != "forbidden":
+            kwargs['vectorize'] = vectorize
+            res = xr.apply_ufunc(f, *bdims, *args, dask=dask, kwargs=fn_kwargs, **kwargs)
+            if dask != 'forbidden':
                 res.compute()
             return res.stack(all_x=dims)
 
         # Set the new callable to the fitter and initialize
         fitter.initialize(fitter.fit_object, local_fit_func)
         # Make easyCore.Fitting.Fitter compatible `x`
-        x_for_fit = xr.concat(bdims, dim="fit_dim")
+        x_for_fit = xr.concat(bdims, dim='fit_dim')
         x_for_fit = x_for_fit.stack(all_x=[d.name for d in bdims])
         try:
             # Deal with any sigmas if supplied
-            if fit_kwargs.get("weights", None) is not None:
-                fit_kwargs["weights"] = xr.DataArray(
-                    np.array(fit_kwargs["weights"]),
-                    dims=["all_x"],
-                    coords={"all_x": x_for_fit.all_x},
+            if fit_kwargs.get('weights', None) is not None:
+                fit_kwargs['weights'] = xr.DataArray(
+                    np.array(fit_kwargs['weights']),
+                    dims=['all_x'],
+                    coords={'all_x': x_for_fit.all_x},
                 )
             # Try to perform a fit
             f_res = fitter.fit(x_for_fit, self._obj.stack(all_x=dims), **fit_kwargs)
@@ -782,7 +761,7 @@ def check_sanity_single(fit_results: FitResults) -> FitResults:
     :return: Modified fit results
     :rtype: FitResults
     """
-    items = ["y_obs", "y_calc", "residual"]
+    items = ['y_obs', 'y_calc', 'residual']
 
     for item in items:
         array = getattr(fit_results, item)
@@ -793,22 +772,20 @@ def check_sanity_single(fit_results: FitResults) -> FitResults:
 
     x_array = fit_results.x
     if isinstance(x_array, xr.DataArray):
-        fit_results.x.name = "axes_broadcast"
+        fit_results.x.name = 'axes_broadcast'
         x_array = x_array.unstack()
         x_dataset = xr.Dataset()
-        dims = [dims for dims in x_array.dims if dims != "fit_dim"]
+        dims = [dims for dims in x_array.dims if dims != 'fit_dim']
         for idx, dim in enumerate(dims):
-            x_dataset[dim + "_broadcast"] = x_array[idx]
-            x_dataset[dim + "_broadcast"].name = dim + "_broadcast"
+            x_dataset[dim + '_broadcast'] = x_array[idx]
+            x_dataset[dim + '_broadcast'].name = dim + '_broadcast'
         fit_results.x_matrices = x_dataset
     else:
         fit_results.x_matrices = x_array
     return fit_results
 
 
-def check_sanity_multiple(
-    fit_results: FitResults, originals: List[xr.DataArray]
-) -> List[FitResults]:
+def check_sanity_multiple(fit_results: FitResults, originals: List[xr.DataArray]) -> List[FitResults]:
     """
     Convert the multifit FitResults from a fitter compatible state to a list of recognizable DataArray states.
 
@@ -833,15 +810,15 @@ def check_sanity_multiple(
         # now the tricky stuff
         current_results.x = item.easyCore.generate_points()
         current_results.y_obs = item.copy()
-        current_results.y_obs.name = f"{item.name}_obs"
+        current_results.y_obs.name = f'{item.name}_obs'
         current_results.y_calc = xr.DataArray(
             fit_results.y_calc[offset : offset + item.size].data,
             dims=item.dims,
             coords=item.coords,
-            name=f"{item.name}_calc",
+            name=f'{item.name}_calc',
         )
         offset += item.size
         current_results.residual = current_results.y_calc - current_results.y_obs
-        current_results.residual.name = f"{item.name}_residual"
+        current_results.residual.name = f'{item.name}_residual'
         return_results.append(current_results)
     return return_results

@@ -5,21 +5,19 @@
 __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
-from typing import List, Optional
 from numbers import Number
-
-from easyCore.Fitting.fitting_template import (
-    Union,
-    Callable,
-    FittingTemplate,
-    np,
-    FitResults,
-    NameConverter,
-    FitError,
-)
+from typing import List
+from typing import Optional
 
 # Import dfols specific objects
 import dfols
+
+from easyCore.Fitting.fitting_template import Callable
+from easyCore.Fitting.fitting_template import FitError
+from easyCore.Fitting.fitting_template import FitResults
+from easyCore.Fitting.fitting_template import FittingTemplate
+from easyCore.Fitting.fitting_template import NameConverter
+from easyCore.Fitting.fitting_template import np
 
 
 class DFO(FittingTemplate):  # noqa: S101

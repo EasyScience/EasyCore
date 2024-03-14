@@ -6,8 +6,17 @@ from typing import Type
 
 import numpy as np
 import pytest
-from .test_core import dp_param_dict, skip_dict, check_dict, A, B, Descriptor, BaseObj
-from easyCore.Utils.io.dict import DictSerializer, DataDictSerializer
+
+from easyCore.Utils.io.dict import DataDictSerializer
+from easyCore.Utils.io.dict import DictSerializer
+
+from .test_core import A
+from .test_core import B
+from .test_core import BaseObj
+from .test_core import Descriptor
+from .test_core import check_dict
+from .test_core import dp_param_dict
+from .test_core import skip_dict
 
 
 def recursive_remove(d, remove_keys: list) -> dict:

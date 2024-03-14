@@ -5,14 +5,15 @@
 __author__ = "github.com/wardsimon"
 __version__ = "0.0.1"
 
-import pytest
 import math
 
 import numpy as np
+import pytest
 
-from easyCore.Objects.Variable import Descriptor, Parameter
-from easyCore.Objects.ObjectClasses import BaseObj
 from easyCore.Objects.Groups import BaseCollection
+from easyCore.Objects.ObjectClasses import BaseObj
+from easyCore.Objects.Variable import Descriptor
+from easyCore.Objects.Variable import Parameter
 
 
 def createSingleObjs(idx):

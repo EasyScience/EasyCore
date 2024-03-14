@@ -7,28 +7,27 @@ __version__ = "0.1.0"
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the easyCore project <https://github.com/easyScience/easyCore
 
-import numbers
 from inspect import getfullargspec
-
-from typing import (
-    List,
-    Union,
-    Iterable,
-    Dict,
-    Optional,
-    TypeVar,
-    TYPE_CHECKING,
-    Callable,
-    Set,
-)
+from typing import TYPE_CHECKING
+from typing import Callable
+from typing import Dict
+from typing import Iterable
+from typing import List
+from typing import Optional
+from typing import Set
+from typing import TypeVar
 
 from easyCore import borg
-from .core import ComponentSerializer
 from easyCore.Utils.classTools import addLoggedProp
-from .Variable import Parameter, Descriptor
+
+from .core import ComponentSerializer
+from .Variable import Descriptor
+from .Variable import Parameter
 
 if TYPE_CHECKING:
-    from easyCore.Utils.typing import C, V, iF
+    from easyCore.Utils.typing import C
+    from easyCore.Utils.typing import V
+    from easyCore.Utils.typing import iF
 
 
 class BasedBase(ComponentSerializer):

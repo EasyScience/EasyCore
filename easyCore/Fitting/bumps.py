@@ -6,21 +6,21 @@ __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
 import inspect
-from typing import List, Optional
+from typing import List
+from typing import Optional
 
-from easyCore.Fitting.fitting_template import (
-    Union,
-    Callable,
-    FittingTemplate,
-    np,
-    FitResults,
-    NameConverter,
-    FitError,
-)
-
-from bumps.names import Curve, FitProblem
+from bumps.fitters import FIT_AVAILABLE_IDS
+from bumps.fitters import fit as bumps_fit
+from bumps.names import Curve
+from bumps.names import FitProblem
 from bumps.parameter import Parameter as bumpsParameter
-from bumps.fitters import fit as bumps_fit, FIT_AVAILABLE_IDS
+
+from easyCore.Fitting.fitting_template import Callable
+from easyCore.Fitting.fitting_template import FitError
+from easyCore.Fitting.fitting_template import FitResults
+from easyCore.Fitting.fitting_template import FittingTemplate
+from easyCore.Fitting.fitting_template import NameConverter
+from easyCore.Fitting.fitting_template import np
 
 
 class bumps(FittingTemplate):  # noqa: S101

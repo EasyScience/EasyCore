@@ -6,8 +6,8 @@ __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
 from easyCore.Objects.Graph import Graph
-from easyCore.Utils.Hugger.Hugger import ScriptManager
 from easyCore.Utils.classUtils import singleton
+from easyCore.Utils.Hugger.Hugger import ScriptManager
 from easyCore.Utils.Logging import Logger
 
 

@@ -1,10 +1,12 @@
 __author__ = 'github.com/wardsimon'
 __version__ = '0.1.0'
 
-from easyCore import np
-from easyCore.Datasets.xarray import xr
 import time
+
 import matplotlib.pyplot as plt
+
+import numpy as np
+from easyCore.Datasets.xarray import xr
 
 d = xr.Dataset()
 
