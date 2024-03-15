@@ -40,7 +40,7 @@ While **easyCore** is under the BSD-3 license, DFO_LS is subject to the GPL lice
 
 [20]: https://github.com/easyScience/easyCore/workflows/CI%20using%20pip/badge.svg
 
-[21]: https://github.com/easyScience/easyCore/actions
+[21]: https://github.com/easyScience/easyCore/actions/workflows/python-ci.yml
 
 
 <!---Release--->
