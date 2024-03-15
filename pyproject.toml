@@ -3,7 +3,7 @@ requires = ["hatchling<=1.21.0"]
 build-backend = "hatchling.build"
 
 [project]
-name = "easyCore"
+name = "easysciencecore"
 version = "0.4.0"
 description = "Generic logic for easyScience libraries"
 readme = "README.md"

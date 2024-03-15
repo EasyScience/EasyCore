@@ -209,6 +209,11 @@ def test_custom_class_full_encode_with_numpy():
         def __init__(self, a, b):
             super(B, self).__init__("B", a=a)
             self.b = b
+    # Same as in __init__.py for easyCore
+    try:
+        version = metadata.version(__package__ or __name__)
+    except metadata.PackageNotFoundError:
+        version = '0.0.0'
 
     obj = B(Descriptor("a", 1.0), np.array([1.0, 2.0, 3.0]))
     full_enc = obj.encode(encoder=DictSerializer, full_encode=True)
@@ -225,7 +230,7 @@ def test_custom_class_full_encode_with_numpy():
         "a": {
             "@module": "easyCore.Objects.Variable",
             "@class": "Descriptor",
-            "@version": metadata.version("easyCore"),
+            "@version": version,
             "description": "",
             "units": "dimensionless",
             "display_name": "a",
