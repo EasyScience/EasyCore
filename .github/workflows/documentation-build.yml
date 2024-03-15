@@ -1,12 +1,17 @@
-# This is a basic workflow to help you get started with Actions
+# This pipeline
+# - builds developer documentation 
+# - pushes documentation to gh-pages branch of the same repository
+#
+# Deployment is handled by pages-build-deployment bot
 
-name: Build Documentation
+name: Build Documentation and Push to gh-pages Branch 
 
 # Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the master branch
+  # Triggers the workflow on tag creation
   push:
-    branches: [ master ]
+    tags:
+      - 'v*'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -21,6 +26,15 @@ jobs:
       uses: actions/checkout@master
       with:
         fetch-depth: 0 # otherwise, you will failed to push refs to dest repo
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.9
+    - name: Install Pandoc, repo and dependencies
+      run: |
+        sudo apt install pandoc
+        pip install . '.[docs]'
+
     - name: Build and Commit
       uses: sphinx-notes/pages@master
       with:

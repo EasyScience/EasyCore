@@ -25,18 +25,26 @@ from pathlib import Path
 main_root = Path(__file__).parents[2]
 sys.path.append(str(main_root))
 
+import datetime
+
 project_info = toml.load(os.path.join(main_root, 'pyproject.toml'))
 
 # -- Project information -----------------------------------------------------
 
 project = 'easyCore'
-copyright = f"2021, {project_info['tool']['poetry']['authors'][0]}"
-author = project_info['tool']['poetry']['authors'][0]
+copyright = f"{datetime.date.today().year}, EasyReflectometry"
+author = "EasyReflectometry"
+# copyright = f"2021, {project_info['tool']['poetry']['authors'][0]}"
+# author = project_info['tool']['poetry']['authors'][0]
 
-# The short X.Y version
-version = ''
-# The full version, including alpha/beta/rc tags
-release = project_info['tool']['poetry']['version']
+# # The short X.Y version
+# version = ''
+# # The full version, including alpha/beta/rc tags
+# release = project_info['tool']['poetry']['version']
+# The short X.Y version.
+version = project_info['project']['version'] 
+# The full version, including alpha/beta/rc tags.
+version = project_info['project']['version'] 
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),

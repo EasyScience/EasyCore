@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "easysciencecore"
-version = "0.4.0"
+version = "0.5.0"
 description = "Generic logic for easyScience libraries"
 readme = "README.md"
 authors = [
@@ -51,7 +51,8 @@ docs = [
     "Sphinx",
     "sphinx-rtd-theme",
     "sphinx-autodoc-typehints", 
-    "sphinx-gallery"
+    "sphinx-gallery",
+    "toml"
 ]
 
 [project.urls]
