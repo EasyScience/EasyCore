@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:00.007** total execution time for 1 file **from fitting_examples**:
+**00:00.008** total execution time for 1 file **from fitting_examples**:
 
 .. container::
 
@@ -33,5 +33,5 @@ Computation times
      - Time
      - Mem (MB)
    * - :ref:`sphx_glr_fitting_examples_plot_constraints.py` (``plot_constraints.py``)
-     - 00:00.007
+     - 00:00.008
      - 0.0
