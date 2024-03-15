@@ -9,9 +9,9 @@ name: Create Python Package
 
 on:
   push:
-    branches: [master, pre-release]
+    branches: [main, pre-release]
   pull_request:
-    branches: [master, pre-release]
+    branches: [main, pre-release]
 
 jobs:
   build:

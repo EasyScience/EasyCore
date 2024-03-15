@@ -4,7 +4,7 @@
 [![Lines of code][81]](<>) [![Total lines][80]](<>) [![Files][82]](<>)
 
 
-<img height="80"><img src="https://raw.githubusercontent.com/easyScience/easyCore/master/resources/images/ec_logo.svg" height="65">
+<img height="80"><img src="https://raw.githubusercontent.com/easyScience/easyCore/main/resources/images/ec_logo.svg" height="65">
 
 **easyCore** is the foundation of the *easyScience* universe, providing the building blocks for libraries and applications which aim to make scientific data simulation and analysis easier.
 
@@ -54,7 +54,7 @@ While **easyCore** is under the BSD-3 license, DFO_LS is subject to the GPL lice
 
 [50]: https://img.shields.io/github/license/easyScience/easyCore.svg
 
-[51]: https://github.com/easyScience/easyCore/blob/master/LICENSE.md
+[51]: https://github.com/easyScience/easyCore/blob/main/LICENSE.md
 
 
 <!---Downloads--->
