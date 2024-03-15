@@ -7,8 +7,13 @@ from copy import deepcopy
 from typing import Type
 
 import pytest
-from .test_core import dp_param_dict, skip_dict, check_dict, A, B, Descriptor, Parameter
+
 from easyCore.Utils.io.xml import XMLSerializer
+
+from .test_core import A
+from .test_core import Descriptor
+from .test_core import dp_param_dict
+from .test_core import skip_dict
 
 
 def recursive_remove(d, remove_keys: list) -> dict:

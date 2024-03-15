@@ -5,10 +5,12 @@
 __author__ = "github.com/wardsimon"
 __version__ = "0.0.1"
 
-import pytest
 import numpy as np
+import pytest
+
+from easyCore.models.polynomial import Line
+from easyCore.models.polynomial import Polynomial
 from easyCore.Objects.Variable import Parameter
-from easyCore.models.polynomial import Line, Polynomial
 
 line_test_cases = ((1, 2), (-1, -2), (0.72, 6.48))
 poly_test_cases = (

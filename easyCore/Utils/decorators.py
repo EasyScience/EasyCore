@@ -8,7 +8,6 @@ __version__ = "0.1.0"
 import collections.abc
 import functools
 import warnings
-
 from time import time
 
 from easyCore import borg

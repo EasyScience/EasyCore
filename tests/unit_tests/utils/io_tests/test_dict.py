@@ -6,8 +6,18 @@ from typing import Type
 
 import numpy as np
 import pytest
-from .test_core import dp_param_dict, skip_dict, check_dict, A, B, Descriptor, BaseObj
-from easyCore.Utils.io.dict import DictSerializer, DataDictSerializer
+from importlib import metadata
+
+from easyCore.Utils.io.dict import DataDictSerializer
+from easyCore.Utils.io.dict import DictSerializer
+
+from .test_core import A
+from .test_core import B
+from .test_core import BaseObj
+from .test_core import Descriptor
+from .test_core import check_dict
+from .test_core import dp_param_dict
+from .test_core import skip_dict
 
 
 def recursive_remove(d, remove_keys: list) -> dict:
@@ -199,6 +209,11 @@ def test_custom_class_full_encode_with_numpy():
         def __init__(self, a, b):
             super(B, self).__init__("B", a=a)
             self.b = b
+    # Same as in __init__.py for easyCore
+    try:
+        version = metadata.version(__package__ or __name__)
+    except metadata.PackageNotFoundError:
+        version = '0.0.0'
 
     obj = B(Descriptor("a", 1.0), np.array([1.0, 2.0, 3.0]))
     full_enc = obj.encode(encoder=DictSerializer, full_encode=True)
@@ -215,7 +230,7 @@ def test_custom_class_full_encode_with_numpy():
         "a": {
             "@module": "easyCore.Objects.Variable",
             "@class": "Descriptor",
-            "@version": "0.3.1",
+            "@version": version,
             "description": "",
             "units": "dimensionless",
             "display_name": "a",

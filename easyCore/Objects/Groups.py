@@ -4,29 +4,28 @@
 
 from __future__ import annotations
 
-__author__ = "github.com/wardsimon"
-__version__ = "0.1.0"
+__author__ = 'github.com/wardsimon'
+__version__ = '0.1.0'
 
+from collections.abc import MutableSequence
 from numbers import Number
-from typing import (
-    Union,
-    TypeVar,
-    Optional,
-    TYPE_CHECKING,
-    Callable,
-    List,
-    Dict,
-    Any,
-    Tuple,
-)
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import Callable
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
 from easyCore import borg
-from easyCore.Objects.ObjectClasses import BasedBase, Descriptor
-from collections.abc import MutableSequence
+from easyCore.Objects.ObjectClasses import BasedBase
+from easyCore.Objects.ObjectClasses import Descriptor
 from easyCore.Utils.UndoRedo import NotarizedDict
 
 if TYPE_CHECKING:
-    from easyCore.Utils.typing import B, iF, V
+    from easyCore.Utils.typing import B
+    from easyCore.Utils.typing import V
+    from easyCore.Utils.typing import iF
 
 
 class BaseCollection(BasedBase, MutableSequence):
@@ -70,9 +69,7 @@ class BaseCollection(BasedBase, MutableSequence):
         kwargs = _kwargs
         for item in list(kwargs.values()) + _args:
             if not issubclass(type(item), (Descriptor, BasedBase)):
-                raise AttributeError(
-                    "A collection can only be formed from easyCore objects."
-                )
+                raise AttributeError('A collection can only be formed from easyCore objects.')
         args = _args
         _kwargs = {}
         for key, item in kwargs.items():
@@ -86,11 +83,9 @@ class BaseCollection(BasedBase, MutableSequence):
 
         for key in kwargs.keys():
             if key in self.__dict__.keys() or key in self.__slots__:
-                raise AttributeError(
-                    f"Given kwarg: `{key}`, is an internal attribute. Please rename."
-                )
+                raise AttributeError(f'Given kwarg: `{key}`, is an internal attribute. Please rename.')
             self._borg.map.add_edge(self, kwargs[key])
-            self._borg.map.reset_type(kwargs[key], "created_internal")
+            self._borg.map.reset_type(kwargs[key], 'created_internal')
             if interface is not None:
                 kwargs[key].interface = interface
             # TODO wrap getter and setter in Logger
@@ -120,12 +115,10 @@ class BaseCollection(BasedBase, MutableSequence):
             self._kwargs.reorder(**{k: v for k, v in zip(update_key, values)})
             # ADD EDGE
             self._borg.map.add_edge(self, value)
-            self._borg.map.reset_type(value, "created_internal")
+            self._borg.map.reset_type(value, 'created_internal')
             value.interface = self.interface
         else:
-            raise AttributeError(
-                "Only easyCore objects can be put into an easyCore group"
-            )
+            raise AttributeError('Only easyCore objects can be put into an easyCore group')
 
     def __getitem__(self, idx: Union[int, slice]) -> Union[V, B]:
         """
@@ -138,30 +131,26 @@ class BaseCollection(BasedBase, MutableSequence):
         """
         if isinstance(idx, slice):
             start, stop, step = idx.indices(len(self))
-            return self.__class__(
-                getattr(self, "name"), *[self[i] for i in range(start, stop, step)]
-            )
+            return self.__class__(getattr(self, 'name'), *[self[i] for i in range(start, stop, step)])
         if str(idx) in self._kwargs.keys():
             return self._kwargs[str(idx)]
         if isinstance(idx, str):
             idx = [index for index, item in enumerate(self) if item.name == idx]
-            l = len(idx)
-            if l == 0:
-                raise IndexError(f"Given index does not exist")
-            elif l == 1:
+            noi = len(idx)
+            if noi == 0:
+                raise IndexError('Given index does not exist')
+            elif noi == 1:
                 idx = idx[0]
             else:
-                return self.__class__(getattr(self, "name"), *[self[i] for i in idx])
+                return self.__class__(getattr(self, 'name'), *[self[i] for i in idx])
         elif not isinstance(idx, int) or isinstance(idx, bool):
             if isinstance(idx, bool):
-                raise TypeError("Boolean indexing is not supported at the moment")
+                raise TypeError('Boolean indexing is not supported at the moment')
             try:
                 if idx > len(self):
-                    raise IndexError(f"Given index {idx} is out of bounds")
+                    raise IndexError(f'Given index {idx} is out of bounds')
             except TypeError:
-                raise IndexError(
-                    "Index must be of type `int`/`slice` or an item name (`str`)"
-                )
+                raise IndexError('Index must be of type `int`/`slice` or an item name (`str`)')
         keys = list(self._kwargs.keys())
         return self._kwargs[keys[idx]]
 
@@ -186,14 +175,12 @@ class BaseCollection(BasedBase, MutableSequence):
             self._kwargs.update(update_dict)
             # ADD EDGE
             self._borg.map.add_edge(self, value)
-            self._borg.map.reset_type(value, "created_internal")
+            self._borg.map.reset_type(value, 'created_internal')
             value.interface = self.interface
             # REMOVE EDGE
             self._borg.map.prune_vertex_from_edge(self, old_item)
         else:
-            raise NotImplementedError(
-                "At the moment only numerical values or easyCore objects can be set."
-            )
+            raise NotImplementedError('At the moment only numerical values or easyCore objects can be set.')
 
     def __delitem__(self, key: int) -> None:
         """
@@ -218,9 +205,7 @@ class BaseCollection(BasedBase, MutableSequence):
         """
         return len(self._kwargs.keys())
 
-    def _convert_to_dict(
-        self, in_dict, encoder, skip: List[str] = [], **kwargs
-    ) -> dict:
+    def _convert_to_dict(self, in_dict, encoder, skip: List[str] = [], **kwargs) -> dict:
         """
         Convert ones self into a serialized form.
 
@@ -228,12 +213,10 @@ class BaseCollection(BasedBase, MutableSequence):
         :rtype: dict
         """
         d = {}
-        if hasattr(self, "_modify_dict"):
+        if hasattr(self, '_modify_dict'):
             # any extra keys defined on the inheriting class
             d = self._modify_dict(skip=skip, **kwargs)
-        in_dict["data"] = [
-            encoder._convert_to_dict(item, skip=skip, **kwargs) for item in self
-        ]
+        in_dict['data'] = [encoder._convert_to_dict(item, skip=skip, **kwargs) for item in self]
         out_dict = {**in_dict, **d}
         return out_dict
 
@@ -251,13 +234,9 @@ class BaseCollection(BasedBase, MutableSequence):
         return tuple(self._kwargs.values())
 
     def __repr__(self) -> str:
-        return (
-            f"{self.__class__.__name__} `{getattr(self, 'name')}` of length {len(self)}"
-        )
+        return f"{self.__class__.__name__} `{getattr(self, 'name')}` of length {len(self)}"
 
-    def sort(
-        self, mapping: Callable[[Union[B, V]], Any], reverse: bool = False
-    ) -> None:
+    def sort(self, mapping: Callable[[Union[B, V]], Any], reverse: bool = False) -> None:
         """
         Sort the collection according to the given mapping.
 

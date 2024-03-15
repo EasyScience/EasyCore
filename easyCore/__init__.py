@@ -2,16 +2,21 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the easyCore project <https://github.com/easyScience/easyCore
 
-__author__ = "github.com/wardsimon"
-__version__ = "0.3.1"
+__author__ = 'github.com/wardsimon'
 
-import numpy as np
+from importlib import metadata
+
+import numpy as np  # noqa: F401  This is used in the other codebases that uses easyCore
+import pint
 
 from easyCore.Objects.Borg import Borg
-import pint
-from .REDIRECT import _REDIRECT
 
-default_fitting_engine = "lmfit"
+try:
+    __version__ = metadata.version(__package__ or __name__)
+except metadata.PackageNotFoundError:
+    __version__ = '0.0.0'
+
+default_fitting_engine = 'lmfit'
 
 ureg = pint.UnitRegistry()
 borg = Borg()

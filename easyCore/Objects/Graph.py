@@ -5,12 +5,14 @@
 __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
-import weakref
 import sys
-from typing import List, Union
-from weakref import WeakKeyDictionary
+import weakref
 from collections import defaultdict
-from uuid import uuid4, UUID
+from typing import List
+from typing import Union
+from uuid import UUID
+from uuid import uuid4
+from weakref import WeakKeyDictionary
 
 
 class _EntryList(list):

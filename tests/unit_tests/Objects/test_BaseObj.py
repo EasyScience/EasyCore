@@ -5,14 +5,20 @@ __version__ = "0.1.0"
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the easyCore project <https://github.com/easyScience/easyCore
 
-import pytest
-import numpy as np
-
-from typing import List, Type, Union, ClassVar, Optional
 from contextlib import contextmanager
+from typing import ClassVar
+from typing import List
+from typing import Optional
+from typing import Type
+from typing import Union
+
+import numpy as np
+import pytest
 
 import easyCore
-from easyCore.Objects.ObjectClasses import Descriptor, Parameter, BaseObj
+from easyCore.Objects.ObjectClasses import BaseObj
+from easyCore.Objects.ObjectClasses import Descriptor
+from easyCore.Objects.ObjectClasses import Parameter
 from easyCore.Utils.io.dict import DictSerializer
 
 
@@ -300,9 +306,10 @@ def test_baseObj_name(setup_pars):
 
 
 def test_subclassing():
+    from typing import ClassVar
+
     from easyCore.models.polynomial import Line
     from easyCore.Objects.Variable import Parameter
-    from typing import ClassVar
 
     class L2(Line):
         diff: ClassVar[Parameter]

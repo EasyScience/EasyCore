@@ -6,12 +6,14 @@ __author__ = "github.com/wardsimon"
 __version__ = "0.1.0"
 
 import sys
-
-from typing import Callable, List, Any
 from functools import wraps
+from typing import Any
+from typing import Callable
+from typing import List
 
 from easyCore import borg
-from easyCore.Utils.Hugger.Hugger import Store, PatcherFactory
+from easyCore.Utils.Hugger.Hugger import PatcherFactory
+from easyCore.Utils.Hugger.Hugger import Store
 
 
 class LoggedProperty(property):

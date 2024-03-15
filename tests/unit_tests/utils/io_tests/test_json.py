@@ -6,8 +6,15 @@ from copy import deepcopy
 from typing import Type
 
 import pytest
-from .test_core import dp_param_dict, skip_dict, check_dict, A, Descriptor, Parameter
-from easyCore.Utils.io.json import JsonSerializer, JsonDataSerializer
+
+from easyCore.Utils.io.json import JsonDataSerializer
+from easyCore.Utils.io.json import JsonSerializer
+
+from .test_core import A
+from .test_core import Descriptor
+from .test_core import check_dict
+from .test_core import dp_param_dict
+from .test_core import skip_dict
 
 
 def recursive_remove(d, remove_keys: list) -> dict:

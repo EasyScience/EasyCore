@@ -8,17 +8,16 @@ __version__ = "0.1.0"
 from copy import deepcopy
 from typing import List
 
-import pytest
 import numpy as np
+import pytest
+
 import easyCore
-from easyCore.Objects.Variable import (
-    Descriptor,
-    Parameter,
-    ureg,
-    Q_,
-    CoreSetException,
-    borg,
-)
+from easyCore.Objects.Variable import Q_
+from easyCore.Objects.Variable import CoreSetException
+from easyCore.Objects.Variable import Descriptor
+from easyCore.Objects.Variable import Parameter
+from easyCore.Objects.Variable import borg
+from easyCore.Objects.Variable import ureg
 
 
 @pytest.fixture

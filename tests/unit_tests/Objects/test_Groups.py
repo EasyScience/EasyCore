@@ -8,10 +8,12 @@ __version__ = "0.1.0"
 from typing import List
 
 import pytest
-import easyCore
 
+import easyCore
 from easyCore.Objects.Groups import BaseCollection
-from easyCore.Objects.ObjectClasses import Descriptor, Parameter, BaseObj
+from easyCore.Objects.ObjectClasses import BaseObj
+from easyCore.Objects.ObjectClasses import Descriptor
+from easyCore.Objects.ObjectClasses import Parameter
 
 test_dict = {
     "@module": "easyCore.Objects.Groups",

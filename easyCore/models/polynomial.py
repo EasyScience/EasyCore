@@ -2,24 +2,28 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the easyCore project <https://github.com/easyScience/easyCore
 
-__author__ = "github.com/wardsimon"
-__version__ = "0.0.1"
+__author__ = 'github.com/wardsimon'
+__version__ = '0.0.1'
 
 
 import functools
+from typing import ClassVar
+from typing import Iterable
+from typing import Optional
+from typing import Union
 
-from easyCore import np
-from easyCore.Objects.ObjectClasses import BaseObj, Parameter
+import numpy as np
+
 from easyCore.Objects.Groups import BaseCollection
-
-from typing import ClassVar, Optional, Iterable, Union
+from easyCore.Objects.ObjectClasses import BaseObj
+from easyCore.Objects.ObjectClasses import Parameter
 
 
 def designate_calc_fn(func):
     @functools.wraps(func)
     def wrapper(obj, *args, **kwargs):
         for name in list(obj.__annotations__.keys()):
-            func.__globals__["_" + name] = getattr(obj, name).raw_value
+            func.__globals__['_' + name] = getattr(obj, name).raw_value
         return func(obj, *args, **kwargs)
 
     return wrapper
@@ -41,14 +45,10 @@ class Polynomial(BaseObj):
 
     def __init__(
         self,
-        name: str = "polynomial",
-        coefficients: Optional[
-            Union[Iterable[Union[float, Parameter]], BaseCollection]
-        ] = None,
+        name: str = 'polynomial',
+        coefficients: Optional[Union[Iterable[Union[float, Parameter]], BaseCollection]] = None,
     ):
-        super(Polynomial, self).__init__(
-            name, coefficients=BaseCollection("coefficients")
-        )
+        super(Polynomial, self).__init__(name, coefficients=BaseCollection('coefficients'))
         if coefficients is not None:
             if issubclass(type(coefficients), BaseCollection):
                 self.coefficients = coefficients
@@ -57,13 +57,11 @@ class Polynomial(BaseObj):
                     if issubclass(type(item), Parameter):
                         self.coefficients.append(item)
                     elif isinstance(item, float):
-                        self.coefficients.append(
-                            Parameter(name="c{}".format(index), value=item)
-                        )
+                        self.coefficients.append(Parameter(name='c{}'.format(index), value=item))
                     else:
-                        raise TypeError("Coefficients must be floats or Parameters")
+                        raise TypeError('Coefficients must be floats or Parameters')
             else:
-                raise TypeError("coefficients must be a list or a BaseCollection")
+                raise TypeError('coefficients must be a list or a BaseCollection')
 
     def __call__(self, x: np.ndarray, *args, **kwargs) -> np.ndarray:
         return np.polyval([c.raw_value for c in self.coefficients], x)
@@ -71,22 +69,17 @@ class Polynomial(BaseObj):
     def __repr__(self):
         s = []
         if len(self.coefficients) >= 1:
-            s += [f"{self.coefficients[0].raw_value}"]
+            s += [f'{self.coefficients[0].raw_value}']
             if len(self.coefficients) >= 2:
-                s += [f"{self.coefficients[1].raw_value}x"]
+                s += [f'{self.coefficients[1].raw_value}x']
                 if len(self.coefficients) >= 3:
-                    s += [
-                        f"{c.raw_value}x^{i+2}"
-                        for i, c in enumerate(self.coefficients[2:])
-                        if c.raw_value != 0
-                    ]
+                    s += [f'{c.raw_value}x^{i+2}' for i, c in enumerate(self.coefficients[2:]) if c.raw_value != 0]
         s.reverse()
-        s = " + ".join(s)
-        return "Polynomial({}, {})".format(self.name, s)
+        s = ' + '.join(s)
+        return 'Polynomial({}, {})'.format(self.name, s)
 
 
 class Line(BaseObj):
-
     m: ClassVar[Parameter]
     c: ClassVar[Parameter]
 
@@ -95,7 +88,7 @@ class Line(BaseObj):
         m: Optional[Union[Parameter, float]] = None,
         c: Optional[Union[Parameter, float]] = None,
     ):
-        super(Line, self).__init__("line", m=Parameter("m", 1.0), c=Parameter("c", 0.0))
+        super(Line, self).__init__('line', m=Parameter('m', 1.0), c=Parameter('c', 0.0))
         if m is not None:
             self.m = m
         if c is not None:
@@ -106,4 +99,4 @@ class Line(BaseObj):
         return self.m.raw_value * x + self.c.raw_value
 
     def __repr__(self):
-        return "{}({}, {})".format(self.__class__.__name__, self.m, self.c)
+        return '{}({}, {})'.format(self.__class__.__name__, self.m, self.c)

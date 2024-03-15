@@ -1,29 +1,34 @@
 from __future__ import annotations
 
-__author__ = "github.com/wardsimon"
-__version__ = "0.0.1"
+__author__ = 'github.com/wardsimon'
+__version__ = '0.0.1'
 
 import functools
 
 #  SPDX-FileCopyrightText: 2023 easyCore contributors  <core@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the easyCore project <https://github.com/easyScience/easyCore
-
 from abc import ABCMeta
 from types import FunctionType
-from typing import List, Callable, TypeVar, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
+from typing import Callable
+from typing import List
+from typing import Optional
+from typing import TypeVar
 
-from easyCore import borg, default_fitting_engine, np
+import numpy as np
+
 import easyCore.Fitting as Fitting
+from easyCore import borg
+from easyCore import default_fitting_engine
 from easyCore.Objects.Groups import BaseCollection
 
-
-_C = TypeVar("_C", bound=ABCMeta)
-_M = TypeVar("_M", bound=Fitting.FittingTemplate)
+_C = TypeVar('_C', bound=ABCMeta)
+_M = TypeVar('_M', bound=Fitting.FittingTemplate)
 
 if TYPE_CHECKING:
-    from easyCore.Utils.typing import B
     from easyCore.Fitting.fitting_template import FitResults as FR
+    from easyCore.Utils.typing import B
 
 
 class Fitter:
@@ -33,10 +38,7 @@ class Fitter:
 
     _borg = borg
 
-    def __init__(
-        self, fit_object: Optional[B] = None, fit_function: Optional[Callable] = None
-    ):
-
+    def __init__(self, fit_object: Optional[B] = None, fit_function: Optional[Callable] = None):
         self._fit_object = fit_object
         self._fit_function = fit_function
         self._dependent_dims = None
@@ -58,7 +60,7 @@ class Fitter:
         fit_methods = [
             x
             for x, y in Fitting.FittingTemplate.__dict__.items()
-            if (isinstance(y, FunctionType) and not x.startswith("_")) and x != "fit"
+            if (isinstance(y, FunctionType) and not x.startswith('_')) and x != 'fit'
         ]
         for method_name in fit_methods:
             setattr(self, method_name, self.__pass_through_generator(method_name))
@@ -118,9 +120,7 @@ class Fitter:
             self._current_engine = self._engines[engines.index(engine_name)]
             self._is_initialized = False
         else:
-            raise AttributeError(
-                f"The supplied optimizer engine '{engine_name}' is unknown."
-            )
+            raise AttributeError(f"The supplied optimizer engine '{engine_name}' is unknown.")
 
     def switch_engine(self, engine_name: str):
         """
@@ -130,9 +130,7 @@ class Fitter:
         """
         # There isn't any state to carry over
         if not self._is_initialized:
-            raise ReferenceError(
-                "The fitting engine must be initialized before switching"
-            )
+            raise ReferenceError('The fitting engine must be initialized before switching')
         # Constrains are not carried over. Do it manually.
         constraints = self.__engine_obj._constraints
         self.create(engine_name)
@@ -148,9 +146,7 @@ class Fitter:
         :rtype: List[str]
         """
         if Fitting.engines is None:
-            raise ImportError(
-                "There are no available fitting engines. Install `lmfit` and/or `bumps`"
-            )
+            raise ImportError('There are no available fitting engines. Install `lmfit` and/or `bumps`')
         return [engine.name for engine in Fitting.engines]
 
     @property
@@ -229,12 +225,10 @@ class Fitter:
 
         def inner(*args, **kwargs):
             if not obj.can_fit:
-                raise ReferenceError("The fitting engine must first be initialized")
+                raise ReferenceError('The fitting engine must first be initialized')
             func = getattr(obj.engine, name, None)
             if func is None:
-                raise ValueError(
-                    'The fitting engine does not have the attribute "{}"'.format(name)
-                )
+                raise ValueError('The fitting engine does not have the attribute "{}"'.format(name))
             return func(*args, **kwargs)
 
         return inner
@@ -264,19 +258,15 @@ class Fitter:
             """
             # Check to see if we can perform a fit
             if not self.can_fit:
-                raise ReferenceError("The fitting engine must first be initialized")
+                raise ReferenceError('The fitting engine must first be initialized')
 
             # Precompute - Reshape all independents into the correct dimensionality
-            x_fit, x_new, y_new, weights, dims, kwargs = self._precompute_reshaping(
-                x, y, weights, vectorized, kwargs
-            )
+            x_fit, x_new, y_new, weights, dims, kwargs = self._precompute_reshaping(x, y, weights, vectorized, kwargs)
             self._dependent_dims = dims
 
             # Fit
             fit_fun = self._fit_function
-            fit_fun_wrap = self._fit_function_wrapper(
-                x_new, flatten=True
-            )  # This should be wrapped.
+            fit_fun_wrap = self._fit_function_wrapper(x_new, flatten=True)  # This should be wrapped.
 
             # We change the  fit function, so have to  reset constraints
             constraints = self.__engine_obj._constraints
@@ -320,21 +310,19 @@ class Fitter:
             if vectorized:
                 # Assert that the shapes are the same
                 if np.all(x_shape[:-1] != y_new.shape):
-                    raise ValueError("The shape of the x and y data must be the same")
+                    raise ValueError('The shape of the x and y data must be the same')
                 # If so do nothing but note that the data is vectorized
                 # x_shape = (-1,) # Should this be done?
             else:
                 # Assert that the shapes are the same
                 if np.prod(x_new.shape[:-1]) != y_new.size:
-                    raise ValueError(
-                        "The number of elements in x and y data must be the same"
-                    )
+                    raise ValueError('The number of elements in x and y data must be the same')
                 # Reshape the data to be [len(NxMx..), Ndims] i.e. flatten to columns
-                x_new = x_new.reshape(-1, x_shape[-1], order="F")
+                x_new = x_new.reshape(-1, x_shape[-1], order='F')
         else:
             # Assert that the shapes are the same
             if np.all(x_shape != y_new.shape):
-                raise ValueError("The shape of the x and y data must be the same")
+                raise ValueError('The shape of the x and y data must be the same')
             # It is 1D data
             x_new = x.flatten()
         # The optimizer needs a 1D array, flatten the y data
@@ -346,9 +334,7 @@ class Fitter:
         return x_for_fit, x_new, y_new, weights, x_shape, kwargs
 
     @staticmethod
-    def _post_compute_reshaping(
-        fit_result: FR, x: np.ndarray, y: np.ndarray, weights: np.ndarray
-    ) -> FR:
+    def _post_compute_reshaping(fit_result: FR, x: np.ndarray, y: np.ndarray, weights: np.ndarray) -> FR:
         """
         Reshape the output of the fitter into the correct dimensions.
         :param fit_result: Output from the fitter
@@ -356,10 +342,10 @@ class Fitter:
         :param y: Input y dependent
         :return: Reshaped Fit Results
         """
-        setattr(fit_result, "x", x)
-        setattr(fit_result, "y_obs", y)
-        setattr(fit_result, "y_calc", np.reshape(fit_result.y_calc, y.shape))
-        setattr(fit_result, "y_err", np.reshape(fit_result.y_err, y.shape))
+        setattr(fit_result, 'x', x)
+        setattr(fit_result, 'y_obs', y)
+        setattr(fit_result, 'y_calc', np.reshape(fit_result.y_calc, y.shape))
+        setattr(fit_result, 'y_err', np.reshape(fit_result.y_err, y.shape))
         return fit_result
 
 
@@ -374,9 +360,8 @@ class MultiFitter(Fitter):
         fit_objects: Optional[List[B]] = None,
         fit_functions: Optional[List[Callable]] = None,
     ):
-
         # Create a dummy core object to hold all the fit objects.
-        self._fit_objects = BaseCollection("multi", *fit_objects)
+        self._fit_objects = BaseCollection('multi', *fit_objects)
         self._fit_functions = fit_functions
         # Initialize with the first of the fit_functions, without this it is
         # not possible to change the fitting engine.
@@ -394,9 +379,7 @@ class MultiFitter(Fitter):
         wrapped_fns = []
         for this_x, this_fun in zip(real_x, self._fit_functions):
             self._fit_function = this_fun
-            wrapped_fns.append(
-                Fitter._fit_function_wrapper(self, this_x, flatten=flatten)
-            )
+            wrapped_fns.append(Fitter._fit_function_wrapper(self, this_x, flatten=flatten))
 
         def wrapped_fun(x, **kwargs):
             # Generate an empty Y based on x
@@ -430,17 +413,13 @@ class MultiFitter(Fitter):
         """
         if weights is None:
             weights = [None] * len(x)
-        _, _x_new, _y_new, _weights, _dims, kwargs = Fitter._precompute_reshaping(
-            x[0], y[0], weights[0], vectorized, kwargs
-        )
+        _, _x_new, _y_new, _weights, _dims, kwargs = Fitter._precompute_reshaping(x[0], y[0], weights[0], vectorized, kwargs)
         x_new = [_x_new]
         y_new = [_y_new]
         w_new = [_weights]
         dims = [_dims]
         for _x, _y, _w in zip(x[1::], y[1::], weights[1::]):
-            _, _x_new, _y_new, _weights, _dims, _ = Fitter._precompute_reshaping(
-                _x, _y, _w, vectorized, kwargs
-            )
+            _, _x_new, _y_new, _weights, _dims, _ = Fitter._precompute_reshaping(_x, _y, _w, vectorized, kwargs)
             x_new.append(_x_new)
             y_new.append(_y_new)
             w_new.append(_weights)
@@ -483,12 +462,8 @@ class MultiFitter(Fitter):
             current_results.p0 = fit_result_obj.p0
             current_results.x = this_x
             current_results.y_obs = y[idx]
-            current_results.y_calc = np.reshape(
-                fit_result_obj.y_calc[sp:ep], current_results.y_obs.shape
-            )
-            current_results.y_err = np.reshape(
-                fit_result_obj.y_err[sp:ep], current_results.y_obs.shape
-            )
+            current_results.y_calc = np.reshape(fit_result_obj.y_calc[sp:ep], current_results.y_obs.shape)
+            current_results.y_err = np.reshape(fit_result_obj.y_err[sp:ep], current_results.y_obs.shape)
             current_results.engine_result = fit_result_obj.engine_result
 
             # Attach an additional field for the un-modified results
