@@ -9,7 +9,6 @@ name: Publish Python Package
 on:
   workflow_dispatch:
   push:
-    branches: [master]
     tags:
       - 'v*'
 
