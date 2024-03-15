@@ -32,13 +32,16 @@ Imports
 Firstly the necessary imports. Notice that we import numpy from easyCore. This is not done for any reason other than
 saving time from multiple imports.
 
-.. GENERATED FROM PYTHON SOURCE LINES 16-20
+.. GENERATED FROM PYTHON SOURCE LINES 16-23
 
 .. code-block:: Python
 
-    from easyCore import np
-    from easyCore.Objects.ObjectClasses import BaseObj, Parameter
+
     import matplotlib.pyplot as plt
+    import numpy as np
+
+    from easyCore.Objects.ObjectClasses import BaseObj
+    from easyCore.Objects.ObjectClasses import Parameter
 
 
 
@@ -47,7 +50,7 @@ saving time from multiple imports.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 21-27
+.. GENERATED FROM PYTHON SOURCE LINES 24-30
 
 Subclassing
 ***********
@@ -56,7 +59,7 @@ rST and your code. This separates your example
 into distinct text and code blocks. You can continue writing code below the
 embedded rST text block:
 
-.. GENERATED FROM PYTHON SOURCE LINES 27-51
+.. GENERATED FROM PYTHON SOURCE LINES 30-55
 
 .. code-block:: Python
 
@@ -74,7 +77,7 @@ embedded rST text block:
             return cls(A, f, p)
 
         def __call__(self, t):
-            return self.A.raw_value * np.sin(2*np.pi*self.f.raw_value*t + self.p.raw_value)
+            return self.A.raw_value * np.sin(2 * np.pi * self.f.raw_value * t + self.p.raw_value)
 
         def plot(self, time, axis=None, **kwargs):
             if axis is None:
@@ -91,7 +94,8 @@ embedded rST text block:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 52-58
+
+.. GENERATED FROM PYTHON SOURCE LINES 56-62
 
 Single Example
 **************
@@ -100,7 +104,7 @@ rST and your code. This separates your example
 into distinct text and code blocks. You can continue writing code below the
 embedded rST text block:
 
-.. GENERATED FROM PYTHON SOURCE LINES 58-67
+.. GENERATED FROM PYTHON SOURCE LINES 62-71
 
 .. code-block:: Python
 
@@ -111,7 +115,7 @@ embedded rST text block:
     # Another pendulum with Frequency = 4
     p3 = Pendulum.from_pars(A=5, f=4)
     # Another pendulum with Phase = pi/2
-    p4 = Pendulum.from_pars(A=5, f=4, p=np.pi/2)
+    p4 = Pendulum.from_pars(A=5, f=4, p=np.pi / 2)
 
 
 
@@ -120,11 +124,11 @@ embedded rST text block:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 68-69
+.. GENERATED FROM PYTHON SOURCE LINES 72-73
 
 Plotting
 
-.. GENERATED FROM PYTHON SOURCE LINES 69-80
+.. GENERATED FROM PYTHON SOURCE LINES 73-84
 
 .. code-block:: Python
 
@@ -151,7 +155,7 @@ Plotting
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 81-87
+.. GENERATED FROM PYTHON SOURCE LINES 85-91
 
 Multiple Examples
 *****************
@@ -160,7 +164,7 @@ rST and your code. This separates your example
 into distinct text and code blocks. You can continue writing code below the
 embedded rST text block:
 
-.. GENERATED FROM PYTHON SOURCE LINES 87-95
+.. GENERATED FROM PYTHON SOURCE LINES 91-98
 
 .. code-block:: Python
 
@@ -171,7 +175,6 @@ embedded rST text block:
         pendulum.plot(t, label=f'Phase = {pendulum.p}')
     plt.legend(loc='lower right')
     fig.show()
-
 
 
 
@@ -187,7 +190,7 @@ embedded rST text block:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 0.797 seconds)
+   **Total running time of the script:** (0 minutes 1.441 seconds)
 
 
 .. _sphx_glr_download_base_examples_plot_baseclass1.py:
