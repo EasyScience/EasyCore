@@ -9,6 +9,7 @@ name: Publish Python Package
 on:
   workflow_dispatch:
   push:
+    branches: [main]
     tags:
       - 'v*'
 
@@ -18,19 +19,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-  
-      - uses: actions/setup-python@v5
-        with:
-          python-version: 3.9
-  
-      - name: Install dependencies and build
-        run: |
-          pip install -e '.[dev]'
-          python -m build
-  
-      - name: Publish distribution 📦 to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: ${{ secrets.PYPI_PASSWORD }}
-  
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: 3.9
+
+    - name: Install dependencies and build
+      run: |
+        pip install -e '.[dev]'
+        python -m build
+
+    - name: Publish distribution 📦 to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.PYPI_PASSWORD }}
