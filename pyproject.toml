@@ -51,7 +51,8 @@ docs = [
     "Sphinx",
     "sphinx-rtd-theme",
     "sphinx-autodoc-typehints", 
-    "sphinx-gallery"
+    "sphinx-gallery",
+    "toml"
 ]
 
 [project.urls]
