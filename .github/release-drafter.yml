@@ -1,4 +1,6 @@
+# Configuration for the realease-drafter workflow.
 # https://github.com/marketplace/actions/release-drafter
+
 name-template: v$NEXT_PATCH_VERSION 🌈
 tag-template: v$NEXT_PATCH_VERSION
 categories:
