@@ -1,6 +1,7 @@
-# This workflow will be verify that all PRs have at
-# least on the label: 'bugs', 'enhancement' before
-# they can be merged.
+# This workflow will
+# - verify that a PR has a known label before it can be merged.
+#
+# A label is needed for the release-drafter workflow to generate the notes.
 
 name: Verify PR labels
 on:
