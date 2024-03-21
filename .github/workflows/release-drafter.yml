@@ -1,10 +1,16 @@
+# This workflow will
+# - draft a new release the next time a release is tagged.
+#
+# Uses the release-drafter.yml configuration file in the .github directory.
+# https://github.com/marketplace/actions/release-drafter
+
+
 name: Release Drafter
 
 on:
   push:
-    # branches to consider in the event; optional, defaults to all
-    branches:
-      - pre-release
+    tags:
+      - 'v*'
 
 jobs:
   update_release_draft:

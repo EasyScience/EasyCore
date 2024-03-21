@@ -1,4 +1,4 @@
-# This pipeline
+# This workflow will
 # - builds developer documentation 
 # - pushes documentation to gh-pages branch of the same repository
 #
