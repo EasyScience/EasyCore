@@ -2,12 +2,13 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the easyCore project <https://github.com/easyScience/easyCore
 
+from typing import List
+
+from easyCore.Objects.Job.Analysis import AnalysisBase
+from easyCore.Objects.Job.Experiment import ExperimentBase
+from easyCore.Objects.Job.Theory import TheoryBase
 from easyCore.Objects.ObjectClasses import BaseObj
 from easyCore.Objects.ObjectClasses import Parameter
-from typing import List
-from easyCore.Objects.Job.Theory import TheoryBase
-from easyCore.Objects.Job.Experiment import ExperimentBase
-from easyCore.Objects.Job.Analysis import AnalysisBase
 
 
 class JobBase(BaseObj):

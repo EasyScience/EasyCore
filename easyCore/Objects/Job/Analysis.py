@@ -2,9 +2,12 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the easyCore project <https://github.com/easyScience/easyCore
 
+from typing import Any
+from typing import List
+
 from easyCore.Objects.ObjectClasses import BaseObj
 from easyCore.Objects.ObjectClasses import Parameter
-from typing import Any, List
+
 
 class AnalysisBase(BaseObj):
     """
