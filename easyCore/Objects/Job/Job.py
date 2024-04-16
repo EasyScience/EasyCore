@@ -2,6 +2,7 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2023 Contributors to the easyCore project <https://github.com/easyScience/easyCore
 
+from abc import ABCMeta
 from abc import abstractmethod
 
 from easyCore.Objects.Job.Analysis import AnalysisBase
@@ -9,10 +10,8 @@ from easyCore.Objects.Job.Experiment import ExperimentBase
 from easyCore.Objects.Job.Theory import TheoryBase
 from easyCore.Objects.ObjectClasses import BaseObj
 
-# from easyCore.Objects.ObjectClasses import Parameter
 
-
-class JobBase(BaseObj):
+class JobBase(BaseObj, metaclass=ABCMeta):
     """
     This virtual class allows for the creation of technique-specific Job objects.
     """
@@ -27,57 +26,61 @@ class JobBase(BaseObj):
 
     """
     JobBase consists of Theory, Experiment, Analysis virtual classes.
-    Additionally, Summary and Info classes are included to store additional information.
+    Summary and Info classes are included to store additional information.
     """
-    @abstractmethod
-    def set_theory(self, theory: TheoryBase):
-        # The implementation must include __copy__ and __deepcopy__ methods
-        raise NotImplementedError("setTheory not implemented")
-    
-    @abstractmethod
-    def set_experiment(self, experiment: ExperimentBase):
-        # We might not have an experiment but this should be dealt with in the specific implementation
-        raise NotImplementedError("setExperiment not implemented")
-
-    @abstractmethod
-    def set_analysis(self, analysis: AnalysisBase):
-        raise NotImplementedError("setAnalysis not implemented")
-
-    @abstractmethod
-    def set_summary(self, summary: BaseObj):
-        raise NotImplementedError("setSummary not implemented")
-
-    @abstractmethod
-    def set_info(self, info: BaseObj):
-        raise NotImplementedError("setInfo not implemented")
-
     @property
     def theory(self):
         return self._theory
-    
+
+    @theory.setter
+    @abstractmethod
+    def theory(self, theory: TheoryBase):
+        raise NotImplementedError("theory setter not implemented")
+   
     @property
     def experiment(self):
         return self._experiment
-    
+
+    @experiment.setter
+    @abstractmethod
+    def experiment(self, experiment: ExperimentBase):
+        raise NotImplementedError("experiment setter not implemented")
+
     @property
     def analysis(self):
         return self._analysis
 
-    @property
-    def summary(self):
-        return self._summary
+    @analysis.setter
+    @abstractmethod
+    def analysis(self, analysis: AnalysisBase):
+        raise NotImplementedError("analysis setter not implemented")
+
+    # TODO: extend derived classes to include Summary and Info
+    # @property
+    # def summary(self):
+    #     return self._summary
+
+    # @summary.setter
+    # @abstractmethod
+    # def summary(self, summary: SummaryBase):
+    #     raise NotImplementedError("summary setter not implemented")
     
-    @property
-    def info(self):
-        return self._info
+    # @property
+    # def info(self):
+    #     return self._info
+
+    # @info.setter
+    # @abstractmethod
+    # def info(self, info: InfoBase):
+    #     raise NotImplementedError("info setter not implemented")
 
     @abstractmethod
     def calculate_model(self, *args, **kwargs):
-        #raise NotImplementedError("calculateModel not implemented")
-        pass
+        raise NotImplementedError("calculateModel not implemented")
+        #pass
 
     @abstractmethod
     def fit(self, *args, **kwargs):
-        #raise NotImplementedError("fit not implemented")
-        pass
+        raise NotImplementedError("fit not implemented")
+        #pass
     
